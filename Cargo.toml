@@ -1,0 +1,82 @@
+[package]
+name = "procedural_modelling"
+description = "A framework-agnostic Procedural Modelling crate."
+version = "0.1.0"
+edition = "2021"
+categories = ["graphics", "rendering", "game-development"]
+keywords = ["gamedev", "graphics", "procedural", "meshes", "modelling"]
+homepage = "https://bevy-procedural.org/modelling"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/bevy-procedural/modelling"
+documentation = "https://docs.rs/procedural_modelling"
+rust-version = "1.76.0"
+
+[lib]
+name = "procedural_modelling"
+path = "src/lib.rs"
+crate-type = ["rlib"]
+
+[workspace]
+members = ["editor"]
+
+[workspace.lints.clippy]
+type_complexity = "allow"
+doc_markdown = "warn"
+manual_let_else = "warn"
+undocumented_unsafe_blocks = "warn"
+redundant_else = "warn"
+match_same_arms = "warn"
+semicolon_if_nothing_returned = "warn"
+map_flatten = "warn"
+
+ptr_as_ptr = "warn"
+ptr_cast_constness = "warn"
+ref_as_ptr = "warn"
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "warn"
+missing_docs = "warn"
+
+[lints]
+workspace = true
+
+[dependencies]
+bevy = { version = "0.13.0", default-features = true, optional = true, features = [
+    "dynamic_linking",
+] }
+bevy-inspector-egui = { version = "0.23.2", optional = true }
+meshopt = { version = "0.2.0", optional = true }
+
+[features]
+default = []
+bevy = ["dep:bevy", "dep:bevy-inspector-egui"]
+meshopt = ["dep:meshopt"]
+
+[[example]]
+name = "2d"
+path = "examples/2d.rs"
+doc-scrape-examples = true
+required-features = ["bevy"]
+
+[[example]]
+name = "3d"
+path = "examples/3d.rs"
+doc-scrape-examples = true
+required-features = ["bevy"]
+
+# Enable a small amount of optimization in debug mode
+[profile.fast-dev]
+inherits = "dev"
+opt-level = 1
+
+# Enable high optimizations for dependencies (incl. Bevy), but not for our code:
+[profile.fast-dev.package."*"]
+inherits = "dev"
+opt-level = 3
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = "z"
+lto = "fat"
+codegen-units = 1

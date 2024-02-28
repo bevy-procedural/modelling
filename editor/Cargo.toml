@@ -1,0 +1,18 @@
+[package]
+name = "editor"
+description = "An Egui-based editor for the procedural_modelling crate"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[dependencies]
+bevy = { version = "0.13.0", features = [
+    "file_watcher",
+    "dynamic_linking",
+] }
+bevy-inspector-egui = "0.23.2"
+bevy_panorbit_camera = { version = "0.15.0", features = ["bevy_egui"] }
+
+[dependencies.procedural_modelling]
+path = "../"
+features = ["bevy", "meshopt"]
