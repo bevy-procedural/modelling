@@ -1,9 +1,6 @@
 use bevy::{
     diagnostic::FrameTimeDiagnosticsPlugin,
-    pbr::{
-        wireframe::{WireframeConfig, WireframePlugin},
-        CascadeShadowConfigBuilder,
-    },
+    pbr::wireframe::{WireframeConfig, WireframePlugin},
     prelude::*,
     window::WindowResolution,
 };
@@ -110,9 +107,6 @@ fn update_meshes(
         return;
     }
 
-    // TODO
-
-    greet();
 
     // mesh.bevy_set(assets.get_mut(query.single().id()).unwrap());
 }
@@ -122,12 +116,16 @@ fn setup_meshes(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    
+    let mesh = representation::Mesh::<u32, u32, u32, Vec3>::cuboid(1.0, 1.0, 2.0);
+    println!("{}", mesh);
+
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(Mesh::from(Cuboid::new(1.0, 1.0, 1.0))),
+            mesh: meshes.add(mesh.to_bevy()),
             material: materials.add(StandardMaterial {
-                base_color: Color::rgba(1.0, 1.0, 1.0, 0.5),
-                alpha_mode: AlphaMode::Blend,
+                base_color: Color::rgba(1.0, 1.0, 1.0, 1.0),
+                //alpha_mode: AlphaMode::Blend,
                 double_sided: false,
                 cull_mode: None,
                 ..default()
@@ -138,10 +136,18 @@ fn setup_meshes(
         Name::new("Generated Shape"),
     ));
 
-    commands.insert_resource(AmbientLight {
-        color: Color::WHITE,
-        brightness: 0.1,
-    });
+    commands.spawn((
+        PbrBundle {
+            mesh: meshes.add(Mesh::from(Plane3d::new(Vec3::Y))),
+            material: materials.add(StandardMaterial::default()),
+            transform: Transform::from_translation(Vec3::new(0.0, -1.0, 0.0))
+                .with_scale(Vec3::splat(10.0)),
+            ..default()
+        },
+        Name::new("Floor"),
+    ));
+
+    commands.insert_resource(AmbientLight::default());
 
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
@@ -154,21 +160,12 @@ fn setup_meshes(
             rotation: Quat::from_rotation_x(-PI / 4.),
             ..default()
         },
-        // The default cascade config is designed to handle large scenes.
-        // As this example has a much smaller world, we can tighten the shadow
-        // bounds for better visual quality.
-        cascade_shadow_config: CascadeShadowConfigBuilder {
-            first_cascade_far_bound: 4.0,
-            maximum_distance: 10.0,
-            ..default()
-        }
-        .into(),
         ..Default::default()
     });
 
     commands.spawn((
         Camera3dBundle {
-            transform: Transform::from_xyz(0.0, 5.0, 0.1).looking_at(Vec3::ZERO, Vec3::Y),
+            transform: Transform::from_xyz(3.0, 5.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
             ..default()
         },
         PanOrbitCamera::default(),

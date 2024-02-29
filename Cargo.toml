@@ -42,20 +42,19 @@ missing_docs = "warn"
 workspace = true
 
 [dependencies]
-bevy = { version = "0.13.0", default-features = true, optional = true, features = [
-    "dynamic_linking",
-] }
+bevy = { version = "0.13.0", default-features = true, optional = true }
 bevy-inspector-egui = { version = "0.23.2", optional = true }
 meshopt = { version = "0.2.0", optional = true }
 
 [features]
-default = []
+default = ["bevy"]
 bevy = ["dep:bevy", "dep:bevy-inspector-egui"]
+dynamic = ["bevy/dynamic_linking"]
 meshopt = ["dep:meshopt"]
 
 [[example]]
-name = "2d"
-path = "examples/2d.rs"
+name = "box"
+path = "examples/box.rs"
 doc-scrape-examples = true
 required-features = ["bevy"]
 

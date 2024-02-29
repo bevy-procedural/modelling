@@ -7,7 +7,4 @@
 //! A framework-agnostic Procedural Modelling crate.
 //!
 
-
-pub fn greet() {
-    println!("Hello, procedural_modelling!");
-}
+pub mod representation;
