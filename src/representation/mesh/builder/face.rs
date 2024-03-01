@@ -1,5 +1,26 @@
 use crate::representation::{payload::Payload, Face, HalfEdge, IndexType, Mesh};
 
+impl<E, V, F, P> Mesh<E, V, F, P>
+where
+    E: IndexType,
+    V: IndexType,
+    F: IndexType,
+    P: Payload,
+{
+    /// Removes the provided face.
+    pub fn remove_face(&mut self, f: F) {
+        let face = self.face(f);
+
+        let edge_ids: Vec<_> = face.edges(self).map(|e| e.id()).collect();
+        for e in edge_ids {
+            self.edge_mut(e).delete_face();
+        }
+
+        *self.face_mut(f) = Face::deleted();
+        // TODO: add to deleted list for reallocation
+    }
+}
+
 /// Close a phase given some description. Might insert additional edges and vertices.
 pub trait CloseFace<Input> {
     /// The type of the face indices

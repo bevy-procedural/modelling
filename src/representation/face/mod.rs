@@ -36,11 +36,30 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
         *mesh.edge(self.edge)
     }
 
+    /// Returns the id of a half-edge incident to the face.
+    #[inline(always)]
+    pub fn edge_id(&self) -> E {
+        self.edge
+    }
+
     /// Creates a new face.
     pub fn new(id: F, edge: E) -> Self {
         assert!(id != IndexType::max());
         assert!(edge != IndexType::max());
         Self { id, edge }
+    }
+
+    /// Creates a new deleted face.
+    pub fn deleted() -> Self {
+        Self {
+            id: IndexType::max(),
+            edge: IndexType::max(),
+        }
+    }
+
+    /// Returns true if the face is deleted.
+    pub fn is_deleted(&self) -> bool {
+        self.id == IndexType::max()
     }
 }
 

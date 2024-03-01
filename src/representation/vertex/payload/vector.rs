@@ -12,8 +12,10 @@ pub trait Scalar:
     + std::ops::Div<Output = Self>
     + std::ops::Sub<Output = Self>
     + std::ops::Neg<Output = Self>
+    + From<f32>
     + 'static
 {
+    
 }
 
 impl Scalar for f32 {}

@@ -84,7 +84,8 @@ where
         if let Some(face_next) = self.edges().find(|e| {
             let f1 = e.face(self);
             let f2 = e.next(self).face(self);
-            (f1.is_none() && f2.is_none()) || f1.unwrap().id() != f2.unwrap().id()
+            (f1.is_none() ^ f2.is_none())
+                || (f1.is_some() && f2.is_some() && f1.unwrap().id() != f2.unwrap().id())
         }) {
             return Err(format!(
                 "HalfEdge {} has face {:?} but next has face {:?}",
@@ -150,7 +151,7 @@ where
     }
 
     fn check_faces_nondegenerate(&self) -> Result<(), String> {
-        if let Some(bad_face) = self.faces().find(|f| f.edges(self).count() < 3) {
+        if let Some(bad_face) = self.faces().find(|f| !f.is_deleted() && f.edges(self).count() < 3) {
             return Err(format!(
                 "Face {} has only {} faces!",
                 bad_face.id(),
@@ -173,7 +174,10 @@ where
     }
 
     fn check_face_invariants(&self) -> Result<(), String> {
-        if let Some(bad_face) = self.faces().find(|f| f.edge(self).face_id() != f.id()) {
+        if let Some(bad_face) = self
+            .faces()
+            .find(|f| !f.is_deleted() && f.edge(self).face_id() != f.id())
+        {
             return Err(format!(
                 "Face {} has edge {} with face {}",
                 bad_face.id(),
@@ -225,19 +229,16 @@ where
         // TODO: check_faces_planar
         // TODO: check_faces_convex
         // TODO: check_faces_oriented
+        // TODO: check for references to delete items
         Ok(())
     }
 }
 
 impl<E: IndexType, V: IndexType, F: IndexType, P: Payload> std::fmt::Display for Mesh<E, V, F, P> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if let Err(msg) = self.check() {
-            return write!(f, "Mesh is invalid: {}", msg);
-        }
-
         write!(
             f,
-            "Mesh:\nvertices:\n{}\n edge --><-- twin   |  face: edge/twin \n{}\n faces: \n{}\n ",
+            "Mesh:\nvertices:\n{}\n edge --><-- twin   |  face: edge/twin \n{}\n faces: \n{}\n{} ",
             self.vertices()
                 .map(|v| format!("{}", v))
                 .collect::<Vec<_>>()
@@ -250,7 +251,12 @@ impl<E: IndexType, V: IndexType, F: IndexType, P: Payload> std::fmt::Display for
             self.faces()
                 .map(|f| format!("{}", f))
                 .collect::<Vec<_>>()
-                .join("\n")
+                .join("\n"),
+            if let Err(msg) = self.check() {
+                msg
+            } else {
+                "".to_string()
+            }
         )
     }
 }

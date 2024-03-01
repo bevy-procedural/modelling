@@ -2,6 +2,7 @@
 
 mod face;
 mod vertex;
+mod extrude;
 use crate::representation::{payload::Payload, HalfEdge, IndexType, Mesh, Vertex};
 pub use face::CloseFace;
 pub use vertex::AddVertex;

@@ -68,6 +68,11 @@ impl<E: IndexType, V: IndexType, F: IndexType> HalfEdge<E, V, F> {
         self.face = face;
     }
 
+    /// Marks the face as deleted
+    pub fn delete_face(&mut self) {
+        self.face = IndexType::max();
+    }
+
     /// Sets the next half-edge incident to the same face (including the holes)
     pub fn set_next(&mut self, next: E) {
         self.next = next;

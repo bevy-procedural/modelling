@@ -10,4 +10,10 @@ mod bevy;
 pub trait Payload: Clone + Default + PartialEq + Vector<Self::S> + std::fmt::Debug {
     /// The scalar type of the coordinates used in the payload. Mainly to choose between f32 and f64. But could also work with integers etc...
     type S: Scalar;
+
+    /// The vector type used in the payload.
+    type Vec: Vector<Self::S>;
+
+    /// Returns a translated clone of the payload.
+    fn translate(&self, v: &Self::Vec) -> Self;
 }

@@ -10,7 +10,7 @@ use bevy_inspector_egui::{
     InspectorOptions,
 };
 use bevy_panorbit_camera::*;
-use procedural_modelling::*;
+use procedural_modelling::{representation::bevy::MeshVec3, *};
 use std::{env, f32::consts::PI};
 
 #[derive(Reflect, Resource, InspectorOptions)]
@@ -107,7 +107,6 @@ fn update_meshes(
         return;
     }
 
-
     // mesh.bevy_set(assets.get_mut(query.single().id()).unwrap());
 }
 
@@ -116,8 +115,15 @@ fn setup_meshes(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    
-    let mesh = representation::Mesh::<u32, u32, u32, Vec3>::cuboid(1.0, 1.0, 2.0);
+    let mut mesh = MeshVec3::regular_polygon(1.0, 6); //cuboid(1.0, 1.0, 2.0);
+    mesh.extrude(
+        mesh.edge_between(1, 0).unwrap().id(),
+        Vec3::new(0.4, -1.0, 0.0),
+        true,
+    );
+    let fe = mesh.extrude_face(3, Vec3::new(-1.0, 0.3, -1.0), true);
+    mesh.extrude_face(fe, Vec3::new(-1.0, -0.3, -1.0), true);
+
     println!("{}", mesh);
 
     commands.spawn((

@@ -5,7 +5,7 @@ pub mod primitives;
 mod tesselate;
 
 #[cfg(feature = "bevy")]
-mod bevy;
+pub mod bevy;
 
 /// A mesh data structure for (open) manifold meshes.
 ///
@@ -30,6 +30,7 @@ where
     vertices: Vec<Vertex<EdgeIndex, VertexIndex, PayloadType>>,
     edges: Vec<HalfEdge<EdgeIndex, VertexIndex, FaceIndex>>,
     faces: Vec<Face<EdgeIndex, FaceIndex>>,
+    // TODO: collect deleted ids for allocation
 }
 
 impl<E, V, F, P> Mesh<E, V, F, P>
@@ -61,6 +62,11 @@ where
     /// Returns the half edge from v to w
     pub fn edge_between(&self, v: V, w: V) -> Option<HalfEdge<E, V, F>> {
         self.vertex(v).edges(self).find(|e| e.target_id(self) == w)
+    }
+
+    /// Returns the half edge id from v to w. Panics if the edge does not exist.
+    pub fn edge_id_between(&self, v: V, w: V) -> E {
+        self.edge_between(v, w).unwrap().id()
     }
 
     /// Returns a reference to the requested face
@@ -125,6 +131,6 @@ where
 
     /// Returns an iterator over all faces
     pub fn faces(&self) -> impl Iterator<Item = &Face<E, F>> {
-        self.faces.iter()
+        self.faces.iter().filter(|f| !f.is_deleted())
     }
 }

@@ -35,4 +35,9 @@ impl Vector3D<f32> for Vec3 {
 
 impl Payload for Vec3 {
     type S = f32;
+    type Vec = Vec3;
+
+    fn translate(&self, v: &Self::Vec) -> Self {
+        *self + *v
+    }
 }

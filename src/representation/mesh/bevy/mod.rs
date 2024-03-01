@@ -1,3 +1,5 @@
+//! This module implements bevy specific mesh handling
+
 use super::{IndexType, Mesh};
 use bevy::{
     math::Vec3,
@@ -6,6 +8,9 @@ use bevy::{
         render_asset::RenderAssetUsages,
     },
 };
+
+/// A mesh with bevy 3D vertices
+pub type MeshVec3 = Mesh<u32, u32, u32, Vec3>;
 
 impl<E, V, F> Mesh<E, V, F, Vec3>
 where
