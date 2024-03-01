@@ -58,6 +58,11 @@ where
         &self.edges[index.index()]
     }
 
+    /// Returns the half edge from v to w
+    pub fn edge_between(&self, v: V, w: V) -> Option<HalfEdge<E, V, F>> {
+        self.vertex(v).edges(self).find(|e| e.target_id(self) == w)
+    }
+
     /// Returns a reference to the requested face
     pub fn face(&self, index: F) -> &Face<E, F> {
         &self.faces[index.index()]

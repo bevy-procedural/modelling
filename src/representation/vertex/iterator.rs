@@ -1,5 +1,5 @@
 use super::{
-    super::{HalfEdge, Face, IndexType, Mesh, Vertex},
+    super::{Face, HalfEdge, IndexType, Mesh, Vertex},
     payload::Payload,
 };
 
@@ -9,8 +9,17 @@ impl<E: IndexType, V: IndexType, P: Payload> Vertex<E, V, P> {
     pub fn edges<'a, F: IndexType>(
         &'a self,
         mesh: &'a Mesh<E, V, F, P>,
-    ) -> IncidentToVertexIterator<'a, E, V, F, P> {
+    ) -> impl Iterator<Item = HalfEdge<E, V, F>> + 'a {
         IncidentToVertexIterator::new(self.edge(mesh), mesh)
+    }
+
+    /// Iterates all ingoing half-edges incident to this vertex in the same manifold edge wheel (clockwise)
+    #[inline(always)]
+    pub fn edges_in<'a, F: IndexType>(
+        &'a self,
+        mesh: &'a Mesh<E, V, F, P>,
+    ) -> impl Iterator<Item = HalfEdge<E, V, F>> + 'a {
+        IncidentToVertexIterator::new(self.edge(mesh), mesh).map(|e| e.twin(mesh))
     }
 
     /// Iterates all vertices adjacent to the vertex in the same manifold edge wheel (clockwise)
@@ -38,7 +47,7 @@ impl<E: IndexType, V: IndexType, P: Payload> Vertex<E, V, P> {
     pub fn wheel<'a, F: IndexType>(
         &'a self,
         mesh: &'a Mesh<E, V, F, P>,
-    ) -> NonmanifoldVertexIterator<'a, E, V, F, P> {
+    ) -> impl Iterator<Item = Vertex<E, V, P>> + 'a {
         NonmanifoldVertexIterator::new(self.clone(), mesh)
     }
 }
