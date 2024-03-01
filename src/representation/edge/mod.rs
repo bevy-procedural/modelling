@@ -4,7 +4,7 @@ pub use iterator::*;
 
 /// Half-edge inspired data structure
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Edge<EdgeIndex, VertexIndex, FaceIndex>
+pub struct HalfEdge<EdgeIndex, VertexIndex, FaceIndex>
 where
     EdgeIndex: IndexType,
     VertexIndex: IndexType,
@@ -41,7 +41,7 @@ where
     // TODO: include a way to explicitly access faces around vertex/face? https://en.wikipedia.org/wiki/Polygon_mesh
 }
 
-impl<E: IndexType, V: IndexType, F: IndexType> Edge<E, V, F> {
+impl<E: IndexType, V: IndexType, F: IndexType> HalfEdge<E, V, F> {
     // TODO: should the operations return a copy or a reference?
 
     /// Creates a new half-edge
@@ -86,7 +86,7 @@ impl<E: IndexType, V: IndexType, F: IndexType> Edge<E, V, F> {
 
     /// Returns the next half-edge incident to the same face or boundary
     #[inline(always)]
-    pub fn next<P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> Edge<E, V, F> {
+    pub fn next<P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> HalfEdge<E, V, F> {
         *mesh.edge(self.next)
     }
 
@@ -98,7 +98,7 @@ impl<E: IndexType, V: IndexType, F: IndexType> Edge<E, V, F> {
 
     /// Returns the other, opposite half-edge
     #[inline(always)]
-    pub fn twin<P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> Edge<E, V, F> {
+    pub fn twin<P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> HalfEdge<E, V, F> {
         *mesh.edge(self.twin)
     }
 
@@ -110,7 +110,7 @@ impl<E: IndexType, V: IndexType, F: IndexType> Edge<E, V, F> {
 
     /// Returns the previous half-edge incident to the same face or boundary
     #[inline(always)]
-    pub fn prev<P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> Edge<E, V, F> {
+    pub fn prev<P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> HalfEdge<E, V, F> {
         *mesh.edge(self.prev)
     }
 
@@ -192,7 +192,7 @@ impl<E: IndexType, V: IndexType, F: IndexType> Edge<E, V, F> {
     }
 }
 
-impl<E: IndexType, V: IndexType, F: IndexType> std::fmt::Display for Edge<E, V, F> {
+impl<E: IndexType, V: IndexType, F: IndexType> std::fmt::Display for HalfEdge<E, V, F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,

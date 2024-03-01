@@ -1,5 +1,5 @@
 use super::Mesh;
-use crate::representation::{payload::Payload, Edge, Face, IndexType, Vertex};
+use crate::representation::{payload::Payload, HalfEdge, Face, IndexType, Vertex};
 
 // The simplest non-empty mesh: a single edge with two vertices
 impl<E, V, F, P> From<(P, P)> for Mesh<E, V, F, P>
@@ -18,9 +18,9 @@ where
 
         mesh.vertices = vec![Vertex::new(v0, e0, v0, a), Vertex::new(v1, e1, v1, b)];
         mesh.edges
-            .push(Edge::new(e0, e1, e1, e1, v0, IndexType::max()));
+            .push(HalfEdge::new(e0, e1, e1, e1, v0, IndexType::max()));
         mesh.edges
-            .push(Edge::new(e1, e0, e0, e0, v1, IndexType::max()));
+            .push(HalfEdge::new(e1, e0, e0, e0, v1, IndexType::max()));
         mesh
     }
 }
@@ -43,9 +43,9 @@ where
 
         self.vertices.push(Vertex::new(new, e2, new, payload));
         self.edges
-            .push(Edge::new(e1, e2, e2, input, v, IndexType::max()));
+            .push(HalfEdge::new(e1, e2, e2, input, v, IndexType::max()));
         self.edges
-            .push(Edge::new(e2, output, e1, e1, new, IndexType::max()));
+            .push(HalfEdge::new(e2, output, e1, e1, new, IndexType::max()));
 
         self.edge_mut(input).set_next(e1);
         self.edge_mut(output).set_prev(e2);
@@ -86,7 +86,7 @@ where
             .find(|e| e.origin_id() == v)
             .unwrap();
 
-        self.edges.push(Edge::new(
+        self.edges.push(HalfEdge::new(
             e1,
             other_inside.id(),
             e2,
@@ -94,7 +94,7 @@ where
             v,
             IndexType::max(),
         ));
-        self.edges.push(Edge::new(
+        self.edges.push(HalfEdge::new(
             e2,
             other_outside.id(),
             e1,

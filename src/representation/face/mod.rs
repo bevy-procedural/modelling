@@ -1,4 +1,4 @@
-use super::{payload::Payload, Edge, IndexType, Mesh};
+use super::{payload::Payload, HalfEdge, IndexType, Mesh};
 mod iterator;
 mod tesselate;
 
@@ -32,7 +32,7 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
 
     /// Returns a half-edge incident to the face.
     #[inline(always)]
-    pub fn edge<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> Edge<E, V, F> {
+    pub fn edge<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> HalfEdge<E, V, F> {
         *mesh.edge(self.edge)
     }
 

@@ -1,5 +1,5 @@
 use super::{
-    super::{Edge, Face, IndexType, Mesh, Vertex},
+    super::{HalfEdge, Face, IndexType, Mesh, Vertex},
     payload::Payload,
 };
 
@@ -53,7 +53,7 @@ where
 {
     is_first: bool,
     first: E,
-    current: Edge<E, V, F>,
+    current: HalfEdge<E, V, F>,
     mesh: &'a Mesh<E, V, F, P>,
 }
 
@@ -61,7 +61,7 @@ impl<'a, E: IndexType, V: IndexType, F: IndexType, P: Payload>
     IncidentToVertexIterator<'a, E, V, F, P>
 {
     /// Creates a new iterator
-    pub fn new(first: Edge<E, V, F>, mesh: &'a Mesh<E, V, F, P>) -> Self {
+    pub fn new(first: HalfEdge<E, V, F>, mesh: &'a Mesh<E, V, F, P>) -> Self {
         Self {
             first: first.id(),
             current: first,
@@ -74,7 +74,7 @@ impl<'a, E: IndexType, V: IndexType, F: IndexType, P: Payload>
 impl<'a, E: IndexType, V: IndexType, F: IndexType, P: Payload> Iterator
     for IncidentToVertexIterator<'a, E, V, F, P>
 {
-    type Item = Edge<E, V, F>;
+    type Item = HalfEdge<E, V, F>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.is_first {

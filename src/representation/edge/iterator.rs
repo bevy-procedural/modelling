@@ -1,8 +1,8 @@
 use crate::representation::payload::Payload;
 
-use super::{super::IndexType, super::Mesh, Edge};
+use super::{super::IndexType, super::Mesh, HalfEdge};
 
-impl<E: IndexType, V: IndexType, F: IndexType> Edge<E, V, F> {
+impl<E: IndexType, V: IndexType, F: IndexType> HalfEdge<E, V, F> {
     /// Iterates all half-edges incident to the same face (counter-clockwise)
     #[inline(always)]
     pub fn edges_face<'a, P: Payload>(
@@ -42,7 +42,7 @@ where
 {
     is_first: bool,
     first: E,
-    current: Edge<E, V, F>,
+    current: HalfEdge<E, V, F>,
     mesh: &'a Mesh<E, V, F, P>,
 }
 
@@ -50,7 +50,7 @@ impl<'a, E: IndexType, V: IndexType, F: IndexType, P: Payload>
     IncidentToFaceIterator<'a, E, V, F, P>
 {
     /// Creates a new iterator
-    pub fn new(first: Edge<E, V, F>, mesh: &'a Mesh<E, V, F, P>) -> Self {
+    pub fn new(first: HalfEdge<E, V, F>, mesh: &'a Mesh<E, V, F, P>) -> Self {
         Self {
             first: first.id(),
             current: first,
@@ -63,7 +63,7 @@ impl<'a, E: IndexType, V: IndexType, F: IndexType, P: Payload>
 impl<'a, E: IndexType, V: IndexType, F: IndexType, P: Payload> Iterator
     for IncidentToFaceIterator<'a, E, V, F, P>
 {
-    type Item = Edge<E, V, F>;
+    type Item = HalfEdge<E, V, F>;
 
     #[inline(always)]
     fn next(&mut self) -> Option<Self::Item> {
@@ -91,7 +91,7 @@ where
 {
     is_first: bool,
     first: E,
-    current: Edge<E, V, F>,
+    current: HalfEdge<E, V, F>,
     mesh: &'a Mesh<E, V, F, P>,
 }
 
@@ -99,7 +99,7 @@ impl<'a, E: IndexType, V: IndexType, F: IndexType, P: Payload>
     IncidentToFaceBackIterator<'a, E, V, F, P>
 {
     /// Creates a new iterator
-    pub fn new(first: Edge<E, V, F>, mesh: &'a Mesh<E, V, F, P>) -> Self {
+    pub fn new(first: HalfEdge<E, V, F>, mesh: &'a Mesh<E, V, F, P>) -> Self {
         Self {
             first: first.id(),
             current: first,
@@ -112,7 +112,7 @@ impl<'a, E: IndexType, V: IndexType, F: IndexType, P: Payload>
 impl<'a, E: IndexType, V: IndexType, F: IndexType, P: Payload> Iterator
     for IncidentToFaceBackIterator<'a, E, V, F, P>
 {
-    type Item = Edge<E, V, F>;
+    type Item = HalfEdge<E, V, F>;
 
     #[inline(always)]
     fn next(&mut self) -> Option<Self::Item> {
@@ -161,7 +161,7 @@ impl<'a, E: IndexType, V: IndexType, F: IndexType, P: Payload>
 impl<'a, E: IndexType, V: IndexType, F: IndexType, P: Payload> Iterator
     for IncidentToFaceIteratorMut<'a, E, V, F, P>
 {
-    type Item = &'a mut Edge<E, V, F>;
+    type Item = &'a mut HalfEdge<E, V, F>;
 
     fn next(&mut self) -> Option<Self::Item> {
         // SAFETY: This unsafe block assumes exclusive access to `self.mesh`
@@ -172,7 +172,7 @@ impl<'a, E: IndexType, V: IndexType, F: IndexType, P: Payload> Iterator
         unsafe {
             if self.is_first {
                 self.is_first = false;
-                let edge_ptr = self.mesh.edge_mut(self.current) as *mut Edge<E, V, F>;
+                let edge_ptr = self.mesh.edge_mut(self.current) as *mut HalfEdge<E, V, F>;
                 return Some(&mut *edge_ptr);
             }
             let next = self.mesh.edge(self.current).next(self.mesh);
@@ -180,7 +180,7 @@ impl<'a, E: IndexType, V: IndexType, F: IndexType, P: Payload> Iterator
                 return None;
             } else {
                 self.current = next.id();
-                let edge_ptr = self.mesh.edge_mut(next.id()) as *mut Edge<E, V, F>;
+                let edge_ptr = self.mesh.edge_mut(next.id()) as *mut HalfEdge<E, V, F>;
                 return Some(&mut *edge_ptr);
             }
         }

@@ -1,4 +1,4 @@
-use super::{Edge, IndexType, Mesh};
+use super::{HalfEdge, IndexType, Mesh};
 use payload::Payload;
 mod iterator;
 pub use iterator::*;
@@ -63,7 +63,7 @@ impl<E: IndexType, V: IndexType, P: Payload> Vertex<E, V, P> {
 
     /// Returns an outgoing half-edge incident to the vertex
     #[inline(always)]
-    pub fn edge<F: IndexType>(&self, mesh: &Mesh<E, V, F, P>) -> Edge<E, V, F> {
+    pub fn edge<F: IndexType>(&self, mesh: &Mesh<E, V, F, P>) -> HalfEdge<E, V, F> {
         *mesh.edge(self.edge)
     }
 

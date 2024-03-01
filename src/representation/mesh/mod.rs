@@ -1,4 +1,4 @@
-use super::{payload::Payload, Edge, Face, IndexType, Vertex};
+use super::{payload::Payload, HalfEdge, Face, IndexType, Vertex};
 mod build;
 mod check;
 pub mod primitives;
@@ -28,7 +28,7 @@ where
     PayloadType: Payload,
 {
     vertices: Vec<Vertex<EdgeIndex, VertexIndex, PayloadType>>,
-    edges: Vec<Edge<EdgeIndex, VertexIndex, FaceIndex>>,
+    edges: Vec<HalfEdge<EdgeIndex, VertexIndex, FaceIndex>>,
     faces: Vec<Face<EdgeIndex, FaceIndex>>,
 }
 
@@ -54,7 +54,7 @@ where
     }
 
     /// Returns a reference to the requested edge
-    pub fn edge(&self, index: E) -> &Edge<E, V, F> {
+    pub fn edge(&self, index: E) -> &HalfEdge<E, V, F> {
         &self.edges[index.index()]
     }
 
@@ -69,7 +69,7 @@ where
     }
 
     /// Returns a mutable reference to the requested edge
-    pub fn edge_mut<'a>(&'a mut self, index: E) -> &'a mut Edge<E, V, F> {
+    pub fn edge_mut<'a>(&'a mut self, index: E) -> &'a mut HalfEdge<E, V, F> {
         &mut self.edges[index.index()]
     }
 
@@ -114,7 +114,7 @@ where
     }
 
     /// Returns an iterator over all edges
-    pub fn edges(&self) -> impl Iterator<Item = &Edge<E, V, F>> {
+    pub fn edges(&self) -> impl Iterator<Item = &HalfEdge<E, V, F>> {
         self.edges.iter()
     }
 

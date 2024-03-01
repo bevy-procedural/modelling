@@ -62,7 +62,7 @@ where
     fn check_edge_invariants(&self) -> Result<(), String> {
         if let Some(unmatched_twin) = self.edges().find(|e| e.twin(self).twin_id() != e.id()) {
             return Err(format!(
-                "Edge {} has a twin {} with twin {}",
+                "HalfEdge {} has a twin {} with twin {}",
                 unmatched_twin.id(),
                 unmatched_twin.twin_id(),
                 unmatched_twin.twin(self).twin_id()
@@ -74,7 +74,7 @@ where
             .find(|e| e.next(self).prev(self).id() != e.id() || e.prev(self).next_id() != e.id())
         {
             return Err(format!(
-                "Edge {} has prev(next) {} and next(prev) {}",
+                "HalfEdge {} has prev(next) {} and next(prev) {}",
                 prev_next.id(),
                 prev_next.next(self).prev_id(),
                 prev_next.prev(self).next_id()
@@ -87,7 +87,7 @@ where
             (f1.is_none() && f2.is_none()) || f1.unwrap().id() != f2.unwrap().id()
         }) {
             return Err(format!(
-                "Edge {} has face {:?} but next has face {:?}",
+                "HalfEdge {} has face {:?} but next has face {:?}",
                 face_next.id(),
                 face_next.face(self),
                 face_next.next(self).face(self)
@@ -99,7 +99,7 @@ where
                 || e.target_id(self) != e.twin(self).origin_id()
         }) {
             return Err(format!(
-                "Edge {} has next origin {} and target {} but twin origin {}",
+                "HalfEdge {} has next origin {} and target {} but twin origin {}",
                 bad_edge.id(),
                 bad_edge.next(self).origin_id(),
                 bad_edge.target_id(self),
@@ -167,7 +167,7 @@ where
             .edges()
             .find(|e| e.is_boundary_self() && e.twin(self).is_boundary_self())
         {
-            return Err(format!("Edge {} has no face!", bad_edge.id()));
+            return Err(format!("HalfEdge {} has no face!", bad_edge.id()));
         }
         Ok(())
     }
