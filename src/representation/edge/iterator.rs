@@ -12,14 +12,14 @@ impl<E: IndexType, V: IndexType, F: IndexType> Edge<E, V, F> {
         IncidentToFaceIterator::new(*self, mesh)
     }
 
-     /// Iterates all half-edges incident to the same face (clockwise)
-     #[inline(always)]
-     pub fn edges_face_back<'a, P: Payload>(
-         &'a self,
-         mesh: &'a Mesh<E, V, F, P>,
-     ) -> IncidentToFaceBackIterator<'a, E, V, F, P> {
-         IncidentToFaceBackIterator::new(*self, mesh)
-     }
+    /// Iterates all half-edges incident to the same face (clockwise)
+    #[inline(always)]
+    pub fn edges_face_back<'a, P: Payload>(
+        &'a self,
+        mesh: &'a Mesh<E, V, F, P>,
+    ) -> IncidentToFaceBackIterator<'a, E, V, F, P> {
+        IncidentToFaceBackIterator::new(*self, mesh)
+    }
 
     /// Iterates all half-edges incident to the same face
     /// WARNING: This method is unsafe because it allows mutable access to the mesh! Be careful!
@@ -71,9 +71,7 @@ impl<'a, E: IndexType, V: IndexType, F: IndexType, P: Payload> Iterator
             self.is_first = false;
             return Some(self.current);
         }
-        let Some(next) = self.current.next(self.mesh) else {
-            return None;
-        };
+        let next = self.current.next(self.mesh);
         if next.id() == self.first {
             return None;
         } else {
@@ -82,8 +80,6 @@ impl<'a, E: IndexType, V: IndexType, F: IndexType, P: Payload> Iterator
         }
     }
 }
-
-
 
 /// Iterator over all half-edges incident to the same face (counter-clockwise)
 pub struct IncidentToFaceBackIterator<'a, E, V, F, P>
@@ -100,7 +96,7 @@ where
 }
 
 impl<'a, E: IndexType, V: IndexType, F: IndexType, P: Payload>
-IncidentToFaceBackIterator<'a, E, V, F, P>
+    IncidentToFaceBackIterator<'a, E, V, F, P>
 {
     /// Creates a new iterator
     pub fn new(first: Edge<E, V, F>, mesh: &'a Mesh<E, V, F, P>) -> Self {
@@ -124,9 +120,7 @@ impl<'a, E: IndexType, V: IndexType, F: IndexType, P: Payload> Iterator
             self.is_first = false;
             return Some(self.current);
         }
-        let Some(prev) = self.current.prev(self.mesh) else {
-            return None;
-        };
+        let prev = self.current.prev(self.mesh);
         if prev.id() == self.first {
             return None;
         } else {
@@ -181,9 +175,7 @@ impl<'a, E: IndexType, V: IndexType, F: IndexType, P: Payload> Iterator
                 let edge_ptr = self.mesh.edge_mut(self.current) as *mut Edge<E, V, F>;
                 return Some(&mut *edge_ptr);
             }
-            let Some(next) = self.mesh.edge(self.current).next(self.mesh) else {
-                return None;
-            };
+            let next = self.mesh.edge(self.current).next(self.mesh);
             if next.id() == self.first {
                 return None;
             } else {

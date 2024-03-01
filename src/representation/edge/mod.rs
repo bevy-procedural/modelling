@@ -84,14 +84,10 @@ impl<E: IndexType, V: IndexType, F: IndexType> Edge<E, V, F> {
         self.id
     }
 
-    /// Returns the next half-edge incident to the same face
+    /// Returns the next half-edge incident to the same face or boundary
     #[inline(always)]
-    pub fn next<P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> Option<Edge<E, V, F>> {
-        if self.next == IndexType::max() {
-            None
-        } else {
-            Some(*mesh.edge(self.next))
-        }
+    pub fn next<P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> Edge<E, V, F> {
+        *mesh.edge(self.next)
     }
 
     /// Returns the next id
@@ -112,14 +108,10 @@ impl<E: IndexType, V: IndexType, F: IndexType> Edge<E, V, F> {
         self.twin
     }
 
-    /// Returns the previous half-edge incident to the same face
+    /// Returns the previous half-edge incident to the same face or boundary
     #[inline(always)]
-    pub fn prev<P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> Option<Edge<E, V, F>> {
-        if self.prev == IndexType::max() {
-            None
-        } else {
-            Some(*mesh.edge(self.prev))
-        }
+    pub fn prev<P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> Edge<E, V, F> {
+        *mesh.edge(self.prev)
     }
 
     /// Returns the prev id
@@ -145,6 +137,12 @@ impl<E: IndexType, V: IndexType, F: IndexType> Edge<E, V, F> {
     pub fn target<P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> Vertex<E, V, P> {
         // TODO: avoid this clone?
         self.twin(mesh).origin(mesh).clone()
+    }
+
+    /// Returns the target vertex id of the half-edge
+    #[inline(always)]
+    pub fn target_id<P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> V {
+        self.twin(mesh).origin_id()
     }
 
     /// Returns the face the half-edge is incident to

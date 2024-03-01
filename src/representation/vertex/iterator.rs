@@ -81,9 +81,7 @@ impl<'a, E: IndexType, V: IndexType, F: IndexType, P: Payload> Iterator
             self.is_first = false;
             return Some(self.current);
         }
-        let Some(next) = self.current.twin(self.mesh).next(self.mesh) else {
-            return None;
-        };
+        let next = self.current.twin(self.mesh).next(self.mesh);
         if next.id() == self.first {
             return None;
         } else {
