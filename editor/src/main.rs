@@ -10,7 +10,7 @@ use bevy_inspector_egui::{
     InspectorOptions,
 };
 use bevy_panorbit_camera::*;
-use procedural_modelling::{representation::bevy::MeshVec3, *};
+use procedural_modelling::representation::bevy::MeshVec3;
 use std::{env, f32::consts::PI};
 
 #[derive(Reflect, Resource, InspectorOptions)]
@@ -123,7 +123,6 @@ fn setup_meshes(
     );
     let fe = mesh.extrude_face(3, Vec3::new(-1.0, 0.3, -1.0), true);
     mesh.extrude_face(fe, Vec3::new(-1.0, -0.3, -1.0), true);
-
     println!("{}", mesh);
 
     commands.spawn((

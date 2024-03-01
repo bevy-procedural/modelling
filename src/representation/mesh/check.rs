@@ -151,7 +151,7 @@ where
     }
 
     fn check_faces_nondegenerate(&self) -> Result<(), String> {
-        if let Some(bad_face) = self.faces().find(|f| !f.is_deleted() && f.edges(self).count() < 3) {
+        if let Some(bad_face) = self.faces().find(|f| f.edges(self).count() < 3) {
             return Err(format!(
                 "Face {} has only {} faces!",
                 bad_face.id(),
@@ -174,10 +174,7 @@ where
     }
 
     fn check_face_invariants(&self) -> Result<(), String> {
-        if let Some(bad_face) = self
-            .faces()
-            .find(|f| !f.is_deleted() && f.edge(self).face_id() != f.id())
-        {
+        if let Some(bad_face) = self.faces().find(|f| f.edge(self).face_id() != f.id()) {
             return Err(format!(
                 "Face {} has edge {} with face {}",
                 bad_face.id(),

@@ -1,4 +1,4 @@
-use super::{payload::Payload, Face, IndexType, Mesh, Vertex};
+use super::{payload::Payload, Deletable, Face, IndexType, Mesh, Vertex};
 mod iterator;
 pub use iterator::*;
 
@@ -45,15 +45,12 @@ impl<E: IndexType, V: IndexType, F: IndexType> HalfEdge<E, V, F> {
     // TODO: should the operations return a copy or a reference?
 
     /// Creates a new half-edge
-    pub fn new(id: E, next: E, twin: E, prev: E, origin: V, face: F) -> Self {
-        assert!(id != IndexType::max());
-        assert!(next != id);
-        assert!(prev != id);
+    pub fn new(next: E, twin: E, prev: E, origin: V, face: F) -> Self {
         assert!(next != IndexType::max());
         assert!(prev != IndexType::max());
         assert!(twin != IndexType::max());
         Self {
-            id,
+            id: IndexType::max(),
             next,
             twin,
             prev,
@@ -68,8 +65,9 @@ impl<E: IndexType, V: IndexType, F: IndexType> HalfEdge<E, V, F> {
         self.face = face;
     }
 
-    /// Marks the face as deleted
+    /// Deletes the face of the HalfEdge
     pub fn delete_face(&mut self) {
+        assert!(self.face != IndexType::max());
         self.face = IndexType::max();
     }
 
@@ -213,5 +211,38 @@ impl<E: IndexType, V: IndexType, F: IndexType> std::fmt::Display for HalfEdge<E,
             },
             self.next.index(),
         )
+    }
+}
+
+impl<E: IndexType, V: IndexType, F: IndexType> Deletable<E> for HalfEdge<E, V, F> {
+    fn delete(&mut self) {
+        assert!(self.id != IndexType::max());
+        self.id = IndexType::max();
+    }
+
+    fn is_deleted(&self) -> bool {
+        self.id == IndexType::max()
+    }
+
+    fn set_id(&mut self, id: E) {
+        assert!(self.id == IndexType::max());
+        assert!(id != IndexType::max());
+        assert!(self.next != id);
+        assert!(self.prev != id);
+        self.id = id;
+    }
+}
+
+impl<E: IndexType, V: IndexType, F: IndexType> Default for HalfEdge<E, V, F> {
+    /// Creates a deleted edge
+    fn default() -> Self {
+        Self {
+            id: IndexType::max(),
+            next: IndexType::max(),
+            twin: IndexType::max(),
+            prev: IndexType::max(),
+            origin: IndexType::max(),
+            face: IndexType::max(),
+        }
     }
 }

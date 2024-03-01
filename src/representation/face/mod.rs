@@ -1,4 +1,4 @@
-use super::{payload::Payload, HalfEdge, IndexType, Mesh};
+use super::{payload::Payload, Deletable, HalfEdge, IndexType, Mesh};
 mod iterator;
 mod tesselate;
 
@@ -43,28 +43,44 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
     }
 
     /// Creates a new face.
-    pub fn new(id: F, edge: E) -> Self {
-        assert!(id != IndexType::max());
+    pub fn new(edge: E) -> Self {
         assert!(edge != IndexType::max());
-        Self { id, edge }
-    }
-
-    /// Creates a new deleted face.
-    pub fn deleted() -> Self {
         Self {
             id: IndexType::max(),
-            edge: IndexType::max(),
+            edge,
         }
-    }
-
-    /// Returns true if the face is deleted.
-    pub fn is_deleted(&self) -> bool {
-        self.id == IndexType::max()
     }
 }
 
 impl<E: IndexType, F: IndexType> std::fmt::Display for Face<E, F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}) {}", self.id().index(), self.edge.index(),)
+    }
+}
+
+impl<E: IndexType, F: IndexType> Deletable<F> for Face<E, F> {
+    fn delete(&mut self) {
+        assert!(self.id != IndexType::max(), "Face is already deleted");
+        self.id = IndexType::max();
+    }
+
+    fn is_deleted(&self) -> bool {
+        self.id == IndexType::max()
+    }
+
+    fn set_id(&mut self, id: F) {
+        assert!(self.id == IndexType::max());
+        assert!(id != IndexType::max());
+        self.id = id;
+    }
+}
+
+impl<E: IndexType, F: IndexType> Default for Face<E, F> {
+    /// Creates a deleted face
+    fn default() -> Self {
+        Self {
+            id: IndexType::max(),
+            edge: IndexType::max(),
+        }
     }
 }

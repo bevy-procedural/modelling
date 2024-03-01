@@ -1,25 +1,4 @@
-use crate::representation::{payload::Payload, Face, HalfEdge, IndexType, Mesh};
-
-impl<E, V, F, P> Mesh<E, V, F, P>
-where
-    E: IndexType,
-    V: IndexType,
-    F: IndexType,
-    P: Payload,
-{
-    /// Removes the provided face.
-    pub fn remove_face(&mut self, f: F) {
-        let face = self.face(f);
-
-        let edge_ids: Vec<_> = face.edges(self).map(|e| e.id()).collect();
-        for e in edge_ids {
-            self.edge_mut(e).delete_face();
-        }
-
-        *self.face_mut(f) = Face::deleted();
-        // TODO: add to deleted list for reallocation
-    }
-}
+use crate::representation::{payload::Payload, Face, IndexType, Mesh};
 
 /// Close a phase given some description. Might insert additional edges and vertices.
 pub trait CloseFace<Input> {
@@ -35,8 +14,7 @@ impl<E: IndexType, V: IndexType, F: IndexType, P: Payload> CloseFace<E> for Mesh
 
     /// Close the open boundary with a single face
     fn close_face(&mut self, e: E) -> F {
-        let f = F::new(self.faces.len());
-        self.faces.push(Face::new(f, e));
+        let f = self.faces.push(Face::new(e));
         self.edge(e)
             .clone()
             .edges_face_mut(self)
@@ -50,9 +28,6 @@ impl<E: IndexType, V: IndexType, F: IndexType, P: Payload> CloseFace<(E, E)> for
 
     /// Close the face by connecting `inside` with the next edge to close the face and `outside` with the next edge to complete the outside
     fn close_face(&mut self, (inside, outside): (E, E)) -> F {
-        let e1 = E::new(self.edges.len());
-        let e2 = E::new(self.edges.len() + 1);
-        let f = F::new(self.faces.len());
         let e_inside = self.edge(inside);
         let e_outside = self.edge(outside);
         let v = e_inside.target(self).id();
@@ -73,29 +48,17 @@ impl<E: IndexType, V: IndexType, F: IndexType, P: Payload> CloseFace<(E, E)> for
             .find(|e| e.origin_id() == v)
             .unwrap();
 
-        self.edges.push(HalfEdge::new(
-            e1,
-            other_inside.id(),
-            e2,
-            inside,
-            v,
-            IndexType::max(),
-        ));
-        self.edges.push(HalfEdge::new(
-            e2,
-            other_outside.id(),
-            e1,
-            outside,
-            w,
-            IndexType::max(),
-        ));
+        let (e1, e2) = self.insert_full_edge(
+            (other_inside.id(), inside, v, IndexType::max()),
+            (other_outside.id(), outside, w, IndexType::max()),
+        );
 
         self.edge_mut(other_inside.id()).set_prev(e1);
         self.edge_mut(other_outside.id()).set_prev(e2);
         self.edge_mut(inside).set_next(e1);
         self.edge_mut(outside).set_next(e2);
 
-        self.faces.push(Face::new(f, inside));
+        let f = self.faces.push(Face::new(inside));
 
         self.edge(inside)
             .clone()

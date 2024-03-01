@@ -1,4 +1,4 @@
-use super::{payload::Payload, Face, HalfEdge, IndexType, Vertex};
+use super::{payload::Payload, Deletable, DeletableVector, Face, HalfEdge, IndexType, Vertex};
 pub mod builder;
 mod check;
 pub mod primitives;
@@ -27,10 +27,9 @@ where
     FaceIndex: IndexType,
     PayloadType: Payload,
 {
-    vertices: Vec<Vertex<EdgeIndex, VertexIndex, PayloadType>>,
-    edges: Vec<HalfEdge<EdgeIndex, VertexIndex, FaceIndex>>,
-    faces: Vec<Face<EdgeIndex, FaceIndex>>,
-    // TODO: collect deleted ids for allocation
+    vertices: DeletableVector<Vertex<EdgeIndex, VertexIndex, PayloadType>, VertexIndex>,
+    edges: DeletableVector<HalfEdge<EdgeIndex, VertexIndex, FaceIndex>, EdgeIndex>,
+    faces: DeletableVector<Face<EdgeIndex, FaceIndex>, FaceIndex>,
 }
 
 impl<E, V, F, P> Mesh<E, V, F, P>
@@ -43,25 +42,34 @@ where
     /// Creates a new empty mesh
     pub fn new() -> Self {
         Self {
-            vertices: Vec::new(),
-            edges: Vec::new(),
-            faces: Vec::new(),
+            vertices: DeletableVector::new(),
+            edges: DeletableVector::new(),
+            faces: DeletableVector::new(),
         }
     }
 
     /// Returns a reference to the requested vertex
     pub fn vertex(&self, index: V) -> &Vertex<E, V, P> {
-        &self.vertices[index.index()]
+        &self.vertices.get(index)
     }
 
     /// Returns a reference to the requested edge
     pub fn edge(&self, index: E) -> &HalfEdge<E, V, F> {
-        &self.edges[index.index()]
+        &self.edges.get(index)
     }
 
     /// Returns the half edge from v to w
     pub fn edge_between(&self, v: V, w: V) -> Option<HalfEdge<E, V, F>> {
-        self.vertex(v).edges(self).find(|e| e.target_id(self) == w)
+        let v = self.vertex(v).edges(self).find(|e| e.target_id(self) == w);
+        if let Some(vv) = v {
+            if vv.is_deleted() {
+                None
+            } else {
+                Some(vv)
+            }
+        } else {
+            None
+        }
     }
 
     /// Returns the half edge id from v to w. Panics if the edge does not exist.
@@ -71,22 +79,24 @@ where
 
     /// Returns a reference to the requested face
     pub fn face(&self, index: F) -> &Face<E, F> {
-        &self.faces[index.index()]
+        let f = &self.faces.get(index);
+        assert!(!f.is_deleted());
+        f
     }
 
     /// Returns a mutable reference to the requested vertex
     pub fn vertex_mut(&mut self, index: V) -> &mut Vertex<E, V, P> {
-        &mut self.vertices[index.index()]
+        self.vertices.get_mut(index)
     }
 
     /// Returns a mutable reference to the requested edge
     pub fn edge_mut<'a>(&'a mut self, index: E) -> &'a mut HalfEdge<E, V, F> {
-        &mut self.edges[index.index()]
+        self.edges.get_mut(index)
     }
 
     /// Returns a mutable reference to the requested face
     pub fn face_mut(&mut self, index: F) -> &mut Face<E, F> {
-        &mut self.faces[index.index()]
+        self.faces.get_mut(index)
     }
 
     /// Whether the mesh is open, i.e., has boundary edges
@@ -119,18 +129,18 @@ where
         self.faces.len()
     }
 
-    /// Returns an iterator over all vertices
+    /// Returns an iterator over all non-deleted vertices
     pub fn vertices(&self) -> impl Iterator<Item = &Vertex<E, V, P>> {
         self.vertices.iter()
     }
 
-    /// Returns an iterator over all edges
+    /// Returns an iterator over all non-deleted edges
     pub fn edges(&self) -> impl Iterator<Item = &HalfEdge<E, V, F>> {
         self.edges.iter()
     }
 
-    /// Returns an iterator over all faces
+    /// Returns an iterator over all non-deleted faces
     pub fn faces(&self) -> impl Iterator<Item = &Face<E, F>> {
-        self.faces.iter().filter(|f| !f.is_deleted())
+        self.faces.iter()
     }
 }

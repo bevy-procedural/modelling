@@ -1,4 +1,4 @@
-use crate::representation::{payload::Payload, HalfEdge, IndexType, Mesh, Vertex};
+use crate::representation::{payload::Payload, IndexType, Mesh, Vertex};
 
 /// Trait for adding a vertex to a mesh and connecting it to the graph
 pub trait AddVertex<Input> {
@@ -52,18 +52,17 @@ impl<E: IndexType, V: IndexType, F: IndexType, P: Payload> AddVertex<(E, E, P)>
 
     /// Adds a vertex with the given payload via a new edge starting in input and ending in output
     fn add_vertex(&mut self, (input, output, payload): (E, E, P)) -> (V, E, E) {
-        let new = V::new(self.vertices.len());
-        let e1 = E::new(self.edges.len());
-        let e2 = E::new(self.edges.len() + 1);
-
         let v = self.edge(input).target(self).id();
         assert!(self.edge(output).origin(self).id() == v);
 
-        self.vertices.push(Vertex::new(new, e2, new, payload));
-        self.edges
-            .push(HalfEdge::new(e1, e2, e2, input, v, IndexType::max()));
-        self.edges
-            .push(HalfEdge::new(e2, output, e1, e1, new, IndexType::max()));
+        let new = self.vertices.allocate();
+
+        let (e1, e2) = self.insert_full_edge(
+            (IndexType::max(), input, v, IndexType::max()),
+            (output, IndexType::max(), new, IndexType::max()),
+        );
+
+        self.vertices.set(new, Vertex::new(e2, payload));
 
         self.edge_mut(input).set_next(e1);
         self.edge_mut(output).set_prev(e2);

@@ -1,4 +1,4 @@
-use super::{HalfEdge, IndexType, Mesh};
+use super::{Deletable, HalfEdge, IndexType, Mesh};
 use payload::Payload;
 mod iterator;
 pub use iterator::*;
@@ -20,6 +20,7 @@ where
 
     /// Since we support non-manifold vertices, there can be a "wheel" of vertices,
     /// each connected to its own "wheel" of manifold edges.
+    /// Will be IndexType::max() if the vertex is manifold.
     next: VertexIndex,
 
     /// the payload of the vertex
@@ -28,17 +29,12 @@ where
 
 impl<E: IndexType, V: IndexType, P: Payload> Vertex<E, V, P> {
     /// Creates a new vertex
-    pub fn new(id: V, edge: E, next: V, payload: P) -> Self {
-        assert!(
-            next != IndexType::max(),
-            "next must be id if the vertex is manifold"
-        );
-        assert!(id != IndexType::max());
+    pub fn new(edge: E, payload: P) -> Self {
         assert!(edge != IndexType::max());
         Self {
-            id,
+            id: IndexType::max(),
             edge,
-            next,
+            next: IndexType::max(),
             payload,
         }
     }
@@ -76,7 +72,7 @@ impl<E: IndexType, V: IndexType, P: Payload> Vertex<E, V, P> {
     /// Returns whether the vertex is manifold
     #[inline(always)]
     pub fn is_manifold(&self) -> bool {
-        self.next == self.id
+        self.next == IndexType::max()
     }
 
     /// Returns whether the vertex has only one edge incident to it
@@ -97,5 +93,34 @@ impl<E: IndexType, V: IndexType, P: Payload> std::fmt::Display for Vertex<E, V, 
             self.edge.index(),
             self.payload
         )
+    }
+}
+
+impl<E: IndexType, V: IndexType, P: Payload> Deletable<V> for Vertex<E, V, P> {
+    fn delete(&mut self) {
+        assert!(self.id != IndexType::max());
+        self.id = IndexType::max();
+    }
+
+    fn is_deleted(&self) -> bool {
+        self.id == IndexType::max()
+    }
+
+    fn set_id(&mut self, id: V) {
+        assert!(self.id == IndexType::max());
+        assert!(id != IndexType::max());
+        self.id = id;
+    }
+}
+
+impl<E: IndexType, V: IndexType, P: Payload> Default for Vertex<E, V, P> {
+    /// Creates a deleted vertex
+    fn default() -> Self {
+        Self {
+            id: IndexType::max(),
+            edge: IndexType::max(),
+            next: IndexType::max(),
+            payload: P::default(),
+        }
     }
 }
