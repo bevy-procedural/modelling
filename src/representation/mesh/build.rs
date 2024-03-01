@@ -1,5 +1,7 @@
+use core::panic;
+
 use super::Mesh;
-use crate::representation::{payload::Payload, HalfEdge, Face, IndexType, Vertex};
+use crate::representation::{payload::Payload, Face, HalfEdge, IndexType, Vertex};
 
 // The simplest non-empty mesh: a single edge with two vertices
 impl<E, V, F, P> From<(P, P)> for Mesh<E, V, F, P>
@@ -32,6 +34,31 @@ where
     F: IndexType,
     P: Payload,
 {
+    /// Creates a new vertex based on p and connects it to vertex v
+    pub fn add_vertex_auto(&mut self, v: V, payload: P) -> (V, E, E) {
+        let (input, output) = if self.vertex(v).has_only_one_edge(self) {
+            let e = self.vertex(v).edge(self);
+            (e.twin_id(), e.id())
+        } else {
+            let Some(boundary) = self.vertex(v).edges(self).find(|e| e.is_boundary_self()) else {
+                panic!("Vertex is not a boundary vertex");
+            };
+            assert!(
+                self.vertex(v)
+                    .edges(self)
+                    .filter(|e| e.is_boundary_self())
+                    .count()
+                    == 1
+            );
+            (boundary.prev_id(), boundary.id())
+        };
+
+        assert!(self.edge(input).is_boundary_self());
+        assert!(self.edge(output).is_boundary_self());
+
+        return self.add_vertex(input, output, payload);
+    }
+
     /// Adds a vertex with the given payload via a new edge starting in input and ending in output
     pub fn add_vertex(&mut self, input: E, output: E, payload: P) -> (V, E, E) {
         let new = V::new(self.vertices.len());
@@ -57,7 +84,10 @@ where
     pub fn close_final(&mut self, e: E) -> F {
         let f = F::new(self.faces.len());
         self.faces.push(Face::new(f, e));
-        self.edge(e).clone().edges_face_mut(self).for_each(|e| e.set_face(f));
+        self.edge(e)
+            .clone()
+            .edges_face_mut(self)
+            .for_each(|e| e.set_face(f));
         return f;
     }
 

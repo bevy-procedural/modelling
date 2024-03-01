@@ -4,7 +4,7 @@ use super::{
 };
 
 impl<E: IndexType, V: IndexType, P: Payload> Vertex<E, V, P> {
-    /// Iterates all half-edges incident to this vertex in the same manifold edge wheel (clockwise)
+    /// Iterates all outgoing half-edges incident to this vertex in the same manifold edge wheel (clockwise)
     #[inline(always)]
     pub fn edges<'a, F: IndexType>(
         &'a self,

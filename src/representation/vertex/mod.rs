@@ -78,6 +78,14 @@ impl<E: IndexType, V: IndexType, P: Payload> Vertex<E, V, P> {
     pub fn is_manifold(&self) -> bool {
         self.next == self.id
     }
+
+    /// Returns whether the vertex has only one edge incident to it
+    #[inline(always)]
+    pub fn has_only_one_edge<F: IndexType>(&self, mesh: &Mesh<E, V, F, P>) -> bool {
+        // self.edges(mesh).count() == 1
+        let e = self.edge(mesh);
+        e.prev_id() == e.twin_id()
+    }
 }
 
 impl<E: IndexType, V: IndexType, P: Payload> std::fmt::Display for Vertex<E, V, P> {
