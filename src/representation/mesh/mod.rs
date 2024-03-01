@@ -1,5 +1,5 @@
-use super::{payload::Payload, HalfEdge, Face, IndexType, Vertex};
-mod build;
+use super::{payload::Payload, Face, HalfEdge, IndexType, Vertex};
+pub mod builder;
 mod check;
 pub mod primitives;
 mod tesselate;
