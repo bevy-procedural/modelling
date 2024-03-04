@@ -8,7 +8,7 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
     pub fn edges<'a, V: IndexType, P: Payload>(
         &'a self,
         mesh: &'a Mesh<E, V, F, P>,
-    ) -> IncidentToFaceIterator<'a, E, V, F, P> {
+    ) -> IncidentToFaceIterator<'a, E, V, F, P>  {
         IncidentToFaceIterator::new(self.edge(mesh), mesh)
     }
 
@@ -17,7 +17,7 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
     pub fn vertices<'a, V: IndexType, P: Payload>(
         &'a self,
         mesh: &'a Mesh<E, V, F, P>,
-    ) -> impl Iterator<Item = Vertex<E, V, P>> + 'a {
+    ) -> impl Iterator<Item = Vertex<E, V, P>> + 'a + Clone + ExactSizeIterator {
         self.edges(mesh).map(|e| e.target(mesh))
     }
 }

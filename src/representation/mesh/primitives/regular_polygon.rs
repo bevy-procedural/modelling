@@ -9,7 +9,8 @@ where
     E: IndexType,
     V: IndexType,
     F: IndexType,
-    P: Payload + Vector3D<P::S>,
+    P: Payload,
+    P::Vec: Vector3D<P::S>,
 {
     /// create a regular polygon
     pub fn regular_polygon(radius: P::S, n: usize) -> Mesh<E, V, F, P> {
@@ -19,16 +20,16 @@ where
         let mut mesh = Mesh::<E, V, F, P>::new();
 
         let (v0, mut current) = mesh.add_isolated_edge(
-            P::from_xyz(
+            P::from_vec(P::Vec::from_xyz(
                 radius * P::S::from(a0.sin()),
                 P::S::default(),
                 radius * P::S::from(a0.cos()),
-            ),
-            P::from_xyz(
+            )),
+            P::from_vec(P::Vec::from_xyz(
                 radius * P::S::from(a1.sin()),
                 P::S::default(),
                 radius * P::S::from(a1.cos()),
-            ),
+            )),
         );
         let mut prev = v0;
 
@@ -38,11 +39,11 @@ where
             current = mesh
                 .add_vertex((
                     current,
-                    P::from_xyz(
+                    P::from_vec(P::Vec::from_xyz(
                         radius * P::S::from(angle.sin()),
                         P::S::default(),
                         radius * P::S::from(angle.cos()),
-                    ),
+                    )),
                 ))
                 .0;
         }

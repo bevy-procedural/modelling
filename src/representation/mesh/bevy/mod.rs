@@ -1,25 +1,25 @@
 //! This module implements bevy specific mesh handling
 
 use super::{IndexType, Mesh};
-use bevy::{
-    math::Vec3,
-    render::{
-        mesh::{PrimitiveTopology, VertexAttributeValues},
-        render_asset::RenderAssetUsages,
-    },
+use crate::representation::payload::{bevy::BevyPayload, Payload};
+use bevy::render::{
+    mesh::{PrimitiveTopology, VertexAttributeValues},
+    render_asset::RenderAssetUsages,
 };
 
 /// A mesh with bevy 3D vertices
-pub type MeshVec3 = Mesh<u32, u32, u32, Vec3>;
+pub type MeshVec3 = Mesh<u32, u32, u32, BevyPayload>;
 
-impl<E, V, F> Mesh<E, V, F, Vec3>
+impl<E, V, F> Mesh<E, V, F, BevyPayload>
 where
     E: IndexType,
     V: IndexType,
     F: IndexType,
 {
     fn raw_vertices(&self) -> Vec<[f32; 3]> {
-        self.vertices().map(|v| v.payload().to_array()).collect()
+        self.vertices()
+            .map(|v| v.payload().vertex().to_array())
+            .collect()
     }
 
     fn bevy_indices(&self) -> bevy::render::mesh::Indices {
@@ -50,7 +50,7 @@ where
         }
     }
 
-    /// Replace the mesh's attributes with the current mesh. 
+    /// Replace the mesh's attributes with the current mesh.
     /// Requires the mesh to be a triangle list and have the MAIN_WORLD usage.
     pub fn bevy_set(&self, mesh: &mut bevy::render::mesh::Mesh) {
         assert!(mesh.primitive_topology() == PrimitiveTopology::TriangleList);

@@ -33,6 +33,7 @@ impl<E: IndexType, V: IndexType, F: IndexType> HalfEdge<E, V, F> {
 }
 
 /// Iterator over all half-edges incident to the same face (counter-clockwise)
+#[derive(Clone)]
 pub struct IncidentToFaceIterator<'a, E, V, F, P>
 where
     E: IndexType,
@@ -79,6 +80,22 @@ impl<'a, E: IndexType, V: IndexType, F: IndexType, P: Payload> Iterator
             return Some(next);
         }
     }
+
+    #[inline(always)]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let mut curr = self.current;
+        let mut len = 1;
+        while curr.next(self.mesh).id() != self.first {
+            len += 1;
+            curr = curr.next(self.mesh);
+        }
+        (len, Some(len))
+    }
+}
+
+impl<'a, E: IndexType, V: IndexType, F: IndexType, P: Payload> ExactSizeIterator
+    for IncidentToFaceIterator<'a, E, V, F, P>
+{
 }
 
 /// Iterator over all half-edges incident to the same face (counter-clockwise)

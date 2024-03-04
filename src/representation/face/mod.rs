@@ -1,6 +1,12 @@
-use super::{payload::Payload, Deletable, HalfEdge, IndexType, Mesh};
+use crate::representation::payload::{Transform3D, Vector3D};
+
+use super::{
+    payload::{Payload, Scalar, Vector},
+    Deletable, HalfEdge, IndexType, Mesh,
+};
 mod iterator;
 mod tesselate;
+use itertools::Itertools;
 
 /// A face in a mesh.
 ///
@@ -49,6 +55,90 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
             id: IndexType::max(),
             edge,
         }
+    }
+
+    fn vertices_crossed<'a, V: IndexType, P: Payload>(
+        &'a self,
+        mesh: &'a Mesh<E, V, F, P>,
+    ) -> impl Iterator<Item = P::Vec> + 'a + Clone + ExactSizeIterator {
+        self.vertices(mesh)
+            .circular_tuple_windows::<(_, _, _)>()
+            .map(|(a, b, c)| (*b.vertex() - *a.vertex()).cross(&(*c.vertex() - *a.vertex())))
+    }
+
+    /// Whether the face is convex. Ignores order.
+    pub fn is_convex<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> bool {
+        // TODO: is this correct?
+        // TODO: collinear points cause problems
+        self.vertices_crossed(mesh)
+            .circular_tuple_windows::<(_, _)>()
+            .map(|w| w.0.dot(&w.1).is_positive())
+            .all_equal()
+    }
+
+    /// Whether the face is planar.
+    pub fn is_planar<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>, eps: P::S) -> bool {
+        if P::Vec::dimensions() <= 2 {
+            return true;
+        }
+
+        // TODO: is this correct?
+        // TODO: collinear points cause problems
+
+        let three: Vec<_> = self.vertices(mesh).take(3).map(|v| *v.vertex()).collect();
+        let n = (three[1] - three[0]).cross(&(three[2] - three[0]));
+
+        self.vertices(mesh).skip(2).all(|v| {
+            let v = *v.vertex();
+            (v - three[0]).dot(&n).abs() < eps
+        })
+    }
+
+    /// Whether the face is planar.
+    pub fn is_planar2<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> bool {
+        self.is_planar(mesh, P::S::EPS * 10.0.into())
+    }
+
+    /// Get the normal of the face. Assumes the face is planar.
+    pub fn normal<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> P::Vec {
+        assert!(self.is_planar2(mesh));
+        let three: Vec<_> = self.vertices(mesh).take(3).map(|v| *v.vertex()).collect();
+        (three[1] - three[0]).cross(&(three[2] - three[0]))
+    }
+
+    /*
+    /// Get the normal of the face. Assumes the face is planar.
+    pub fn vertices_2d<'a, V: IndexType, P: Payload>(
+        &'a self,
+        mesh: &'a Mesh<E, usize, F, P>,
+    ) -> impl Iterator<Item = P::Vec> + Clone + ExactSizeIterator + 'a
+    where
+        P::Vec: Vector2D<P::S>,
+    {
+        assert!(self.is_planar2(mesh));
+        assert!(P::Vec::dimensions() == 2);
+        self.vertices(mesh).map(|v| *v.vertex())
+    }*/
+
+    /// Get the normal of the face. Assumes the face is planar.
+    pub fn vertices_2d<'a, V: IndexType, P: Payload>(
+        &'a self,
+        mesh: &'a Mesh<E, V, F, P>,
+    ) -> impl Iterator<Item = (<P::Vec as Vector<P::S>>::Vec2D, V)> + Clone + ExactSizeIterator + 'a
+    where
+        P::Vec: Vector3D<P::S>,
+    {
+        // TODO: overload this in a way that allows different dimensions
+
+        assert!(self.is_planar2(mesh));
+        assert!(P::Vec::dimensions() == 3);
+
+        let normal = self.normal(mesh);
+        let z_axis = Vector3D::<P::S>::from_xyz(0.0.into(), 0.0.into(), 1.0.into());
+        let rotation = <P::Vec as Vector3D<P::S>>::Transform::from_rotation_arc(normal, z_axis);
+        // TODO: sometimes this results in the wrong ordering of the vertices. Fix this!
+        self.vertices(mesh)
+            .map(move |v| (rotation.apply(*v.vertex()).xy(), v.id()))
     }
 }
 

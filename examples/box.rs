@@ -4,7 +4,7 @@ use bevy::{
     pbr::wireframe::{WireframeConfig, WireframePlugin},
     prelude::*, render::render_asset::RenderAssetUsages,
 };
-use procedural_modelling::*;
+use procedural_modelling::{representation::payload::bevy::BevyPayload, *};
 use std::{env, f32::consts::PI};
 
 fn main() {
@@ -27,7 +27,7 @@ fn setup_meshes(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let mesh = representation::Mesh::<u32, u32, u32, Vec3>::cuboid(1.0, 1.0, 2.0);
+    let mesh = representation::Mesh::<u32, u32, u32, BevyPayload>::cuboid(1.0, 1.0, 2.0);
     println!("{}", mesh);
 
     commands.spawn((

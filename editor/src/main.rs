@@ -54,7 +54,7 @@ impl Default for MeshSettings {
     fn default() -> Self {
         MeshSettings {
             tol: -4.0,
-            n: 6,
+            n: 7,
             r: 1.0,
             d1: Vec3::new(0.4, -1.0, 0.0),
             d2: Vec3::new(-1.0, 0.3, -1.0),
