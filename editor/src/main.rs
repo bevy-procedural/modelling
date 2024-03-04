@@ -2,6 +2,7 @@ use bevy::{
     diagnostic::FrameTimeDiagnosticsPlugin,
     pbr::wireframe::{WireframeConfig, WireframePlugin},
     prelude::*,
+    render::render_asset::RenderAssetUsages,
     window::WindowResolution,
 };
 use bevy_inspector_egui::{
@@ -38,12 +39,37 @@ impl Default for GlobalSettings {
 struct MeshSettings {
     #[inspector(min = -20.0, max = 10.0)]
     tol: f32,
+
+    n: usize,
+    
+    #[inspector(min = 0.0, max = 10.0)]
+    r: f32,
+    
+    d1: Vec3,
+    d2: Vec3,
+    d3: Vec3,
 }
 
 impl Default for MeshSettings {
     fn default() -> Self {
-        MeshSettings { tol: -4.0 }
+        MeshSettings {
+            tol: -4.0,
+            n: 6,
+            r: 1.0,
+            d1: Vec3::new(0.4, -1.0, 0.0),
+            d2: Vec3::new(-1.0, 0.3, -1.0),
+            d3: Vec3::new(-1.0, -0.3, -1.0),
+        }
     }
+}
+
+fn make_mesh(settings: &MeshSettings) -> MeshVec3 {
+    let mut mesh = MeshVec3::regular_polygon(settings.r, settings.n); //cuboid(1.0, 1.0, 2.0);
+    mesh.extrude(mesh.edge_between(1, 0).unwrap().id(), settings.d1, true);
+    let fe = mesh.extrude_face(3, settings.d2, true);
+    mesh.extrude_face(fe, settings.d3, true);
+    println!("{}", mesh);
+    mesh
 }
 
 pub fn main() {
@@ -81,8 +107,8 @@ pub fn main() {
 }
 
 fn update_meshes(
-    _query: Query<&Handle<Mesh>>,
-    mut _assets: ResMut<Assets<Mesh>>,
+    query: Query<(&Handle<Mesh>, &MeshSettings), Changed<MeshSettings>>,
+    mut assets: ResMut<Assets<Mesh>>,
     mut settings: ResMut<GlobalSettings>,
     windows: Query<&Window>,
     camera_q: Query<(&Camera, &GlobalTransform)>,
@@ -107,7 +133,10 @@ fn update_meshes(
         return;
     }
 
-    // mesh.bevy_set(assets.get_mut(query.single().id()).unwrap());
+    for (handle, settings) in query.iter() {
+        let mesh = make_mesh(settings);
+        mesh.bevy_set(assets.get_mut(handle).unwrap());
+    }
 }
 
 fn setup_meshes(
@@ -115,19 +144,10 @@ fn setup_meshes(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let mut mesh = MeshVec3::regular_polygon(1.0, 6); //cuboid(1.0, 1.0, 2.0);
-    mesh.extrude(
-        mesh.edge_between(1, 0).unwrap().id(),
-        Vec3::new(0.4, -1.0, 0.0),
-        true,
-    );
-    let fe = mesh.extrude_face(3, Vec3::new(-1.0, 0.3, -1.0), true);
-    mesh.extrude_face(fe, Vec3::new(-1.0, -0.3, -1.0), true);
-    println!("{}", mesh);
-
+    let mesh = make_mesh(&MeshSettings::default());
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(mesh.to_bevy()),
+            mesh: meshes.add(mesh.to_bevy(RenderAssetUsages::all())),
             material: materials.add(StandardMaterial {
                 base_color: Color::rgba(1.0, 1.0, 1.0, 1.0),
                 //alpha_mode: AlphaMode::Blend,

@@ -39,18 +39,35 @@ where
         }
     }
 
-    /// Convert the mesh to a bevy mesh
-    pub fn to_bevy(&self) -> bevy::render::mesh::Mesh {
-        let mut mesh = bevy::render::mesh::Mesh::new(
-            PrimitiveTopology::TriangleList,
-            RenderAssetUsages::all(),
-        );
+    fn bevy_remove_attributes(mesh: &mut bevy::render::mesh::Mesh) {
+        mesh.remove_indices();
+        let mut attributes_to_remove = Vec::new();
+        for (attr, _) in mesh.attributes() {
+            attributes_to_remove.push(attr);
+        }
+        for attr in attributes_to_remove {
+            mesh.remove_attribute(attr);
+        }
+    }
+
+    /// Replace the mesh's attributes with the current mesh. 
+    /// Requires the mesh to be a triangle list and have the MAIN_WORLD usage.
+    pub fn bevy_set(&self, mesh: &mut bevy::render::mesh::Mesh) {
+        assert!(mesh.primitive_topology() == PrimitiveTopology::TriangleList);
+        assert!(mesh.asset_usage.contains(RenderAssetUsages::MAIN_WORLD));
+        Self::bevy_remove_attributes(mesh);
         let vertices = self.raw_vertices();
         mesh.insert_indices(self.bevy_indices());
         mesh.insert_attribute(
             bevy::render::mesh::Mesh::ATTRIBUTE_POSITION,
             VertexAttributeValues::Float32x3(vertices),
         );
+    }
+
+    /// Convert the mesh to a bevy mesh
+    pub fn to_bevy(&self, usage: RenderAssetUsages) -> bevy::render::mesh::Mesh {
+        let mut mesh = bevy::render::mesh::Mesh::new(PrimitiveTopology::TriangleList, usage);
+        self.bevy_set(&mut mesh);
         mesh
     }
 }

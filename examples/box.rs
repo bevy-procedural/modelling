@@ -2,7 +2,7 @@
 
 use bevy::{
     pbr::wireframe::{WireframeConfig, WireframePlugin},
-    prelude::*,
+    prelude::*, render::render_asset::RenderAssetUsages,
 };
 use procedural_modelling::*;
 use std::{env, f32::consts::PI};
@@ -32,7 +32,7 @@ fn setup_meshes(
 
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(mesh.to_bevy()),
+            mesh: meshes.add(mesh.to_bevy(RenderAssetUsages::all())),
             material: materials.add(StandardMaterial {
                 base_color: Color::rgba(1.0, 1.0, 1.0, 1.0),
                 //alpha_mode: AlphaMode::Blend,
