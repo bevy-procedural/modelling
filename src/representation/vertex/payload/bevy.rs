@@ -175,6 +175,16 @@ impl Payload for BevyPayload {
     }
 
     #[inline(always)]
+    fn normal(&self) -> &Self::Vec {
+        &self.normal
+    }
+
+    #[inline(always)]
+    fn set_normal(&mut self, normal: Self::Vec) {
+        self.normal = normal;
+    }
+
+    #[inline(always)]
     fn from_vec(v: Self::Vec) -> Self {
         Self {
             position: v,

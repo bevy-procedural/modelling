@@ -22,8 +22,7 @@ where
             .collect()
     }
 
-    fn bevy_indices(&self) -> bevy::render::mesh::Indices {
-        let indices = self.tesselate();
+    fn bevy_indices(&self, indices: &Vec<V>) -> bevy::render::mesh::Indices {
         if std::mem::size_of::<V>() == std::mem::size_of::<u32>() {
             bevy::render::mesh::Indices::U32(
                 indices.into_iter().map(|x| x.index() as u32).collect(),
@@ -56,11 +55,23 @@ where
         assert!(mesh.primitive_topology() == PrimitiveTopology::TriangleList);
         assert!(mesh.asset_usage.contains(RenderAssetUsages::MAIN_WORLD));
         Self::bevy_remove_attributes(mesh);
-        let vertices = self.raw_vertices();
-        mesh.insert_indices(self.bevy_indices());
+        //let vertices = self.raw_vertices();
+        //let indices = self.tesselate();
+        let (indices, raw_vertices) = self.tesselate_complete();
+
+        mesh.insert_indices(self.bevy_indices(&indices));
+
         mesh.insert_attribute(
             bevy::render::mesh::Mesh::ATTRIBUTE_POSITION,
-            VertexAttributeValues::Float32x3(vertices),
+            VertexAttributeValues::Float32x3(
+                raw_vertices.iter().map(|v| v.vertex().to_array()).collect(),
+            ),
+        );
+        mesh.insert_attribute(
+            bevy::render::mesh::Mesh::ATTRIBUTE_NORMAL,
+            VertexAttributeValues::Float32x3(
+                raw_vertices.iter().map(|v| v.normal().to_array()).collect(),
+            ),
         );
 
         // mesh.duplicate_vertices();

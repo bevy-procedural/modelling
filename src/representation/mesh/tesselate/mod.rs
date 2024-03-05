@@ -17,4 +17,15 @@ where
         }
         indices
     }
+
+    /// convert the mesh to triangles and get all indices to do so.
+    /// Also duplicates vertices to insert normals etc.
+    pub fn tesselate_complete(&self) -> (Vec<V>, Vec<P>) {
+        let mut indices = Vec::new();
+        let mut vertices = Vec::new();
+        for f in self.faces() {
+            f.tesselate_complete(self, &mut vertices, &mut indices);
+        }
+        (indices, vertices)
+    }
 }

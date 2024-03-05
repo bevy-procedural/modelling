@@ -36,6 +36,7 @@ where
         &self,
         mesh: &Mesh<E, V, F, P>,
         indices: &mut Vec<V>,
+        local_coordinates: bool,
     ) where
         P::Vec: Vector3D<P::S>,
     {
@@ -90,9 +91,15 @@ where
                 continue;
             }
 
-            indices.push(vs[i_a].1);
-            indices.push(vs[i_b].1);
-            indices.push(vs[i_c].1);
+            if local_coordinates {
+                indices.push(V::new(i_a));
+                indices.push(V::new(i_b));
+                indices.push(V::new(i_c));
+            } else {
+                indices.push(vs[i_a].1);
+                indices.push(vs[i_b].1);
+                indices.push(vs[i_c].1);
+            }
             clipped[i_b] = true;
             n -= 1;
             fails_since_advance = 0;
@@ -337,6 +344,27 @@ where
 
         // Minimize edge length
         // TODO: https://en.wikipedia.org/wiki/Minimum-weight_triangulation#Variations
+    }
+
+    /// Converts the face into a triangle list and duplicates vertices.
+    pub fn tesselate_complete<V: IndexType, P: Payload>(
+        &self,
+        mesh: &Mesh<E, V, F, P>,
+        vertices: &mut Vec<P>,
+        indices: &mut Vec<V>,
+    ) where
+        P::Vec: Vector3D<P::S>,
+    {
+        let v0 = vertices.len();
+        let normal = self.normal(mesh);
+        self.vertices(mesh).for_each(|v| {
+            let mut p = v.payload().clone();
+            p.set_normal(normal);
+            vertices.push(p)
+        });
+        let mut local_indices = Vec::new();
+        self.ear_clipping(mesh, &mut local_indices, true);
+        indices.extend(local_indices.iter().map(|i| V::new(v0 + i.index())));
     }
 
     /*/// Converts the face into a triangle list using the delaunay triangulation.

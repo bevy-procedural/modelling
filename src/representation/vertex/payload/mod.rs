@@ -22,6 +22,12 @@ pub trait Payload: Clone + Default + PartialEq + std::fmt::Debug {
 
     /// returns the coordinates of the payload as an array
     fn vertex(&self) -> &Self::Vec;
+    
+    /// returns the normals of the payload as an array
+    fn normal(&self) -> &Self::Vec;
+
+    /// Sets the normals.
+    fn set_normal(&mut self, normal: Self::Vec);
 
     /// Creates a payload from a vector.
     fn from_vec(v: Self::Vec) -> Self;
