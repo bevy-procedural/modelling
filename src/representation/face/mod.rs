@@ -168,19 +168,6 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
             z_axis.normalize(),
         );
         let mut vs: Vec<_> = self.vertices(mesh).map(|v| *v.vertex()).collect();
-        println!("normal: {:?} {:?}", normal, rotation.apply(normal));
-        println!(
-            "vs: {:?} {:?}",
-            (vs[1] - vs[0]).cross(&(vs[1] - vs[2])),
-            (vs[2] - vs[1]).cross(&(vs[2] - vs[3]))
-        );
-        vs = vs.iter().map(|v| rotation.apply(*v)).collect();
-        println!(
-            "vs: {:?} {:?}",
-            (vs[1] - vs[0]).cross(&(vs[1] - vs[2])),
-            (vs[2] - vs[1]).cross(&(vs[2] - vs[3]))
-        );
-
         self.vertices(mesh)
             .map(move |v| (rotation.apply(*v.vertex()).xy(), v.id()))
     }

@@ -299,9 +299,10 @@ where
         let mut best_indices = Vec::new();
         let mut best_dist: P::S = std::f32::INFINITY.into();
 
-        for _ in 1..1000 {
+        for _ in 1..10 {
             let mut local_indices = Vec::new();
             self.ear_clipping_rand2(mesh, &mut local_indices);
+            self.shorten(mesh, &mut local_indices);
 
             let mut dist = 0.0.into();
 
@@ -326,10 +327,9 @@ where
         P::Vec: Vector3D<P::S>,
     {
         let mut local_indices = Vec::new();
-        self.ear_clipping(mesh, &mut local_indices);
-        // self.min_weight_triangulation_stoch(mesh, &mut local_indices);
+        //self.ear_clipping(mesh, &mut local_indices);
+        self.min_weight_triangulation_stoch(mesh, &mut local_indices);
         //self.delaunayfy(mesh, &mut local_indices);
-        //self.shorten(mesh, &mut local_indices);
         indices.extend(local_indices);
         assert!(indices.len() % 3 == 0, "{:?}", indices.len());
         assert!(indices.iter().all(|i| i.index() < mesh.max_vertex_index()));
