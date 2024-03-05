@@ -1,4 +1,4 @@
-use self::payload::Vector;
+use crate::math::Vector;
 
 use super::{Deletable, HalfEdge, IndexType, Mesh};
 use payload::Payload;
@@ -52,7 +52,7 @@ impl<E: IndexType, V: IndexType, P: Payload> Vertex<E, V, P> {
     pub fn payload(&self) -> &P {
         &self.payload
     }
-    
+
     /// Returns the vertex coordinates of the payload
     #[inline(always)]
     pub fn vertex(&self) -> &P::Vec {

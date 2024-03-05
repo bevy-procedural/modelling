@@ -1,5 +1,5 @@
 use super::{IndexType, Mesh};
-use crate::representation::payload::{Payload, Vector3D};
+use crate::{math::Vector3D, representation::payload::Payload};
 
 impl<E, V, F, P> Mesh<E, V, F, P>
 where

@@ -1,7 +1,10 @@
 use super::super::{IndexType, Mesh};
-use crate::representation::{
-    builder::{AddVertex, CloseFace},
-    payload::{Payload, Vector3D},
+use crate::{
+    math::Vector3D,
+    representation::{
+        builder::{AddVertex, CloseFace},
+        payload::Payload,
+    },
 };
 
 impl<E, V, F, P> Mesh<E, V, F, P>
@@ -17,7 +20,7 @@ where
         Self::regular_star(radius, radius, n)
     }
 
-    /// create a regular polygon
+    /// create a regular star, i.e., a regular polygon with two radii
     pub fn regular_star(inner_radius: P::S, outer_radius: P::S, n: usize) -> Mesh<E, V, F, P> {
         let pi2n = 2.0 * std::f32::consts::PI / (n as f32);
         let a0 = 0.0 as f32;
@@ -31,15 +34,15 @@ where
                 inner_radius * P::S::from(a0.cos()),
             )),
             P::from_vec(P::Vec::from_xyz(
-                inner_radius * P::S::from(a1.sin()),
+                outer_radius * P::S::from(a1.sin()),
                 P::S::default(),
-                inner_radius * P::S::from(a1.cos()),
+                outer_radius * P::S::from(a1.cos()),
             )),
         );
         let mut prev = v0;
 
         for i in 2..n {
-            let r = if i % 2 == 0 {
+            let r = if i % 2 == 1 {
                 outer_radius
             } else {
                 inner_radius

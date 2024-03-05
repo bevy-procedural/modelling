@@ -1,8 +1,8 @@
 use super::super::{IndexType, Mesh};
-use crate::representation::{
+use crate::{math::Vector3D, representation::{
     builder::{AddVertex, CloseFace},
-    payload::{Payload, Vector3D},
-};
+    payload::Payload,
+}};
 
 impl<E, V, F, P> Mesh<E, V, F, P>
 where

@@ -67,8 +67,19 @@ impl Default for MeshSettings {
     }
 }
 
-fn make_mesh(settings: &MeshSettings) -> MeshVec3 {
-    let mut mesh = MeshVec3::regular_star(settings.r, settings.r2, settings.n); //cuboid(1.0, 1.0, 2.0);
+fn _make_hex_bridge(settings: &MeshSettings) -> MeshVec3 {
+    let mut mesh = MeshVec3::regular_polygon(settings.r, 6); //cuboid(1.0, 1.0, 2.0);
+    mesh.extrude(mesh.edge_between(1, 0).unwrap().id(), settings.d1, true);
+    let fe = mesh.extrude_face(1, Vec3::new(0.2, 0.1, 0.2), true);
+    mesh.extrude_face(fe, Vec3::new(0.2, -0.1, 0.2), true);
+    println!("{}", mesh);
+    mesh
+}
+
+fn _make_spiral(settings: &MeshSettings) -> MeshVec3 {
+    let mut mesh = MeshVec3::regular_star(settings.r, settings.r2, settings.n);
+
+    // TODO: Smooth surface groups
 
     mesh.transform(
         &bevy::transform::components::Transform::from_translation(Vec3::new(0.0, -0.99, 0.0))
@@ -94,13 +105,21 @@ fn make_mesh(settings: &MeshSettings) -> MeshVec3 {
             true,
         );
     }
-
-    /* mesh.extrude(mesh.edge_between(1, 0).unwrap().id(), settings.d1, true);
-    let fe = mesh.extrude_face(1, settings.d2, true);
-    mesh.extrude_face(fe, settings.d3, true);*/
-
-    println!("{}", mesh);
     mesh
+}
+
+fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
+    let mut mesh = MeshVec3::regular_star(2.0, 0.9, 10);
+    mesh.transform(&bevy::transform::components::Transform::from_translation(
+        Vec3::new(0.0, -0.99, 0.0),
+    ));
+    mesh
+}
+
+fn make_mesh(settings: &MeshSettings) -> MeshVec3 {
+    
+    make_2d_shape(settings)
+    //_make_spiral(settings)
 }
 
 pub fn main() {

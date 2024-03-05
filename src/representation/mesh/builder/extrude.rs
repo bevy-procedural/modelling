@@ -1,8 +1,8 @@
-use crate::representation::{
+use crate::{math::{Transform, Vector}, representation::{
     builder::{AddVertex, CloseFace},
-    payload::{Payload, Transform, Vector},
+    payload::Payload,
     IndexType, Mesh,
-};
+}};
 
 impl<E, V, F, P> Mesh<E, V, F, P>
 where

@@ -1,7 +1,7 @@
 use super::{Face, Mesh, Payload};
-use crate::representation::{
-    payload::{Vector, Vector2D, Vector3D},
-    IndexType,
+use crate::{
+    math::{Vector, Vector2D, Vector3D},
+    representation::IndexType,
 };
 use itertools::Itertools;
 use std::collections::HashMap;
@@ -42,6 +42,7 @@ where
     {
         // TODO: ear clipping is inefficient
         assert!(self.may_be_curved() || self.is_planar2(mesh));
+        assert!(self.is_simple(mesh));
 
         let vs: Vec<(<P::Vec as Vector<P::S>>::Vec2D, V)> =
             self.vertices_2d::<V, P>(mesh).collect();
