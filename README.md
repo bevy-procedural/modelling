@@ -12,17 +12,36 @@
 
 A Framework-Agnostic Procedural Modelling Library.
 
-Uses a hybrid datastructure of half-edge meshes and face-vertex meshes. Our goal is to implement operations like Boolean Operations, Subdivisions, Curved Surfaces, and Stitching. The library aims to support the tesselation of 2d surfaces in a modular way that can be used without any of the 3d features.
+Uses a datastructure based on half-edge meshes to represent (open) manifold meshes with optional non-manifold vertices. Our goal is to implement operations like Boolean Operations, Subdivisions, Curved Surfaces, and Stitching. The library aims to support the tesselation of 2d surfaces in a modular way that can be used without any of the 3d features.
 
-Currently there are quite a few crates that implement boolean operations and tesselation to achieve some other goal. We want to provide a common implementation to satisfy these very similar requirements and improve code-reuse among these projects so that they can focus more easily on their original goal.
-
-Right now, many toolkits offer functionality for merging shapes and creating complex patterns as part of their unique objectives. Our aim is to offer a shared solution for these overlapping needs, enhancing the code-reuse between projects. This will help them concentrate more on their primary purposes.
+Currently there are quite a few crates that implement boolean operations and tesselation to achieve some other goal. We want to provide a common implementation to satisfy these very similar requirements and improve code-reuse among these projects so they can focus on their original goal.
 
 
 ## WARNING
 
 This crate is still in a _very_ early stage of development. Expect frequent API modifications, bugs, and missing features. Feel free to contribute by opening issues, pull requests or sharing your ideas in [Github Discussion](https://github.com/bevy-procedural/modelling/discussions).
 
+
+## Usage
+
+<img src="assets/demo.png" alt="drawing" width="300"/>
+
+Install using `cargo add procedural_modelling`.
+
+```rs
+let mut mesh = MeshVec3::regular_star(1.0, 0.8, 30);
+mesh.transform(
+    &Transform::from_translation(Vec3::new(0.0, -0.99, 0.0))
+               .with_rotation(Quat::from_rotation_z(PI)),
+);
+let trans = Transform::from_rotation(Quat::from_rotation_y(0.3))
+                      .with_translation(Vec3::new(0.4, 0.3, 0.0));
+let mut f = mesh.extrude_ex(mesh.edge_between(1, 0).unwrap().id(), trans, true, true);
+for _ in 0..5 {
+    f = mesh.extrude_face_ex(f, trans, true, true);
+}
+mesh.to_bevy(RenderAssetUsages::default())
+```
 
 ## Examples 
 
@@ -37,13 +56,60 @@ Or run the [examples](https://github.com/bevy-procedural/modelling/tree/main/exa
 For package development, we recommend using the `editor`-subcrate. This example has a little [egui](https://github.com/jakobhellermann/bevy-inspector-egui/)-editor. Run it using `cargo watch -w editor/src -w src -x "run -p editor --profile fast-dev"`. The `fast-dev` profile will enable optimizations for the dependencies, but not for the package itself. This will slow down the first build _significantly_, but incremental builds are slightly faster and bevy's performance (bevy is used as the renderer in the examples) improves a lot.
 
 
-## Usage
+## Feature Progress
 
-Install using `cargo add procedural_modelling`.
+- [ ] Attributes
+  - [x] Positions
+  - [x] Normals
+  - [ ] Smooth Surface Groups
+  - [ ] Tangents
+  - [ ] UV Coordinates
+  - [ ] Custom Attributes
+- [ ] Triangulation
+  - [ ] Montone Sweep-Line
+  - [ ] Min Weight
+  - [ ] Constrained Delaunay
+- [ ] Primitives
+  - [x] Polygon, Star
+  - [x] Cuboid
+  - [x] Cylinder, Cone
+  - [ ] Tetrahedron, Octahedron, Dodecahedron, Icosahedron
+  - [ ] UV Sphere
+  - [ ] Cube Sphere
+  - [ ] Icosphere
+  - [ ] Torus
+- [ ] Builder Primitives
+  - [x] Lines
+  - [ ] Quadratic Bezier Curves
+  - [ ] Cubic Bezier Curves
+  - [ ] Curved Surfaces (Bezier Surfaces / Parametric Surfaces / NURBS / Spline Networks...?)
+- [ ] Operations   
+  - [x] Extrude 
+  - [ ] Loft
+  - [ ] Inset
+  - [ ] Plane Intersection
+  - [ ] Union
+  - [ ] Intersection
+  - [ ] Difference
+  - [ ] Symmetric Difference
+  - [ ] (Anisotropic) Simplification / LODs
+  - [ ] Stitching
+  - [ ] Subdivision
+  - [ ] Morphing
+  - [ ] Voxelization
+- [ ] Tools
+  - [ ] Geodesic Pathfinding
+  - [ ] Raycasting
+  - [ ] Topology Analysis
+  - [ ] Spatial Data Structures
+- [ ] Debug Visualizations
+  - [ ] Normals
+  - [ ] Tangents
+  - [ ] Topology
+- [ ] Backends
+  - [x] Bevy
+  - [ ] wgpu
 
-```rs
-// TODO
-```
 
 
 ## Features

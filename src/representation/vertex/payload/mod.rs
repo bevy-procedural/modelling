@@ -6,7 +6,7 @@ use crate::math::{Scalar, Transform, Vector, Vector2D, Vector3D};
 pub mod bevy;
 
 /// Trait for the payload of vertices.
-pub trait Payload: Clone + Default + PartialEq + std::fmt::Debug {
+pub trait Payload: Clone + Default + PartialEq + std::fmt::Debug + std::fmt::Display {
     /// The scalar type of the coordinates used in the payload. Mainly to choose between f32 and f64. But could also work with integers etc...
     type S: Scalar;
 

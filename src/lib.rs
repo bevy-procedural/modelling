@@ -9,3 +9,4 @@
 
 pub mod representation;
 pub mod math;
+pub mod gizmo;

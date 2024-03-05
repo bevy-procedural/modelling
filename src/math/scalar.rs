@@ -20,6 +20,9 @@ pub trait Scalar:
 
     /// The value of the machine epsilon.
     const EPS: Self;
+    
+    /// A value of zero.
+    const ZERO: Self;
 
     /// Returns whether the scalar is strictly positive.
     fn is_positive(self) -> bool;

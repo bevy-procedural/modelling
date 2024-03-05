@@ -2,3 +2,4 @@
 
 mod cuboid;
 mod regular_polygon;
+mod frustum;

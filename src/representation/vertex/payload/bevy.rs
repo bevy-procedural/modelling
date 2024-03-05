@@ -61,3 +61,15 @@ impl Payload for BevyPayload {
         }
     }
 }
+
+impl std::fmt::Display for BevyPayload {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{:+05.3}, {:+05.3}, {:+05.3}",
+            self.position.x,
+            self.position.y,
+            self.position.z,
+        )
+    }
+}

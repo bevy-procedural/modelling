@@ -5,6 +5,7 @@ use crate::math::Scalar;
 impl Scalar for f64 {
     const PI: Self = std::f64::consts::PI;
     const EPS: Self = std::f64::EPSILON;
+    const ZERO: Self = 0.0;
 
     #[inline(always)]
     fn is_positive(self) -> bool {

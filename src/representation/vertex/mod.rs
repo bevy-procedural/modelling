@@ -94,13 +94,19 @@ impl<E: IndexType, V: IndexType, P: Payload> Vertex<E, V, P> {
     pub fn transform(&mut self, transform: &P::Trans) {
         self.payload = self.payload.transform(transform);
     }
+
+    /// Translates the payload.
+    #[inline(always)]
+    pub fn translate(&mut self, transform: &P::Vec) {
+        self.payload = self.payload.translate(transform);
+    }
 }
 
 impl<E: IndexType, V: IndexType, P: Payload> std::fmt::Display for Vertex<E, V, P> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "{}) --{}-->; payload: {:?}",
+            "{}) --{}-->; payload: {}",
             self.id().index(),
             self.edge.index(),
             self.payload

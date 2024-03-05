@@ -50,7 +50,7 @@ rand = "0.8.5"
 
 [features]
 default = ["bevy"]
-bevy = ["dep:bevy", "dep:bevy-inspector-egui"]
+bevy = ["dep:bevy", "dep:bevy-inspector-egui", "bevy/bevy_gizmos"]
 dynamic = ["bevy/dynamic_linking"]
 meshopt = ["dep:meshopt"]
 

@@ -52,6 +52,31 @@ where
         return IndexType::max();
     }
 
+    pub fn extrude_to_point(&mut self, e: E, p: P) -> V {
+        let mut last = self.edge(e).origin_id();
+        let mut curr = self.edge(e).target_id(self);
+        let edges = self.edge(e).edges_face_back(self).collect::<Vec<_>>();
+
+        let point = self.add_vertex((last, p)).0;
+
+        for i in 1..edges.len() {
+            println!("{} {}", last, curr);
+            self.close_face((last, curr, point, false));
+            last = curr;
+            curr = edges[i].origin_id();
+            break;
+        }
+        //self.close_face((self.edge_id_between(point, last), false));
+        point
+    }
+
+    pub fn extrude_to_center_point(&mut self, e: E, translation: P::Vec) -> V {
+        let f = self.close_face((e, true));
+        let p = P::from_vec(self.face(f).center(self) + translation);
+        self.remove_face(f);
+        self.extrude_to_point(e, p)
+    }
+
     /// Extrudes the given face in the given direction.
     pub fn extrude_face(&mut self, f: F, direction: P::Vec, close: bool) -> F {
         let e = self.face(f).edge_id();

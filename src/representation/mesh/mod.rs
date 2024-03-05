@@ -155,4 +155,11 @@ where
             v.transform(t);
         }
     }
+    
+    /// Translates all vertices in the mesh
+    pub fn translate(&mut self, t: &P::Vec) {
+        for v in self.vertices.iter_mut() {
+            v.translate(t);
+        }
+    }
 }

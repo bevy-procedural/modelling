@@ -193,6 +193,13 @@ impl<E: IndexType, V: IndexType, F: IndexType> HalfEdge<E, V, F> {
             .find(|e| e.origin_id() == v)
             .is_some()
     }
+
+    /// Returns the center of the edge
+    pub fn center<P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> P::Vec {
+        let v1 = self.origin(mesh).vertex().clone();
+        let v2 = self.target(mesh).vertex().clone();
+        (v1 + v2) * P::S::from(0.5)
+    }
 }
 
 impl<E: IndexType, V: IndexType, F: IndexType> std::fmt::Display for HalfEdge<E, V, F> {

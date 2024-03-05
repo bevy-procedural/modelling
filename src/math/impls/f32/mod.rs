@@ -5,6 +5,7 @@ use crate::math::Scalar;
 impl Scalar for f32 {
     const PI: Self = std::f32::consts::PI;
     const EPS: Self = std::f32::EPSILON;
+    const ZERO: Self = 0.0;
 
     #[inline(always)]
     fn is_positive(self) -> bool {

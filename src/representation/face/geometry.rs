@@ -132,6 +132,8 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
         normal * P::Vec::from_xyz(P::S::from(-0.5), P::S::from(-0.5), P::S::from(-0.5))
     }
 
+    // TODO: check for degenerated faces; empty triangles, collinear points etc...
+
     /*
     /// Get the normal of the face. Assumes the face is planar.
     pub fn vertices_2d<'a, V: IndexType, P: Payload>(
@@ -162,5 +164,16 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
         let rotation = P::Trans::from_rotation_arc(normal.normalize(), z_axis.normalize());
         self.vertices(mesh)
             .map(move |v| (rotation.apply(*v.vertex()).xy(), v.id()))
+    }
+
+    /// Naive method to get the center of the face by averaging the vertices.
+    pub fn center<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> P::Vec {
+        let mut center = P::Vec::zero();
+        let mut count = 0;
+        for a in self.vertices(mesh).map(|v| *v.vertex()) {
+            center += a;
+            count += 1;
+        }
+        center * P::S::from(1.0 / (count as f32))
     }
 }

@@ -2,7 +2,7 @@ use bevy::{
     diagnostic::FrameTimeDiagnosticsPlugin,
     pbr::wireframe::{WireframeConfig, WireframePlugin},
     prelude::*,
-    render::render_asset::RenderAssetUsages,
+    render::{render_asset::RenderAssetUsages, Render},
     window::WindowResolution,
 };
 use bevy_inspector_egui::{
@@ -11,7 +11,13 @@ use bevy_inspector_egui::{
     InspectorOptions,
 };
 use bevy_panorbit_camera::*;
-use procedural_modelling::representation::bevy::MeshVec3;
+use procedural_modelling::{
+    gizmo::{
+        self,
+        bevy::{show_edges, show_faces, show_vertex_indices, text::{text3d::Text3d, Text3dGizmo, Text3dGizmos}},
+    },
+    representation::bevy::MeshVec3,
+};
 use std::{env, f32::consts::PI};
 
 #[derive(Reflect, Resource, InspectorOptions)]
@@ -78,47 +84,32 @@ fn _make_hex_bridge(settings: &MeshSettings) -> MeshVec3 {
 
 fn _make_spiral(settings: &MeshSettings) -> MeshVec3 {
     let mut mesh = MeshVec3::regular_star(settings.r, settings.r2, settings.n);
-
-    // TODO: Smooth surface groups
-
     mesh.transform(
-        &bevy::transform::components::Transform::from_translation(Vec3::new(0.0, -0.99, 0.0))
+        &Transform::from_translation(Vec3::new(0.0, -0.99, 0.0))
             .with_rotation(Quat::from_rotation_z(PI)),
     );
-
-    let mut f = mesh.extrude_ex(
-        mesh.edge_between(1, 0).unwrap().id(),
-        bevy::transform::components::Transform::from_rotation(Quat::from_rotation_y(settings.rot))
-            .with_translation(settings.d1),
-        true,
-        true,
-    );
-
+    let trans =
+        Transform::from_rotation(Quat::from_rotation_y(settings.rot)).with_translation(settings.d1);
+    let mut f = mesh.extrude_ex(mesh.edge_between(1, 0).unwrap().id(), trans, true, true);
     for _ in 0..settings.segs {
-        f = mesh.extrude_face_ex(
-            f,
-            bevy::transform::components::Transform::from_rotation(Quat::from_rotation_y(
-                settings.rot,
-            ))
-            .with_translation(settings.d1),
-            true,
-            true,
-        );
+        f = mesh.extrude_face_ex(f, trans, true, true);
     }
+
     mesh
 }
 
 fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
     let mut mesh = MeshVec3::regular_star(2.0, 0.9, 10);
-    mesh.transform(&bevy::transform::components::Transform::from_translation(
-        Vec3::new(0.0, -0.99, 0.0),
-    ));
+    mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh
 }
 
 fn make_mesh(settings: &MeshSettings) -> MeshVec3 {
-    make_2d_shape(settings)
-    //_make_spiral(settings)
+    // make_2d_shape(settings)
+    // _make_spiral(settings)
+    let mesh = MeshVec3::cone(1.0.into(), 2.0.into(), 4);
+    println!("{}", mesh);
+    mesh
 }
 
 pub fn main() {
@@ -148,6 +139,7 @@ pub fn main() {
             WorldInspectorPlugin::default(),
             FrameTimeDiagnosticsPlugin,
             PanOrbitCameraPlugin,
+            gizmo::bevy::text::Text3dGizmosPlugin,
         ))
         .add_systems(Update, bevy::window::close_on_esc)
         .add_systems(Startup, setup_meshes)
@@ -192,7 +184,9 @@ fn setup_meshes(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-) {
+    mut texts: ResMut<Text3dGizmos>,
+) {   
+
     let mesh = make_mesh(&MeshSettings::default());
     commands.spawn((
         PbrBundle {
@@ -209,6 +203,10 @@ fn setup_meshes(
         MeshSettings::default(),
         Name::new("Generated Shape"),
     ));
+
+    show_vertex_indices(&mut texts, &mesh);
+    show_edges(&mut texts, &mesh, 0.1);
+    show_faces(&mut texts, &mesh);
 
     commands.spawn((
         PbrBundle {
