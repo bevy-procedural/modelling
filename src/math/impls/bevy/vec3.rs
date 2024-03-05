@@ -2,9 +2,9 @@ use crate::math::{Vector, Vector3D};
 use bevy::math::{Vec2, Vec3};
 
 impl Vector<f32> for Vec3 {
-    type Vec2D = Vec2;
-    type Vec3D = Vec3;
-    type Transform = bevy::transform::components::Transform;
+    type Vec2 = Vec2;
+    type Vec3 = Vec3;
+    type Trans = bevy::transform::components::Transform;
 
     #[inline(always)]
     fn zero() -> Self {

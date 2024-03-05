@@ -150,7 +150,7 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
     pub fn vertices_2d<'a, V: IndexType, P: Payload>(
         &'a self,
         mesh: &'a Mesh<E, V, F, P>,
-    ) -> impl Iterator<Item = (<P::Vec as Vector<P::S>>::Vec2D, V)> + Clone + ExactSizeIterator + 'a
+    ) -> impl Iterator<Item = (P::Vec2, V)> + Clone + ExactSizeIterator + 'a
     where
         P::Vec: Vector3D<P::S>,
     {
@@ -159,10 +159,7 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
 
         let normal = self.normal(mesh);
         let z_axis = P::Vec::from_xyz(0.0.into(), 0.0.into(), 1.0.into());
-        let rotation = <P::Vec as Vector<P::S>>::Transform::from_rotation_arc(
-            normal.normalize(),
-            z_axis.normalize(),
-        );
+        let rotation = P::Trans::from_rotation_arc(normal.normalize(), z_axis.normalize());
         self.vertices(mesh)
             .map(move |v| (rotation.apply(*v.vertex()).xy(), v.id()))
     }

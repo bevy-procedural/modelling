@@ -18,13 +18,13 @@ pub trait Vector<ScalarType: Scalar>:
     + 'static
 {
     /// The 2d vector type used in the coordinates.
-    type Vec2D: Vector2D<ScalarType>;
+    type Vec2: Vector2D<ScalarType>;
 
     /// The 3d vector type used in the coordinates.
-    type Vec3D: Vector3D<ScalarType>;
+    type Vec3: Vector3D<ScalarType>;
 
     /// The rotation type used in the vector.
-    type Transform: Transform<S = ScalarType, Vec = Self>;
+    type Trans: Transform<S = ScalarType, Vec = Self>;
 
     /// Returns the origin vector.
     fn zero() -> Self;
@@ -57,13 +57,13 @@ pub trait Vector<ScalarType: Scalar>:
     fn w(&self) -> ScalarType;
 
     /// Returns the coordinates as a tuple.
-    fn xy(&self) -> Self::Vec2D {
-        Self::Vec2D::from_xy(self.x(), self.y())
+    fn xy(&self) -> Self::Vec2 {
+        Self::Vec2::from_xy(self.x(), self.y())
     }
 
     /// Returns the coordinates as a tuple.
-    fn xyz(&self) -> Self::Vec3D {
-        Self::Vec3D::from_xyz(self.x(), self.y(), self.z())
+    fn xyz(&self) -> Self::Vec3 {
+        Self::Vec3::from_xyz(self.x(), self.y(), self.z())
     }
 
     /// Normalizes the vector.

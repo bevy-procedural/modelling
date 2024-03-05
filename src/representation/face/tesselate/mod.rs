@@ -44,8 +44,7 @@ where
         assert!(self.may_be_curved() || self.is_planar2(mesh));
         assert!(self.is_simple(mesh));
 
-        let vs: Vec<(<P::Vec as Vector<P::S>>::Vec2D, V)> =
-            self.vertices_2d::<V, P>(mesh).collect();
+        let vs: Vec<(P::Vec2, V)> = self.vertices_2d::<V, P>(mesh).collect();
 
         let triangle_empty = |a: usize, b: usize, c: usize| {
             let av = vs[a].0;
@@ -117,8 +116,7 @@ where
         // TODO: ear clipping is inefficient
         assert!(self.may_be_curved() || self.is_planar2(mesh));
 
-        let vs: Vec<(<P::Vec as Vector<P::S>>::Vec2D, V)> =
-            self.vertices_2d::<V, P>(mesh).collect();
+        let vs: Vec<(P::Vec2, V)> = self.vertices_2d::<V, P>(mesh).collect();
 
         let triangle_empty = |a: usize, b: usize, c: usize| {
             let av = vs[a].0;
@@ -182,10 +180,9 @@ where
     where
         P::Vec: Vector3D<P::S>,
     {
-        let vs: Vec<(<P::Vec as Vector<P::S>>::Vec2D, V)> =
-            self.vertices_2d::<V, P>(mesh).collect();
+        let vs: Vec<(P::Vec2, V)> = self.vertices_2d::<V, P>(mesh).collect();
         assert!(vs.len() == self.vertices(mesh).count());
-        let mut vsh: HashMap<V, <P::Vec as Vector<P::S>>::Vec2D> = HashMap::new();
+        let mut vsh: HashMap<V, P::Vec2> = HashMap::new();
         for (v, p) in vs {
             vsh.insert(p, v);
         }
@@ -237,10 +234,9 @@ where
         P::Vec: Vector3D<P::S>,
     {
         // TODO: This shortens edges producing invalid meshess!
-        let vs: Vec<(<P::Vec as Vector<P::S>>::Vec2D, V)> =
-            self.vertices_2d::<V, P>(mesh).collect();
+        let vs: Vec<(P::Vec2, V)> = self.vertices_2d::<V, P>(mesh).collect();
         assert!(vs.len() == self.vertices(mesh).count());
-        let mut vsh: HashMap<V, <P::Vec as Vector<P::S>>::Vec2D> = HashMap::new();
+        let mut vsh: HashMap<V, P::Vec2> = HashMap::new();
         for (v, p) in vs {
             vsh.insert(p, v);
         }

@@ -1,5 +1,3 @@
-use crate::math::Vector;
-
 use super::{Deletable, HalfEdge, IndexType, Mesh};
 use payload::Payload;
 mod iterator;
@@ -93,7 +91,7 @@ impl<E: IndexType, V: IndexType, P: Payload> Vertex<E, V, P> {
 
     /// Transforms the payload.
     #[inline(always)]
-    pub fn transform(&mut self, transform: &<P::Vec as Vector<P::S>>::Transform) {
+    pub fn transform(&mut self, transform: &P::Trans) {
         self.payload = self.payload.transform(transform);
     }
 }

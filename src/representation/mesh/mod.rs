@@ -1,5 +1,3 @@
-use crate::math::Vector;
-
 use super::{payload::Payload, Deletable, DeletableVector, Face, HalfEdge, IndexType, Vertex};
 pub mod builder;
 mod check;
@@ -152,7 +150,7 @@ where
     }
 
     /// Transforms all vertices in the mesh
-    pub fn transform(&mut self, t: &<P::Vec as Vector<P::S>>::Transform) {
+    pub fn transform(&mut self, t: &P::Trans) {
         for v in self.vertices.iter_mut() {
             v.transform(t);
         }

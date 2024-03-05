@@ -1,7 +1,7 @@
 //! Bevy specific implementations for the vertex payload and 3d rotation.
 
 use super::Payload;
-use crate::math::{Transform, Vector};
+use crate::math::Transform;
 use bevy::math::{Vec2, Vec3};
 
 /// Vertex Payload for Bevy with 3d position, normal, and uv.
@@ -29,7 +29,7 @@ impl Payload for BevyPayload {
     }
 
     #[inline(always)]
-    fn transform(&self, t: &<Self::Vec as Vector<Self::S>>::Transform) -> Self {
+    fn transform(&self, t: &Self::Trans) -> Self {
         Self {
             position: t.apply(self.position),
             normal: t.apply_vec(self.normal),

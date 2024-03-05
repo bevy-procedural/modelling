@@ -11,7 +11,7 @@ pub trait Payload: Clone + Default + PartialEq + std::fmt::Debug {
     type S: Scalar;
 
     /// The vector type used in the payload.
-    type Vec: Vector<Self::S, Vec2D = Self::Vec2, Vec3D = Self::Vec3, Transform = Self::Trans>;
+    type Vec: Vector<Self::S, Vec2 = Self::Vec2, Vec3 = Self::Vec3, Trans = Self::Trans>;
 
     /// The 2d vector type used in the payload.
     type Vec2: Vector2D<Self::S>;
@@ -26,7 +26,7 @@ pub trait Payload: Clone + Default + PartialEq + std::fmt::Debug {
     fn translate(&self, v: &Self::Vec) -> Self;
 
     /// Returns the coordinates of the payload as a reference.
-    fn transform(&self, t: &<Self::Vec as Vector<Self::S>>::Transform) -> Self;
+    fn transform(&self, t: &Self::Trans) -> Self;
 
     /// returns the coordinates of the payload as an array
     fn vertex(&self) -> &Self::Vec;
