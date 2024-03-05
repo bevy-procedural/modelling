@@ -118,6 +118,11 @@ where
     pub fn num_vertices(&self) -> usize {
         self.vertices.len()
     }
+    
+    /// Returns the maximum vertex index in the mesh
+    pub fn max_vertex_index(&self) -> usize {
+        self.vertices.max_ind()
+    }
 
     /// Returns the number of edges in the mesh
     pub fn num_edges(&self) -> usize {

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use itertools::Itertools;
 
 use super::{Face, Mesh, Payload, Scalar};
@@ -39,6 +41,7 @@ where
     ) where
         P::Vec: Vector3D<P::S>,
     {
+        // TODO: ear clipping is inefficient
         assert!(self.is_planar(mesh, P::S::EPS * 10.0.into()));
 
         let vs: Vec<(<P::Vec as Vector<P::S>>::Vec2D, V)> =
@@ -98,6 +101,62 @@ where
         }
     }
 
+    /// Flip edges to make the face delaunay.
+    pub fn delaunayfy<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>, indices: &mut Vec<V>)
+    where
+        P::Vec: Vector3D<P::S>,
+    {
+        let vs: Vec<(<P::Vec as Vector<P::S>>::Vec2D, V)> =
+            self.vertices_2d::<V, P>(mesh).collect();
+        let vsl = vs.len();
+        assert!(vs.len() == self.vertices(mesh).count());
+        let mut vsh: HashMap<V, <P::Vec as Vector<P::S>>::Vec2D> = HashMap::new();
+        for (v, p) in vs {
+            vsh.insert(p, v);
+        }
+
+        if indices.len() < 3 {
+            return;
+        }
+
+        for _ in 0..indices.len() {
+            let mut changed = false;
+            for i in (0..indices.len()).step_by(3) {
+                for j in ((i + 3)..indices.len()).step_by(3) {
+                    for k in 0..3 {
+                        let a = indices[i + (0 + k) % 3];
+                        let b = indices[i + (1 + k) % 3];
+                        let c = indices[i + (2 + k) % 3];
+                        for l in 0..3 {
+                            let d = indices[j + (0 + l) % 3];
+                            let e = indices[j + (1 + l) % 3];
+                            let f = indices[j + (2 + l) % 3];
+                            if a == e && b == d {
+                                if vsh[&f].is_inside_circumcircle(vsh[&a], vsh[&b], vsh[&c]) {
+                                //if vsh[&a].distance(&vsh[&b]) > vsh[&c].distance(&vsh[&f]) {
+                                    indices[i + (0 + k) % 3] = c;
+                                    indices[i + (1 + k) % 3] = f;
+                                    indices[i + (2 + k) % 3] = b;
+
+                                    indices[j + (0 + l) % 3] = c;
+                                    indices[j + (1 + l) % 3] = a;
+                                    indices[j + (2 + l) % 3] = f;
+
+                                    changed = true;
+
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if !changed {
+                break;
+            }
+        }
+    }
+
     /*
     /// Converts the face into a triangle list
     pub fn tesselate<V: IndexType, P: Payload>(
@@ -113,7 +172,15 @@ where
     where
         P::Vec: Vector3D<P::S>,
     {
-        self.ear_clipping(mesh, indices);
+        let mut local_indices = Vec::new();
+        self.ear_clipping(mesh, &mut local_indices);
+        self.delaunayfy(mesh, &mut local_indices);
+        indices.extend(local_indices);
+        assert!(indices.len() % 3 == 0, "{:?}", indices.len());
+        assert!(indices.iter().all(|i| i.index() < mesh.max_vertex_index()));
+
+        // Minimize edge length
+        // TODO: https://en.wikipedia.org/wiki/Minimum-weight_triangulation#Variations
     }
 
     /*/// Converts the face into a triangle list using the delaunay triangulation.

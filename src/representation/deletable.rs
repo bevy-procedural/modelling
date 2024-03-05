@@ -60,6 +60,11 @@ impl<T: Deletable<I> + Default, I: IndexType> DeletableVector<T, I> {
         self.data.len() - self.deleted.len()
     }
 
+    /// Returns the maximum index of the non-deleted elements.
+    pub fn max_ind(&self) -> usize {
+        self.data.len()
+    }
+
     /// Allocates a new element, moves the given to that index, sets the new id, and returns the index.
     pub fn push(&mut self, mut v: T) -> I {
         assert!(

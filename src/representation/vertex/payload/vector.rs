@@ -39,7 +39,19 @@ pub trait Scalar:
     /// Returns the arcus cosine of the scalar.
     fn acos(self) -> Self;
 
-    
+    fn det3(
+        a: Self,
+        b: Self,
+        c: Self,
+        d: Self,
+        e: Self,
+        f: Self,
+        g: Self,
+        h: Self,
+        i: Self,
+    ) -> Self {
+        a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g)
+    }
 }
 
 impl Scalar for f32 {
@@ -196,6 +208,29 @@ pub trait Vector2D<ScalarType: Scalar>: Vector<ScalarType> {
         let inside_ccw = bs1.is_positive() && bs2.is_positive() && bs3.is_positive();
         let inside_cw = bs1.is_negative() && bs2.is_negative() && bs3.is_negative();
         inside_ccw || inside_cw
+    }
+
+    /// Whether the point is inside the circumcircle of the triangle.
+    fn is_inside_circumcircle(&self, a: Self, b: Self, c: Self) -> bool {
+        // https://en.wikipedia.org/wiki/Delaunay_triangulation#Algorithms
+
+        let adx = a.x() - self.x();
+        let ady = a.y() - self.y();
+        let bdx = b.x() - self.x();
+        let bdy = b.y() - self.y();
+        let cdx = c.x() - self.x();
+        let cdy = c.y() - self.y();
+        ScalarType::det3(
+            adx,
+            ady,
+            adx * adx + ady * ady,
+            bdx,
+            bdy,
+            bdx * bdx + bdy * bdy,
+            cdx,
+            cdy,
+            cdx * cdx + cdy * cdy,
+        ).is_positive()
     }
 }
 

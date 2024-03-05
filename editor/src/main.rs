@@ -54,7 +54,7 @@ impl Default for MeshSettings {
     fn default() -> Self {
         MeshSettings {
             tol: -4.0,
-            n: 7,
+            n: 30,
             r: 1.0,
             d1: Vec3::new(0.4, -1.0, 0.0),
             d2: Vec3::new(-1.0, 0.3, -1.0),
@@ -66,9 +66,9 @@ impl Default for MeshSettings {
 fn make_mesh(settings: &MeshSettings) -> MeshVec3 {
     let mut mesh = MeshVec3::regular_polygon(settings.r, settings.n); //cuboid(1.0, 1.0, 2.0);
     mesh.extrude(mesh.edge_between(1, 0).unwrap().id(), settings.d1, true);
-    let fe = mesh.extrude_face(3, settings.d2, true);
+    /*let fe = mesh.extrude_face(3, settings.d2, true);
     mesh.extrude_face(fe, settings.d3, true);
-    println!("{}", mesh);
+    println!("{}", mesh);*/
     mesh
 }
 
