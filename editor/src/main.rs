@@ -41,10 +41,10 @@ struct MeshSettings {
     tol: f32,
 
     n: usize,
-    
+
     #[inspector(min = 0.0, max = 10.0)]
     r: f32,
-    
+
     d1: Vec3,
     d2: Vec3,
     d3: Vec3,
@@ -74,6 +74,17 @@ fn make_mesh(settings: &MeshSettings) -> MeshVec3 {
 
 pub fn main() {
     env::set_var("RUST_BACKTRACE", "1"); // or "full"
+
+    let from = Vec3::new(0.0, 0.0, -1.00001);
+    let to = Vec3::new(0.0, 0.0, 1.0);
+    println!(
+        "{:?} {:?} {:?}",
+        from,
+        to,
+        Quat::from_rotation_arc(from.normalize(), to.normalize()) * from
+    );
+
+    return;
 
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {

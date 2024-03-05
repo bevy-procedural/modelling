@@ -177,6 +177,9 @@ pub trait Vector<ScalarType: Scalar>:
     fn xyz(&self) -> Self::Vec3D {
         Self::Vec3D::from_xyz(self.x(), self.y(), self.z())
     }
+
+    /// Normalizes the vector.
+    fn normalize(&self) -> Self;
 }
 
 /// Trait for coordinates in 2d space.
@@ -230,7 +233,8 @@ pub trait Vector2D<ScalarType: Scalar>: Vector<ScalarType> {
             cdx,
             cdy,
             cdx * cdx + cdy * cdy,
-        ).is_positive()
+        )
+        .is_positive()
     }
 }
 

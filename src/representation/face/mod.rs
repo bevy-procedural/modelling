@@ -134,9 +134,11 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
         assert!(P::Vec::dimensions() == 3);
 
         let normal = self.normal(mesh);
-        let z_axis = Vector3D::<P::S>::from_xyz(0.0.into(), 0.0.into(), 1.0.into());
-        let rotation = <P::Vec as Vector3D<P::S>>::Transform::from_rotation_arc(normal, z_axis);
-        // TODO: sometimes this results in the wrong ordering of the vertices. Fix this!
+        let z_axis = P::Vec::from_xyz(0.0.into(), 0.0.into(), 1.0.into());
+        let rotation = <P::Vec as Vector3D<P::S>>::Transform::from_rotation_arc(
+            normal.normalize(),
+            z_axis.normalize(),
+        );
         self.vertices(mesh)
             .map(move |v| (rotation.apply(*v.vertex()).xy(), v.id()))
     }

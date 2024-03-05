@@ -59,6 +59,11 @@ impl Vector<f32> for Vec3 {
     fn w(&self) -> f32 {
         0.0
     }
+
+    #[inline(always)]
+    fn normalize(&self) -> Self {
+        Vec3::normalize(*self)
+    }
 }
 
 impl Vector3D<f32> for Vec3 {
@@ -123,6 +128,11 @@ impl Vector<f32> for Vec2 {
     fn w(&self) -> f32 {
         0.0
     }
+
+    #[inline(always)]
+    fn normalize(&self) -> Self {
+        Vec2::normalize(*self)
+    }
 }
 
 impl Vector2D<f32> for Vec2 {
@@ -184,6 +194,8 @@ impl Transform3D for Transform {
 
     #[inline(always)]
     fn from_rotation_arc(from: Vec3, to: Vec3) -> Self {
+        assert!((from.length() - 1.0).abs() < 0.01);
+        assert!((to.length() - 1.0).abs() < 0.01);
         Transform::from_rotation(Quat::from_rotation_arc(from, to))
     }
 
@@ -194,12 +206,7 @@ impl Transform3D for Transform {
         }
         let v2 = self.transform_point(v);
         if v2.x.is_nan() {
-            panic!(
-                "NAN in transformed vertex: {:?} {:?} {:?}",
-                v,
-                self,
-                self.transform_point(v)
-            );
+            panic!("NAN in transformed vertex: {:?} {:?} {:?}", v, self, v2);
         }
         v2
     }

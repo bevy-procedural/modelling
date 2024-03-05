@@ -295,6 +295,7 @@ where
     ) where
         P::Vec: Vector3D<P::S>,
     {
+        // TODO: O(n^3) algorithm http://www.ist.tugraz.at/_attach/Publish/Eaa19/Chapter_04_MWT_handout.pdf
         let mut best_indices = Vec::new();
         let mut best_dist: P::S = std::f32::INFINITY.into();
 
@@ -311,7 +312,7 @@ where
                 dist += a.distance(b) + b.distance(c) + c.distance(a);
             }
 
-            if dist  < best_dist {
+            if dist < best_dist {
                 best_dist = dist;
                 best_indices = local_indices;
             }
@@ -325,7 +326,8 @@ where
         P::Vec: Vector3D<P::S>,
     {
         let mut local_indices = Vec::new();
-        self.min_weight_triangulation_stoch(mesh, &mut local_indices);
+        self.ear_clipping(mesh, &mut local_indices);
+        // self.min_weight_triangulation_stoch(mesh, &mut local_indices);
         //self.delaunayfy(mesh, &mut local_indices);
         //self.shorten(mesh, &mut local_indices);
         indices.extend(local_indices);
