@@ -75,17 +75,7 @@ fn make_mesh(settings: &MeshSettings) -> MeshVec3 {
 pub fn main() {
     env::set_var("RUST_BACKTRACE", "1"); // or "full"
 
-    let from = Vec3::new(0.0, 0.0, -1.00001);
-    let to = Vec3::new(0.0, 0.0, 1.0);
-    println!(
-        "{:?} {:?} {:?}",
-        from,
-        to,
-        Quat::from_rotation_arc(from.normalize(), to.normalize()) * from
-    );
-
-    return;
-
+   
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {

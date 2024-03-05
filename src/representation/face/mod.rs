@@ -99,11 +99,39 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
         self.is_planar(mesh, P::S::EPS * 10.0.into())
     }
 
-    /// Get the normal of the face. Assumes the face is planar.
-    pub fn normal<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> P::Vec {
+    /// A fast methods to get the surface normal, but will only work for convex faces.
+    pub fn normal_naive<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> P::Vec {
         assert!(self.is_planar2(mesh));
+        assert!(self.is_convex(mesh));
+
         let three: Vec<_> = self.vertices(mesh).take(3).map(|v| *v.vertex()).collect();
         (three[1] - three[0]).cross(&(three[2] - three[0]))
+    }
+
+    /// Get the normal of the face. Assumes the face is planar.
+    /// Uses Newell's method to handle concave faces.
+    pub fn normal<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> P::Vec
+    where
+        P::Vec: Vector3D<P::S>,
+    {
+        // TODO: overload this in a way that allows different dimensions
+
+        assert!(self.is_planar2(mesh));
+
+        let mut normal = P::Vec::zero();
+        for (a, b) in self
+            .vertices(mesh)
+            .map(|v| *v.vertex())
+            .circular_tuple_windows::<(_, _)>()
+        {
+            normal += P::Vec::from_xyz(
+                (a.z() + b.z()) * (b.y() - a.y()),
+                (a.x() + b.x()) * (b.z() - a.z()),
+                (a.y() + b.y()) * (b.x() - a.x()),
+            );
+        }
+
+        normal * P::Vec::from_xyz(P::S::from(-0.5), P::S::from(-0.5), P::S::from(-0.5))
     }
 
     /*
@@ -139,6 +167,20 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
             normal.normalize(),
             z_axis.normalize(),
         );
+        let mut vs: Vec<_> = self.vertices(mesh).map(|v| *v.vertex()).collect();
+        println!("normal: {:?} {:?}", normal, rotation.apply(normal));
+        println!(
+            "vs: {:?} {:?}",
+            (vs[1] - vs[0]).cross(&(vs[1] - vs[2])),
+            (vs[2] - vs[1]).cross(&(vs[2] - vs[3]))
+        );
+        vs = vs.iter().map(|v| rotation.apply(*v)).collect();
+        println!(
+            "vs: {:?} {:?}",
+            (vs[1] - vs[0]).cross(&(vs[1] - vs[2])),
+            (vs[2] - vs[1]).cross(&(vs[2] - vs[3]))
+        );
+
         self.vertices(mesh)
             .map(move |v| (rotation.apply(*v.vertex()).xy(), v.id()))
     }
