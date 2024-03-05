@@ -34,15 +34,16 @@ where
         let mut prev = v0;
 
         for i in 2..n {
+            let r = if i % 2 == 0 { radius } else { radius * 0.8.into() };
             let angle = pi2n * (i as f32);
             prev = current;
             current = mesh
                 .add_vertex((
                     current,
                     P::from_vec(P::Vec::from_xyz(
-                        radius * P::S::from(angle.sin()),
+                        r * P::S::from(angle.sin()),
                         P::S::default(),
-                        radius * P::S::from(angle.cos()),
+                        r * P::S::from(angle.cos()),
                     )),
                 ))
                 .0;
