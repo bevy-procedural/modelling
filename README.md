@@ -72,8 +72,8 @@ For package development, we recommend using the `editor`-subcrate. This example 
 - [ ] Primitives
   - [x] Polygon, Star
   - [x] Cuboid
-  - [x] Cylinder, Cone
-  - [ ] Tetrahedron, Octahedron, Dodecahedron, Icosahedron
+  - [x] Cylinder, Cone, Frustum, Tetrahedron, Octahedron
+  - [ ] Dodecahedron, Icosahedron
   - [ ] UV Sphere
   - [ ] Cube Sphere
   - [ ] Icosphere

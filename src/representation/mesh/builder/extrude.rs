@@ -69,7 +69,11 @@ where
 
     /// Create a vertex by translating the center of the given face and connect the given face to that vertex.
     pub fn extrude_to_center_point(&mut self, e: E, translation: P::Vec) -> V {
-        let f = self.close_face((e, true));
+        let f = if self.edge(e).is_boundary_self() {
+            self.close_face((e, true))
+        } else {
+            self.edge(e).face_id()
+        };
         let p = P::from_vec(self.face(f).center(self) + translation);
         self.remove_face(f);
         self.extrude_to_point(e, p)

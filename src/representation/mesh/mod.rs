@@ -168,7 +168,7 @@ where
     /// Flip all edges (and faces) turning the mesh inside out.
     pub fn flip(&mut self) {
         // TODO: Not very efficient, but easy to implement
-        let mut edges: Vec<_> = self.edges().map(|e| e.id()).collect();
+        let edges: Vec<_> = self.edges().map(|e| e.id()).collect();
         let mut flipped = HashSet::new();
         for i in 0..edges.len() {
             if flipped.contains(&edges[i]) {
