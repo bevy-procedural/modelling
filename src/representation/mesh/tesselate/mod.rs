@@ -24,7 +24,7 @@ where
         let mut indices = Vec::new();
         let mut vertices = Vec::new();
         for f in self.faces() {
-            f.tesselate_complete(self, &mut vertices, &mut indices);
+            f.tesselate_smooth_normal(self, &mut vertices, &mut indices);
         }
         (indices, vertices)
     }

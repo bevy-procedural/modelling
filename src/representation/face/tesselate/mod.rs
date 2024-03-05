@@ -347,7 +347,7 @@ where
     }
 
     /// Converts the face into a triangle list and duplicates vertices.
-    pub fn tesselate_complete<V: IndexType, P: Payload>(
+    pub fn tesselate_flat_normal<V: IndexType, P: Payload>(
         &self,
         mesh: &Mesh<E, V, F, P>,
         vertices: &mut Vec<P>,
@@ -365,6 +365,38 @@ where
         let mut local_indices = Vec::new();
         self.ear_clipping(mesh, &mut local_indices, true);
         indices.extend(local_indices.iter().map(|i| V::new(v0 + i.index())));
+    }
+
+    /// Converts the face into a triangle list and duplicates vertices.
+    pub fn tesselate_smooth_normal<V: IndexType, P: Payload>(
+        &self,
+        mesh: &Mesh<E, V, F, P>,
+        vertices: &mut Vec<P>,
+        indices: &mut Vec<V>,
+    ) where
+        P::Vec: Vector3D<P::S>,
+    {
+        let v0 = vertices.len();
+        let normal = self.normal(mesh);
+        self.vertices(mesh)
+            .circular_tuple_windows::<(_, _, _)>()
+            .for_each(|(prev, v, next)| {
+                let mut p = v.payload().clone();
+                let mut no = v.vertex().normal(*prev.vertex(), *next.vertex());
+                if no.dot(&normal) < 0.0.into() {
+                    no = -no;
+                }
+                p.set_normal(no);
+                vertices.push(p)
+            });
+        let mut local_indices = Vec::new();
+        self.ear_clipping(mesh, &mut local_indices, true);
+        let n = self.num_vertices(mesh);
+        indices.extend(
+            local_indices
+                .iter()
+                .map(|i| V::new(v0 + ((i.index() + n - 1) % n))),
+        );
     }
 
     /*/// Converts the face into a triangle list using the delaunay triangulation.

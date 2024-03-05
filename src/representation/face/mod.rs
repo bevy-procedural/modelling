@@ -107,13 +107,35 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
         self.is_planar(mesh, P::S::EPS * 10.0.into())
     }
 
+    /// Whether the face is simple, i.e., doesn't self-intersect or have holes.
+    pub fn is_simple<V: IndexType, P: Payload>(&self, _mesh: &Mesh<E, V, F, P>) -> bool {
+        todo!("implement this");
+    }
+
+    /// Whether the face is monotone, i.e., every orthogonal line intersects the face at most twice.
+    pub fn is_monotone<V: IndexType, P: Payload>(&self, _mesh: &Mesh<E, V, F, P>) -> bool {
+        todo!("implement this");
+    }
+
+    /// Whether the face is monotone at a given edge, i.e., every orthogonal line on that edge intersects the face at most twice.
+    pub fn is_monotone_at<V: IndexType, P: Payload>(
+        &self,
+        _mesh: &Mesh<E, V, F, P>,
+        _edge: E,
+    ) -> bool {
+        todo!("implement this");
+    }
+
     /// A fast methods to get the surface normal, but will only work for convex faces.
-    pub fn normal_naive<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> P::Vec {
+    pub fn normal_naive<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> P::Vec
+    where
+        P::Vec: Vector3D<P::S>,
+    {
         assert!(self.is_planar2(mesh));
         assert!(self.is_convex(mesh));
 
         let three: Vec<_> = self.vertices(mesh).take(3).map(|v| *v.vertex()).collect();
-        (three[1] - three[0]).cross(&(three[2] - three[0]))
+        three[1].normal(three[0], three[2])
     }
 
     /// Get the normal of the face. Assumes the face is planar.
@@ -176,6 +198,18 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
         );
         self.vertices(mesh)
             .map(move |v| (rotation.apply(*v.vertex()).xy(), v.id()))
+    }
+
+    /// Get the number of edges of the face.
+    pub fn num_edges<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> usize {
+        let (min, max) = self.edges(mesh).size_hint();
+        assert!(min == max.unwrap());
+        min
+    }
+
+    /// Get the number of vertices of the face.
+    pub fn num_vertices<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> usize {
+        self.num_edges(mesh)
     }
 }
 
