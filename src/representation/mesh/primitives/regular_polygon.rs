@@ -14,6 +14,11 @@ where
 {
     /// create a regular polygon
     pub fn regular_polygon(radius: P::S, n: usize) -> Mesh<E, V, F, P> {
+        Self::regular_star(radius, radius, n)
+    }
+
+    /// create a regular polygon
+    pub fn regular_star(inner_radius: P::S, outer_radius: P::S, n: usize) -> Mesh<E, V, F, P> {
         let pi2n = 2.0 * std::f32::consts::PI / (n as f32);
         let a0 = 0.0 as f32;
         let a1 = pi2n;
@@ -21,20 +26,24 @@ where
 
         let (v0, mut current) = mesh.add_isolated_edge(
             P::from_vec(P::Vec::from_xyz(
-                radius * P::S::from(a0.sin()),
+                inner_radius * P::S::from(a0.sin()),
                 P::S::default(),
-                radius * P::S::from(a0.cos()),
+                inner_radius * P::S::from(a0.cos()),
             )),
             P::from_vec(P::Vec::from_xyz(
-                radius * P::S::from(a1.sin()),
+                inner_radius * P::S::from(a1.sin()),
                 P::S::default(),
-                radius * P::S::from(a1.cos()),
+                inner_radius * P::S::from(a1.cos()),
             )),
         );
         let mut prev = v0;
 
         for i in 2..n {
-            let r = if i % 2 == 0 { radius } else { radius * 0.8.into() };
+            let r = if i % 2 == 0 {
+                outer_radius
+            } else {
+                inner_radius
+            };
             let angle = pi2n * (i as f32);
             prev = current;
             current = mesh

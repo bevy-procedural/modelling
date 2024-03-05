@@ -96,12 +96,12 @@ impl Scalar for f64 {
 
 /// Trait for tansformations in 3d space.
 
-pub trait Transform3D: Clone + Copy + Default + std::fmt::Debug + 'static {
+pub trait Transform: Clone + Copy + Default + std::fmt::Debug + 'static {
     /// The scalar type of the coordinates and angles used in the rotation.
     type S: Scalar;
 
     /// The vector type used in the rotation.
-    type Vec: Vector3D<Self::S>;
+    type Vec: Vector<Self::S>;
 
     /// Returns the identity rotation.
     fn identity() -> Self;
@@ -112,8 +112,18 @@ pub trait Transform3D: Clone + Copy + Default + std::fmt::Debug + 'static {
     /// Returns a rotation from a rotation arc.
     fn from_rotation_arc(from: Self::Vec, to: Self::Vec) -> Self;
 
-    /// Applies the rotation to a vector.
+    /// Constructs a transform from a translation.
+    fn from_translation(v: Self::Vec) -> Self;
+
+    /// Constructs a transform from a scale.
+    fn from_scale(v: Self::Vec) -> Self;
+
+    /// Applies the rotation/translation/scale/sheer to a vector.
     fn apply(&self, v: Self::Vec) -> Self::Vec;
+
+    /// Applies the rotation/scale/sheer to a vector.
+    fn apply_vec(&self, v: Self::Vec) -> Self::Vec ;
+
 }
 
 /// Trait for coordinates in n-dimensional space.
@@ -138,6 +148,9 @@ pub trait Vector<ScalarType: Scalar>:
     /// The 3d vector type used in the coordinates.
     type Vec3D: Vector3D<ScalarType>;
 
+    /// The rotation type used in the vector.
+    type Transform: Transform<S = ScalarType, Vec = Self>;
+    
     /// Returns the origin vector.
     fn zero() -> Self;
 
@@ -240,8 +253,6 @@ pub trait Vector2D<ScalarType: Scalar>: Vector<ScalarType> {
 
 /// Trait for coordinates in 3d space.
 pub trait Vector3D<ScalarType: Scalar>: Vector<ScalarType> {
-    /// The rotation type used in the vector.
-    type Transform: Transform3D<S = ScalarType, Vec = Self>;
 
     /// Construct from scalar values.
     fn from_xyz(x: ScalarType, y: ScalarType, z: ScalarType) -> Self;

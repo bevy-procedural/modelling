@@ -32,6 +32,11 @@ impl<T: Deletable<I> + Default, I: IndexType> DeletableVector<T, I> {
     pub fn iter(&self) -> impl Iterator<Item = &T> {
         self.data.iter().filter(|f| !f.is_deleted())
     }
+    
+    /// Returns a mutable iterator over the non-deleted elements.
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
+        self.data.iter_mut().filter(|f| !f.is_deleted())
+    }
 
     /// Returns the requested element. Panics if it doesn't exist or is deleted.
     pub fn get(&self, index: I) -> &T {

@@ -1,14 +1,12 @@
 //! Bevy specific implementations for the vertex payload and 3d rotation.
 
-use super::{Payload, Transform3D, Vector, Vector2D, Vector3D};
-use bevy::{
-    math::{Quat, Vec2, Vec3},
-    transform::components::Transform,
-};
+use super::{Payload, Transform, Vector, Vector2D, Vector3D};
+use bevy::math::{Affine2, Quat, Vec2, Vec3};
 
 impl Vector<f32> for Vec3 {
     type Vec2D = Vec2;
     type Vec3D = Vec3;
+    type Transform = bevy::transform::components::Transform;
 
     #[inline(always)]
     fn zero() -> Self {
@@ -67,8 +65,6 @@ impl Vector<f32> for Vec3 {
 }
 
 impl Vector3D<f32> for Vec3 {
-    type Transform = Transform;
-
     #[inline(always)]
     fn from_xyz(x: f32, y: f32, z: f32) -> Self {
         Vec3::new(x, y, z)
@@ -78,6 +74,7 @@ impl Vector3D<f32> for Vec3 {
 impl Vector<f32> for Vec2 {
     type Vec2D = Vec2;
     type Vec3D = Vec3;
+    type Transform = Affine2;
 
     #[inline(always)]
     fn zero() -> Self {
@@ -164,6 +161,15 @@ impl Payload for BevyPayload {
     }
 
     #[inline(always)]
+    fn transform(&self, t: &<Self::Vec as Vector<Self::S>>::Transform) -> Self {
+        Self {
+            position: t.apply(self.position),
+            normal: t.apply_vec(self.normal),
+            uv: self.uv,
+        }
+    }
+
+    #[inline(always)]
     fn vertex(&self) -> &Self::Vec {
         &self.position
     }
@@ -178,25 +184,36 @@ impl Payload for BevyPayload {
     }
 }
 
-impl Transform3D for Transform {
+// TODO: Switch to Affine3
+impl Transform for bevy::transform::components::Transform {
     type S = f32;
     type Vec = Vec3;
 
     #[inline(always)]
     fn identity() -> Self {
-        Transform::default()
+        bevy::transform::components::Transform::default()
     }
 
     #[inline(always)]
     fn from_axis_angle(axis: Vec3, angle: f32) -> Self {
-        Transform::from_rotation(Quat::from_axis_angle(axis, angle))
+        bevy::transform::components::Transform::from_rotation(Quat::from_axis_angle(axis, angle))
     }
 
     #[inline(always)]
     fn from_rotation_arc(from: Vec3, to: Vec3) -> Self {
         assert!((from.length() - 1.0).abs() < 0.01);
         assert!((to.length() - 1.0).abs() < 0.01);
-        Transform::from_rotation(Quat::from_rotation_arc(from, to))
+        bevy::transform::components::Transform::from_rotation(Quat::from_rotation_arc(from, to))
+    }
+
+    #[inline(always)]
+    fn from_translation(v: Vec3) -> Self {
+        bevy::transform::components::Transform::from_translation(v)
+    }
+
+    #[inline(always)]
+    fn from_scale(v: Vec3) -> Self {
+        bevy::transform::components::Transform::from_scale(v)
     }
 
     #[inline(always)]
@@ -209,5 +226,50 @@ impl Transform3D for Transform {
             panic!("NAN in transformed vertex: {:?} {:?} {:?}", v, self, v2);
         }
         v2
+    }
+
+    #[inline(always)]
+    fn apply_vec(&self, v: Vec3) -> Vec3 {
+        self.apply(v)
+    }
+}
+
+impl Transform for Affine2 {
+    type S = f32;
+    type Vec = Vec2;
+
+    #[inline(always)]
+    fn identity() -> Self {
+        Affine2::IDENTITY
+    }
+
+    #[inline(always)]
+    fn from_axis_angle(axis: Vec2, angle: f32) -> Self {
+        bevy::math::Affine2::from_axis_angle(axis, angle)
+    }
+
+    #[inline(always)]
+    fn from_rotation_arc(from: Vec2, to: Vec2) -> Self {
+        bevy::math::Affine2::from_rotation_arc(from, to)
+    }
+
+    #[inline(always)]
+    fn from_translation(v: Vec2) -> Self {
+        bevy::math::Affine2::from_translation(v)
+    }
+
+    #[inline(always)]
+    fn from_scale(v: Vec2) -> Self {
+        bevy::math::Affine2::from_scale(v)
+    }
+
+    #[inline(always)]
+    fn apply(&self, v: Vec2) -> Vec2 {
+        bevy::math::Affine2::transform_point2(self, v)
+    }
+
+    #[inline(always)]
+    fn apply_vec(&self, v: Vec2) -> Vec2 {
+        bevy::math::Affine2::transform_vector2(self, v)
     }
 }

@@ -1,3 +1,5 @@
+use self::payload::Vector;
+
 use super::{Deletable, HalfEdge, IndexType, Mesh};
 use payload::Payload;
 mod iterator;
@@ -87,6 +89,12 @@ impl<E: IndexType, V: IndexType, P: Payload> Vertex<E, V, P> {
         // self.edges(mesh).count() == 1
         let e = self.edge(mesh);
         e.prev_id() == e.twin_id()
+    }
+
+    /// Transforms the payload.
+    #[inline(always)]
+    pub fn transform(&mut self, transform: &<P::Vec as Vector<P::S>>::Transform) {
+        self.payload = self.payload.transform(transform);
     }
 }
 

@@ -1,6 +1,6 @@
 use crate::representation::{
     builder::{AddVertex, CloseFace},
-    payload::Payload,
+    payload::{Payload, Transform, Vector},
     IndexType, Mesh,
 };
 
@@ -13,7 +13,22 @@ where
 {
     /// Extrudes the given edge in the given direction.
     /// Returns the closing face if it was created.
-    pub fn extrude(&mut self, e: E, direction: P::Vec, close: bool) -> F{
+    pub fn extrude(&mut self, e: E, direction: P::Vec, close: bool) -> F {
+        self.extrude_ex(
+            e,
+            <P::Vec as Vector<P::S>>::Transform::from_translation(direction),
+            close,
+        )
+    }
+
+    /// Extrudes the given edge using the given transformation.
+    /// Returns the closing face if it was created.
+    pub fn extrude_ex(
+        &mut self,
+        e: E,
+        transform: <P::Vec as Vector<P::S>>::Transform,
+        close: bool,
+    ) -> F {
         assert!(self.edge(e).is_boundary_self());
 
         let first = self.edge(e).origin_id();
@@ -21,7 +36,7 @@ where
         let mut second = first;
         let edges = self.edge(e).edges_face_back(self).collect::<Vec<_>>();
         for i in 0..edges.len() {
-            let p = edges[i].origin(self).payload().translate(&direction);
+            let p = edges[i].origin(self).payload().transform(&transform);
 
             let curr = self.add_vertex((last, p)).0;
             if i > 0 {
@@ -47,5 +62,17 @@ where
         let e = self.face(f).edge_id();
         self.remove_face(f);
         return self.extrude(e, direction, close);
+    }
+
+    /// Extrudes the given face in the given direction.
+    pub fn extrude_face_ex(
+        &mut self,
+        f: F,
+        transform: <P::Vec as Vector<P::S>>::Transform,
+        close: bool,
+    ) -> F {
+        let e = self.face(f).edge_id();
+        self.remove_face(f);
+        return self.extrude_ex(e, transform, close);
     }
 }

@@ -118,7 +118,7 @@ where
     pub fn num_vertices(&self) -> usize {
         self.vertices.len()
     }
-    
+
     /// Returns the maximum vertex index in the mesh
     pub fn max_vertex_index(&self) -> usize {
         self.vertices.max_ind()
@@ -147,5 +147,12 @@ where
     /// Returns an iterator over all non-deleted faces
     pub fn faces(&self) -> impl Iterator<Item = &Face<E, F>> {
         self.faces.iter()
+    }
+
+    /// Transforms all vertices in the mesh
+    pub fn transform(&mut self, t: &<P::Vec as super::payload::Vector<P::S>>::Transform) {
+        for v in self.vertices.iter_mut() {
+            v.transform(t);
+        }
     }
 }

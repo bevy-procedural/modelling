@@ -1,4 +1,4 @@
-use crate::representation::payload::{Transform3D, Vector3D};
+use crate::representation::payload::{Transform, Vector3D};
 
 use super::{
     payload::{Payload, Scalar, Vector},
@@ -82,6 +82,9 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
             return true;
         }
 
+        // TODO: Ignoring planar-ness for now
+        return true;
+
         // TODO: is this correct?
         // TODO: collinear points cause problems
 
@@ -163,11 +166,10 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
 
         let normal = self.normal(mesh);
         let z_axis = P::Vec::from_xyz(0.0.into(), 0.0.into(), 1.0.into());
-        let rotation = <P::Vec as Vector3D<P::S>>::Transform::from_rotation_arc(
+        let rotation = <P::Vec as Vector<P::S>>::Transform::from_rotation_arc(
             normal.normalize(),
             z_axis.normalize(),
         );
-        let mut vs: Vec<_> = self.vertices(mesh).map(|v| *v.vertex()).collect();
         self.vertices(mesh)
             .map(move |v| (rotation.apply(*v.vertex()).xy(), v.id()))
     }

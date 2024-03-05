@@ -17,6 +17,9 @@ pub trait Payload: Clone + Default + PartialEq + std::fmt::Debug {
     /// Returns a translated clone of the payload.
     fn translate(&self, v: &Self::Vec) -> Self;
 
+    /// Returns the coordinates of the payload as a reference.
+    fn transform(&self, t: &<Self::Vec as Vector<Self::S>>::Transform) -> Self;
+
     /// returns the coordinates of the payload as an array
     fn vertex(&self) -> &Self::Vec;
 
