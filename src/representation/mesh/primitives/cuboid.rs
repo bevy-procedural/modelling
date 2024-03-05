@@ -20,16 +20,16 @@ where
         let (v0, v1) = mesh.add_isolated_edge(make(x, y, z), make(-x, y, z));
         let v2 = mesh.add_vertex((v1, make(-x, -y, z))).0;
         let v3 = mesh.add_vertex((v2, make(x, -y, z))).0;
-        mesh.close_face((v2, v3, v0));
+        mesh.close_face((v2, v3, v0, false));
         let v4 = mesh.add_vertex((v1, make(-x, y, -z))).0;
         let v5 = mesh.add_vertex((v4, make(-x, -y, -z))).0;
-        mesh.close_face((v4, v5, v2));
+        mesh.close_face((v4, v5, v2, false));
         let v6 = mesh.add_vertex((v0, make(x, y, -z))).0;
         let v7 = mesh.add_vertex((v3, make(x, -y, -z))).0;
-        mesh.close_face((v3, v7, v6));
-        mesh.close_face((v2, v5, v7));
-        mesh.close_face((v0, v6, v4));
-        mesh.close_face(mesh.edge_between(v6, v7).unwrap().id());
+        mesh.close_face((v3, v7, v6, false));
+        mesh.close_face((v2, v5, v7, false));
+        mesh.close_face((v0, v6, v4, false));
+        mesh.close_face((mesh.edge_between(v6, v7).unwrap().id(), false));
         mesh
     }
 }

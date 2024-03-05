@@ -62,7 +62,7 @@ impl Default for MeshSettings {
             r2: 0.8,
             d1: Vec3::new(0.4, 0.3, 0.0),
             rot: 0.3,
-            segs: 30,
+            segs: 5,
         }
     }
 }
@@ -71,7 +71,7 @@ fn make_mesh(settings: &MeshSettings) -> MeshVec3 {
     let mut mesh = MeshVec3::regular_star(settings.r, settings.r2, settings.n); //cuboid(1.0, 1.0, 2.0);
 
     mesh.transform(
-        &bevy::transform::components::Transform::from_translation(Vec3::new(0.0, -1.0, 0.0))
+        &bevy::transform::components::Transform::from_translation(Vec3::new(0.0, -0.99, 0.0))
             .with_rotation(Quat::from_rotation_z(PI)),
     );
 
@@ -79,6 +79,7 @@ fn make_mesh(settings: &MeshSettings) -> MeshVec3 {
         mesh.edge_between(1, 0).unwrap().id(),
         bevy::transform::components::Transform::from_rotation(Quat::from_rotation_y(settings.rot))
             .with_translation(settings.d1),
+        true,
         true,
     );
 
@@ -89,6 +90,7 @@ fn make_mesh(settings: &MeshSettings) -> MeshVec3 {
                 settings.rot,
             ))
             .with_translation(settings.d1),
+            true,
             true,
         );
     }

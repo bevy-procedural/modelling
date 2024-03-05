@@ -39,6 +39,7 @@ pub trait Scalar:
     /// Returns the arcus cosine of the scalar.
     fn acos(self) -> Self;
 
+    /// Returns the determinant of a 3x3 matrix.
     fn det3(
         a: Self,
         b: Self,
@@ -105,9 +106,6 @@ pub trait Transform: Clone + Copy + Default + std::fmt::Debug + 'static {
 
     /// Returns the identity rotation.
     fn identity() -> Self;
-
-    /// Returns a rotation from an axis and an angle.
-    fn from_axis_angle(axis: Self::Vec, angle: Self::S) -> Self;
 
     /// Returns a rotation from a rotation arc.
     fn from_rotation_arc(from: Self::Vec, to: Self::Vec) -> Self;

@@ -1,10 +1,9 @@
-use super::{Face, Mesh, Payload, Scalar};
+use super::{Face, Mesh, Payload};
 use crate::representation::{
     payload::{Vector, Vector2D, Vector3D},
     IndexType,
 };
 use itertools::Itertools;
-use rand::prelude::*;
 use std::collections::HashMap;
 
 impl<E, F> Face<E, F>
@@ -18,7 +17,7 @@ where
         mesh: &Mesh<E, V, F, P>,
         indices: &mut Vec<V>,
     ) {
-        assert!(self.is_planar(mesh, P::S::EPS * 10.0.into()));
+        assert!(self.may_be_curved() || self.is_planar2(mesh));
         assert!(self.is_convex(mesh));
 
         let center = self.vertices(mesh).next().unwrap();
@@ -41,7 +40,7 @@ where
         P::Vec: Vector3D<P::S>,
     {
         // TODO: ear clipping is inefficient
-        assert!(self.is_planar(mesh, P::S::EPS * 10.0.into()));
+        assert!(self.may_be_curved() || self.is_planar2(mesh));
 
         let vs: Vec<(<P::Vec as Vector<P::S>>::Vec2D, V)> =
             self.vertices_2d::<V, P>(mesh).collect();
@@ -108,7 +107,7 @@ where
         P::Vec: Vector3D<P::S>,
     {
         // TODO: ear clipping is inefficient
-        assert!(self.is_planar(mesh, P::S::EPS * 10.0.into()));
+        assert!(self.may_be_curved() || self.is_planar2(mesh));
 
         let vs: Vec<(<P::Vec as Vector<P::S>>::Vec2D, V)> =
             self.vertices_2d::<V, P>(mesh).collect();
@@ -229,6 +228,7 @@ where
     where
         P::Vec: Vector3D<P::S>,
     {
+        // TODO: This shortens edges producing invalid meshess!
         let vs: Vec<(<P::Vec as Vector<P::S>>::Vec2D, V)> =
             self.vertices_2d::<V, P>(mesh).collect();
         assert!(vs.len() == self.vertices(mesh).count());
@@ -302,7 +302,8 @@ where
         for _ in 1..10 {
             let mut local_indices = Vec::new();
             self.ear_clipping_rand2(mesh, &mut local_indices);
-            self.shorten(mesh, &mut local_indices);
+
+            // self.shorten(mesh, &mut local_indices);
 
             let mut dist = 0.0.into();
 
@@ -344,7 +345,7 @@ where
         mesh: &Mesh<E, V, F, P>,
         _indices: &mut Vec<V>,
     ) {
-        assert!(self.is_planar(mesh, P::S::EPS * 10.0.into()));
+        assert!(self.may_be_curved() || self.is_planar2(mesh));
 
 
 

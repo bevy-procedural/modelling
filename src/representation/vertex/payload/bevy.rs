@@ -195,11 +195,6 @@ impl Transform for bevy::transform::components::Transform {
     }
 
     #[inline(always)]
-    fn from_axis_angle(axis: Vec3, angle: f32) -> Self {
-        bevy::transform::components::Transform::from_rotation(Quat::from_axis_angle(axis, angle))
-    }
-
-    #[inline(always)]
     fn from_rotation_arc(from: Vec3, to: Vec3) -> Self {
         assert!((from.length() - 1.0).abs() < 0.01);
         assert!((to.length() - 1.0).abs() < 0.01);
@@ -244,13 +239,8 @@ impl Transform for Affine2 {
     }
 
     #[inline(always)]
-    fn from_axis_angle(axis: Vec2, angle: f32) -> Self {
-        bevy::math::Affine2::from_axis_angle(axis, angle)
-    }
-
-    #[inline(always)]
     fn from_rotation_arc(from: Vec2, to: Vec2) -> Self {
-        bevy::math::Affine2::from_rotation_arc(from, to)
+        bevy::math::Affine2::from_angle(from.angle_between(to))
     }
 
     #[inline(always)]

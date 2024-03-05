@@ -27,6 +27,8 @@ where
     // No! We don't have i
     // a half-edge incident to each inner component of the face
     // inner_components: Vec<EdgeIndex>,
+    /// whether the face is curved, i.e., not planar
+    curved: bool,
 }
 
 impl<E: IndexType, F: IndexType> Face<E, F> {
@@ -49,11 +51,12 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
     }
 
     /// Creates a new face.
-    pub fn new(edge: E) -> Self {
+    pub fn new(edge: E, curved: bool) -> Self {
         assert!(edge != IndexType::max());
         Self {
             id: IndexType::max(),
             edge,
+            curved,
         }
     }
 
@@ -82,9 +85,6 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
             return true;
         }
 
-        // TODO: Ignoring planar-ness for now
-        return true;
-
         // TODO: is this correct?
         // TODO: collinear points cause problems
 
@@ -95,6 +95,11 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
             let v = *v.vertex();
             (v - three[0]).dot(&n).abs() < eps
         })
+    }
+
+    /// Whether the face is allowed to be curved.
+    pub fn may_be_curved(&self) -> bool {
+        self.curved
     }
 
     /// Whether the face is planar.
@@ -119,7 +124,8 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
     {
         // TODO: overload this in a way that allows different dimensions
 
-        assert!(self.is_planar2(mesh));
+        // TODO: allows only for slight curvature...
+        assert!(self.may_be_curved() || self.is_planar2(mesh));
 
         let mut normal = P::Vec::zero();
         for (a, b) in self
@@ -160,8 +166,6 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
         P::Vec: Vector3D<P::S>,
     {
         // TODO: overload this in a way that allows different dimensions
-
-        assert!(self.is_planar2(mesh));
         assert!(P::Vec::dimensions() == 3);
 
         let normal = self.normal(mesh);
@@ -204,6 +208,7 @@ impl<E: IndexType, F: IndexType> Default for Face<E, F> {
         Self {
             id: IndexType::max(),
             edge: IndexType::max(),
+            curved: false,
         }
     }
 }

@@ -18,6 +18,7 @@ where
             e,
             <P::Vec as Vector<P::S>>::Transform::from_translation(direction),
             close,
+            false,
         )
     }
 
@@ -28,6 +29,7 @@ where
         e: E,
         transform: <P::Vec as Vector<P::S>>::Transform,
         close: bool,
+        curved: bool,
     ) -> F {
         assert!(self.edge(e).is_boundary_self());
 
@@ -39,19 +41,20 @@ where
             let p = edges[i].origin(self).payload().transform(&transform);
 
             let curr = self.add_vertex((last, p)).0;
+
             if i > 0 {
-                self.close_face((last, curr, edges[i].origin_id()));
+                self.close_face((last, curr, edges[i].origin_id(), curved));
             } else {
                 second = curr;
             }
             if i == edges.len() - 1 {
-                self.close_face((edges[i].origin_id(), curr, second));
+                self.close_face((edges[i].origin_id(), curr, second, curved));
             }
             last = curr;
         }
 
         if close {
-            return self.close_face(self.edge_id_between(second, last));
+            return self.close_face((self.edge_id_between(second, last), curved));
         }
 
         return IndexType::max();
@@ -70,9 +73,10 @@ where
         f: F,
         transform: <P::Vec as Vector<P::S>>::Transform,
         close: bool,
+        curved: bool,
     ) -> F {
         let e = self.face(f).edge_id();
         self.remove_face(f);
-        return self.extrude_ex(e, transform, close);
+        return self.extrude_ex(e, transform, close, curved);
     }
 }

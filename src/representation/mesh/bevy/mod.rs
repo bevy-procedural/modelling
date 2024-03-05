@@ -62,6 +62,9 @@ where
             bevy::render::mesh::Mesh::ATTRIBUTE_POSITION,
             VertexAttributeValues::Float32x3(vertices),
         );
+
+        // mesh.duplicate_vertices();
+        // mesh.compute_flat_normals();
     }
 
     /// Convert the mesh to a bevy mesh

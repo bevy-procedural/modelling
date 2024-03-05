@@ -58,7 +58,7 @@ where
                 .0;
         }
 
-        mesh.close_face((prev, current, v0));
+        mesh.close_face((prev, current, v0, false));
 
         mesh
     }

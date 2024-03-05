@@ -9,12 +9,14 @@ pub trait CloseFace<Input> {
     fn close_face(&mut self, input: Input) -> Self::FaceIndex;
 }
 
-impl<E: IndexType, V: IndexType, F: IndexType, P: Payload> CloseFace<E> for Mesh<E, V, F, P> {
+impl<E: IndexType, V: IndexType, F: IndexType, P: Payload> CloseFace<(E, bool)>
+    for Mesh<E, V, F, P>
+{
     type FaceIndex = F;
 
     /// Close the open boundary with a single face
-    fn close_face(&mut self, e: E) -> F {
-        let f = self.faces.push(Face::new(e));
+    fn close_face(&mut self, (e, curved): (E, bool)) -> F {
+        let f = self.faces.push(Face::new(e, curved));
         self.edge(e)
             .clone()
             .edges_face_mut(self)
@@ -23,11 +25,13 @@ impl<E: IndexType, V: IndexType, F: IndexType, P: Payload> CloseFace<E> for Mesh
     }
 }
 
-impl<E: IndexType, V: IndexType, F: IndexType, P: Payload> CloseFace<(E, E)> for Mesh<E, V, F, P> {
+impl<E: IndexType, V: IndexType, F: IndexType, P: Payload> CloseFace<(E, E, bool)>
+    for Mesh<E, V, F, P>
+{
     type FaceIndex = F;
 
     /// Close the face by connecting `inside` with the next edge to close the face and `outside` with the next edge to complete the outside
-    fn close_face(&mut self, (inside, outside): (E, E)) -> F {
+    fn close_face(&mut self, (inside, outside, curved): (E, E, bool)) -> F {
         let e_inside = self.edge(inside);
         let e_outside = self.edge(outside);
         let v = e_inside.target(self).id();
@@ -58,7 +62,7 @@ impl<E: IndexType, V: IndexType, F: IndexType, P: Payload> CloseFace<(E, E)> for
         self.edge_mut(inside).set_next(e1);
         self.edge_mut(outside).set_next(e2);
 
-        let f = self.faces.push(Face::new(inside));
+        let f = self.faces.push(Face::new(inside, curved));
 
         self.edge(inside)
             .clone()
@@ -69,13 +73,13 @@ impl<E: IndexType, V: IndexType, F: IndexType, P: Payload> CloseFace<(E, E)> for
     }
 }
 
-impl<E: IndexType, V: IndexType, F: IndexType, P: Payload> CloseFace<(V, V, V)>
+impl<E: IndexType, V: IndexType, F: IndexType, P: Payload> CloseFace<(V, V, V, bool)>
     for Mesh<E, V, F, P>
 {
     type FaceIndex = F;
 
     /// Close the face by connecting the edge from v1 to v2 with vertex w.
-    fn close_face(&mut self, (prev, from, to): (V, V, V)) -> F {
+    fn close_face(&mut self, (prev, from, to, curved): (V, V, V, bool)) -> F {
         let inside = self.edge_between(prev, from).unwrap().id();
 
         assert!(
@@ -95,6 +99,6 @@ impl<E: IndexType, V: IndexType, F: IndexType, P: Payload> CloseFace<(V, V, V)>
             .unwrap()
             .id();
 
-        return self.close_face((inside, outside));
+        return self.close_face((inside, outside, curved));
     }
 }
