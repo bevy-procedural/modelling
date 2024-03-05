@@ -2,7 +2,6 @@ use bevy::math::{Affine2, Quat, Vec2, Vec3};
 
 use crate::math::Transform;
 
-
 // TODO: Switch to Affine3
 impl Transform for bevy::transform::components::Transform {
     type S = f32;
@@ -28,6 +27,16 @@ impl Transform for bevy::transform::components::Transform {
     #[inline(always)]
     fn from_scale(v: Vec3) -> Self {
         bevy::transform::components::Transform::from_scale(v)
+    }
+
+    #[inline(always)]
+    fn with_scale(&self, scale: Self::Vec) -> Self {
+        bevy::transform::components::Transform::with_scale(*self, scale)
+    }
+
+    #[inline(always)]
+    fn with_translation(&self, v: Self::Vec) -> Self {
+        bevy::transform::components::Transform::with_translation(*self, v)
     }
 
     #[inline(always)]
@@ -70,6 +79,16 @@ impl Transform for Affine2 {
     #[inline(always)]
     fn from_scale(v: Vec2) -> Self {
         bevy::math::Affine2::from_scale(v)
+    }
+
+    #[inline(always)]
+    fn with_scale(&self, scale: Self::Vec) -> Self {
+        bevy::math::Affine2::from_scale(scale) * *self
+    }
+
+    #[inline(always)]
+    fn with_translation(&self, v: Self::Vec) -> Self {
+        bevy::math::Affine2::from_translation(v) * *self
     }
 
     #[inline(always)]

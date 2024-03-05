@@ -21,6 +21,12 @@ pub trait Transform: Clone + Copy + Default + std::fmt::Debug + 'static {
     /// Constructs a transform from a scale.
     fn from_scale(v: Self::Vec) -> Self;
 
+    /// Adds scale.
+    fn with_scale(&self, v: Self::Vec) -> Self;
+
+    /// Adds translation.
+    fn with_translation(&self, v: Self::Vec) -> Self;
+
     /// Applies the rotation/translation/scale/sheer to a vector.
     fn apply(&self, v: Self::Vec) -> Self::Vec;
 

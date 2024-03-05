@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use super::{payload::Payload, Deletable, DeletableVector, Face, HalfEdge, IndexType, Vertex};
 pub mod builder;
 mod check;
@@ -155,11 +157,25 @@ where
             v.transform(t);
         }
     }
-    
+
     /// Translates all vertices in the mesh
     pub fn translate(&mut self, t: &P::Vec) {
         for v in self.vertices.iter_mut() {
             v.translate(t);
+        }
+    }
+
+    /// Flip all edges (and faces) turning the mesh inside out.
+    pub fn flip(&mut self) {
+        // TODO: Not very efficient, but easy to implement
+        let mut edges: Vec<_> = self.edges().map(|e| e.id()).collect();
+        let mut flipped = HashSet::new();
+        for i in 0..edges.len() {
+            if flipped.contains(&edges[i]) {
+                continue;
+            }
+            HalfEdge::flip(edges[i], self);
+            flipped.insert(self.edge(edges[i]).twin_id());
         }
     }
 }

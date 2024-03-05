@@ -14,7 +14,10 @@ use bevy_panorbit_camera::*;
 use procedural_modelling::{
     gizmo::{
         self,
-        bevy::{show_edges, show_faces, show_vertex_indices, text::{text3d::Text3d, Text3dGizmo, Text3dGizmos}},
+        bevy::{
+            show_edges, show_faces, show_vertex_indices,
+            text::{text3d::Text3d, Text3dGizmo, Text3dGizmos},
+        },
     },
     representation::bevy::MeshVec3,
 };
@@ -107,8 +110,11 @@ fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
 fn make_mesh(settings: &MeshSettings) -> MeshVec3 {
     // make_2d_shape(settings)
     // _make_spiral(settings)
-    let mesh = MeshVec3::cone(1.0.into(), 2.0.into(), 4);
-    println!("{}", mesh);
+    let mesh = MeshVec3::frustum(1.0.into(), 0.0.into(), 2.0.into(), 10);
+    /*let mut mesh = MeshVec3::regular_polygon(1.0, 3);
+    mesh.flip();
+    mesh.extrude(1, Vec3::new(0.0, 1.0, 0.0), true);
+    println!("{}", mesh);*/
     mesh
 }
 
@@ -185,8 +191,7 @@ fn setup_meshes(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut texts: ResMut<Text3dGizmos>,
-) {   
-
+) {
     let mesh = make_mesh(&MeshSettings::default());
     commands.spawn((
         PbrBundle {

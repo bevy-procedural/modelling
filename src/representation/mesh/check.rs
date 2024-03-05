@@ -250,7 +250,7 @@ impl<E: IndexType, V: IndexType, F: IndexType, P: Payload> std::fmt::Display for
                 .collect::<Vec<_>>()
                 .join("\n"),
             if let Err(msg) = self.check() {
-                msg
+                format!("⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️ ERROR ⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️\n{}" , msg)
             } else {
                 "".to_string()
             }

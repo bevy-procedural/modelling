@@ -200,6 +200,32 @@ impl<E: IndexType, V: IndexType, F: IndexType> HalfEdge<E, V, F> {
         let v2 = self.target(mesh).vertex().clone();
         (v1 + v2) * P::S::from(0.5)
     }
+
+    /// Flips the direction of the edge and its twin
+    pub fn flip<P: Payload>(e: E, mesh: &mut Mesh<E, V, F, P>) {
+        let origin = mesh.edge(e).origin_id();
+        let target = mesh.edge(e).target_id(mesh);
+
+        let twin_id = {
+            let edge = mesh.edge_mut(e);
+            let tmp = edge.next;
+            edge.next = edge.prev;
+            edge.prev = tmp;
+            edge.origin = target;
+            edge.twin_id()
+        };
+        {
+            let twin = mesh.edge_mut(twin_id);
+            let tmp = twin.next;
+            twin.next = twin.prev;
+            twin.prev = tmp;
+            twin.origin = origin;
+        }
+        let o = mesh.vertex_mut(origin);
+        o.set_edge(twin_id);
+        let t = mesh.vertex_mut(target);
+        t.set_edge(e);
+    }
 }
 
 impl<E: IndexType, V: IndexType, F: IndexType> std::fmt::Display for HalfEdge<E, V, F> {

@@ -31,9 +31,7 @@ where
         let edges = self.edge(e).edges_face_back(self).collect::<Vec<_>>();
         for i in 0..edges.len() {
             let p = edges[i].origin(self).payload().transform(&transform);
-
             let curr = self.add_vertex((last, p)).0;
-
             if i > 0 {
                 self.close_face((last, curr, edges[i].origin_id(), curved));
             } else {
@@ -52,24 +50,24 @@ where
         return IndexType::max();
     }
 
+    /// Create a vertex at the given position and connect the given face to that vertex.
     pub fn extrude_to_point(&mut self, e: E, p: P) -> V {
-        let mut last = self.edge(e).origin_id();
-        let mut curr = self.edge(e).target_id(self);
+        let mut curr = self.edge(e).origin_id();
+        let mut last = self.edge(e).target_id(self);
         let edges = self.edge(e).edges_face_back(self).collect::<Vec<_>>();
 
         let point = self.add_vertex((last, p)).0;
 
         for i in 1..edges.len() {
-            println!("{} {}", last, curr);
-            self.close_face((last, curr, point, false));
+            self.close_face((last, point, curr, false));
             last = curr;
             curr = edges[i].origin_id();
-            break;
         }
-        //self.close_face((self.edge_id_between(point, last), false));
+        self.close_face((self.edge_id_between(point, curr), false));
         point
     }
 
+    /// Create a vertex by translating the center of the given face and connect the given face to that vertex.
     pub fn extrude_to_center_point(&mut self, e: E, translation: P::Vec) -> V {
         let f = self.close_face((e, true));
         let p = P::from_vec(self.face(f).center(self) + translation);

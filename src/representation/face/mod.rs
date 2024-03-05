@@ -19,9 +19,7 @@ where
 
     /// a half-edge incident to the face (outer component)
     edge: EdgeIndex,
-    // No! We don't have i
-    // a half-edge incident to each inner component of the face
-    // inner_components: Vec<EdgeIndex>,
+    
     /// whether the face is curved, i.e., not planar
     curved: bool,
 }

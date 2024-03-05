@@ -1,4 +1,7 @@
-use crate::representation::{payload::Payload, Face, IndexType, Mesh};
+use crate::{
+    representation::{payload::Payload, Face, IndexType, Mesh},
+    util::iter::contains_exactly_one,
+};
 
 /// Close a phase given some description. Might insert additional edges and vertices.
 pub trait CloseFace<Input> {
@@ -83,13 +86,15 @@ impl<E: IndexType, V: IndexType, F: IndexType, P: Payload> CloseFace<(V, V, V, b
         let inside = self.edge_between(prev, from).unwrap().id();
 
         assert!(
-            self.vertex(to)
-                .edges_in(self)
-                .filter(|e| {
-                    e.is_boundary_self() && e.can_reach(self, self.edge(inside).origin_id())
-                })
-                .count()
-                == 1,
+            contains_exactly_one(self.vertex(to).edges_in(self), |e| {
+                e.is_boundary_self() && e.can_reach(self, self.edge(inside).origin_id())
+            }),
+            "There mus be exactly one ingoing edge to {} that can reach edge {} but there were {:?}",
+            to,
+            inside,
+            self.vertex(to).edges_in(self).filter(|e| {
+                e.is_boundary_self() && e.can_reach(self, self.edge(inside).origin_id())
+            }).collect::<Vec<_>>()
         );
 
         let outside = self

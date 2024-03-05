@@ -39,6 +39,11 @@ impl<E: IndexType, V: IndexType, P: Payload> Vertex<E, V, P> {
         }
     }
 
+    /// Changes the representative of the outgoing edges 
+    pub fn set_edge(&mut self, edge: E) {
+        self.edge = edge;
+    }
+
     /// Returns the index of the vertex
     #[inline(always)]
     pub fn id(&self) -> V {

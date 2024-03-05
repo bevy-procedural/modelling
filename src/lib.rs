@@ -7,6 +7,7 @@
 //! A framework-agnostic Procedural Modelling crate.
 //!
 
-pub mod representation;
-pub mod math;
 pub mod gizmo;
+pub mod math;
+pub mod representation;
+pub mod util;

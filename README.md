@@ -103,6 +103,7 @@ For package development, we recommend using the `editor`-subcrate. This example 
   - [ ] Topology Analysis
   - [ ] Spatial Data Structures
 - [ ] Debug Visualizations
+  - [x] Indices
   - [ ] Normals
   - [ ] Tangents
   - [ ] Topology
