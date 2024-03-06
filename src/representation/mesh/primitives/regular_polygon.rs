@@ -20,6 +20,20 @@ where
         Self::regular_star(radius, radius, n)
     }
 
+    /// Draw a polygon from the given vertices
+    pub fn polygon(v: &[P::Vec]) -> Mesh<E, V, F, P> {
+        let mut mesh = Mesh::<E, V, F, P>::new();
+        assert!(v.len() >= 3);
+        let (v0, mut current) = mesh.add_isolated_edge(P::from_vec(v[0]), P::from_vec(v[1]));
+        let mut last = current;
+        for i in 2..v.len() {
+            last = current;
+            current = mesh.add_vertex((current, P::from_vec(v[i]))).0;
+        }
+        mesh.close_face((last, current, v0, false));
+        mesh
+    }
+
     /// create a regular star, i.e., a regular polygon with two radii
     pub fn regular_star(inner_radius: P::S, outer_radius: P::S, n: usize) -> Mesh<E, V, F, P> {
         let pi2n = 2.0 * std::f32::consts::PI / (n as f32);

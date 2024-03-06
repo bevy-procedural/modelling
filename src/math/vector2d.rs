@@ -12,6 +12,13 @@ pub trait Vector2D<ScalarType: Scalar>: Vector<ScalarType> {
         (*self - prev).cross2d(&(next - *self)).is_positive()
     }
 
+    /// True if the vertex is collinear.
+    fn collinear(&self, a: Self, b: Self, eps: ScalarType) -> bool {
+        let ab = b - a;
+        let ac = *self - a;
+        ab.cross2d(&ac).abs() <= eps
+    }
+
     /// Returns the barycentric sign of a point in a triangle.
     #[inline(always)]
     fn barycentric_sign(a: Self, b: Self, c: Self) -> ScalarType {

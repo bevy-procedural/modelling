@@ -23,6 +23,7 @@ where
     ) where
         P::Vec: Vector3D<P::S>,
     {
+        let eps = 0.00001.into();
         debug_assert!(self.may_be_curved() || self.is_planar2(mesh));
         debug_assert!(self.is_simple(mesh));
 
@@ -63,11 +64,27 @@ where
             debug_assert!(i_c != i_a);
 
             // cut the ear off
-            if !vs[i_b].0.convex(vs[i_a].0, vs[i_c].0) || !triangle_empty(i_a, i_b, i_c) {
+            if !vs[i_b].0.convex(vs[i_a].0, vs[i_c].0)
+                || !triangle_empty(i_a, i_b, i_c)
+                || vs[i_b].0.collinear(vs[i_a].0, vs[i_c].0, eps)
+            {
                 fails_since_advance += 1;
                 if fails_since_advance > n {
                     // TODO: don't panic; this could happen due to float inaccuracies
-                    panic!("Failed to advance {:?} {} {} {}", vs, i_a, i_b, i_c);
+                    println!("⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️");
+                    println!(
+                        "Failed to advance {} {} {}",
+                        vs[i_a].1, vs[i_b].1, vs[i_c].1
+                    );
+                    println!(
+                        "clipped: {:?}",
+                        clipped
+                            .iter()
+                            .enumerate()
+                            .filter_map(|(i, &c)| if c { Some(i) } else { None })
+                            .collect::<Vec<_>>()
+                    );
+                    return;
                 }
                 i_a = i_b;
                 continue;
