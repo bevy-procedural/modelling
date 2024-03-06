@@ -1,7 +1,10 @@
 //! This module implements bevy specific mesh handling
 
 use super::{IndexType, Mesh};
-use crate::representation::payload::{bevy::BevyPayload, Payload};
+use crate::representation::{
+    payload::{bevy::BevyPayload, Payload},
+    tesselate::{GenerateNormals, TriangulationAlgorithm},
+};
 use bevy::render::{
     mesh::{PrimitiveTopology, VertexAttributeValues},
     render_asset::RenderAssetUsages,
@@ -55,9 +58,12 @@ where
         assert!(mesh.primitive_topology() == PrimitiveTopology::TriangleList);
         assert!(mesh.asset_usage.contains(RenderAssetUsages::MAIN_WORLD));
         Self::bevy_remove_attributes(mesh);
-        //let vertices = self.raw_vertices();
-        //let indices = self.tesselate();
-        let (indices, raw_vertices) = self.tesselate_complete();
+
+        let (indices, mut raw_vertices) =
+            self.tesselate(TriangulationAlgorithm::Delaunay, GenerateNormals::None);
+        if raw_vertices.len() == 0 {
+            raw_vertices = self.vertices().map(|v| v.payload()).cloned().collect();
+        }
 
         mesh.insert_indices(self.bevy_indices(&indices));
 

@@ -105,8 +105,8 @@ fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
 }
 
 fn make_mesh(settings: &MeshSettings) -> MeshVec3 {
-     make_2d_shape(settings)
-    // _make_spiral(settings)
+    // make_2d_shape(settings)
+     _make_spiral(settings)
     //MeshVec3::octahedron(1.0)
 }
 
@@ -201,9 +201,9 @@ fn setup_meshes(
         Name::new("Generated Shape"),
     ));
 
-    show_vertex_indices(&mut texts, &mesh);
-    show_edges(&mut texts, &mesh, 0.1);
-    show_faces(&mut texts, &mesh);
+    //show_vertex_indices(&mut texts, &mesh);
+    //show_edges(&mut texts, &mesh, 0.1);
+    //show_faces(&mut texts, &mesh);
 
     commands.spawn((
         PbrBundle {

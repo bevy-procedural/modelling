@@ -10,15 +10,26 @@ where
     E: IndexType,
     F: IndexType,
 {
-    fn delaunayfy<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>, indices: &mut Vec<V>)
-    where
+    /// Flips edges until the delaunay-condition is met. This is quite slow: O(n^3).
+    pub fn delaunayfy<V: IndexType, P: Payload>(
+        &self,
+        mesh: &Mesh<E, V, F, P>,
+        indices: &mut Vec<V>,
+        local_indices: bool,
+    ) where
         P::Vec: Vector3D<P::S>,
     {
         let vs: Vec<(P::Vec2, V)> = self.vertices_2d::<V, P>(mesh).collect();
-        assert!(vs.len() == self.vertices(mesh).count());
+        assert!(vs.len() == self.num_vertices(mesh));
         let mut vsh: HashMap<V, P::Vec2> = HashMap::new();
-        for (v, p) in vs {
-            vsh.insert(p, v);
+        if local_indices {
+            for (i, (v, p)) in vs.iter().enumerate() {
+                vsh.insert(V::new(i), *v);
+            }
+        } else {
+            for (v, p) in vs {
+                vsh.insert(p, v);
+            }
         }
 
         if indices.len() < 3 {
@@ -70,9 +81,6 @@ where
         _indices: &mut Vec<V>,
     ) {
         assert!(self.may_be_curved() || self.is_planar2(mesh));
-
-
-
         // TODO: or at least some other O(n log n) algorithm: https://en.wikipedia.org/wiki/Delaunay_triangulation
     }*/
 }

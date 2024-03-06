@@ -1,5 +1,11 @@
 use super::{IndexType, Mesh};
-use crate::{math::Vector3D, representation::payload::Payload};
+use crate::{
+    math::Vector3D,
+    representation::{
+        payload::Payload,
+        tesselate::{GenerateNormals, TriangulationAlgorithm},
+    },
+};
 
 impl<E, V, F, P> Mesh<E, V, F, P>
 where
@@ -9,22 +15,23 @@ where
     P: Payload,
     P::Vec: Vector3D<P::S>,
 {
-    /// convert the mesh to triangles and get all indices to do so
-    pub fn tesselate(&self) -> Vec<V> {
-        let mut indices = Vec::new();
-        for f in self.faces() {
-            f.tesselate(self, &mut indices);
-        }
-        indices
-    }
-
     /// convert the mesh to triangles and get all indices to do so.
-    /// Also duplicates vertices to insert normals etc.
-    pub fn tesselate_complete(&self) -> (Vec<V>, Vec<P>) {
+    /// Also optionally duplicates vertices to insert normals etc. (otherwise, return empty vertices)
+    pub fn tesselate(
+        &self,
+        algorithm: TriangulationAlgorithm,
+        generate_normals: GenerateNormals,
+    ) -> (Vec<V>, Vec<P>) {
         let mut indices = Vec::new();
         let mut vertices = Vec::new();
         for f in self.faces() {
-            f.tesselate_flat_normal(self, &mut vertices, &mut indices);
+            f.tesselate(
+                self,
+                &mut vertices,
+                &mut indices,
+                algorithm,
+                generate_normals,
+            );
         }
         (indices, vertices)
     }

@@ -1,7 +1,7 @@
 use super::{payload::Payload, Deletable, HalfEdge, IndexType, Mesh};
 mod geometry;
 mod iterator;
-mod tesselate;
+pub mod tesselate;
 
 /// A face in a mesh.
 ///

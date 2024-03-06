@@ -76,23 +76,23 @@ where
         let mut best_dist: P::S = std::f32::INFINITY.into();
 
         for _ in 1..100 {
-            let mut local_indices = Vec::new();
-            self.ear_clipping_randomized(mesh, &mut local_indices);
+            let mut tmp_indices = Vec::new();
+            self.ear_clipping(mesh, &mut tmp_indices, false, true);
 
             // self.shorten(mesh, &mut local_indices);
 
             let mut dist = 0.0.into();
 
-            for i in (0..local_indices.len()).step_by(3) {
-                let a = mesh.vertex(local_indices[i]).vertex();
-                let b = mesh.vertex(local_indices[i + 1]).vertex();
-                let c = mesh.vertex(local_indices[i + 2]).vertex();
+            for i in (0..tmp_indices.len()).step_by(3) {
+                let a = mesh.vertex(tmp_indices[i]).vertex();
+                let b = mesh.vertex(tmp_indices[i + 1]).vertex();
+                let c = mesh.vertex(tmp_indices[i + 2]).vertex();
                 dist += a.distance(b) + b.distance(c) + c.distance(a);
             }
 
             if dist < best_dist {
                 best_dist = dist;
-                best_indices = local_indices;
+                best_indices = tmp_indices;
             }
         }
         indices.extend(best_indices);
