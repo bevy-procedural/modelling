@@ -1,6 +1,6 @@
 use super::{Face, Mesh, Payload};
 use crate::{
-    math::{Vector2D, Vector3D},
+    math::{Scalar, Vector2D, Vector3D},
     representation::IndexType,
 };
 
@@ -23,7 +23,7 @@ where
     ) where
         P::Vec: Vector3D<P::S>,
     {
-        let eps = 0.00001.into();
+        let eps = <P::S as Scalar>::EPS * 2.0.into();
         debug_assert!(self.may_be_curved() || self.is_planar2(mesh));
         debug_assert!(self.is_simple(mesh));
 
