@@ -4,6 +4,7 @@ use super::{Scalar, Transform, Vector2D, Vector3D};
 pub trait Vector<ScalarType: Scalar>:
     Copy
     + Default
+    + PartialEq
     + std::fmt::Debug
     + std::ops::Add<Output = Self>
     + std::ops::AddAssign

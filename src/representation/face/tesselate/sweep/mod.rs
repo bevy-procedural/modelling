@@ -46,37 +46,79 @@ where
         }
 
         // sweep line status indexed by x-coordinate
-        let mut sls: BTreeMap<OrderedFloats<P::S>, IntervalData<V, P::Vec2, P::S>> =
-            BTreeMap::new();
+        let mut sls: SweepLineStatus<V, P::Vec2, P::S> = SweepLineStatus::new();
 
         while let Some(event) = event_queue.pop() {
             match event.vertex_type {
                 VertexType::Start => {
-                    println!("Start {}", event.here.index);
-                    sls.insert(
-                        OrderedFloats::new(event.here.vec.x()),
-                        IntervalData {
-                            lowest: Some(event.here),
-                            left: EdgeData::new(event.here, event.prev),
-                            right: EdgeData::new(event.here, event.next),
-                        },
-                    );
-                }
-                VertexType::End => {
-                    println!("End {}", event.here.index);
-                }
-                VertexType::Split => {
-                    println!("Split {}", event.here.index);
-                    // Find and handle the left neighbor in sweep line status
-                    // Insert a diagonal if necessary
+                    sls.insert(IntervalData {
+                        lowest: Some(event.here),
+                        left: EdgeData::new(event.here, event.next),
+                        right: EdgeData::new(event.here, event.prev),
+                    });
+
+                    println!("Start {}\n{}", event.here.index, sls);
                 }
                 VertexType::Merge => {
-                    println!("Merge {}", event.here.index);
-                    // TODO
+                    // left and right are swapped because "remove_right" will get the left one _from_ the right (and vice versa)
+                    let left = sls.remove_right(&event.here.index).unwrap();
+                    let right = sls.remove_left(&event.here.index).unwrap();
+                    assert!(left != right, "Mustn't be the same to merge them");
+                    sls.insert(IntervalData {
+                        lowest: Some(event.here),
+                        left: left.left,
+                        right: right.right,
+                    });
+
+                    println!("Merge {}\n{}", event.here.index, sls);
                 }
                 VertexType::Regular => {
-                    println!("Regular {}", event.here.index);
-                    // TODO
+                    // TODO: modify instead of remove
+                    if let Some(v) = sls.remove_left(&event.here.index) {
+                        todo!("Handle regular vertex")
+                    } else if let Some(v) = sls.remove_right(&event.here.index) {
+                        sls.insert(IntervalData {
+                            lowest: Some(event.here),
+                            left: v.left,
+                            right: EdgeData::new(event.here, event.prev),
+                        })
+                    } else {
+                        panic!("Regular vertex not found in sweep line status");
+                    }
+
+                    println!("Regular {}\n{}", event.here.index, sls);
+                }
+                VertexType::Split => {
+                    let i = *sls.find_by_position(&event.here.vec).unwrap().0;
+                    let line = sls.remove_left(&i).unwrap();
+
+                    println!(
+                        "Insert diagonal from {} to {}",
+                        event.here.index,
+                        line.lowest.unwrap().index
+                    );
+
+                    /*indices.push(event.here.index);
+                    indices.push(line.lowest.unwrap().index);
+                    indices.push(event.prev.index);*/
+
+                    sls.insert(IntervalData {
+                        lowest: Some(event.here),
+                        left: line.left,
+                        right: EdgeData::new(event.here, event.prev),
+                    });
+                    sls.insert(IntervalData {
+                        lowest: Some(event.here),
+                        left: EdgeData::new(event.here, event.next),
+                        right: line.right,
+                    });
+
+                    println!("Split {}\n{}", event.here.index, sls);
+                }
+                VertexType::End => {
+                    let line = sls.remove_left(&event.here.index).unwrap();
+
+                    println!("End {}\n{}", event.here.index, sls);
                 }
             }
         }

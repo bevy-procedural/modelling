@@ -28,10 +28,36 @@ impl<V: IndexType, Vec2: Vector2D<S>, S: Scalar> IndexedVertexPoint<V, Vec2, S> 
 
 #[derive(Debug, Clone)]
 pub struct EventPoint<V: IndexType, Vec2: Vector2D<S>, S: Scalar> {
+    /// Previous vertex in the face
     pub prev: IndexedVertexPoint<V, Vec2, S>,
+    /// Current vertex in the face
     pub here: IndexedVertexPoint<V, Vec2, S>,
+    /// Next vertex in the face
     pub next: IndexedVertexPoint<V, Vec2, S>,
+    /// Precomputed vertex type
     pub vertex_type: VertexType,
+}
+
+impl<V: IndexType, Vec2: Vector2D<S>, S: Scalar> EventPoint<V, Vec2, S> {
+    /// Returns the leftmost vertex of left/right
+    #[inline(always)]
+    pub fn left(&self) -> IndexedVertexPoint<V, Vec2, S> {
+        if self.prev.vec.x() < self.next.vec.x() {
+            self.prev
+        } else {
+            self.next
+        }
+    }
+
+    /// Returns the rightmost vertex of left/right
+    #[inline(always)]
+    pub fn right(&self) -> IndexedVertexPoint<V, Vec2, S> {
+        if self.prev.vec.x() < self.next.vec.x() {
+            self.next
+        } else {
+            self.prev
+        }
+    }
 }
 
 impl<V: IndexType, Vec2: Vector2D<S>, S: Scalar> std::cmp::PartialEq for EventPoint<V, Vec2, S> {
