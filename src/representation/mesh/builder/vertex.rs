@@ -27,7 +27,7 @@ impl<E: IndexType, V: IndexType, F: IndexType, P: Payload> AddVertex<(V, P)> for
             let Some(boundary) = self.vertex(v).edges(self).find(|e| e.is_boundary_self()) else {
                 panic!("Vertex is not a boundary vertex");
             };
-            assert!(
+            debug_assert!(
                 self.vertex(v)
                     .edges(self)
                     .filter(|e| e.is_boundary_self())

@@ -54,7 +54,8 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
         return false;
     }
 
-    /// Whether the face is self-intersecting
+    /// Whether the face is self-intersecting. 
+    /// This is a quite slow O(n^2) method. Use with caution.
     pub fn has_self_intersections<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> bool
     where
         P::Vec: Vector3D<P::S>,
@@ -72,6 +73,7 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
     }
 
     /// Whether the face is simple, i.e., doesn't self-intersect or have holes.
+    /// Testing this is quite slow O(n^2). Use with caution.
     pub fn is_simple<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> bool
     where
         P::Vec: Vector3D<P::S>,
@@ -98,8 +100,8 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
     where
         P::Vec: Vector3D<P::S>,
     {
-        assert!(self.is_planar2(mesh));
-        assert!(self.is_convex(mesh));
+        debug_assert!(self.is_planar2(mesh));
+        debug_assert!(self.is_convex(mesh));
 
         let three: Vec<_> = self.vertices(mesh).take(3).map(|v| *v.vertex()).collect();
         three[1].normal(three[0], three[2])
@@ -114,7 +116,7 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
         // TODO: overload this in a way that allows different dimensions
 
         // TODO: allows only for slight curvature...
-        assert!(self.may_be_curved() || self.is_planar2(mesh));
+        debug_assert!(self.may_be_curved() || self.is_planar2(mesh));
 
         let mut normal = P::Vec::zero();
         for (a, b) in self

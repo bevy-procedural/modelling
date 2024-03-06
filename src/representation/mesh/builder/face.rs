@@ -40,8 +40,8 @@ impl<E: IndexType, V: IndexType, F: IndexType, P: Payload> CloseFace<(E, E, bool
         let v = e_inside.target(self).id();
         let w = e_outside.target(self).id();
 
-        assert!(e_inside.can_reach_back(self, w));
-        assert!(e_outside.can_reach_back(self, v));
+        debug_assert!(e_inside.can_reach_back(self, w));
+        debug_assert!(e_outside.can_reach_back(self, v));
 
         let other_inside = self
             .edge(inside)
@@ -85,7 +85,7 @@ impl<E: IndexType, V: IndexType, F: IndexType, P: Payload> CloseFace<(V, V, V, b
     fn close_face(&mut self, (prev, from, to, curved): (V, V, V, bool)) -> F {
         let inside = self.edge_between(prev, from).unwrap().id();
 
-        assert!(
+        debug_assert!(
             contains_exactly_one(self.vertex(to).edges_in(self), |e| {
                 e.is_boundary_self() && e.can_reach(self, self.edge(inside).origin_id())
             }),

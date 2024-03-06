@@ -13,8 +13,8 @@ where
         mesh: &Mesh<E, V, F, P>,
         indices: &mut Vec<V>,
     ) {
-        assert!(self.may_be_curved() || self.is_planar2(mesh));
-        assert!(self.is_convex(mesh));
+        debug_assert!(self.may_be_curved() || self.is_planar2(mesh));
+        debug_assert!(self.is_convex(mesh));
 
         let center = self.vertices(mesh).next().unwrap();
         self.vertices(mesh)

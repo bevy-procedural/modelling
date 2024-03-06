@@ -169,9 +169,9 @@ where
 
         assert!(indices.len() % 3 == 0, "{:?}", indices.len());
         if vertices.is_empty() {
-            assert!(indices.iter().all(|i| i.index() < mesh.max_vertex_index()));
+            debug_assert!(indices.iter().all(|i| i.index() < mesh.max_vertex_index()));
         } else {
-            assert!(indices.iter().all(|i| i.index() < vertices.len()));
+            debug_assert!(indices.iter().all(|i| i.index() < vertices.len()));
         }
     }
 }

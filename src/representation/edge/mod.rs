@@ -61,13 +61,13 @@ impl<E: IndexType, V: IndexType, F: IndexType> HalfEdge<E, V, F> {
 
     /// Sets the face of the HalfEdge. Panics if the face is already set.
     pub fn set_face(&mut self, face: F) {
-        assert!(self.face == IndexType::max());
+        debug_assert!(self.face == IndexType::max());
         self.face = face;
     }
 
     /// Deletes the face of the HalfEdge
     pub fn delete_face(&mut self) {
-        assert!(self.face != IndexType::max());
+        debug_assert!(self.face != IndexType::max());
         self.face = IndexType::max();
     }
 

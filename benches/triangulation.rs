@@ -31,7 +31,7 @@ fn bench_spirals(c: &mut Criterion) {
 
     for (name, mesh) in [
         ("Spiral", make_spiral()),
-       // ("Star", MeshVec3::regular_star(2.0, 0.9, 1000)),
+        ("Star", MeshVec3::regular_star(2.0, 0.9, 1000)),
     ] {
         group.bench_with_input(
             BenchmarkId::new("Fast", name),

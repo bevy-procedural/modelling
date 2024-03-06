@@ -23,8 +23,8 @@ where
     ) where
         P::Vec: Vector3D<P::S>,
     {
-        assert!(self.may_be_curved() || self.is_planar2(mesh));
-        assert!(self.is_simple(mesh));
+        debug_assert!(self.may_be_curved() || self.is_planar2(mesh));
+        debug_assert!(self.is_simple(mesh));
 
         let vs: Vec<(P::Vec2, V)> = self.vertices_2d::<V, P>(mesh).collect();
 
@@ -58,10 +58,9 @@ where
                 i_c = (i_c + 1) % n0;
             }
 
-            // println!("i_a: {}, i_b: {}, i_c: {} {:?}", i_a, i_b, i_c, clipped);
-            assert!(i_a != i_b);
-            assert!(i_b != i_c);
-            assert!(i_c != i_a);
+            debug_assert!(i_a != i_b);
+            debug_assert!(i_b != i_c);
+            debug_assert!(i_c != i_a);
 
             // cut the ear off
             if !vs[i_b].0.convex(vs[i_a].0, vs[i_c].0) || !triangle_empty(i_a, i_b, i_c) {
@@ -75,13 +74,9 @@ where
             }
 
             if local_indices {
-                indices.push(V::new(i_a));
-                indices.push(V::new(i_b));
-                indices.push(V::new(i_c));
+                indices.extend([V::new(i_a), V::new(i_b), V::new(i_c)]);
             } else {
-                indices.push(vs[i_a].1);
-                indices.push(vs[i_b].1);
-                indices.push(vs[i_c].1);
+                indices.extend([vs[i_a].1, vs[i_b].1, vs[i_c].1]);
             }
             clipped[i_b] = true;
             n -= 1;
