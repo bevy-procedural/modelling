@@ -1,4 +1,4 @@
-use super::IndexType;
+use crate::math::IndexType;
 
 /// A trait for soft-deletable elements.
 pub trait Deletable<I> {
