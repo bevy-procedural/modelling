@@ -105,9 +105,9 @@ fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
 }
 
 fn make_mesh(settings: &MeshSettings) -> MeshVec3 {
-  //  make_2d_shape(settings)
+     make_2d_shape(settings)
     // _make_spiral(settings)
-    MeshVec3::octahedron(1.0)
+    //MeshVec3::octahedron(1.0)
 }
 
 pub fn main() {
