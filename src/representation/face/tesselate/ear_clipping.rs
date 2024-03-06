@@ -66,6 +66,7 @@ where
             // cut the ear off
             if !vs[i_b].0.convex(vs[i_a].0, vs[i_c].0)
                 || !triangle_empty(i_a, i_b, i_c)
+                // if there are nearly collinear points, we can't cut the ear, because triangle_empty could block any progress afterwards
                 || vs[i_b].0.collinear(vs[i_a].0, vs[i_c].0, eps)
             {
                 fails_since_advance += 1;
@@ -84,7 +85,7 @@ where
                             .filter_map(|(i, &c)| if c { Some(i) } else { None })
                             .collect::<Vec<_>>()
                     );
-                    return;
+                    break;
                 }
                 i_a = i_b;
                 continue;

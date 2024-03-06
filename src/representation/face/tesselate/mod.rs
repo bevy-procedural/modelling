@@ -81,17 +81,17 @@ where
 
         match algorithm {
             TriangulationAlgorithm::Fast => {
-                //if n < 10 {
-                self.ear_clipping(mesh, indices, local_indices, false);
-                /*} else {
-                    self.sweep_triangulation(mesh, indices);
-                }*/
+                if n < 10 {
+                    self.ear_clipping(mesh, indices, local_indices, false);
+                } else {
+                    self.sweep_line(mesh, indices, local_indices);
+                }
             }
             TriangulationAlgorithm::EarClipping => {
                 self.ear_clipping(mesh, indices, local_indices, false);
             }
             TriangulationAlgorithm::Sweep => {
-                todo!("TriangulationAlgorithm::Sweep")
+                self.sweep_line(mesh, indices, local_indices);
             }
             TriangulationAlgorithm::MinWeight => {
                 assert!(local_indices == false);
