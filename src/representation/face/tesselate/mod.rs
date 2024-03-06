@@ -1,6 +1,6 @@
 use super::{Face, Mesh, Payload};
 use crate::{
-    math::{Vector, Vector3D},
+    math::{Vector, Vector2D, Vector3D},
     representation::IndexType,
 };
 use itertools::Itertools;
@@ -64,25 +64,26 @@ where
     {
         match algorithm {
             TriangulationAlgorithm::Fast => {
-                todo!("TriangulationAlgorithm::Fast")
-                /*let n = self.num_vertices(mesh);
+                let n = self.num_vertices(mesh);
                 if n < 3 {
                     return;
-                }
-                if n == 3 {
-                    let v0 = vertices.len();
-                    self.vertices(mesh)
-                        .for_each(|v| vertices.push(v.payload().clone()));
-                    indices.push(V::new(v0));
-                    indices.push(V::new(v0 + 1));
-                    indices.push(V::new(v0 + 2));
-                    return;
-                }
-                if n < 10 {
-                    self.ear_clipping(mesh, indices, true);
+                } else if n == 3 {
+                    if local_indices {
+                        indices.push(V::new(0));
+                        indices.push(V::new(1));
+                        indices.push(V::new(2));
+                    } else {
+                        indices.extend(self.vertices(mesh).map(|v| v.id()));
+                    }
+                } else if n == 4 {
+                    self.quad_triangulate(mesh, indices, local_indices);
                 } else {
-                    self.sweep_triangulation(mesh, indices);
-                }*/
+                    //if n < 10 {
+                    self.ear_clipping(mesh, indices, local_indices, false);
+                    /*} else {
+                        self.sweep_triangulation(mesh, indices);
+                    }*/
+                }
             }
             TriangulationAlgorithm::EarClipping => {
                 self.ear_clipping(mesh, indices, local_indices, false);

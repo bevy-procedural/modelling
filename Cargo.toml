@@ -48,6 +48,9 @@ itertools = "0.12.1"
 meshopt = { version = "0.2.0", optional = true }
 rand = "0.8.5"
 
+[dev-dependencies]
+criterion = { version = "0.4", features = ["html_reports"] }
+
 [features]
 default = ["bevy"]
 bevy = ["dep:bevy", "dep:bevy-inspector-egui", "bevy/bevy_gizmos"]
@@ -59,6 +62,10 @@ name = "box"
 path = "examples/box.rs"
 doc-scrape-examples = true
 required-features = ["bevy"]
+
+[[bench]]
+name = "triangulation"
+harness = false
 
 # Enable a small amount of optimization in debug mode
 [profile.fast-dev]

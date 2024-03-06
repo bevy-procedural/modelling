@@ -11,8 +11,8 @@ where
 {
     /// Use ear-clipping to triangulate the face.
     /// This is relatively slow: O(n^2).
-    /// 
-    /// Optionally randomize the start position to search the next ear. 
+    ///
+    /// Optionally randomize the start position to search the next ear.
     /// This is slightly slower but can generate more versatile results.
     pub fn ear_clipping<V: IndexType, P: Payload>(
         &self,

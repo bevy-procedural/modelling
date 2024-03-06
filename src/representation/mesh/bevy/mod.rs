@@ -9,6 +9,7 @@ use bevy::render::{
     mesh::{PrimitiveTopology, VertexAttributeValues},
     render_asset::RenderAssetUsages,
 };
+use std::time::Instant;
 
 /// A mesh with bevy 3D vertices
 pub type MeshVec3 = Mesh<u32, u32, u32, BevyPayload>;
@@ -59,25 +60,25 @@ where
         assert!(mesh.asset_usage.contains(RenderAssetUsages::MAIN_WORLD));
         Self::bevy_remove_attributes(mesh);
 
-        let (indices, mut raw_vertices) =
-            self.tesselate(TriangulationAlgorithm::Delaunay, GenerateNormals::None);
-        if raw_vertices.len() == 0 {
-            raw_vertices = self.vertices().map(|v| v.payload()).cloned().collect();
+        // use https://crates.io/crates/stats_alloc to measure memory usage
+        let now = Instant::now();
+        let (is, mut vs) = self.tesselate(TriangulationAlgorithm::Fast, GenerateNormals::None);
+        let elapsed = now.elapsed();
+        println!("Triangulation took {:.2?}", elapsed);
+
+        if vs.len() == 0 {
+            vs = self.vertices().map(|v| v.payload()).cloned().collect();
         }
 
-        mesh.insert_indices(self.bevy_indices(&indices));
+        mesh.insert_indices(self.bevy_indices(&is));
 
         mesh.insert_attribute(
             bevy::render::mesh::Mesh::ATTRIBUTE_POSITION,
-            VertexAttributeValues::Float32x3(
-                raw_vertices.iter().map(|v| v.vertex().to_array()).collect(),
-            ),
+            VertexAttributeValues::Float32x3(vs.iter().map(|v| v.vertex().to_array()).collect()),
         );
         mesh.insert_attribute(
             bevy::render::mesh::Mesh::ATTRIBUTE_NORMAL,
-            VertexAttributeValues::Float32x3(
-                raw_vertices.iter().map(|v| v.normal().to_array()).collect(),
-            ),
+            VertexAttributeValues::Float32x3(vs.iter().map(|v| v.normal().to_array()).collect()),
         );
 
         // mesh.duplicate_vertices();
