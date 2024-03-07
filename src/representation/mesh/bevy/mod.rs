@@ -62,9 +62,9 @@ where
 
         // use https://crates.io/crates/stats_alloc to measure memory usage
         let now = Instant::now();
-        let (is, mut vs) = self.tesselate(TriangulationAlgorithm::Fast, GenerateNormals::None);
+        let (is, mut vs) = self.tesselate(TriangulationAlgorithm::Sweep, GenerateNormals::None);
         let elapsed = now.elapsed();
-        println!("Triangulation took {:.2?}", elapsed);
+        println!("///////////////////\nTriangulation took {:.2?}", elapsed);
 
         if vs.len() == 0 {
             vs = self.vertices().map(|v| v.payload()).cloned().collect();

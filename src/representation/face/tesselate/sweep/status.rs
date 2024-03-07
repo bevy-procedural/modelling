@@ -26,11 +26,174 @@ impl<V: IndexType, Vec2: Vector2D<S>, S: Scalar> EdgeData<V, Vec2, S> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+enum VertexSweepStackDirection {
+    Left,
+    Right,
+    RightLeft,
+    LeftRight,
+    None,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VertexSweepStack<V: IndexType> {
+    stack: Vec<V>,
+    d: VertexSweepStackDirection,
+}
+
+impl<V: IndexType> VertexSweepStack<V> {
+    pub fn new() -> Self {
+        VertexSweepStack {
+            stack: Vec::new(),
+            d: VertexSweepStackDirection::None,
+        }
+    }
+
+    pub fn first(v: V) -> Self {
+        VertexSweepStack {
+            stack: vec![v],
+            d: VertexSweepStackDirection::None,
+        }
+    }
+
+    pub fn left(&mut self, value: V, indices: &mut Vec<V>) -> Self {
+        println!("left: {:?} {} {:?}", self.d, value, self.stack);
+        match self.d {
+            VertexSweepStackDirection::RightLeft => {
+                // Consume the triangle immediately
+                assert!(self.stack.len() == 2);
+                indices.extend([self.stack[0], self.stack[1], value]);
+                println!("create lrl: {:?}", [self.stack[0], self.stack[1], value]);
+                // self.stack[0] = self.stack[0];
+                self.stack[1] = value;
+                self.d = VertexSweepStackDirection::Left;
+            }
+            VertexSweepStackDirection::LeftRight => {
+                // Consume the triangle immediately
+                assert!(self.stack.len() == 2);
+                indices.extend([self.stack[0], self.stack[1], value]);
+                println!("create llr: {:?}", [self.stack[0], self.stack[1], value]);
+                self.stack[0] = self.stack[1];
+                self.stack[1] = value;
+                self.d = VertexSweepStackDirection::RightLeft;
+            }
+            VertexSweepStackDirection::None => {
+                assert!(self.stack.len() <= 1);
+                self.stack.push(value);
+                self.d = VertexSweepStackDirection::Left;
+            }
+            VertexSweepStackDirection::Left => {
+                assert!(self.stack.len() >= 1);
+                // remember on more for the same direction
+                self.stack.push(value);
+            }
+            VertexSweepStackDirection::Right => {
+                assert!(self.stack.len() >= 1);
+                // place the next triangle!
+                if self.stack.len() == 1 {
+                    self.stack.push(value);
+                    self.d = VertexSweepStackDirection::RightLeft;
+                } else {
+                    // there is enough on the stack to consume
+                    for i in 1..self.stack.len() {
+                        indices.extend([self.stack[i - 1], value, self.stack[i]]);
+                        println!(
+                            "create mul l: {:?}",
+                            [self.stack[i - 1], self.stack[i], value]
+                        );
+                    }
+                    let last = self.stack.pop().unwrap();
+                    self.stack.clear();
+                    self.stack.push(last);
+                    self.stack.push(value);
+                    self.d = VertexSweepStackDirection::RightLeft;
+                }
+            }
+        }
+        self.clone()
+    }
+
+    pub fn right(&mut self, value: V, indices: &mut Vec<V>) -> Self {
+        println!("right: {:?} {} {:?}", self.d, value, self.stack);
+        match self.d {
+            VertexSweepStackDirection::RightLeft => {
+                // Consume the triangle immediately
+                assert!(self.stack.len() == 2);
+                indices.extend([self.stack[0], self.stack[1], value]);
+                println!("create rrl: {:?}", [self.stack[0], self.stack[1], value]);
+                self.stack[0] = self.stack[1];
+                self.stack[1] = value;
+                self.d = VertexSweepStackDirection::LeftRight;
+            }
+            VertexSweepStackDirection::LeftRight => {
+                // Consume the triangle immediately
+                assert!(self.stack.len() == 2);
+                indices.extend([self.stack[1], self.stack[0], value]);
+                println!("create rlr: {:?}", [self.stack[1], self.stack[0], value]);
+                //self.stack[0] = self.stack[0];
+                self.stack[1] = value;
+                self.d = VertexSweepStackDirection::Right;
+            }
+            VertexSweepStackDirection::None => {
+                assert!(self.stack.len() <= 1);
+                self.stack.push(value);
+                self.d = VertexSweepStackDirection::Right;
+            }
+            VertexSweepStackDirection::Right => {
+                assert!(self.stack.len() >= 1);
+                // remember on more for the same direction
+                self.stack.push(value);
+            }
+            VertexSweepStackDirection::Left => {
+                assert!(self.stack.len() >= 1);
+                // place the next triangle!
+                if self.stack.len() == 1 {
+                    self.stack.push(value);
+                    self.d = VertexSweepStackDirection::LeftRight;
+                } else {
+                    // there is enough on the stack to consume
+                    for i in 1..self.stack.len() {
+                        indices.extend([self.stack[i - 1], self.stack[i], value]);
+                        println!(
+                            "create mul r: {:?}",
+                            [self.stack[i - 1], self.stack[i], value]
+                        );
+                    }
+                    let last = self.stack.pop().unwrap();
+                    self.stack.clear();
+                    self.stack.push(last);
+                    self.stack.push(value);
+                    self.d = VertexSweepStackDirection::LeftRight;
+                }
+            }
+        }
+        self.clone()
+    }
+
+    pub fn is_done(&self) -> bool {
+        self.stack.len() <= 2
+            && self.d != VertexSweepStackDirection::Left
+            && self.d != VertexSweepStackDirection::Right
+    }
+
+    /* pub fn close(&self, value: V, indices: &mut Vec<V>) {
+        assert!(self.stack.len() >= 2);
+        for i in 1..self.stack.len() {
+            indices.extend([self.stack[i - 1], self.stack[i], value]);
+            println!(
+                "create mul: {:?}",
+                [self.stack[i], self.stack[i - 1], value]
+            );
+        }
+    }*/
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct IntervalData<V: IndexType, Vec2: Vector2D<S>, S: Scalar> {
-    pub lowest: Option<IndexedVertexPoint<V, Vec2, S>>,
+    pub helper: IndexedVertexPoint<V, Vec2, S>,
     pub left: EdgeData<V, Vec2, S>,
     pub right: EdgeData<V, Vec2, S>,
-    
+    pub stacks: VertexSweepStack<V>,
+    pub fixup: Option<VertexSweepStack<V>>,
 }
 
 impl<V: IndexType, Vec2: Vector2D<S>, S: Scalar> IntervalData<V, Vec2, S> {
@@ -42,7 +205,7 @@ impl<V: IndexType, Vec2: Vector2D<S>, S: Scalar> IntervalData<V, Vec2, S> {
 
 impl<V: IndexType, Vec2: Vector2D<S>, S: Scalar> std::fmt::Display for IntervalData<V, Vec2, S> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "lowest: {} ", self.lowest.unwrap().index)?;
+        write!(f, "lowest: {} ", self.helper.index)?;
         write!(
             f,
             "left: {}->{} ",

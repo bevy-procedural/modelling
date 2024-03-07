@@ -1,16 +1,18 @@
 use super::{Face, Mesh, Payload};
 use crate::{
     math::{Scalar, Vector, Vector2D, Vector3D},
-    representation::IndexType,
+    representation::{tesselate::sweep::status::VertexSweepStack, IndexType},
 };
 use itertools::Itertools;
-use std::collections::{BTreeMap, BinaryHeap};
+use std::collections::BinaryHeap;
 mod point;
 mod status;
 mod vertex_type;
 use point::{EventPoint, IndexedVertexPoint};
-use status::{EdgeData, IntervalData, OrderedFloats, SweepLineStatus};
+use status::{EdgeData, IntervalData, SweepLineStatus};
 use vertex_type::VertexType;
+
+// See https://www.cs.umd.edu/class/spring2020/cmsc754/Lects/lect05-triangulate.pdf
 
 impl<E, F> Face<E, F>
 where
@@ -51,76 +53,117 @@ where
         while let Some(event) = event_queue.pop() {
             match event.vertex_type {
                 VertexType::Start => {
+                    println!("******* Start {}", event.here.index);
                     sls.insert(IntervalData {
-                        lowest: Some(event.here),
+                        helper: event.here,
                         left: EdgeData::new(event.here, event.next),
                         right: EdgeData::new(event.here, event.prev),
+                        stacks: VertexSweepStack::<V>::first(event.here.index),
+                        fixup: None,
                     });
-
-                    println!("Start {}\n{}", event.here.index, sls);
                 }
                 VertexType::Merge => {
+                    println!("******* Merge {}", event.here.index);
+
                     // left and right are swapped because "remove_right" will get the left one _from_ the right (and vice versa)
-                    let left = sls.remove_right(&event.here.index).unwrap();
-                    let right = sls.remove_left(&event.here.index).unwrap();
+                    let mut left = sls.remove_right(&event.here.index).unwrap();
+                    let mut right: IntervalData<V, <P as Payload>::Vec2, <P as Payload>::S> =
+                        sls.remove_left(&event.here.index).unwrap();
                     assert!(left != right, "Mustn't be the same to merge them");
+                    if let Some(fixup) = left.fixup {
+                        todo!("Handle fixup");
+                    }
+                    if let Some(fixup) = right.fixup {
+                        todo!("Handle fixup");
+                    }
                     sls.insert(IntervalData {
-                        lowest: Some(event.here),
+                        helper: event.here,
                         left: left.left,
                         right: right.right,
+                        stacks: left.stacks.right(event.here.index, indices),
+                        fixup: Some(right.stacks.left(event.here.index, indices)),
                     });
-
-                    println!("Merge {}\n{}", event.here.index, sls);
                 }
                 VertexType::Regular => {
+                    println!("******* Regular {}", event.here.index);
+
                     // TODO: modify instead of remove
-                    if let Some(v) = sls.remove_left(&event.here.index) {
-                        todo!("Handle regular vertex")
-                    } else if let Some(v) = sls.remove_right(&event.here.index) {
+                    if let Some(mut v) = sls.remove_left(&event.here.index) {
+                        if let Some(mut fixup) = v.fixup {
+                            fixup.left(event.here.index, indices);
+                            assert!(fixup.is_done());
+                        }
                         sls.insert(IntervalData {
-                            lowest: Some(event.here),
+                            helper: event.here,
+                            left: EdgeData::new(event.here, event.next),
+                            right: v.right,
+                            stacks: v.stacks.left(event.here.index, indices),
+                            fixup: None,
+                        })
+                    } else if let Some(mut v) = sls.remove_right(&event.here.index) {
+                        if let Some(mut fixup) = v.fixup {
+                            fixup.right(event.here.index, indices);
+                            assert!(fixup.is_done());
+                        }
+                        sls.insert(IntervalData {
+                            helper: event.here,
                             left: v.left,
                             right: EdgeData::new(event.here, event.prev),
+                            stacks: v.stacks.right(event.here.index, indices),
+                            fixup: None,
                         })
                     } else {
                         panic!("Regular vertex not found in sweep line status");
                     }
-
-                    println!("Regular {}\n{}", event.here.index, sls);
                 }
                 VertexType::Split => {
+                    println!("******* Split {}", event.here.index);
                     let i = *sls.find_by_position(&event.here.vec).unwrap().0;
                     let line = sls.remove_left(&i).unwrap();
 
-                    println!(
+                    /*println!(
                         "Insert diagonal from {} to {}",
-                        event.here.index,
-                        line.lowest.unwrap().index
-                    );
+                        event.here.index, line.helper.index
+                    );*/
 
-                    /*indices.push(event.here.index);
-                    indices.push(line.lowest.unwrap().index);
-                    indices.push(event.prev.index);*/
+                    if let Some(mut fixup) = line.fixup {
+                        todo!("Handle fixup");
+                        fixup.left(event.here.index, indices);
+                        assert!(fixup.is_done());
+                    }
 
                     sls.insert(IntervalData {
-                        lowest: Some(event.here),
+                        helper: event.here,
                         left: line.left,
                         right: EdgeData::new(event.here, event.prev),
+                        stacks: line.stacks.clone().right(event.here.index, indices),
+                        fixup: None,
                     });
+                    
                     sls.insert(IntervalData {
-                        lowest: Some(event.here),
+                        helper: event.here,
                         left: EdgeData::new(event.here, event.next),
                         right: line.right,
+                        stacks: VertexSweepStack::<V>::first(line.helper.index).left(event.here.index, indices),
+                        fixup: None,
                     });
 
-                    println!("Split {}\n{}", event.here.index, sls);
                 }
                 VertexType::End => {
-                    let line = sls.remove_left(&event.here.index).unwrap();
+                    println!("******* End {}", event.here.index);
+                    let mut line = sls.remove_left(&event.here.index).unwrap();
 
-                    println!("End {}\n{}", event.here.index, sls);
+                    if let Some(mut fixup) = line.fixup {
+                        todo!("Handle fixup");
+                        fixup.left(event.here.index, indices);
+                        assert!(fixup.is_done());
+                    }
+
+                    line.stacks.left(event.here.index, indices);
+                    assert!(line.stacks.is_done());
                 }
             }
+            // println!("{}", sls);
         }
     }
 }

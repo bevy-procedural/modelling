@@ -142,7 +142,8 @@ fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
         Vec3::new(2.0, 0.0, 2.0),
         Vec3::new(1.0, 0.0, 0.0),
         Vec3::new(0.0, 0.0, 2.0),
-        Vec3::new(-1.0, 0.0, 0.0),
+        //Vec3::new(-1.0, 0.0, 0.0),
+        //Vec3::new(-1.0, 0.0, 0.1),
         // e4
         Vec3::new(-2.0, 0.0, 2.0),
     ];
