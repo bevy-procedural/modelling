@@ -33,23 +33,30 @@ where
         assert!(!local_indices);
         debug_assert!(self.may_be_curved() || self.is_planar2(mesh));
 
-        //TODO: get rid of the hashmap by using better indices. Also, reduce memory footprint of data in the queue and tree by indexing into this!
-        let mut vec2s: Vec<_> = self
+        let vec2s: Vec<_> = self
             .vertices_2d::<V, P>(mesh)
             .enumerate()
             .map(|(i, (p, v))| IndexedVertexPoint::new(p, i, v))
             .collect();
 
-        let mut event_queue: BinaryHeap<EventPoint<P::Vec2, P::S>> = BinaryHeap::new();
-        for (prev, here, next) in vec2s.iter().circular_tuple_windows::<(_, _, _)>() {
+        let mut event_queue = Vec::new();
+        for here in vec2s.clone() {
+            let prev = (here.local + vec2s.len() - 1) % vec2s.len();
+            let next = (here.local + 1) % vec2s.len();
             event_queue.push(EventPoint::new(
-                prev.local,
+                prev,
                 here.local,
-                next.local,
-                VertexType::new::<V, P::Vec2, P::S>(prev.vec, here.vec, next.vec, P::S::EPS),
+                next,
+                VertexType::new::<V, P::Vec2, P::S>(
+                    vec2s[prev].vec,
+                    here.vec,
+                    vec2s[next].vec,
+                    P::S::EPS,
+                ),
                 here.vec,
             ));
         }
+        event_queue.sort_unstable();
 
         // sweep line status indexed by x-coordinate
         let mut sls = SweepLineStatus::new();
@@ -137,7 +144,7 @@ where
                 }
                 VertexType::Split => {
                     let i = *sls
-                        .find_by_position::<V,P>(&vec2s[event.here].vec, &vec2s)
+                        .find_by_position::<V, P>(&vec2s[event.here].vec, &vec2s)
                         .unwrap()
                         .0;
                     let line = sls.remove_left(i).unwrap();
