@@ -96,19 +96,24 @@ where
                 VertexType::Regular => {
                     // TODO: modify instead of remove
                     if let Some(mut v) = sls.remove_left(&event.here.index) {
-                        if let Some(mut fixup) = v.fixup {
-                            fixup.left::<P>(event.here.index, indices, &vec2s);
-                            assert!(fixup.is_done());
-                        }
+                        let mut stacks = if let Some(mut fixup) = v.fixup {
+                            println!("fixup regular l: {:?}", fixup);
+                            v.stacks.left::<P>(event.here.index, indices, &vec2s);
+                            assert!(v.stacks.is_done());
+                            fixup
+                        } else {
+                            v.stacks
+                        };
                         sls.insert(IntervalData {
                             helper: event.here,
                             left: EdgeData::new(event.here, event.next),
                             right: v.right,
-                            stacks: v.stacks.left::<P>(event.here.index, indices, &vec2s),
+                            stacks: stacks.left::<P>(event.here.index, indices, &vec2s),
                             fixup: None,
                         })
                     } else if let Some(mut v) = sls.remove_right(&event.here.index) {
                         if let Some(mut fixup) = v.fixup {
+                            println!("fixup regular r: {:?}", fixup);
                             fixup.right::<P>(event.here.index, indices, &vec2s);
                             assert!(fixup.is_done());
                         }
@@ -132,8 +137,6 @@ where
                         fixup.left::<P>(event.here.index, indices, &vec2s);
                         assert!(fixup.is_done());
                     }
-
-                    println!("{:?}", line.stacks);
 
                     sls.insert(IntervalData {
                         helper: event.here,

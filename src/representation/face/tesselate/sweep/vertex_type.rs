@@ -13,6 +13,7 @@ pub enum VertexType {
 }
 
 impl VertexType {
+    // TODO: When there are two vertices with the same y-coordinate, the vertex type is not well defined. i.e., the first one should be Start and all others should be regular
     pub fn new<V: IndexType, Vec2: Vector2D<S>, S: Scalar>(
         prev: Vec2,
         here: Vec2,
