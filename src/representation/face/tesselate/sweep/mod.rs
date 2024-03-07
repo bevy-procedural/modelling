@@ -79,18 +79,28 @@ where
                     let mut right: IntervalData<V, <P as Payload>::Vec2, <P as Payload>::S> =
                         sls.remove_left(&event.here.index).unwrap();
                     assert!(left != right, "Mustn't be the same to merge them");
-                    if let Some(fixup) = left.fixup {
-                        todo!("Handle fixup");
-                    }
-                    if let Some(fixup) = right.fixup {
-                        todo!("Handle fixup");
-                    }
+                    let mut new_stacks = if let Some(mut fixup) = left.fixup {
+                        println!("fixup merge l: {:?}", fixup);
+                        fixup.right::<P>(event.here.index, indices, &vec2s);
+                        assert!(fixup.is_done());
+                        left.stacks
+                    } else {
+                        left.stacks
+                    };
+                    let mut new_fixup = if let Some(mut fixup) = right.fixup {
+                        println!("fixup merge r: {:?}", fixup);
+                        right.stacks.left::<P>(event.here.index, indices, &vec2s);
+                        assert!(right.stacks.is_done());
+                        fixup
+                    } else {
+                        right.stacks
+                    };
                     sls.insert(IntervalData {
                         helper: event.here,
                         left: left.left,
                         right: right.right,
-                        stacks: left.stacks.right::<P>(event.here.index, indices, &vec2s),
-                        fixup: Some(right.stacks.left::<P>(event.here.index, indices, &vec2s)),
+                        stacks: new_stacks.right::<P>(event.here.index, indices, &vec2s),
+                        fixup: Some(new_fixup.left::<P>(event.here.index, indices, &vec2s)),
                     });
                 }
                 VertexType::Regular => {
