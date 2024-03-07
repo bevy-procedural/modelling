@@ -5,8 +5,8 @@ use crate::{
 };
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-enum SweepReflexChainDirection {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SweepReflexChainDirection {
     /// The reflex chain is completely on the left
     Left,
     /// The reflex chain is completely on the right
@@ -37,7 +37,19 @@ impl<V: IndexType> SweepReflexChain<V> {
         }
     }
 
-    pub fn first(v: V) -> Self {
+    pub fn direction(&self) -> SweepReflexChainDirection {
+        self.d
+    }
+
+    pub fn last(&self) -> V {
+        self.stack.last().unwrap().clone()
+    }
+
+    pub fn first(&self) -> V {
+        self.stack.first().unwrap().clone()
+    }
+
+    pub fn single(v: V) -> Self {
         SweepReflexChain {
             stack: vec![v],
             d: SweepReflexChainDirection::None,
@@ -159,6 +171,7 @@ impl<V: IndexType> SweepReflexChain<V> {
                 } else {
                     // there is enough on the stack to consume
                     for i in 1..self.stack.len() {
+                        // TODO: assert that they are visible
                         indices.extend([self.stack[i - 1], self.stack[i], value]);
                         println!(
                             "create mul r: {:?}",
