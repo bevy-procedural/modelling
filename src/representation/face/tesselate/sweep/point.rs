@@ -5,22 +5,19 @@ use crate::{
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct IndexedVertexPoint<V: IndexType, Vec2: Vector2D<S>, S: Scalar> {
+pub struct IndexedVertexPoint<Vec2: Vector2D<S>, S: Scalar> {
     /// Position of the point
     pub vec: Vec2,
     /// Index in the local structure
     pub local: usize,
-    /// Index in the mesh
-    pub index: V,
     phantom: std::marker::PhantomData<S>,
 }
 
-impl<V: IndexType, Vec2: Vector2D<S>, S: Scalar> IndexedVertexPoint<V, Vec2, S> {
-    pub fn new(vec: Vec2, local: usize, index: V) -> Self {
+impl<Vec2: Vector2D<S>, S: Scalar> IndexedVertexPoint<Vec2, S> {
+    pub fn new(vec: Vec2, local: usize) -> Self {
         IndexedVertexPoint {
             vec,
             local,
-            index,
             phantom: std::marker::PhantomData,
         }
     }
@@ -32,11 +29,9 @@ where
     Vec2: Vector2D<S>,
     S: Scalar,
 {
-    /// Previous vertex in the face
-    pub prev: usize,
     /// Current vertex in the face
     pub here: usize,
-    /// Next vertex in the face
+    pub prev: usize,
     pub next: usize,
 
     pub vec: Vec2,
@@ -47,19 +42,21 @@ where
 }
 
 impl<Vec2: Vector2D<S>, S: Scalar> EventPoint<Vec2, S> {
-    pub fn new(
-        prev: usize,
-        here: usize,
-        next: usize,
-        vertex_type: VertexType,
-        vec: Vec2,
-    ) -> Self {
+    pub fn new<V: IndexType>(here: usize, vec2s: &Vec<IndexedVertexPoint<Vec2, S>>) -> Self {
+        let prev = (here + vec2s.len() - 1) % vec2s.len();
+        let next = (here + 1) % vec2s.len();
+
         EventPoint {
-            prev,
             here,
+            vec: vec2s[here].vec,
+            prev,
             next,
-            vec,
-            vertex_type,
+            vertex_type: VertexType::new::<V, Vec2, S>(
+                vec2s[prev].vec,
+                vec2s[here].vec,
+                vec2s[next].vec,
+                S::EPS,
+            ),
             phantom: std::marker::PhantomData,
         }
     }

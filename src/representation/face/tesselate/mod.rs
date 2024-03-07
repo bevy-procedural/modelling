@@ -83,27 +83,29 @@ where
 
         match algorithm {
             TriangulationAlgorithm::Fast => {
-                if n < 10 {
+                if n < 15 { // TODO: find a good threshold
                     self.ear_clipping(mesh, indices, local_indices, false);
                 } else {
-                    panic!("Not implemented");
-                    //  self.sweep_line(mesh, indices, local_indices);
+                    let v0 = indices.len();
+                    self.sweep_line(mesh, indices);
+                    if !local_indices {
+                        for i in v0..indices.len() {
+                            indices[i] = V::new(v0 + (indices[i].index() + 1) % n);
+                        }
+                    }
                 }
             }
             TriangulationAlgorithm::EarClipping => {
                 self.ear_clipping(mesh, indices, local_indices, false);
             }
             TriangulationAlgorithm::Sweep => {
-                assert!(local_indices == false);
-                let mut indices2 = Vec::new();
-                self.sweep_line(mesh, &mut indices2, local_indices);
                 let v0 = indices.len();
-                let ne = self.num_edges(mesh);
-                indices.extend(
-                    indices2
-                        .iter()
-                        .map(|i| V::new(v0 + ((i + 1) % ne))),
-                );
+                self.sweep_line(mesh, indices);
+                if !local_indices {
+                    for i in v0..indices.len() {
+                        indices[i] = V::new(v0 + (indices[i].index() + 1) % n);
+                    }
+                }
             }
             TriangulationAlgorithm::MinWeight => {
                 assert!(local_indices == false);

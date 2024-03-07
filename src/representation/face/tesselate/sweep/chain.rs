@@ -1,9 +1,8 @@
 use super::point::IndexedVertexPoint;
 use crate::{
     math::{Scalar, Vector2D},
-    representation::{payload::Payload, IndexType, Mesh},
+    representation::{payload::Payload, IndexType},
 };
-use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SweepReflexChainDirection {
@@ -60,9 +59,9 @@ impl SweepReflexChain {
     pub fn left<V: IndexType, P: Payload>(
         &mut self,
         value: usize,
-        indices: &mut Vec<usize>,
-        vec2s: &Vec<IndexedVertexPoint<V, P::Vec2, P::S>>,
-    ) -> Self {
+        indices: &mut Vec<V>,
+        vec2s: &Vec<IndexedVertexPoint<P::Vec2, P::S>>,
+    ) -> &Self {
         #[cfg(feature = "sweep_debug_print")]
         println!("left: {:?} {} {:?}", self.d, value, self.stack);
         match self.d {
@@ -91,7 +90,11 @@ impl SweepReflexChain {
                         "create vis l: {:?}",
                         [self.stack[l - 1], self.stack[l - 2], value]
                     );
-                    indices.extend([self.stack[l - 1], value, self.stack[l - 2]]);
+                    indices.extend([
+                        V::new(self.stack[l - 1]),
+                        V::new(value),
+                        V::new(self.stack[l - 2]),
+                    ]);
                     self.stack.pop();
                 }
 
@@ -107,7 +110,11 @@ impl SweepReflexChain {
                 } else {
                     // there is enough on the stack to consume
                     for i in 1..self.stack.len() {
-                        indices.extend([self.stack[i - 1], value, self.stack[i]]);
+                        indices.extend([
+                            V::new(self.stack[i - 1]),
+                            V::new(value),
+                            V::new(self.stack[i]),
+                        ]);
                         #[cfg(feature = "sweep_debug_print")]
                         println!(
                             "create mul l: {:?}",
@@ -122,16 +129,16 @@ impl SweepReflexChain {
                 }
             }
         }
-        self.clone()
+        self
     }
 
     /// Add a new value to the right reflex chain
     pub fn right<V: IndexType, P: Payload>(
         &mut self,
         value: usize,
-        indices: &mut Vec<usize>,
-        vec2s: &Vec<IndexedVertexPoint<V, P::Vec2, P::S>>,
-    ) -> Self {
+        indices: &mut Vec<V>,
+        vec2s: &Vec<IndexedVertexPoint<P::Vec2, P::S>>,
+    ) -> &Self {
         #[cfg(feature = "sweep_debug_print")]
         println!("right: {:?} {} {:?}", self.d, value, self.stack);
         match self.d {
@@ -160,7 +167,11 @@ impl SweepReflexChain {
                         "create vis r: {:?}",
                         [self.stack[l - 1], self.stack[l - 2], value]
                     );
-                    indices.extend([self.stack[l - 1], self.stack[l - 2], value]);
+                    indices.extend([
+                        V::new(self.stack[l - 1]),
+                        V::new(self.stack[l - 2]),
+                        V::new(value),
+                    ]);
                     self.stack.pop();
                 }
 
@@ -177,7 +188,11 @@ impl SweepReflexChain {
                     // there is enough on the stack to consume
                     for i in 1..self.stack.len() {
                         // TODO: assert that they are visible
-                        indices.extend([self.stack[i - 1], self.stack[i], value]);
+                        indices.extend([
+                            V::new(self.stack[i - 1]),
+                            V::new(self.stack[i]),
+                            V::new(value),
+                        ]);
                         #[cfg(feature = "sweep_debug_print")]
                         println!(
                             "create mul r: {:?}",
@@ -192,7 +207,7 @@ impl SweepReflexChain {
                 }
             }
         }
-        self.clone()
+        self
     }
 
     pub fn is_done(&self) -> bool {

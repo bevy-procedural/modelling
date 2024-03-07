@@ -1,6 +1,6 @@
 use super::{chain::SweepReflexChain, point::IndexedVertexPoint};
 use crate::{
-    math::{Scalar, Vector, Vector2D},
+    math::{Scalar, Vector},
     representation::{payload::Payload, IndexType},
 };
 use std::collections::HashMap;
@@ -15,7 +15,7 @@ impl EdgeData {
     pub fn x_at_y<V: IndexType, P: Payload>(
         &self,
         y: P::S,
-        vec2s: &Vec<IndexedVertexPoint<V, P::Vec2, P::S>>,
+        vec2s: &Vec<IndexedVertexPoint<P::Vec2, P::S>>,
     ) -> P::S {
         let e = vec2s[self.end].vec;
         let s = vec2s[self.start].vec;
@@ -43,7 +43,7 @@ impl IntervalData {
     pub fn contains<V: IndexType, P: Payload>(
         &self,
         pos: &P::Vec2,
-        vec2s: &Vec<IndexedVertexPoint<V, P::Vec2, P::S>>,
+        vec2s: &Vec<IndexedVertexPoint<P::Vec2, P::S>>,
     ) -> bool {
         let p1 = self.left.x_at_y::<V, P>(pos.y(), vec2s);
         let p2 = self.right.x_at_y::<V, P>(pos.y(), vec2s);
@@ -141,7 +141,7 @@ impl SweepLineStatus {
     pub fn find_by_position<V: IndexType, P: Payload>(
         &self,
         pos: &P::Vec2,
-        vec2s: &Vec<IndexedVertexPoint<V, P::Vec2, P::S>>,
+        vec2s: &Vec<IndexedVertexPoint<P::Vec2, P::S>>,
     ) -> Option<(&usize, &IntervalData)> {
         // TODO: faster search using a BTreeMap
         self.left

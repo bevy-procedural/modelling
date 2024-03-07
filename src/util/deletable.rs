@@ -1,3 +1,5 @@
+//! A module for soft-deletable elements.
+
 use crate::math::IndexType;
 
 /// A trait for soft-deletable elements.
