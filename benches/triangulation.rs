@@ -34,11 +34,11 @@ fn bench_spirals(c: &mut Criterion) {
         ("Star", MeshVec3::regular_star(2.0, 0.9, 1000)),
     ] {
         group.bench_with_input(
-            BenchmarkId::new("Fast", name),
+            BenchmarkId::new("Sweep", name),
             &mesh,
             |b, para: &MeshVec3| {
                 b.iter(|| {
-                    para.tesselate(TriangulationAlgorithm::Fast, GenerateNormals::None);
+                    para.tesselate(TriangulationAlgorithm::Sweep, GenerateNormals::None);
                 })
             },
         );

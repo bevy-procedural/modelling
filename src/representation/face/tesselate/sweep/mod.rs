@@ -25,7 +25,7 @@ where
     pub fn sweep_line<V: IndexType, P: Payload>(
         &self,
         mesh: &Mesh<E, V, F, P>,
-        indices: &mut Vec<V>,
+        indices: &mut Vec<usize>,
         local_indices: bool,
     ) where
         P::Vec: Vector3D<P::S>,
@@ -33,29 +33,26 @@ where
         assert!(!local_indices);
         debug_assert!(self.may_be_curved() || self.is_planar2(mesh));
 
-        let vs: Vec<(P::Vec2, V)> = self.vertices_2d::<V, P>(mesh).collect();
-
         //TODO: get rid of the hashmap by using better indices. Also, reduce memory footprint of data in the queue and tree by indexing into this!
-        let mut vec2s = HashMap::new();
+        let mut vec2s: Vec<_> = self
+            .vertices_2d::<V, P>(mesh)
+            .enumerate()
+            .map(|(i, (p, v))| IndexedVertexPoint::new(p, i, v))
+            .collect();
 
         let mut event_queue: BinaryHeap<EventPoint<V, P::Vec2, P::S>> = BinaryHeap::new();
-        for (prev, here, next) in vs.iter().enumerate().circular_tuple_windows::<(_, _, _)>() {
+        for (prev, here, next) in vec2s.iter().circular_tuple_windows::<(_, _, _)>() {
             event_queue.push(EventPoint {
-                prev: IndexedVertexPoint::new(prev.1 .0, prev.0, prev.1 .1),
-                here: IndexedVertexPoint::new(here.1 .0, here.0, here.1 .1),
-                next: IndexedVertexPoint::new(next.1 .0, next.0, next.1 .1),
+                prev: *prev,
+                here: *here,
+                next: *next,
                 vertex_type: VertexType::new::<V, P::Vec2, P::S>(
-                    prev.1 .0,
-                    here.1 .0,
-                    next.1 .0,
+                    prev.vec,
+                    here.vec,
+                    next.vec,
                     P::S::EPS,
                 ),
             });
-
-            vec2s.insert(
-                here.1 .1,
-                IndexedVertexPoint::new(here.1 .0, here.0, here.1 .1),
-            );
         }
 
         // sweep line status indexed by x-coordinate
@@ -70,20 +67,19 @@ where
                         helper: event.here,
                         left: EdgeData::new(event.here, event.next),
                         right: EdgeData::new(event.here, event.prev),
-                        stacks: SweepReflexChain::<V>::single(event.here.index),
+                        stacks: SweepReflexChain::single(event.here.local),
                         fixup: None,
                     });
                 }
                 VertexType::Merge => {
                     // left and right are swapped because "remove_right" will get the left one _from_ the right (and vice versa)
                     let mut left = sls.remove_right(&event.here.index).unwrap();
-                    let mut right: IntervalData<V, <P as Payload>::Vec2, <P as Payload>::S> =
-                        sls.remove_left(&event.here.index).unwrap();
+                    let mut right = sls.remove_left(&event.here.index).unwrap();
                     assert!(left != right, "Mustn't be the same to merge them");
                     let mut new_stacks = if let Some(mut fixup) = left.fixup {
                         #[cfg(feature = "sweep_debug_print")]
                         println!("fixup merge l: {:?}", fixup);
-                        fixup.right::<P>(event.here.index, indices, &vec2s);
+                        fixup.right::<V, P>(event.here.local, indices, &vec2s);
                         assert!(fixup.is_done());
                         left.stacks
                     } else {
@@ -92,7 +88,7 @@ where
                     let mut new_fixup = if let Some(mut fixup) = right.fixup {
                         #[cfg(feature = "sweep_debug_print")]
                         println!("fixup merge r: {:?}", fixup);
-                        right.stacks.left::<P>(event.here.index, indices, &vec2s);
+                        right.stacks.left::<V, P>(event.here.local, indices, &vec2s);
                         assert!(right.stacks.is_done());
                         fixup
                     } else {
@@ -102,8 +98,8 @@ where
                         helper: event.here,
                         left: left.left,
                         right: right.right,
-                        stacks: new_stacks.right::<P>(event.here.index, indices, &vec2s),
-                        fixup: Some(new_fixup.left::<P>(event.here.index, indices, &vec2s)),
+                        stacks: new_stacks.right::<V, P>(event.here.local, indices, &vec2s),
+                        fixup: Some(new_fixup.left::<V, P>(event.here.local, indices, &vec2s)),
                     });
                 }
                 VertexType::Regular => {
@@ -112,7 +108,7 @@ where
                         let mut stacks = if let Some(mut fixup) = v.fixup {
                             #[cfg(feature = "sweep_debug_print")]
                             println!("fixup regular l: {:?}", fixup);
-                            v.stacks.left::<P>(event.here.index, indices, &vec2s);
+                            v.stacks.left::<V, P>(event.here.local, indices, &vec2s);
                             assert!(v.stacks.is_done());
                             fixup
                         } else {
@@ -122,21 +118,21 @@ where
                             helper: event.here,
                             left: EdgeData::new(event.here, event.next),
                             right: v.right,
-                            stacks: stacks.left::<P>(event.here.index, indices, &vec2s),
+                            stacks: stacks.left::<V, P>(event.here.local, indices, &vec2s),
                             fixup: None,
                         })
                     } else if let Some(mut v) = sls.remove_right(&event.here.index) {
                         if let Some(mut fixup) = v.fixup {
                             #[cfg(feature = "sweep_debug_print")]
                             println!("fixup regular r: {:?}", fixup);
-                            fixup.right::<P>(event.here.index, indices, &vec2s);
+                            fixup.right::<V, P>(event.here.local, indices, &vec2s);
                             assert!(fixup.is_done());
                         }
                         sls.insert(IntervalData {
                             helper: event.here,
                             left: v.left,
                             right: EdgeData::new(event.here, event.prev),
-                            stacks: v.stacks.right::<P>(event.here.index, indices, &vec2s),
+                            stacks: v.stacks.right::<V, P>(event.here.local, indices, &vec2s),
                             fixup: None,
                         })
                     } else {
@@ -149,7 +145,7 @@ where
 
                     if let Some(mut fixup) = line.fixup {
                         todo!("Handle fixup");
-                        fixup.left::<P>(event.here.index, indices, &vec2s);
+                        fixup.left::<V, P>(event.here.local, indices, &vec2s);
                         assert!(fixup.is_done());
                     }
 
@@ -157,22 +153,23 @@ where
                         helper: event.here,
                         left: line.left,
                         right: EdgeData::new(event.here, event.prev),
-                        stacks: line
-                            .stacks
-                            .clone()
-                            .right::<P>(event.here.index, indices, &vec2s),
+                        stacks: line.stacks.clone().right::<V, P>(
+                            event.here.local,
+                            indices,
+                            &vec2s,
+                        ),
                         fixup: None,
                     });
 
                     let stacks = if line.stacks.direction() == SweepReflexChainDirection::Right {
-                        SweepReflexChain::<V>::single(line.helper.index).left::<P>(
-                            event.here.index,
+                        SweepReflexChain::single(line.helper.local).left::<V, P>(
+                            event.here.local,
                             indices,
                             &vec2s,
                         )
                     } else {
-                        SweepReflexChain::<V>::single(line.stacks.first()).left::<P>(
-                            event.here.index,
+                        SweepReflexChain::single(line.stacks.first()).left::<V, P>(
+                            event.here.local,
                             indices,
                             &vec2s,
                         )
@@ -194,11 +191,11 @@ where
 
                     if let Some(mut fixup) = line.fixup {
                         todo!("Handle fixup");
-                        fixup.left::<P>(event.here.index, indices, &vec2s);
+                        fixup.left::<V, P>(event.here.local, indices, &vec2s);
                         assert!(fixup.is_done());
                     }
 
-                    line.stacks.left::<P>(event.here.index, indices, &vec2s);
+                    line.stacks.left::<V, P>(event.here.local, indices, &vec2s);
                     assert!(line.stacks.is_done());
                 }
             }

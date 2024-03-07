@@ -29,8 +29,8 @@ pub struct IntervalData<V: IndexType, Vec2: Vector2D<S>, S: Scalar> {
     pub helper: IndexedVertexPoint<V, Vec2, S>,
     pub left: EdgeData<V, Vec2, S>,
     pub right: EdgeData<V, Vec2, S>,
-    pub stacks: SweepReflexChain<V>,
-    pub fixup: Option<SweepReflexChain<V>>,
+    pub stacks: SweepReflexChain,
+    pub fixup: Option<SweepReflexChain>,
 }
 
 impl<V: IndexType, Vec2: Vector2D<S>, S: Scalar> IntervalData<V, Vec2, S> {

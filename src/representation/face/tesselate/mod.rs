@@ -1,3 +1,5 @@
+use std::panic;
+
 use super::{Face, Mesh, Payload};
 use crate::{
     math::{Vector, Vector2D, Vector3D},
@@ -84,14 +86,24 @@ where
                 if n < 10 {
                     self.ear_clipping(mesh, indices, local_indices, false);
                 } else {
-                    self.sweep_line(mesh, indices, local_indices);
+                    panic!("Not implemented");
+                    //  self.sweep_line(mesh, indices, local_indices);
                 }
             }
             TriangulationAlgorithm::EarClipping => {
                 self.ear_clipping(mesh, indices, local_indices, false);
             }
             TriangulationAlgorithm::Sweep => {
-                self.sweep_line(mesh, indices, local_indices);
+                assert!(local_indices == false);
+                let mut indices2 = Vec::new();
+                self.sweep_line(mesh, &mut indices2, local_indices);
+                let v0 = indices.len();
+                let ne = self.num_edges(mesh);
+                indices.extend(
+                    indices2
+                        .iter()
+                        .map(|i| V::new(v0 + ((i + 1) % ne))),
+                );
             }
             TriangulationAlgorithm::MinWeight => {
                 assert!(local_indices == false);

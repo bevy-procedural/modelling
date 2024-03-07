@@ -24,12 +24,12 @@ pub enum SweepReflexChainDirection {
 /// edge has its bottom endpoint below the sweep line. Hence, we place the start vertex before the other
 /// chain. The currently active chain is indicated by d.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct SweepReflexChain<V: IndexType> {
-    stack: Vec<V>,
+pub struct SweepReflexChain {
+    stack: Vec<usize>,
     d: SweepReflexChainDirection,
 }
 
-impl<V: IndexType> SweepReflexChain<V> {
+impl SweepReflexChain {
     pub fn new() -> Self {
         SweepReflexChain {
             stack: Vec::new(),
@@ -41,15 +41,15 @@ impl<V: IndexType> SweepReflexChain<V> {
         self.d
     }
 
-    pub fn last(&self) -> V {
+    pub fn last(&self) -> usize {
         self.stack.last().unwrap().clone()
     }
 
-    pub fn first(&self) -> V {
+    pub fn first(&self) -> usize {
         self.stack.first().unwrap().clone()
     }
 
-    pub fn single(v: V) -> Self {
+    pub fn single(v: usize) -> Self {
         SweepReflexChain {
             stack: vec![v],
             d: SweepReflexChainDirection::None,
@@ -57,11 +57,11 @@ impl<V: IndexType> SweepReflexChain<V> {
     }
 
     /// Add a new value to the left reflex chain
-    pub fn left<P: Payload>(
+    pub fn left<V: IndexType, P: Payload>(
         &mut self,
-        value: V,
-        indices: &mut Vec<V>,
-        vec2s: &HashMap<V, IndexedVertexPoint<V, P::Vec2, P::S>>,
+        value: usize,
+        indices: &mut Vec<usize>,
+        vec2s: &Vec<IndexedVertexPoint<V, P::Vec2, P::S>>,
     ) -> Self {
         #[cfg(feature = "sweep_debug_print")]
         println!("left: {:?} {} {:?}", self.d, value, self.stack);
@@ -80,9 +80,9 @@ impl<V: IndexType> SweepReflexChain<V> {
                     if l <= 1 {
                         break;
                     }
-                    let angle = vec2s[&value]
+                    let angle = vec2s[value]
                         .vec
-                        .angle(vec2s[&self.stack[l - 1]].vec, vec2s[&self.stack[l - 2]].vec);
+                        .angle(vec2s[self.stack[l - 1]].vec, vec2s[self.stack[l - 2]].vec);
                     if angle > P::S::ZERO {
                         break;
                     }
@@ -126,11 +126,11 @@ impl<V: IndexType> SweepReflexChain<V> {
     }
 
     /// Add a new value to the right reflex chain
-    pub fn right<P: Payload>(
+    pub fn right<V: IndexType, P: Payload>(
         &mut self,
-        value: V,
-        indices: &mut Vec<V>,
-        vec2s: &HashMap<V, IndexedVertexPoint<V, P::Vec2, P::S>>,
+        value: usize,
+        indices: &mut Vec<usize>,
+        vec2s: &Vec<IndexedVertexPoint<V, P::Vec2, P::S>>,
     ) -> Self {
         #[cfg(feature = "sweep_debug_print")]
         println!("right: {:?} {} {:?}", self.d, value, self.stack);
@@ -149,9 +149,9 @@ impl<V: IndexType> SweepReflexChain<V> {
                     if l <= 1 {
                         break;
                     }
-                    let angle = vec2s[&value]
+                    let angle = vec2s[value]
                         .vec
-                        .angle(vec2s[&self.stack[l - 1]].vec, vec2s[&self.stack[l - 2]].vec);
+                        .angle(vec2s[self.stack[l - 1]].vec, vec2s[self.stack[l - 2]].vec);
                     if angle < P::S::ZERO {
                         break;
                     }
