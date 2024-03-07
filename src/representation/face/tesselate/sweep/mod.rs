@@ -1,12 +1,14 @@
 use super::{Face, Mesh, Payload};
 use crate::{
     math::{Scalar, Vector, Vector2D, Vector3D},
-    representation::{tesselate::sweep::status::SweepReflexChain, IndexType},
+    representation::IndexType,
 };
 use itertools::Itertools;
 use std::collections::{BinaryHeap, HashMap};
+mod chain;
 mod point;
 mod status;
+use chain::SweepReflexChain;
 mod vertex_type;
 use point::{EventPoint, IndexedVertexPoint};
 use status::{EdgeData, IntervalData, SweepLineStatus};
@@ -163,7 +165,7 @@ where
                     });
 
                     if event.here.index == V::new(3) {
-                        break;
+                        // break;
                     }
                 }
                 VertexType::End => {

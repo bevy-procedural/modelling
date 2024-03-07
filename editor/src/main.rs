@@ -129,7 +129,7 @@ fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
         Vec3::new(-2.0, 0.0, 2.0),
     ];*/
 
-    /*let mut p = [
+    let mut p = [
         // e1
         Vec3::new(-2.0, 0.0, -2.0),
         Vec3::new(-1.0, 0.0, -1.0),
@@ -147,9 +147,9 @@ fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
         // e4
         Vec3::new(-2.0, 0.0, 2.0),
     ];
-    */
+    
 
-    let mut p = [
+    /*let mut p = [
         Vec3::new(-2.0, 0.0, -2.0),
         Vec3::new(-1.0, 0.0, -0.5),
         Vec3::new(1.0, 0.0, 0.0),
@@ -160,7 +160,7 @@ fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
         Vec3::new(-4.0, 0.0, 0.0),
         Vec3::new(-2.1, 0.0, -0.2),
 
-    ];
+    ];*/
     p.reverse();
 
     let mut mesh = MeshVec3::polygon(&p);
