@@ -5,6 +5,7 @@ pub trait Scalar:
     + PartialEq
     + PartialOrd
     + std::fmt::Debug
+    + std::fmt::Display
     + std::ops::Add<Output = Self>
     + std::ops::AddAssign
     + std::ops::Mul<Output = Self>

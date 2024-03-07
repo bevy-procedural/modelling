@@ -1,7 +1,7 @@
 use super::point::IndexedVertexPoint;
 use crate::{
     math::{Scalar, Vector2D},
-    representation::IndexType,
+    representation::{payload::Payload, IndexType, Mesh},
 };
 use std::collections::HashMap;
 
@@ -26,72 +26,112 @@ impl<V: IndexType, Vec2: Vector2D<S>, S: Scalar> EdgeData<V, Vec2, S> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-enum VertexSweepStackDirection {
+enum SweepReflexChainDirection {
+    /// The reflex chain is completely on the left
     Left,
+    /// The reflex chain is completely on the right
     Right,
+    /// We have a right and a left element
     RightLeft,
+    /// We have a left and a right element
     LeftRight,
+    /// The reflex chain consists of the first single item having no preference for a side or is empty
     None,
 }
 
+/// This structure stores the reflex chain of the untriangulated region above.
+/// See https://www.cs.umd.edu/class/spring2020/cmsc754/Lects/lect05-triangulate.pdf
+/// It preserves the following invariant:
+/// for i>=2, let v_i be the triangle just processed by the algorithm. The untriangulated
+/// region to the top of v_i consist of two y-monotone chains, a left and a right chain each containing
+/// at least one edge. Only one of the two chains contains more than one edge. The chain with the single
+/// edge has its bottom endpoint below the sweep line. Hence, we place the start vertex before the other
+/// chain. The currently active chain is indicated by d.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct VertexSweepStack<V: IndexType> {
+pub struct SweepReflexChain<V: IndexType> {
     stack: Vec<V>,
-    d: VertexSweepStackDirection,
+    d: SweepReflexChainDirection,
 }
 
-impl<V: IndexType> VertexSweepStack<V> {
+impl<V: IndexType> SweepReflexChain<V> {
     pub fn new() -> Self {
-        VertexSweepStack {
+        SweepReflexChain {
             stack: Vec::new(),
-            d: VertexSweepStackDirection::None,
+            d: SweepReflexChainDirection::None,
         }
     }
 
     pub fn first(v: V) -> Self {
-        VertexSweepStack {
+        SweepReflexChain {
             stack: vec![v],
-            d: VertexSweepStackDirection::None,
+            d: SweepReflexChainDirection::None,
         }
     }
 
-    pub fn left(&mut self, value: V, indices: &mut Vec<V>) -> Self {
+    /// Add a new value to the left reflex chain
+    pub fn left<P: Payload>(
+        &mut self,
+        value: V,
+        indices: &mut Vec<V>,
+        vec2s: &HashMap<V, IndexedVertexPoint<V, P::Vec2, P::S>>,
+    ) -> Self {
         println!("left: {:?} {} {:?}", self.d, value, self.stack);
         match self.d {
-            VertexSweepStackDirection::RightLeft => {
+            SweepReflexChainDirection::RightLeft => {
                 // Consume the triangle immediately
                 assert!(self.stack.len() == 2);
                 indices.extend([self.stack[0], self.stack[1], value]);
                 println!("create lrl: {:?}", [self.stack[0], self.stack[1], value]);
                 // self.stack[0] = self.stack[0];
                 self.stack[1] = value;
-                self.d = VertexSweepStackDirection::Left;
+                self.d = SweepReflexChainDirection::Left;
             }
-            VertexSweepStackDirection::LeftRight => {
+            SweepReflexChainDirection::LeftRight => {
                 // Consume the triangle immediately
                 assert!(self.stack.len() == 2);
                 indices.extend([self.stack[0], self.stack[1], value]);
                 println!("create llr: {:?}", [self.stack[0], self.stack[1], value]);
                 self.stack[0] = self.stack[1];
                 self.stack[1] = value;
-                self.d = VertexSweepStackDirection::RightLeft;
+                self.d = SweepReflexChainDirection::RightLeft;
             }
-            VertexSweepStackDirection::None => {
+            SweepReflexChainDirection::None => {
                 assert!(self.stack.len() <= 1);
                 self.stack.push(value);
-                self.d = VertexSweepStackDirection::Left;
+                self.d = SweepReflexChainDirection::Left;
             }
-            VertexSweepStackDirection::Left => {
+            SweepReflexChainDirection::Left => {
                 assert!(self.stack.len() >= 1);
+
+                // draw triangles while they are visible
+                loop {
+                    let l = self.stack.len();
+                    if l <= 1 {
+                        break;
+                    }
+                    let angle = vec2s[&value]
+                        .vec
+                        .angle(vec2s[&self.stack[l - 1]].vec, vec2s[&self.stack[l - 2]].vec);
+                    if angle > P::S::ZERO {
+                        break;
+                    }
+                    println!(
+                        "create vis l: {:?}",
+                        [self.stack[l - 1], self.stack[l - 2], value]
+                    );
+                    indices.extend([self.stack[l - 1], value, self.stack[l - 2]]);
+                    self.stack.pop();
+                }
+
                 // remember on more for the same direction
                 self.stack.push(value);
             }
-            VertexSweepStackDirection::Right => {
+            SweepReflexChainDirection::Right => {
                 assert!(self.stack.len() >= 1);
                 // place the next triangle!
                 if self.stack.len() == 1 {
                     self.stack.push(value);
-                    self.d = VertexSweepStackDirection::RightLeft;
+                    self.d = SweepReflexChainDirection::RightLeft;
                 } else {
                     // there is enough on the stack to consume
                     for i in 1..self.stack.len() {
@@ -105,50 +145,77 @@ impl<V: IndexType> VertexSweepStack<V> {
                     self.stack.clear();
                     self.stack.push(last);
                     self.stack.push(value);
-                    self.d = VertexSweepStackDirection::RightLeft;
+                    self.d = SweepReflexChainDirection::RightLeft;
                 }
             }
         }
         self.clone()
     }
 
-    pub fn right(&mut self, value: V, indices: &mut Vec<V>) -> Self {
+    /// Add a new value to the right reflex chain
+    pub fn right<P: Payload>(
+        &mut self,
+        value: V,
+        indices: &mut Vec<V>,
+        vec2s: &HashMap<V, IndexedVertexPoint<V, P::Vec2, P::S>>,
+    ) -> Self {
         println!("right: {:?} {} {:?}", self.d, value, self.stack);
         match self.d {
-            VertexSweepStackDirection::RightLeft => {
+            SweepReflexChainDirection::RightLeft => {
                 // Consume the triangle immediately
                 assert!(self.stack.len() == 2);
                 indices.extend([self.stack[0], self.stack[1], value]);
                 println!("create rrl: {:?}", [self.stack[0], self.stack[1], value]);
                 self.stack[0] = self.stack[1];
                 self.stack[1] = value;
-                self.d = VertexSweepStackDirection::LeftRight;
+                self.d = SweepReflexChainDirection::LeftRight;
             }
-            VertexSweepStackDirection::LeftRight => {
+            SweepReflexChainDirection::LeftRight => {
                 // Consume the triangle immediately
                 assert!(self.stack.len() == 2);
                 indices.extend([self.stack[1], self.stack[0], value]);
                 println!("create rlr: {:?}", [self.stack[1], self.stack[0], value]);
                 //self.stack[0] = self.stack[0];
                 self.stack[1] = value;
-                self.d = VertexSweepStackDirection::Right;
+                self.d = SweepReflexChainDirection::Right;
             }
-            VertexSweepStackDirection::None => {
+            SweepReflexChainDirection::None => {
                 assert!(self.stack.len() <= 1);
                 self.stack.push(value);
-                self.d = VertexSweepStackDirection::Right;
+                self.d = SweepReflexChainDirection::Right;
             }
-            VertexSweepStackDirection::Right => {
+            SweepReflexChainDirection::Right => {
                 assert!(self.stack.len() >= 1);
+
+                // draw triangles while they are visible
+                loop {
+                    let l = self.stack.len();
+                    if l <= 1 {
+                        break;
+                    }
+                    let angle = vec2s[&value]
+                        .vec
+                        .angle(vec2s[&self.stack[l - 1]].vec, vec2s[&self.stack[l - 2]].vec);
+                    if angle < P::S::ZERO {
+                        break;
+                    }
+                    println!(
+                        "create vis r: {:?}",
+                        [self.stack[l - 1], self.stack[l - 2], value]
+                    );
+                    indices.extend([self.stack[l - 1], self.stack[l - 2], value]);
+                    self.stack.pop();
+                }
+
                 // remember on more for the same direction
                 self.stack.push(value);
             }
-            VertexSweepStackDirection::Left => {
+            SweepReflexChainDirection::Left => {
                 assert!(self.stack.len() >= 1);
                 // place the next triangle!
                 if self.stack.len() == 1 {
                     self.stack.push(value);
-                    self.d = VertexSweepStackDirection::LeftRight;
+                    self.d = SweepReflexChainDirection::LeftRight;
                 } else {
                     // there is enough on the stack to consume
                     for i in 1..self.stack.len() {
@@ -162,7 +229,7 @@ impl<V: IndexType> VertexSweepStack<V> {
                     self.stack.clear();
                     self.stack.push(last);
                     self.stack.push(value);
-                    self.d = VertexSweepStackDirection::LeftRight;
+                    self.d = SweepReflexChainDirection::LeftRight;
                 }
             }
         }
@@ -171,8 +238,8 @@ impl<V: IndexType> VertexSweepStack<V> {
 
     pub fn is_done(&self) -> bool {
         self.stack.len() <= 2
-            && self.d != VertexSweepStackDirection::Left
-            && self.d != VertexSweepStackDirection::Right
+            //&& self.d != SweepReflexChainDirection::Left
+           // && self.d != SweepReflexChainDirection::Right
     }
 
     /* pub fn close(&self, value: V, indices: &mut Vec<V>) {
@@ -192,8 +259,8 @@ pub struct IntervalData<V: IndexType, Vec2: Vector2D<S>, S: Scalar> {
     pub helper: IndexedVertexPoint<V, Vec2, S>,
     pub left: EdgeData<V, Vec2, S>,
     pub right: EdgeData<V, Vec2, S>,
-    pub stacks: VertexSweepStack<V>,
-    pub fixup: Option<VertexSweepStack<V>>,
+    pub stacks: SweepReflexChain<V>,
+    pub fixup: Option<SweepReflexChain<V>>,
 }
 
 impl<V: IndexType, Vec2: Vector2D<S>, S: Scalar> IntervalData<V, Vec2, S> {

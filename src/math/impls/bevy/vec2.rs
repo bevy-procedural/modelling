@@ -67,4 +67,14 @@ impl Vector2D<f32> for Vec2 {
     fn from_xy(x: f32, y: f32) -> Self {
         Vec2::new(x, y)
     }
+
+    /// Magnitude of the vector.
+    fn magnitude(&self) -> f32 {
+        Vec2::length(*self)
+    }
+
+    /// Angle between two vectors.
+    fn angle(&self, a: Self, b: Self) -> f32 {
+        Vec2::angle_between(a - *self, b - *self)
+    }
 }

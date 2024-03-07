@@ -19,6 +19,12 @@ pub trait Vector2D<ScalarType: Scalar>: Vector<ScalarType> {
         ab.cross2d(&ac).abs() <= eps
     }
 
+    /// Magnitude of the vector.
+    fn magnitude(&self) -> ScalarType;
+
+    /// Angle between two vectors.
+    fn angle(&self, a: Self, b: Self) -> ScalarType;
+
     /// Returns the barycentric sign of a point in a triangle.
     #[inline(always)]
     fn barycentric_sign(a: Self, b: Self, c: Self) -> ScalarType {
