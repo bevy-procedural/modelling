@@ -159,7 +159,7 @@ fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
         Vec3::new(-2.1, 0.0, -0.2),
 
     ];*/
-
+    /*
     let mut p = [
         // e1
         Vec3::new(-2.0, 0.0, -2.0),
@@ -178,8 +178,8 @@ fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
 
     p.reverse();
     let mut mesh = MeshVec3::polygon(&p);
-
-    //let mut mesh = MeshVec3::regular_star(2.0, 1.0, 12);
+    */
+    let mut mesh = MeshVec3::regular_star(2.0, 1.0, 20);
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh
 }

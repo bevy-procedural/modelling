@@ -62,6 +62,7 @@ where
         let mut sls: SweepLineStatus<V, P::Vec2, P::S> = SweepLineStatus::new();
 
         while let Some(event) = event_queue.pop() {
+            #[cfg(feature = "sweep_debug_print")]
             println!("###### {:?} {}", event.vertex_type, event.here.index);
             match event.vertex_type {
                 VertexType::Start => {
@@ -80,6 +81,7 @@ where
                         sls.remove_left(&event.here.index).unwrap();
                     assert!(left != right, "Mustn't be the same to merge them");
                     let mut new_stacks = if let Some(mut fixup) = left.fixup {
+                        #[cfg(feature = "sweep_debug_print")]
                         println!("fixup merge l: {:?}", fixup);
                         fixup.right::<P>(event.here.index, indices, &vec2s);
                         assert!(fixup.is_done());
@@ -88,6 +90,7 @@ where
                         left.stacks
                     };
                     let mut new_fixup = if let Some(mut fixup) = right.fixup {
+                        #[cfg(feature = "sweep_debug_print")]
                         println!("fixup merge r: {:?}", fixup);
                         right.stacks.left::<P>(event.here.index, indices, &vec2s);
                         assert!(right.stacks.is_done());
@@ -107,6 +110,7 @@ where
                     // TODO: modify instead of remove
                     if let Some(mut v) = sls.remove_left(&event.here.index) {
                         let mut stacks = if let Some(mut fixup) = v.fixup {
+                            #[cfg(feature = "sweep_debug_print")]
                             println!("fixup regular l: {:?}", fixup);
                             v.stacks.left::<P>(event.here.index, indices, &vec2s);
                             assert!(v.stacks.is_done());
@@ -123,6 +127,7 @@ where
                         })
                     } else if let Some(mut v) = sls.remove_right(&event.here.index) {
                         if let Some(mut fixup) = v.fixup {
+                            #[cfg(feature = "sweep_debug_print")]
                             println!("fixup regular r: {:?}", fixup);
                             fixup.right::<P>(event.here.index, indices, &vec2s);
                             assert!(fixup.is_done());
@@ -197,7 +202,9 @@ where
                     assert!(line.stacks.is_done());
                 }
             }
-            //println!("{}", sls);
+
+            #[cfg(feature = "sweep_debug_print")]
+            println!("{}", sls);
         }
     }
 }

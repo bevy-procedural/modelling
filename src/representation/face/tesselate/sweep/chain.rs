@@ -63,6 +63,7 @@ impl<V: IndexType> SweepReflexChain<V> {
         indices: &mut Vec<V>,
         vec2s: &HashMap<V, IndexedVertexPoint<V, P::Vec2, P::S>>,
     ) -> Self {
+        #[cfg(feature = "sweep_debug_print")]
         println!("left: {:?} {} {:?}", self.d, value, self.stack);
         match self.d {
             SweepReflexChainDirection::None => {
@@ -85,6 +86,7 @@ impl<V: IndexType> SweepReflexChain<V> {
                     if angle > P::S::ZERO {
                         break;
                     }
+                    #[cfg(feature = "sweep_debug_print")]
                     println!(
                         "create vis l: {:?}",
                         [self.stack[l - 1], self.stack[l - 2], value]
@@ -106,6 +108,7 @@ impl<V: IndexType> SweepReflexChain<V> {
                     // there is enough on the stack to consume
                     for i in 1..self.stack.len() {
                         indices.extend([self.stack[i - 1], value, self.stack[i]]);
+                        #[cfg(feature = "sweep_debug_print")]
                         println!(
                             "create mul l: {:?}",
                             [self.stack[i - 1], self.stack[i], value]
@@ -129,6 +132,7 @@ impl<V: IndexType> SweepReflexChain<V> {
         indices: &mut Vec<V>,
         vec2s: &HashMap<V, IndexedVertexPoint<V, P::Vec2, P::S>>,
     ) -> Self {
+        #[cfg(feature = "sweep_debug_print")]
         println!("right: {:?} {} {:?}", self.d, value, self.stack);
         match self.d {
             SweepReflexChainDirection::None => {
@@ -151,6 +155,7 @@ impl<V: IndexType> SweepReflexChain<V> {
                     if angle < P::S::ZERO {
                         break;
                     }
+                    #[cfg(feature = "sweep_debug_print")]
                     println!(
                         "create vis r: {:?}",
                         [self.stack[l - 1], self.stack[l - 2], value]
@@ -173,6 +178,7 @@ impl<V: IndexType> SweepReflexChain<V> {
                     for i in 1..self.stack.len() {
                         // TODO: assert that they are visible
                         indices.extend([self.stack[i - 1], self.stack[i], value]);
+                        #[cfg(feature = "sweep_debug_print")]
                         println!(
                             "create mul r: {:?}",
                             [self.stack[i - 1], self.stack[i], value]
