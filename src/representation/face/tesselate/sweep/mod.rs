@@ -84,10 +84,14 @@ where
                         helper: event.here,
                         left: left.left,
                         right: right.right,
-                        stacks: new_stacks
-                            .right::<V, P>(event.here, indices, &vec2s)
-                            .clone(),
-                        fixup: Some(new_fixup.left::<V, P>(event.here, indices, &vec2s).clone()),
+                        stacks: {
+                            new_stacks.right::<V, P>(event.here, indices, &vec2s);
+                            new_stacks
+                        },
+                        fixup: Some({
+                            new_fixup.left::<V, P>(event.here, indices, &vec2s);
+                            new_fixup
+                        }),
                     });
                 }
                 VertexType::Regular => {
@@ -106,7 +110,10 @@ where
                             helper: event.here,
                             left: EdgeData::new(event.here, event.next),
                             right: v.right,
-                            stacks: stacks.left::<V, P>(event.here, indices, &vec2s).clone(),
+                            stacks: {
+                                stacks.left::<V, P>(event.here, indices, &vec2s);
+                                stacks
+                            },
                             fixup: None,
                         })
                     } else if let Some(mut v) = sls.remove_right(event.here) {
@@ -120,7 +127,10 @@ where
                             helper: event.here,
                             left: v.left,
                             right: EdgeData::new(event.here, event.prev),
-                            stacks: v.stacks.right::<V, P>(event.here, indices, &vec2s).clone(),
+                            stacks: {
+                                v.stacks.right::<V, P>(event.here, indices, &vec2s);
+                                v.stacks
+                            },
                             fixup: None,
                         })
                     } else {
@@ -142,22 +152,22 @@ where
                         helper: event.here,
                         left: line.left,
                         right: EdgeData::new(event.here, event.prev),
-                        stacks: line
-                            .stacks
-                            .clone()
-                            .right::<V, P>(event.here, indices, &vec2s)
-                            .clone(),
+                        stacks: {
+                            let mut x = line.stacks.clone();
+                            x.right::<V, P>(event.here, indices, &vec2s);
+                            x
+                        },
                         fixup: None,
                     });
 
                     let stacks = if line.stacks.direction() == SweepReflexChainDirection::Right {
-                        SweepReflexChain::single(line.helper)
-                            .left::<V, P>(event.here, indices, &vec2s)
-                            .clone()
+                        let mut x = SweepReflexChain::single(line.helper);
+                        x.left::<V, P>(event.here, indices, &vec2s);
+                        x
                     } else {
-                        SweepReflexChain::single(line.stacks.first())
-                            .left::<V, P>(event.here, indices, &vec2s)
-                            .clone()
+                        let mut x = SweepReflexChain::single(line.stacks.first());
+                        x.left::<V, P>(event.here, indices, &vec2s);
+                        x
                     };
                     sls.insert(IntervalData {
                         helper: event.here,
