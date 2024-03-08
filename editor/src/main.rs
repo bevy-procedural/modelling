@@ -281,9 +281,9 @@ fn setup_meshes(
         Name::new("Generated Shape"),
     ));
 
-    show_vertex_indices(&mut texts, &mesh);
+    /*show_vertex_indices(&mut texts, &mesh);
     show_edges(&mut texts, &mesh, 0.1);
-    show_faces(&mut texts, &mesh);
+    show_faces(&mut texts, &mesh);*/
 
     commands.spawn((
         PbrBundle {

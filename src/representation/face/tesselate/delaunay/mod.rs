@@ -22,11 +22,13 @@ where
     ) where
         P::Vec: Vector3D<P::S>,
     {
-        let eps = P::S::ZERO; // TODO: Numerical instability... This is so close to zero we have to include equal to zero (or slightly smaller). This just doesn't work!
+        let eps = P::S::EPS; // TODO: Numerical instability... This is so close to zero we have to include equal to zero (or slightly smaller). This just doesn't work!
+        let mut this_is_a_hack_eps = P::S::ZERO;
 
         let vs: Vec<(P::Vec2, V)> = self.vertices_2d::<V, P>(mesh).collect();
         let mut flips = 0;
         let max_flips = vs.len() * vs.len();
+        let min_flips = vs.len() * ((vs.len() as f32).sqrt() as usize);
 
         assert!(indices.len() - first == (self.num_vertices(mesh) - 2) * 3);
         assert!(indices[first..]
@@ -55,7 +57,7 @@ where
 
                 if vs[indices[neigh.other_ns].index()]
                     .0
-                    .is_inside_circumcircle(v21, v22, v23, eps)
+                    .is_inside_circumcircle(v21, v22, v23, this_is_a_hack_eps)
                 {
                     dual.flip(&neigh, indices);
                     neigh.flip_indices(indices);
@@ -65,6 +67,10 @@ where
                         // TODO:
                         println!("WARNING: Delaunay might not terminate if numerical instabilities are too bad. Aborting.");
                         return;
+                    }
+                    // After a few iterations, increase the eps to the "real" eps
+                    if flips == min_flips {
+                        this_is_a_hack_eps = eps;
                     }
 
                     // println!("{} <-> {}", neigh.s.index(), neigh.o.index());
