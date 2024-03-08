@@ -19,7 +19,7 @@ where
 
     /// a half-edge incident to the face (outer component)
     edge: EdgeIndex,
-    
+
     /// whether the face is curved, i.e., not planar
     curved: bool,
 }
@@ -68,6 +68,11 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
     /// Get the number of vertices of the face.
     pub fn num_vertices<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> usize {
         self.num_edges(mesh)
+    }
+
+    /// Get the number of triangles of the face. (n-2)*3
+    pub fn num_triangles<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> usize {
+        (self.num_vertices(mesh) - 2) * 3
     }
 }
 

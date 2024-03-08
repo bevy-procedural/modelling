@@ -1,5 +1,3 @@
-use std::panic;
-
 use super::{Face, Mesh, Payload};
 use crate::{
     math::{Vector, Vector2D, Vector3D},
@@ -129,9 +127,11 @@ where
                 self.expand_local_indices(mesh, indices, local_indices, |mesh, indices| {
                     let n = indices.len();
                     self.sweep_line(mesh, indices);
-                    let mut i = indices[n..].to_vec();
+                    self.delaunayfy(mesh, indices, n);
+
+                    /*let mut i = indices[n..].to_vec();
                     self.delaunayfy_naive(mesh, &mut i, true);
-                    indices[n..].copy_from_slice(&i);
+                    indices[n..].copy_from_slice(&i);*/
                 });
             }
         }
