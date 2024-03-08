@@ -19,7 +19,6 @@ where
     E: IndexType,
     F: IndexType,
 {
-   
     /// Uses the sweep line triangulation
     pub fn sweep_line<V: IndexType, P: Payload>(
         &self,
@@ -72,7 +71,7 @@ where
                     } else {
                         left.stacks
                     };
-                    let mut new_fixup = if let Some(mut fixup) = right.fixup {
+                    let mut new_fixup = if let Some(fixup) = right.fixup {
                         #[cfg(feature = "sweep_debug_print")]
                         println!("fixup merge r: {:?}", fixup);
                         right.stacks.left::<V, P>(event.here, indices, &vec2s);

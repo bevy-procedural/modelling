@@ -16,11 +16,7 @@ use procedural_modelling::{
         self,
         bevy::{show_edges, show_faces, show_vertex_indices, text::Text3dGizmos},
     },
-    representation::{
-        bevy::MeshVec3,
-        builder::{AddVertex, CloseFace},
-        payload::{bevy::BevyPayload, Payload},
-    },
+    representation::bevy::MeshVec3,
 };
 use std::{env, f32::consts::PI};
 
@@ -103,83 +99,7 @@ fn _make_spiral(settings: &MeshSettings) -> MeshVec3 {
 }
 
 fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
-    /*let mut mesh = MeshVec3::regular_star(2.0, 0.9, 10);
-    mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
-    mesh*/
-
-    /*let mut p = [
-        // e1
-        Vec3::new(-2.0, 0.0, -2.0),
-        Vec3::new(-1.0, 0.0, -1.0),
-        Vec3::new(0.0, 0.0, -2.0),
-        // e2
-        Vec3::new(2.0, 0.0, -2.0),
-        Vec3::new(1.0, 0.0, -1.0),
-        Vec3::new(2.5, 0.0, 0.0),
-        Vec3::new(1.8, 0.0, 1.0),
-        // e3
-        Vec3::new(2.0, 0.0, 2.0),
-        Vec3::new(1.0, 0.0, 0.0),
-        Vec3::new(0.5, 0.0, 0.0),
-        Vec3::new(0.0, 0.0, 2.0),
-        Vec3::new(-1.0, 0.0, 0.0),
-        Vec3::new(-1.5, 0.0, 2.0),
-        Vec3::new(-1.8, 0.0, 2.0),
-        // e4
-        Vec3::new(-2.0, 0.0, 2.0),
-    ];*/
-
-    /*let mut p = [
-        // e1
-        Vec3::new(-2.0, 0.0, -2.0),
-        Vec3::new(-1.0, 0.0, -1.0),
-        // e2
-        Vec3::new(2.0, 0.0, -2.0),
-        Vec3::new(1.0, 0.0, -1.0),
-        Vec3::new(2.5, 0.0, 0.0),
-        Vec3::new(1.8, 0.0, 1.0),
-        // e3
-        Vec3::new(2.0, 0.0, 2.0),
-        Vec3::new(1.0, 0.0, 0.0),
-        Vec3::new(0.0, 0.0, 2.0),
-        Vec3::new(-1.0, 0.0, 0.0),
-        // e4
-        Vec3::new(-2.0, 0.0, 2.0),
-    ];*/
-
-    /*let mut p = [
-        Vec3::new(-2.0, 0.0, -2.0),
-        Vec3::new(-1.0, 0.0, -0.5),
-        Vec3::new(1.0, 0.0, 0.0),
-        Vec3::new(-1.0, 0.0, 0.5),
-        Vec3::new(-2.0, 0.0, 2.0),
-
-        Vec3::new(-2.1, 0.0, 0.2),
-        Vec3::new(-4.0, 0.0, 0.0),
-        Vec3::new(-2.1, 0.0, -0.2),
-
-    ];*/
-    /*
-    let mut p = [
-        // e1
-        Vec3::new(-2.0, 0.0, -2.0),
-        Vec3::new(-1.0, 0.0, -1.1),
-        Vec3::new(-0.5, 0.0, -2.0),
-        Vec3::new(0.0, 0.0, 0.0),
-        Vec3::new(0.5, 0.0, -2.0),
-        Vec3::new(1.0, 0.0, -1.0),
-        // e2
-        Vec3::new(2.0, 0.0, -2.0),
-        // e3
-        Vec3::new(2.0, 0.0, 1.0),
-        // e4
-        Vec3::new(-2.0, 0.0, 1.0),
-    ];
-
-    p.reverse();
-    let mut mesh = MeshVec3::polygon(&p);
-    */
-    let mut mesh = MeshVec3::regular_star(2.0, 1.0, 1000);
+    let mut mesh = MeshVec3::regular_star(2.0, 1.0, 100);
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh
 }
@@ -281,9 +201,11 @@ fn setup_meshes(
         Name::new("Generated Shape"),
     ));
 
-    /*show_vertex_indices(&mut texts, &mesh);
-    show_edges(&mut texts, &mesh, 0.1);
-    show_faces(&mut texts, &mesh);*/
+    if false {
+        show_vertex_indices(&mut texts, &mesh);
+        show_edges(&mut texts, &mesh, 0.1);
+        show_faces(&mut texts, &mesh);
+    }
 
     commands.spawn((
         PbrBundle {

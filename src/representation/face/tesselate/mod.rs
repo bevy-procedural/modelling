@@ -1,6 +1,8 @@
+//! Triangulation Algorithms
+
 use super::{Face, Mesh, Payload};
 use crate::{
-    math::{Vector, Vector2D, Vector3D},
+    math::{Vector, Vector3D},
     representation::IndexType,
 };
 use itertools::Itertools;
