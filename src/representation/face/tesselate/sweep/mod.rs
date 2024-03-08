@@ -19,6 +19,7 @@ where
     E: IndexType,
     F: IndexType,
 {
+   
     /// Uses the sweep line triangulation
     pub fn sweep_line<V: IndexType, P: Payload>(
         &self,

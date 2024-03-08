@@ -30,19 +30,19 @@ fn bench_spirals(c: &mut Criterion) {
     let mut group = c.benchmark_group("Tesselate");
 
     for (name, mesh) in [
-        //("Spiral", make_spiral()),
+        ("Spiral", make_spiral()),
         ("Star", MeshVec3::regular_star(2.0, 0.9, 1000)),
     ] {
         group.bench_with_input(
-            BenchmarkId::new("Sweep", name),
+            BenchmarkId::new("Fast", name),
             &mesh,
             |b, para: &MeshVec3| {
                 b.iter(|| {
-                    para.tesselate(TriangulationAlgorithm::Sweep, GenerateNormals::None);
+                    para.tesselate(TriangulationAlgorithm::Fast, GenerateNormals::None);
                 })
             },
         );
-        /*group.bench_with_input(
+        group.bench_with_input(
             BenchmarkId::new("Ears", name),
             &mesh,
             |b, para: &MeshVec3| {
@@ -50,7 +50,7 @@ fn bench_spirals(c: &mut Criterion) {
                     para.tesselate(TriangulationAlgorithm::EarClipping, GenerateNormals::None);
                 })
             },
-        );*/
+        );
         /*group.bench_with_input(
             BenchmarkId::new("Delaunay", name),
             &mesh,

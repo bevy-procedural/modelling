@@ -55,6 +55,27 @@ where
     E: IndexType,
     F: IndexType,
 {
+    /// Expand local indices to global indices if requested to.
+    fn expand_local_indices<V: IndexType, P: Payload>(
+        &self,
+        mesh: &Mesh<E, V, F, P>,
+        indices: &mut Vec<V>,
+        local_indices: bool,
+        f: impl Fn(&Mesh<E, V, F, P>, &mut Vec<V>),
+    ) where
+        P::Vec: Vector3D<P::S>,
+    {
+        // TODO: counting again and again is rather slow. Cache this values
+        let n = self.num_vertices(mesh);
+        let v0: usize = indices.len();
+        f(mesh, indices);
+        if !local_indices {
+            for i in v0..indices.len() {
+                indices[i] = V::new(v0 + (indices[i].index() + 1) % n);
+            }
+        }
+    }
+
     fn tesselate_inner<V: IndexType, P: Payload>(
         &self,
         mesh: &Mesh<E, V, F, P>,
@@ -83,45 +104,35 @@ where
 
         match algorithm {
             TriangulationAlgorithm::Fast => {
-                if n < 15 { // TODO: find a good threshold
+                if n < 15 {
+                    // TODO: find a good threshold
                     self.ear_clipping(mesh, indices, local_indices, false);
                 } else {
-                    let v0 = indices.len();
-                    self.sweep_line(mesh, indices);
-                    if !local_indices {
-                        for i in v0..indices.len() {
-                            indices[i] = V::new(v0 + (indices[i].index() + 1) % n);
-                        }
-                    }
+                    self.expand_local_indices(mesh, indices, local_indices, |mesh, indices| {
+                        self.sweep_line(mesh, indices)
+                    });
                 }
             }
             TriangulationAlgorithm::EarClipping => {
                 self.ear_clipping(mesh, indices, local_indices, false);
             }
             TriangulationAlgorithm::Sweep => {
-                let v0 = indices.len();
-                self.sweep_line(mesh, indices);
-                if !local_indices {
-                    for i in v0..indices.len() {
-                        indices[i] = V::new(v0 + (indices[i].index() + 1) % n);
-                    }
-                }
+                self.expand_local_indices(mesh, indices, local_indices, |mesh, indices| {
+                    self.sweep_line(mesh, indices)
+                });
             }
             TriangulationAlgorithm::MinWeight => {
                 assert!(local_indices == false);
                 self.min_weight_triangulation_stoch(mesh, indices);
             }
             TriangulationAlgorithm::Delaunay => {
-                self.ear_clipping(mesh, indices, local_indices, false);
-                if local_indices {
-                    self.delaunayfy(mesh, indices, local_indices);
-                } else {
-                    let il = indices.len();
-                    let nv = (self.num_vertices(mesh) - 2) * 3;
-                    let mut i = indices[(il - nv)..].to_vec();
-                    self.delaunayfy(mesh, &mut i, local_indices);
-                    indices[(il - nv)..].copy_from_slice(&i);
-                }
+                self.expand_local_indices(mesh, indices, local_indices, |mesh, indices| {
+                    let n = indices.len();
+                    self.sweep_line(mesh, indices);
+                    let mut i = indices[n..].to_vec();
+                    self.delaunayfy_naive(mesh, &mut i, true);
+                    indices[n..].copy_from_slice(&i);
+                });
             }
         }
     }

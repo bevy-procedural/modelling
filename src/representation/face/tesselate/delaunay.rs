@@ -11,7 +11,7 @@ where
     F: IndexType,
 {
     /// Flips edges until the delaunay-condition is met. This is quite slow: O(n^3).
-    pub fn delaunayfy<V: IndexType, P: Payload>(
+    pub fn delaunayfy_naive<V: IndexType, P: Payload>(
         &self,
         mesh: &Mesh<E, V, F, P>,
         indices: &mut Vec<V>,
