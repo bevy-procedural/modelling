@@ -74,6 +74,30 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
     pub fn num_triangles<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> usize {
         (self.num_vertices(mesh) - 2) * 3
     }
+
+    /// Whether a triangle is inside or outside of the face
+    pub fn is_inside<V: IndexType, P: Payload>(
+        &self,
+        mesh: &Mesh<E, V, F, P>,
+        v0: V,
+        v1: V,
+        v2: V,
+    ) -> bool {
+        if let Some(e) = mesh.edge_between(v0, v1) {
+            return !e.is_boundary_self();
+        }
+        if let Some(e) = mesh.edge_between(v1, v2) {
+            return !e.is_boundary_self();
+        }
+        if let Some(e) = mesh.edge_between(v2, v0) {
+            return !e.is_boundary_self();
+        }
+
+        //println!("v0: {} {} {}", v0.index(), v1.index(), v2.index());
+
+        return true;
+        //todo!("is_inside: not implemented for faces not touching the boundary");
+    }
 }
 
 impl<E: IndexType, F: IndexType> std::fmt::Display for Face<E, F> {

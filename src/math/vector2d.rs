@@ -51,7 +51,7 @@ pub trait Vector2D<S: Scalar>: Vector<S> {
     }
 
     /// Whether the point is inside the circumcircle of the triangle.
-    #[inline(always)]
+    #[deprecated(since="0.1.0", note="use something more robust")]
     fn is_inside_circumcircle(&self, a: Self, b: Self, c: Self, eps: S) -> bool {
         // https://en.wikipedia.org/wiki/Delaunay_triangulation#Algorithms
 

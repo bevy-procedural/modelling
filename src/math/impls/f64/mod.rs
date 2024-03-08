@@ -21,4 +21,9 @@ impl Scalar for f64 {
     fn acos(self) -> Self {
         f64::acos(self)
     }
+
+    #[inline(always)]
+    fn to_f64(self) -> f64 {
+        self
+    }
 }

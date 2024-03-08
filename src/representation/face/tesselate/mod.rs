@@ -125,13 +125,7 @@ where
             }
             TriangulationAlgorithm::Delaunay => {
                 self.expand_local_indices(mesh, indices, local_indices, |mesh, indices| {
-                    let n = indices.len();
-                    self.sweep_line(mesh, indices);
-                    self.delaunayfy(mesh, indices, n);
-
-                    /*let mut i = indices[n..].to_vec();
-                    self.delaunayfy_naive(mesh, &mut i, true);
-                    indices[n..].copy_from_slice(&i);*/
+                    self.delaunay_triangulation(mesh, indices);
                 });
             }
         }

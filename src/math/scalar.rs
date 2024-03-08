@@ -31,6 +31,9 @@ pub trait Scalar:
     /// Returns whether the scalar is strictly negative.
     fn is_negative(self) -> bool;
 
+    /// Converts the scalar to a 64-bit floating point number.
+    fn to_f64(self) -> f64;
+
     /// Returns the absolute value of the scalar.
     fn abs(self) -> Self {
         if self.is_positive() {

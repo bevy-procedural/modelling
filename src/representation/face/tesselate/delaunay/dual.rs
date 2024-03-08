@@ -1,3 +1,6 @@
+//! This whole module is deprecated
+
+
 use crate::{math::IndexType, representation::Face};
 use itertools::Itertools;
 

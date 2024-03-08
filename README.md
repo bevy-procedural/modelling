@@ -66,9 +66,8 @@ For package development, we recommend using the `editor`-subcrate. This example 
   - [ ] UV Coordinates
   - [ ] Custom Attributes
 - [ ] Triangulation
-  - [ ] Montone Sweep-Line
-  - [ ] Min Weight
-  - [ ] Constrained Delaunay
+  - [(x)] Montone Sweep-Line
+  - [x] Constrained Delaunay (using Delaunator)
 - [ ] Primitives
   - [x] Polygon, Star
   - [x] Cuboid

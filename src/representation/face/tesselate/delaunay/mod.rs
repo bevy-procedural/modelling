@@ -1,10 +1,18 @@
 use super::{Face, Mesh, Payload};
 use crate::{
-    math::{Scalar, Vector2D, Vector3D},
+    math::{Scalar, Vector, Vector2D, Vector3D},
     representation::IndexType,
 };
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 mod dual;
+use spade::{
+    handles::{
+        FixedDirectedEdgeHandle,
+        VoronoiVertex::{self, Inner, Outer},
+    },
+    AngleLimit, ConstrainedDelaunayTriangulation, FloatTriangulation as _, HasPosition,
+    InsertionError, Point2, RefinementParameters, Triangulation as _,
+};
 
 impl<E, F> Face<E, F>
 where
@@ -14,6 +22,7 @@ where
     /// Flips edges until the delaunay-condition is met.
     /// This is quite slow in the worst case O(n^3) but usually much better than the naive version.
     /// Assumes local indices
+    #[deprecated(since = "0.1.0", note = "please use `delaunator` instead")]
     pub fn delaunayfy<V: IndexType, P: Payload>(
         &self,
         mesh: &Mesh<E, V, F, P>,
@@ -90,78 +99,71 @@ where
         }
     }
 
-    /// Flips edges until the delaunay-condition is met. This is quite slow: O(n^3).
-    pub fn delaunayfy_naive<V: IndexType, P: Payload>(
-        &self,
-        mesh: &Mesh<E, V, F, P>,
-        indices: &mut Vec<V>,
-        local_indices: bool,
-    ) where
-        P::Vec: Vector3D<P::S>,
-    {
-        let eps = P::S::EPS * P::S::from(10.0); // TODO
-        let vs: Vec<(P::Vec2, V)> = self.vertices_2d::<V, P>(mesh).collect();
-        assert!(vs.len() == self.num_vertices(mesh));
-        let mut vsh: HashMap<V, P::Vec2> = HashMap::new();
-        if local_indices {
-            for (i, (v, p)) in vs.iter().enumerate() {
-                vsh.insert(V::new(i), *v);
-            }
-        } else {
-            for (v, p) in vs {
-                vsh.insert(p, v);
-            }
-        }
-
-        if indices.len() < 3 {
-            return;
-        }
-
-        for _ in 0..indices.len() {
-            let mut changed = false;
-            for i in (0..indices.len()).step_by(3) {
-                for j in ((i + 3)..indices.len()).step_by(3) {
-                    for k in 0..3 {
-                        let a = indices[i + (0 + k) % 3];
-                        let b = indices[i + (1 + k) % 3];
-                        let c = indices[i + (2 + k) % 3];
-                        for l in 0..3 {
-                            let d = indices[j + (0 + l) % 3];
-                            let e = indices[j + (1 + l) % 3];
-                            let f = indices[j + (2 + l) % 3];
-                            if a == e && b == d {
-                                if vsh[&f].is_inside_circumcircle(vsh[&a], vsh[&b], vsh[&c], eps) {
-                                    //if vsh[&a].distance(&vsh[&b]) > vsh[&c].distance(&vsh[&f]) {
-                                    indices[i + (0 + k) % 3] = c;
-                                    indices[i + (1 + k) % 3] = f;
-                                    indices[i + (2 + k) % 3] = b;
-
-                                    indices[j + (0 + l) % 3] = c;
-                                    indices[j + (1 + l) % 3] = a;
-                                    indices[j + (2 + l) % 3] = f;
-
-                                    changed = true;
-
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if !changed {
-                break;
-            }
-        }
-    }
-
-    /*/// Converts the face into a triangle list using the delaunay triangulation.
+    /// Converts the face into a triangle list using the delaunay triangulation.
     pub fn delaunay_triangulation<V: IndexType, P: Payload>(
         &self,
         mesh: &Mesh<E, V, F, P>,
-        _indices: &mut Vec<V>,
-    ) {
-        assert!(self.may_be_curved() || self.is_planar2(mesh));
-        // TODO: or at least some other O(n log n) algorithm: https://en.wikipedia.org/wiki/Delaunay_triangulation
-    }*/
+        indices: &mut Vec<V>,
+    ) where
+        P::Vec: Vector3D<P::S>,
+    {
+        debug_assert!(self.may_be_curved() || self.is_planar2(mesh));
+        debug_assert!(!self.has_self_intersections(mesh));
+
+        //let n = indices.len();
+        //self.sweep_line(mesh, indices);
+        //self.delaunayfy(mesh, indices, n);
+
+        // using Delaunator because it is faster than spade for < 100_000 vertices
+        // https://github.com/Stoeoef/spade/tree/master/delaunay_compare
+        /*let vs: Vec<delaunator::Point> = self
+            .vertices_2d::<V, P>(mesh)
+            .map(|(vec2, _)| delaunator::Point {
+                x: vec2.x().to_f64(),
+                y: vec2.y().to_f64(),
+            })
+            .collect();
+        let triangulation = delaunator::triangulate(&vs);
+        indices.extend(triangulation.triangles.iter().map(|i| V::new(*i)));*/
+
+        let mut cdt = ConstrainedDelaunayTriangulation::<Point2<_>>::new();
+        //TODO: faster: ConstrainedDelaunayTriangulation::bulk_load()
+        let mut last = None;
+        let mut first = None;
+        for (i2, (vec2, _)) in self.vertices_2d::<V, P>(mesh).enumerate() {
+            let i = cdt
+                .insert(Point2::new(vec2.x().to_f64(), vec2.y().to_f64()))
+                .unwrap();
+            assert!(i.index() == i2);
+            if let Some(j) = last {
+                assert!(cdt.add_constraint(j, i));
+            } else {
+                first = Some(i);
+            }
+            last = Some(i);
+        }
+        assert!(cdt.add_constraint(last.unwrap(), first.unwrap()));
+
+        let i2v = self
+            .vertices_2d::<V, P>(mesh)
+            .map(|(_, i)| i)
+            .collect::<Vec<_>>();
+        let i0 = indices.len();
+        cdt.inner_faces().for_each(|face| {
+            let [p0, p1, p2] = face.vertices();
+            let v0 = V::new(p0.index());
+            let v1 = V::new(p1.index());
+            let v2 = V::new(p2.index());
+
+            //if self.is_inside(mesh, i2v[p0.index()], i2v[p1.index()], i2v[p2.index()]) {
+            if self.is_inside(
+                mesh,
+                V::new(i0 + p0.index()),
+                V::new(i0 + p1.index()),
+                V::new(i0 + p2.index()),
+            ) {
+                indices.extend(&[v0, v1, v2]);
+            }
+        });
+    }
 }
