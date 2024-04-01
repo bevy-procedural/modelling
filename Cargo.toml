@@ -67,7 +67,7 @@ meshopt = ["dep:meshopt"]
 name = "box"
 path = "examples/box.rs"
 doc-scrape-examples = true
-required-features = ["bevy"]
+required-features = ["bevy", "bevy/bevy_pbr"]
 
 [[bench]]
 name = "triangulation"
