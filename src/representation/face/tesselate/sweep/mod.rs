@@ -144,7 +144,7 @@ where
                         .0;
                     let line = sls.remove_left(i).unwrap();
 
-                    if let Some(mut fixup) = line.fixup {
+                    if let Some(_fixup) = line.fixup {
                         todo!("Handle fixup");
                     }
 
@@ -180,7 +180,7 @@ where
                 VertexType::End => {
                     let mut line = sls.remove_left(event.here).unwrap();
 
-                    if let Some(mut fixup) = line.fixup {
+                    if let Some(_fixup) = line.fixup {
                         todo!("Handle fixup");
                     }
 

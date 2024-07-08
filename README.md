@@ -1,14 +1,11 @@
 # Procedural Modelling
 
-<!-- 
 [![Documentation](https://docs.rs/procedural_modelling/badge.svg)](https://docs.rs/procedural_modelling)
 [![crates.io](https://img.shields.io/crates/v/procedural_modelling)](https://crates.io/crates/procedural_modelling) 
 [![Downloads](https://img.shields.io/crates/d/procedural_modelling)](https://crates.io/crates/procedural_modelling)
 [![License](https://img.shields.io/crates/l/procedural_modelling)](https://bevyengine.org/learn/quick-start/plugin-development/#licensing)
--->
 [![Build Status](https://github.com/bevy-procedural/modelling/actions/workflows/rust.yml/badge.svg)](https://github.com/bevy-procedural/modelling/actions)
 [![GitHub Repo stars](https://img.shields.io/github/stars/bevy-procedural/modelling)](https://github.com/bevy-procedural/modelling)
-[![Lines of Code](https://tokei.rs/b1/github/bevy-procedural/modelling)](https://github.com/bevy-procedural/modelling)
 
 A Framework-Agnostic Procedural Modelling Library.
 
@@ -119,6 +116,14 @@ The following features are available:
 * `meshopt` -- Use [Meshopt](https://github.com/gwihlidal/meshopt-rs) to optimize the performance of generated meshes. 
 * `bevy` -- Compiles with support for bevy. Necessary for the examples and the editor.
 
+## Supported Bevy Versions
+
+The following table shows the compatibility of `procedural_modelling` with certain versions of Bevy:
+
+| bevy | bevy_procedural_meshes |
+| ---- | ---------------------- |
+| 0.14 | 0.2.*, main            |
+| 0.13 | 0.1.*                  |
 
 ## License
 

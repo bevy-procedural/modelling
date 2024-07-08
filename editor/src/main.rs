@@ -139,7 +139,6 @@ pub fn main() {
             PanOrbitCameraPlugin,
             gizmo::bevy::text::Text3dGizmosPlugin,
         ))
-        .add_systems(Update, bevy::window::close_on_esc)
         .add_systems(Startup, setup_meshes)
         .add_systems(Update, update_meshes)
         .run();
@@ -159,7 +158,7 @@ fn update_meshes(
         .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
     {
         let distance = ray
-            .intersect_plane(Vec3::ZERO, Plane3d::new(Vec3::Y))
+            .intersect_plane(Vec3::ZERO, InfinitePlane3d::new(Vec3::Y))
             .unwrap_or(0.0);
         let world_position = ray.get_point(distance);
         if settings.px != world_position.x || settings.py != world_position.z {
@@ -182,14 +181,14 @@ fn setup_meshes(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut texts: ResMut<Text3dGizmos>,
+     mut texts: ResMut<Text3dGizmos>,
 ) {
     let mesh = make_mesh(&MeshSettings::default());
     commands.spawn((
         PbrBundle {
             mesh: meshes.add(mesh.to_bevy(RenderAssetUsages::all())),
             material: materials.add(StandardMaterial {
-                base_color: Color::rgba(1.0, 1.0, 1.0, 1.0),
+                base_color: Color::srgba(1.0, 1.0, 1.0, 1.0),
                 //alpha_mode: AlphaMode::Blend,
                 double_sided: false,
                 cull_mode: None,
@@ -209,7 +208,7 @@ fn setup_meshes(
 
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(Mesh::from(Plane3d::new(Vec3::Y))),
+            mesh: meshes.add(Mesh::from(Plane3d::new(Vec3::Y, Vec2::new(1.0, 1.0)))),
             material: materials.add(StandardMaterial::default()),
             transform: Transform::from_translation(Vec3::new(0.0, -1.0, 0.0))
                 .with_scale(Vec3::splat(10.0)),
