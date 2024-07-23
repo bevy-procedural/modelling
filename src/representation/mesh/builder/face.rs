@@ -3,7 +3,7 @@ use crate::{
     util::iter::contains_exactly_one,
 };
 
-/// Close a phase given some description. Might insert additional edges and vertices.
+/// Close a face given some description. Might insert additional edges and vertices.
 pub trait CloseFace<Input> {
     /// The type of the face indices
     type FaceIndex: IndexType;

@@ -98,7 +98,7 @@ impl<'a, E: IndexType, V: IndexType, F: IndexType, P: Payload> ExactSizeIterator
 {
 }
 
-/// Iterator over all half-edges incident to the same face (counter-clockwise)
+/// Iterator over all half-edges incident to the same face (clockwise)
 pub struct IncidentToFaceBackIterator<'a, E, V, F, P>
 where
     E: IndexType,
