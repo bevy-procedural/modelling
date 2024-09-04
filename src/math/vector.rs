@@ -22,7 +22,7 @@ pub trait Vector<S: Scalar>:
     type Vec2: Vector2D<S = S>;
 
     /// The 3d vector type used in the coordinates.
-    type Vec3: Vector3D<S>;
+    type Vec3: Vector3D<S = S>;
 
     /// The rotation type used in the vector.
     type Trans: Transform<S = S, Vec = Self>;

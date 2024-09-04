@@ -13,7 +13,7 @@ where
     V: IndexType,
     F: IndexType,
     P: Payload,
-    P::Vec: Vector3D<P::S>,
+    P::Vec: Vector3D<S = P::S>,
 {
     /// create a regular polygon
     pub fn regular_polygon(radius: P::S, n: usize) -> Mesh<E, V, F, P> {

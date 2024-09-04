@@ -1,5 +1,8 @@
 use super::{Face, Mesh, Payload};
-use crate::{math::{Vector2D, Vector3D}, representation::IndexType};
+use crate::{
+    math::{Vector2D, Vector3D},
+    representation::IndexType,
+};
 use itertools::Itertools;
 
 impl<E, F> Face<E, F>
@@ -35,7 +38,7 @@ where
         indices: &mut Vec<V>,
         local_indices: bool,
     ) where
-        P::Vec: Vector3D<P::S>,
+        P::Vec: Vector3D<S = P::S>,
     {
         let vs: Vec<(P::Vec2, V)> = self.vertices_2d::<V, P>(mesh).collect();
         let vs1_convex = vs[1].0.convex(vs[0].0, vs[2].0);

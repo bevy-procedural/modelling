@@ -17,7 +17,7 @@ pub trait Payload: Clone + Default + PartialEq + std::fmt::Debug + std::fmt::Dis
     type Vec2: Vector2D<S = Self::S>;
 
     /// The 3d vector type used in the payload.
-    type Vec3: Vector3D<Self::S>;
+    type Vec3: Vector3D<S = Self::S>;
 
     /// The transformation type used in the payload.
     type Trans: Transform<S = Self::S, Vec = Self::Vec>;

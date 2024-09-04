@@ -16,7 +16,7 @@ where
         mesh: &Mesh<E, V, F, P>,
         indices: &mut Vec<V>,
     ) where
-        P::Vec: Vector3D<P::S>,
+        P::Vec: Vector3D<S = P::S>,
     {
         debug_assert!(self.may_be_curved() || self.is_planar2(mesh));
         debug_assert!(!self.has_self_intersections(mesh));

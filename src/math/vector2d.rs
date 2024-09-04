@@ -2,6 +2,7 @@ use super::{Scalar, Vector};
 
 /// Trait for coordinates in 2d space.
 pub trait Vector2D: Vector<Self::S> {
+    /// The scalar type of the coordinates used in the vector
     type S: Scalar;
 
     /// Construct from scalar values.

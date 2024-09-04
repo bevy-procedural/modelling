@@ -21,7 +21,7 @@ where
         local_indices: bool,
         randomize: bool,
     ) where
-        P::Vec: Vector3D<P::S>,
+        P::Vec: Vector3D<S = P::S>,
     {
         let eps = <P::S as Scalar>::EPS * 2.0.into();
         debug_assert!(self.may_be_curved() || self.is_planar2(mesh));

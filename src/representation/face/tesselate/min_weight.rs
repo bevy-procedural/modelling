@@ -12,7 +12,7 @@ where
 {
     fn shorten<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>, indices: &mut Vec<V>)
     where
-        P::Vec: Vector3D<P::S>,
+        P::Vec: Vector3D<S = P::S>,
     {
         // TODO: This shortens edges producing invalid meshess!
         let vs: Vec<(P::Vec2, V)> = self.vertices_2d::<V, P>(mesh).collect();
@@ -69,7 +69,7 @@ where
         mesh: &Mesh<E, V, F, P>,
         indices: &mut Vec<V>,
     ) where
-        P::Vec: Vector3D<P::S>,
+        P::Vec: Vector3D<S = P::S>,
     {
         // TODO: O(n^3) algorithm http://www.ist.tugraz.at/_attach/Publish/Eaa19/Chapter_04_MWT_handout.pdf
         let mut best_indices = Vec::new();

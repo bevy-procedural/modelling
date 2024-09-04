@@ -62,7 +62,9 @@ impl Vector<f32> for Vec3 {
     }
 }
 
-impl Vector3D<f32> for Vec3 {
+impl Vector3D for Vec3 {
+    type S = f32;
+    
     #[inline(always)]
     fn from_xyz(x: f32, y: f32, z: f32) -> Self {
         Vec3::new(x, y, z)

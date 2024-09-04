@@ -1,5 +1,5 @@
 use super::point::IndexedVertexPoint;
-use crate::{math::Vector2D, math::Scalar,representation::IndexType};
+use crate::{math::Scalar, math::Vector2D, representation::IndexType};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SweepReflexChainDirection {

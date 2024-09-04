@@ -13,7 +13,7 @@ where
     V: IndexType,
     F: IndexType,
     P: Payload,
-    P::Vec: Vector3D<P::S>,
+    P::Vec: Vector3D<S = P::S>,
 {
     /// convert the mesh to triangles and get all indices to do so.
     /// Also optionally duplicates vertices to insert normals etc. (otherwise, return empty vertices)

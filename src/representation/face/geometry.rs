@@ -2,7 +2,7 @@ use super::{
     super::{payload::Payload, IndexType, Mesh},
     Face,
 };
-use crate::math::{LineSegment2D, Scalar, Transform, Vector, Vector2D, Vector3D};
+use crate::math::{LineSegment2D, Scalar, Transform, Vector, Vector3D};
 use itertools::Itertools;
 
 impl<E: IndexType, F: IndexType> Face<E, F> {
@@ -58,7 +58,7 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
     /// This is a quite slow O(n^2) method. Use with caution.
     pub fn has_self_intersections<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> bool
     where
-        P::Vec: Vector3D<P::S>,
+        P::Vec: Vector3D<S = P::S>,
     {
         // TODO: Test this
         self.vertices_2d(mesh)
@@ -76,7 +76,7 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
     /// Testing this is quite slow O(n^2). Use with caution.
     pub fn is_simple<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> bool
     where
-        P::Vec: Vector3D<P::S>,
+        P::Vec: Vector3D<S = P::S>,
     {
         !self.has_holes() && !self.has_self_intersections(mesh)
     }
@@ -90,7 +90,7 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
     /// A fast methods to get the surface normal, but will only work for convex faces.
     pub fn normal_naive<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> P::Vec
     where
-        P::Vec: Vector3D<P::S>,
+        P::Vec: Vector3D<S = P::S>,
     {
         debug_assert!(self.is_planar2(mesh));
         debug_assert!(self.is_convex(mesh));
@@ -103,7 +103,7 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
     /// Uses Newell's method to handle concave faces.
     pub fn normal<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> P::Vec
     where
-        P::Vec: Vector3D<P::S>,
+        P::Vec: Vector3D<S = P::S>,
     {
         // TODO: overload this in a way that allows different dimensions
 
@@ -148,7 +148,7 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
         mesh: &'a Mesh<E, V, F, P>,
     ) -> impl Iterator<Item = (P::Vec2, V)> + Clone + ExactSizeIterator + 'a
     where
-        P::Vec: Vector3D<P::S>,
+        P::Vec: Vector3D<S = P::S>,
     {
         // TODO: overload this in a way that allows different dimensions
         assert!(P::Vec::dimensions() == 3);

@@ -63,7 +63,7 @@ where
         local_indices: bool,
         f: impl Fn(&Mesh<E, V, F, P>, &mut Vec<V>),
     ) where
-        P::Vec: Vector3D<P::S>,
+        P::Vec: Vector3D<S = P::S>,
     {
         // TODO: counting again and again is rather slow. Cache this values
         let n = self.num_vertices(mesh);
@@ -83,7 +83,7 @@ where
         algorithm: TriangulationAlgorithm,
         local_indices: bool,
     ) where
-        P::Vec: Vector3D<P::S>,
+        P::Vec: Vector3D<S = P::S>,
     {
         let n = self.num_vertices(mesh);
         if n < 3 {
@@ -144,7 +144,7 @@ where
         algorithm: TriangulationAlgorithm,
         generate_normals: GenerateNormals,
     ) where
-        P::Vec: Vector3D<P::S>,
+        P::Vec: Vector3D<S = P::S>,
     {
         match generate_normals {
             GenerateNormals::None => {
