@@ -7,9 +7,18 @@ use bevy::math::{Vec2, Vec3};
 /// Vertex Payload for Bevy with 3d position, normal, and uv.
 #[derive(Debug, Clone, PartialEq, Default, Copy)]
 pub struct BevyPayload {
+    /// The position of the vertex.
     position: Vec3,
+
+    /// The normal of the vertex.
     normal: Vec3,
+
+    /// The uv coordinates of the vertex.
     uv: Vec2,
+
+    #[cfg(feature = "sweep_debug")]
+    /// The type of vertex in the sweep algorithm.
+    pub sweep: crate::representation::tesselate::sweep::SweepMeta,
 }
 
 impl Payload for BevyPayload {
@@ -25,6 +34,9 @@ impl Payload for BevyPayload {
             position: self.position + *v,
             normal: self.normal,
             uv: self.uv,
+
+            #[cfg(feature = "sweep_debug")]
+            sweep: self.sweep,
         }
     }
 
@@ -34,6 +46,9 @@ impl Payload for BevyPayload {
             position: t.apply(self.position),
             normal: t.apply_vec(self.normal),
             uv: self.uv,
+
+            #[cfg(feature = "sweep_debug")]
+            sweep: self.sweep,
         }
     }
 
@@ -58,6 +73,9 @@ impl Payload for BevyPayload {
             position: v,
             normal: Vec3::ZERO,
             uv: Vec2::ZERO,
+            
+            #[cfg(feature = "sweep_debug")]
+            sweep: Default::default(),
         }
     }
 }
@@ -67,9 +85,7 @@ impl std::fmt::Display for BevyPayload {
         write!(
             f,
             "{:+05.3}, {:+05.3}, {:+05.3}",
-            self.position.x,
-            self.position.y,
-            self.position.z,
+            self.position.x, self.position.y, self.position.z,
         )
     }
 }

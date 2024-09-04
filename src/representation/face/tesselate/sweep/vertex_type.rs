@@ -3,17 +3,32 @@ use crate::{
     representation::IndexType,
 };
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Copy, Default)]
+/// The type of a vertex in a sweep line reflex chain
 pub enum VertexType {
+    #[default]
+    /// Undefined vertex type.
+    Undefined,
+
+    /// Start a new sweep line here
     Start,
+
+    /// End the sweep line here
     End,
+
+    /// Split the sweep line in two parts at this scan reflex vertex
     Split,
+
+    /// Merge two parts of the sweep line at this scan reflex vertex
     Merge,
+
+    /// Polygon is monotone at this vertex 
     Regular,
 }
 
 impl VertexType {
     // TODO: When there are two vertices with the same y-coordinate, the vertex type is not well defined. i.e., the first one should be Start and all others should be regular
+    /// Calculate the vertex type based on the previous, current and next vertices.
     pub fn new<V: IndexType, Vec2: Vector2D<S>, S: Scalar>(
         prev: Vec2,
         here: Vec2,

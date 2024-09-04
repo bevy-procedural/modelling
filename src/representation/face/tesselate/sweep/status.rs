@@ -1,6 +1,6 @@
 use super::{chain::SweepReflexChain, point::IndexedVertexPoint};
 use crate::{
-    math::{Scalar, Vector},
+    math::{Scalar, Vector, Vector2D},
     representation::{payload::Payload, IndexType},
 };
 use std::collections::HashMap;
@@ -12,11 +12,11 @@ pub struct EdgeData {
 }
 
 impl EdgeData {
-    pub fn x_at_y<V: IndexType, P: Payload>(
+    pub fn x_at_y<V: IndexType, Vec2: Vector2D<S>, S: Scalar>(
         &self,
-        y: P::S,
-        vec2s: &Vec<IndexedVertexPoint<P::Vec2, P::S>>,
-    ) -> P::S {
+        y: S,
+        vec2s: &Vec<IndexedVertexPoint<Vec2, S>>,
+    ) -> S {
         let e = vec2s[self.end].vec;
         let s = vec2s[self.start].vec;
         let dx = e.x() - s.x();
@@ -31,22 +31,18 @@ impl EdgeData {
     }
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct IntervalData {
+pub struct IntervalData<V: IndexType, Vec2: Vector2D<S>, S: Scalar> {
     pub helper: usize,
     pub left: EdgeData,
     pub right: EdgeData,
-    pub stacks: SweepReflexChain,
-    pub fixup: Option<SweepReflexChain>,
+    pub stacks: SweepReflexChain<V, Vec2, S>,
+    pub fixup: Option<SweepReflexChain<V, Vec2, S>>,
 }
 
-impl IntervalData {
-    pub fn contains<V: IndexType, P: Payload>(
-        &self,
-        pos: &P::Vec2,
-        vec2s: &Vec<IndexedVertexPoint<P::Vec2, P::S>>,
-    ) -> bool {
-        let p1 = self.left.x_at_y::<V, P>(pos.y(), vec2s);
-        let p2 = self.right.x_at_y::<V, P>(pos.y(), vec2s);
+impl<V: IndexType, Vec2: Vector2D<S>, S: Scalar> IntervalData<V, Vec2, S> {
+    pub fn contains(&self, pos: &Vec2, vec2s: &Vec<IndexedVertexPoint<Vec2, S>>) -> bool {
+        let p1 = self.left.x_at_y::<V, Vec2, S>(pos.y(), vec2s);
+        let p2 = self.right.x_at_y::<V, Vec2, S>(pos.y(), vec2s);
         assert!(p1 <= p2);
         p1 <= pos.x() && pos.x() <= p2
     }
@@ -92,14 +88,14 @@ impl<S: Scalar> std::cmp::Ord for OrderedFloats<S> {
     }
 }
 
-pub struct SweepLineStatus {
+pub struct SweepLineStatus<V: IndexType, Vec2: Vector2D<S>, S: Scalar> {
     /// The sweep lines, ordered by the target vertex index of the left edge
-    left: HashMap<usize, IntervalData>,
+    left: HashMap<usize, IntervalData<V, Vec2, S>>,
     /// Maps right targets to left targets
     right: HashMap<usize, usize>,
 }
 
-impl SweepLineStatus {
+impl<V: IndexType, Vec2: Vector2D<S>, S: Scalar> SweepLineStatus<V, Vec2, S> {
     pub fn new() -> Self {
         SweepLineStatus {
             left: HashMap::new(),
@@ -107,21 +103,21 @@ impl SweepLineStatus {
         }
     }
 
-    pub fn insert(&mut self, value: IntervalData) {
+    pub fn insert(&mut self, value: IntervalData<V, Vec2, S>) {
         // TODO: assert that the pos is in between the start and end
         self.right.insert(value.right.end, value.left.end);
         self.left.insert(value.left.end, value);
     }
 
-    pub fn get_left(&self, key: usize) -> Option<&IntervalData> {
+    pub fn get_left(&self, key: usize) -> Option<&IntervalData<V, Vec2, S>> {
         self.left.get(&key)
     }
 
-    pub fn get_right(&self, key: usize) -> Option<&IntervalData> {
+    pub fn get_right(&self, key: usize) -> Option<&IntervalData<V, Vec2, S>> {
         self.right.get(&key).and_then(|key| self.left.get(key))
     }
 
-    pub fn remove_left(&mut self, key: usize) -> Option<IntervalData> {
+    pub fn remove_left(&mut self, key: usize) -> Option<IntervalData<V, Vec2, S>> {
         if let Some(v) = self.left.remove(&key) {
             self.right.remove(&v.right.end);
             Some(v)
@@ -130,7 +126,7 @@ impl SweepLineStatus {
         }
     }
 
-    pub fn remove_right(&mut self, key: usize) -> Option<IntervalData> {
+    pub fn remove_right(&mut self, key: usize) -> Option<IntervalData<V, Vec2, S>> {
         if let Some(k) = self.right.remove(&key) {
             self.left.remove(&k)
         } else {
@@ -138,15 +134,15 @@ impl SweepLineStatus {
         }
     }
 
-    pub fn find_by_position<V: IndexType, P: Payload>(
+    pub fn find_by_position(
         &self,
-        pos: &P::Vec2,
-        vec2s: &Vec<IndexedVertexPoint<P::Vec2, P::S>>,
-    ) -> Option<(&usize, &IntervalData)> {
+        pos: &Vec2,
+        vec2s: &Vec<IndexedVertexPoint<Vec2, S>>,
+    ) -> Option<(&usize, &IntervalData<V,Vec2,S>)> {
         // TODO: faster search using a BTreeMap
         self.left
             .iter()
-            .find(|(_, v)| v.contains::<V, P>(pos, vec2s))
+            .find(|(_, v)| v.contains(pos, vec2s))
     }
 }
 

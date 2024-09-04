@@ -11,7 +11,7 @@ mod convex;
 mod delaunay;
 mod ear_clipping;
 mod min_weight;
-mod sweep;
+pub mod sweep;
 
 /// The algorithm to use for triangulating a face.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

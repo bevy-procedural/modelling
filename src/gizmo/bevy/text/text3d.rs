@@ -12,7 +12,7 @@ impl Plugin for Text3dPlugin {
 }
 
 /// Component to hold text data and world position
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct Text3d {
     world_position: Vec3,
     font_size: f32,
@@ -41,6 +41,7 @@ fn update_text_positions(
         else {
             continue;
         };
+        
         style.top = Val::Px(viewport_position.y - text_3d.font_size / 2.0);
         style.left = Val::Px(viewport_position.x);
     }

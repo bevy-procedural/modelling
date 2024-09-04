@@ -16,6 +16,15 @@ pub fn show_vertex_indices(texts: &mut ResMut<Text3dGizmos>, mesh: &MeshVec3) {
     });
 }
 
+pub fn show_sweep_types(texts: &mut ResMut<Text3dGizmos>, mesh: &MeshVec3) {
+    mesh.vertices().for_each(|v| {
+        texts.write(
+            Text3dGizmo::new(v.id().to_string(), v.vertex().clone())
+                .with_color(Color::srgb(0.0, 0.0, 1.0)),
+        );
+    });
+}
+
 /// Show the edge indices of a mesh.
 /// Boundary edges are red, edges with faces are green.
 /// Use `offset` to slightly shift them towards the face center.

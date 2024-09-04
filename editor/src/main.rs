@@ -14,7 +14,7 @@ use bevy_panorbit_camera::*;
 use procedural_modelling::{
     gizmo::{
         self,
-        bevy::{show_edges, show_faces, show_vertex_indices, text::Text3dGizmos},
+        bevy::{text::Text3dGizmos, *},
     },
     representation::bevy::MeshVec3,
 };
@@ -99,7 +99,7 @@ fn _make_spiral(settings: &MeshSettings) -> MeshVec3 {
 }
 
 fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
-    let mut mesh = MeshVec3::regular_star(2.0, 1.0, 6);
+    let mut mesh = MeshVec3::regular_star(2.0, 1.0, 8);
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh
 }
@@ -141,7 +141,17 @@ pub fn main() {
         ))
         .add_systems(Startup, setup_meshes)
         .add_systems(Update, update_meshes)
+        .add_systems(Update, exit_on_esc)
         .run();
+}
+
+fn exit_on_esc(
+    input: Res<ButtonInput<KeyCode>>,
+    mut app_exit_events: ResMut<Events<bevy::app::AppExit>>,
+) {
+    if input.just_pressed(KeyCode::Escape) {
+        app_exit_events.send(AppExit::Success);
+    }
 }
 
 fn update_meshes(
@@ -181,7 +191,7 @@ fn setup_meshes(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-     mut texts: ResMut<Text3dGizmos>,
+    mut texts: ResMut<Text3dGizmos>,
 ) {
     let mesh = make_mesh(&MeshSettings::default());
     commands.spawn((
@@ -199,6 +209,7 @@ fn setup_meshes(
         MeshSettings::default(),
         Name::new("Generated Shape"),
     ));
+    show_sweep_types(&mut texts, &mesh);
 
     if false {
         show_vertex_indices(&mut texts, &mesh);
