@@ -59,7 +59,8 @@ where
         self.bevy_set_ex(mesh, &mut TesselationMeta::default());
     }
 
-    pub fn bevy_set_ex(&self, mesh: &mut bevy::render::mesh::Mesh, meta: &mut TesselationMeta<BevyPayload>) {
+    /// Like bevy_set, but with additional meta information
+    pub fn bevy_set_ex(&self, mesh: &mut bevy::render::mesh::Mesh, meta: &mut TesselationMeta) {
         assert!(mesh.primitive_topology() == PrimitiveTopology::TriangleList);
         assert!(mesh.asset_usage.contains(RenderAssetUsages::MAIN_WORLD));
         Self::bevy_remove_attributes(mesh);

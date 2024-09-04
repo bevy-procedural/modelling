@@ -21,7 +21,7 @@ where
         &self,
         algorithm: TriangulationAlgorithm,
         generate_normals: GenerateNormals,
-        meta: &mut TesselationMeta<P>,
+        meta: &mut TesselationMeta,
     ) -> (Vec<V>, Vec<P>) {
         let mut indices = Vec::new();
         let mut vertices = Vec::new();

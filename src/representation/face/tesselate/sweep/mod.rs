@@ -12,15 +12,24 @@ pub use vertex_type::VertexType;
 
 /// Meta information for debuggin the sweep algorithm
 #[derive(Debug, Clone, PartialEq)]
-pub struct SweepMeta<P: Payload> {
+pub struct SweepMeta {
     /// The type of the vertex in the reflex chain
-    pub vertex_type: Vec<(P::Vec, VertexType)>,
+    pub vertex_type: Vec<(usize, VertexType)>,
 }
 
-impl<P: Payload> Default for SweepMeta<P> {
+impl Default for SweepMeta {
     fn default() -> Self {
         SweepMeta {
             vertex_type: Vec::new(),
+        }
+    }
+}
+
+impl SweepMeta {
+    /// Expand the indices to global indices
+    pub fn expand(&mut self, v0: usize, n: usize) {
+        for (i, _) in self.vertex_type.iter_mut() {
+            *i = v0 + (*i + 1) % n;
         }
     }
 }
@@ -35,7 +44,7 @@ where
         &self,
         mesh: &Mesh<E, V, F, P>,
         indices: &mut Vec<V>,
-        meta: &mut TesselationMeta<P>,
+        meta: &mut TesselationMeta,
     ) where
         P::Vec: Vector3D<S = P::S>,
     {
@@ -50,12 +59,7 @@ where
         let mut event_queue = queue::SweepEventQueue::<P::Vec2, V>::new(&vec2s);
 
         // #[cfg(feature = "sweep_debug")]
-        meta.sweep = event_queue.extract_meta(
-            &self
-                .vertices(mesh)
-                .map(|v| v.vertex().clone() as P::Vec)
-                .collect(),
-        );
+        meta.sweep = event_queue.extract_meta();
 
         while event_queue.work(indices) {}
     }

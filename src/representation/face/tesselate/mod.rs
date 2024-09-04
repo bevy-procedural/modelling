@@ -63,10 +63,10 @@ pub enum GenerateNormals {
 
 /// Meta information for debugging the tesselation algorithm
 #[derive(Debug, Clone, Default)]
-pub struct TesselationMeta<P: Payload> {
+pub struct TesselationMeta {
     #[cfg(feature = "sweep_debug")]
     /// Meta information for debugging the sweep algorithm
-    pub sweep: sweep::SweepMeta<P>,
+    pub sweep: sweep::SweepMeta,
 }
 
 impl<E, F> Face<E, F>
@@ -80,8 +80,8 @@ where
         mesh: &Mesh<E, V, F, P>,
         indices: &mut Vec<V>,
         local_indices: bool,
-        meta: &mut TesselationMeta<P>,
-        f: impl Fn(&Mesh<E, V, F, P>, &mut Vec<V>, &mut TesselationMeta<P>),
+        meta: &mut TesselationMeta,
+        f: impl Fn(&Mesh<E, V, F, P>, &mut Vec<V>, &mut TesselationMeta),
     ) where
         P::Vec: Vector3D<S = P::S>,
     {
@@ -93,6 +93,9 @@ where
             for i in v0..indices.len() {
                 indices[i] = V::new(v0 + (indices[i].index() + 1) % n);
             }
+            
+            #[cfg(feature = "sweep_debug")]
+            meta.sweep.expand(v0, n);
         }
     }
 
@@ -102,7 +105,7 @@ where
         indices: &mut Vec<V>,
         algorithm: TriangulationAlgorithm,
         local_indices: bool,
-        meta: &mut TesselationMeta<P>,
+        meta: &mut TesselationMeta,
     ) where
         P::Vec: Vector3D<S = P::S>,
     {
@@ -187,7 +190,7 @@ where
         indices: &mut Vec<V>,
         algorithm: TriangulationAlgorithm,
         generate_normals: GenerateNormals,
-        meta: &mut TesselationMeta<P>,
+        meta: &mut TesselationMeta,
     ) where
         P::Vec: Vector3D<S = P::S>,
     {

@@ -40,12 +40,12 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
         };
     }
 
-    pub fn extract_meta<P: Payload>(&self, vs: &Vec<P::Vec>) -> SweepMeta<P> {
+    pub fn extract_meta(&self) -> SweepMeta {
         SweepMeta {
             vertex_type: self
                 .queue
                 .iter()
-                .map(|e| (vs[e.here.index()], e.vertex_type))
+                .map(|e| (e.here, e.vertex_type))
                 .collect(),
         }
     }

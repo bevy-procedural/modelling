@@ -4,7 +4,9 @@ use bevy::prelude::*;
 use text::{Text3dGizmo, Text3dGizmos};
 
 use crate::representation::{
-    bevy::MeshVec3, payload::bevy::BevyPayload, tesselate::TesselationMeta,
+    bevy::MeshVec3,
+    payload::{bevy::BevyPayload, Payload},
+    tesselate::TesselationMeta,
 };
 pub mod text;
 
@@ -22,11 +24,15 @@ pub fn show_vertex_indices(texts: &mut ResMut<Text3dGizmos>, mesh: &MeshVec3) {
 pub fn show_tesselation_meta(
     texts: &mut ResMut<Text3dGizmos>,
     mesh: &MeshVec3,
-    meta: &TesselationMeta<BevyPayload>,
+    meta: &TesselationMeta,
 ) {
-    for (i, (pos, t)) in meta.sweep.vertex_type.iter().enumerate() {
+    for (index, t) in meta.sweep.vertex_type.iter() {
         texts.write(
-            Text3dGizmo::new(format!("{:?}", t), *pos).with_color(Color::srgb(1.0, 0.0, 0.0)),
+            Text3dGizmo::new(
+                format!("{:?}", t),
+                *mesh.vertices().nth(*index).unwrap().payload().vertex(),
+            )
+            .with_color(Color::srgb(1.0, 0.0, 0.0)),
         );
     }
 }
