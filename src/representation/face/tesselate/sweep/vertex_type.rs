@@ -29,11 +29,11 @@ pub enum VertexType {
 impl VertexType {
     // TODO: When there are two vertices with the same y-coordinate, the vertex type is not well defined. i.e., the first one should be Start and all others should be regular
     /// Calculate the vertex type based on the previous, current and next vertices.
-    pub fn new<V: IndexType, Vec2: Vector2D<S>, S: Scalar>(
+    pub fn new<V: IndexType, Vec2: Vector2D>(
         prev: Vec2,
         here: Vec2,
         next: Vec2,
-        tol: S,
+        tol: Vec2::S,
     ) -> Self {
         let cross = (here - prev).cross2d(&(next - here));
         let is_above_prev = here.y() - prev.y() > tol;

@@ -61,3 +61,25 @@ pub trait Scalar:
         a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g)
     }
 }
+
+
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
+pub struct OrderedFloats<S: Scalar> {
+    value: S,
+}
+
+impl<S: Scalar> OrderedFloats<S> {
+    pub fn new(value: S) -> Self {
+        OrderedFloats { value }
+    }
+}
+
+impl<S: Scalar> std::cmp::Eq for OrderedFloats<S> {}
+
+impl<S: Scalar> std::cmp::Ord for OrderedFloats<S> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.value
+            .partial_cmp(&other.value)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    }
+}

@@ -4,21 +4,16 @@ use super::{Scalar, Vector2D};
 
 /// Trait for line segments in 2d space.
 #[derive(Debug, Clone, Copy)]
-pub struct LineSegment2D<Vec2: Vector2D<S>, S: Scalar> {
+pub struct LineSegment2D<Vec2: Vector2D> {
     start: Vec2,
     end: Vec2,
-    _phantom: std::marker::PhantomData<S>,
 }
 
-impl<Vec2: Vector2D<S>, S: Scalar> LineSegment2D<Vec2, S> {
+impl<Vec2: Vector2D> LineSegment2D<Vec2> {
     /// Creates a new line segment from two points.
     #[inline(always)]
     pub fn new(start: Vec2, end: Vec2) -> Self {
-        Self {
-            start,
-            end,
-            _phantom: std::marker::PhantomData,
-        }
+        Self { start, end }
     }
 
     /// Returns the start point of the line segment.
@@ -35,20 +30,20 @@ impl<Vec2: Vector2D<S>, S: Scalar> LineSegment2D<Vec2, S> {
 
     /// Returns the length of the line segment.
     #[inline(always)]
-    pub fn length(&self) -> S {
+    pub fn length(&self) -> Vec2::S {
         self.start().distance(&self.end())
     }
 
     /// Returns the squared length of the line segment.
     #[inline(always)]
-    pub fn length_squared(&self) -> S {
+    pub fn length_squared(&self) -> Vec2::S {
         self.start().distance_squared(&self.end())
     }
 
     /// Returns the midpoint of the line segment.
     #[inline(always)]
     pub fn midpoint(&self) -> Vec2 {
-        self.start() + (self.end() - self.start()) * S::from(0.5)
+        self.start() + (self.end() - self.start()) * Vec2::S::from(0.5)
     }
 
     /// Returns the direction of the line segment.
@@ -60,7 +55,7 @@ impl<Vec2: Vector2D<S>, S: Scalar> LineSegment2D<Vec2, S> {
     /// Returns the intersection point of two line segments.
     /// `eps` is the epsilon for the cross product, i.e., for whether the lines are considered parallel.
     /// `eps2` is the epsilon for the t and u values, i.e., for the line length.
-    pub fn intersect_line(&self, other: &Self, eps: S, eps2: S) -> Option<Vec2> {
+    pub fn intersect_line(&self, other: &Self, eps: Vec2::S, eps2: Vec2::S) -> Option<Vec2> {
         let r = self.end() - self.start();
         let s = other.end() - other.start();
         let rxs = r.cross2d(&s);

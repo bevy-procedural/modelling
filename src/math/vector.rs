@@ -19,7 +19,7 @@ pub trait Vector<S: Scalar>:
     + 'static
 {
     /// The 2d vector type used in the coordinates.
-    type Vec2: Vector2D<S>;
+    type Vec2: Vector2D<S = S>;
 
     /// The 3d vector type used in the coordinates.
     type Vec3: Vector3D<S>;

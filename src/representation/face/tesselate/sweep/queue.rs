@@ -2,7 +2,6 @@ use super::chain;
 use super::point;
 use super::status;
 use super::vertex_type;
-use crate::math::Scalar;
 use crate::math::Vector2D;
 use crate::representation::{tesselate::sweep::chain::SweepReflexChainDirection, IndexType};
 use chain::SweepReflexChain;
@@ -11,23 +10,23 @@ use status::{EdgeData, IntervalData, SweepLineStatus};
 pub use vertex_type::VertexType;
 
 /// Central event queue of the sweep line triangulation
-pub struct SweepEventQueue<Vec2: Vector2D<S>, S: Scalar, V: IndexType> {
+pub struct SweepEventQueue<Vec2: Vector2D, V: IndexType> {
     /// Sorted event queue
-    queue: Vec<EventPoint<Vec2, S>>,
+    queue: Vec<EventPoint<Vec2>>,
 
     /// Indexed vertex points
-    vec2s: Vec<IndexedVertexPoint<Vec2, S>>,
+    vec2s: Vec<IndexedVertexPoint<Vec2>>,
 
     /// sweep line status indexed by x-coordinate
-    sls: SweepLineStatus<V, Vec2, S>,
+    sls: SweepLineStatus<V, Vec2>,
 
     phantom: std::marker::PhantomData<V>,
 }
 
-impl<Vec2: Vector2D<S>, S: Scalar, V: IndexType> SweepEventQueue<Vec2, S, V> {
+impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
     /// Creates a new event queue from a list of indexed vertex points
-    pub fn new(vec2s: &Vec<IndexedVertexPoint<Vec2, S>>) -> Self {
-        let mut event_queue: Vec<EventPoint<Vec2, S>> = Vec::new();
+    pub fn new(vec2s: &Vec<IndexedVertexPoint<Vec2>>) -> Self {
+        let mut event_queue: Vec<EventPoint<Vec2>> = Vec::new();
         for here in 0..vec2s.len() {
             event_queue.push(EventPoint::new::<V>(here, &vec2s));
         }
@@ -67,7 +66,7 @@ impl<Vec2: Vector2D<S>, S: Scalar, V: IndexType> SweepEventQueue<Vec2, S, V> {
     }
 
     /// Start a new sweep line at the given event
-    fn start(self: &mut Self, event: &EventPoint<Vec2, S>) {
+    fn start(self: &mut Self, event: &EventPoint<Vec2>) {
         self.sls.insert(IntervalData {
             helper: event.here,
             left: EdgeData::new(event.here, event.next),
@@ -78,7 +77,7 @@ impl<Vec2: Vector2D<S>, S: Scalar, V: IndexType> SweepEventQueue<Vec2, S, V> {
     }
 
     /// Merge two parts of the sweep line at the given event
-    fn merge(self: &mut Self, event: &EventPoint<Vec2, S>, indices: &mut Vec<V>) {
+    fn merge(self: &mut Self, event: &EventPoint<Vec2>, indices: &mut Vec<V>) {
         // left and right are swapped because "remove_right" will get the left one _from_ the right (and vice versa)
         let left = self.sls.remove_right(event.here).unwrap();
         let mut right = self.sls.remove_left(event.here).unwrap();
@@ -117,7 +116,7 @@ impl<Vec2: Vector2D<S>, S: Scalar, V: IndexType> SweepEventQueue<Vec2, S, V> {
     }
 
     /// Handle a regular vertex
-    fn regular(self: &mut Self, event: &EventPoint<Vec2, S>, indices: &mut Vec<V>) {
+    fn regular(self: &mut Self, event: &EventPoint<Vec2>, indices: &mut Vec<V>) {
         // TODO: modify instead of remove
         if let Some(mut v) = self.sls.remove_left(event.here) {
             let mut stacks = if let Some(fixup) = v.fixup {
@@ -162,7 +161,7 @@ impl<Vec2: Vector2D<S>, S: Scalar, V: IndexType> SweepEventQueue<Vec2, S, V> {
     }
 
     /// Split the sweep line at the given event
-    fn split(self: &mut Self, event: &EventPoint<Vec2, S>, indices: &mut Vec<V>) {
+    fn split(self: &mut Self, event: &EventPoint<Vec2>, indices: &mut Vec<V>) {
         let i = *self
             .sls
             .find_by_position(&self.vec2s[event.here].vec, &self.vec2s)
@@ -205,7 +204,7 @@ impl<Vec2: Vector2D<S>, S: Scalar, V: IndexType> SweepEventQueue<Vec2, S, V> {
     }
 
     /// End a sweep line at the given event
-    fn end(self: &mut Self, event: &EventPoint<Vec2, S>, indices: &mut Vec<V>) {
+    fn end(self: &mut Self, event: &EventPoint<Vec2>, indices: &mut Vec<V>) {
         let mut line = self.sls.remove_left(event.here).unwrap();
 
         if let Some(_fixup) = line.fixup {

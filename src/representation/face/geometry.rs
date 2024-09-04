@@ -2,7 +2,7 @@ use super::{
     super::{payload::Payload, IndexType, Mesh},
     Face,
 };
-use crate::math::{LineSegment2D, Scalar, Transform, Vector, Vector3D};
+use crate::math::{LineSegment2D, Scalar, Transform, Vector, Vector2D, Vector3D};
 use itertools::Itertools;
 
 impl<E: IndexType, F: IndexType> Face<E, F> {
@@ -54,7 +54,7 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
         return false;
     }
 
-    /// Whether the face is self-intersecting. 
+    /// Whether the face is self-intersecting.
     /// This is a quite slow O(n^2) method. Use with caution.
     pub fn has_self_intersections<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> bool
     where
@@ -65,8 +65,8 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
             .circular_tuple_windows::<(_, _)>()
             .tuple_combinations::<(_, _)>()
             .any(|(((a1, _), (a2, _)), ((b1, _), (b2, _)))| {
-                let l1 = LineSegment2D::<P::Vec2, P::S>::new(a1, a2);
-                let l2 = LineSegment2D::<P::Vec2, P::S>::new(b1, b2);
+                let l1 = LineSegment2D::<P::Vec2>::new(a1, a2);
+                let l2 = LineSegment2D::<P::Vec2>::new(b1, b2);
                 let res = l1.intersect_line(&l2, P::S::EPS, -P::S::EPS);
                 res.is_some()
             })
@@ -81,12 +81,11 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
         !self.has_holes() && !self.has_self_intersections(mesh)
     }
 
-    /// Whether the face is monotone in y direction, i.e., 
+    /// Whether the face is monotone in y direction, i.e.,
     /// every horizontal line intersects the face at most twice.
     pub fn is_y_monotone<V: IndexType, P: Payload>(&self, _mesh: &Mesh<E, V, F, P>) -> bool {
         todo!("implement is_y_monotone");
     }
-
 
     /// A fast methods to get the surface normal, but will only work for convex faces.
     pub fn normal_naive<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> P::Vec

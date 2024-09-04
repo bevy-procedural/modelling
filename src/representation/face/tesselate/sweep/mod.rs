@@ -45,7 +45,7 @@ where
             .map(|(i, (p, _))| IndexedVertexPoint::new(p, i))
             .collect();
 
-        let event_queue = queue::SweepEventQueue::<P::Vec2, P::S, V>::new(&vec2s);
+        let event_queue = queue::SweepEventQueue::<P::Vec2, V>::new(&vec2s);
         let mut event_queue = event_queue;
         while event_queue.work(indices) {}
     }

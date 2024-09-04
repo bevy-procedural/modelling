@@ -1,8 +1,5 @@
 use super::point::IndexedVertexPoint;
-use crate::{
-    math::{Scalar, Vector2D},
-    representation::IndexType,
-};
+use crate::{math::Vector2D, math::Scalar,representation::IndexType};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SweepReflexChainDirection {
@@ -23,15 +20,15 @@ pub enum SweepReflexChainDirection {
 /// edge has its bottom endpoint below the sweep line. Hence, we place the start vertex before the other
 /// chain. The currently active chain is indicated by d.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct SweepReflexChain<V: IndexType, Vec2: Vector2D<S>, S: Scalar> {
+pub struct SweepReflexChain<V: IndexType, Vec2: Vector2D> {
     stack: Vec<usize>,
     d: SweepReflexChainDirection,
 
     /// Bind the types to the chain. There is no need to mix the types and it simplifies the type signatures.
-    phantom: std::marker::PhantomData<(V, Vec2, S)>,
+    phantom: std::marker::PhantomData<(V, Vec2)>,
 }
 
-impl<V: IndexType, Vec2: Vector2D<S>, S: Scalar> SweepReflexChain<V, Vec2, S> {
+impl<V: IndexType, Vec2: Vector2D> SweepReflexChain<V, Vec2> {
     /// Create an empty reflex chain
     pub fn new() -> Self {
         SweepReflexChain {
@@ -64,7 +61,7 @@ impl<V: IndexType, Vec2: Vector2D<S>, S: Scalar> SweepReflexChain<V, Vec2, S> {
         &mut self,
         value: usize,
         indices: &mut Vec<V>,
-        vec2s: &Vec<IndexedVertexPoint<Vec2, S>>,
+        vec2s: &Vec<IndexedVertexPoint<Vec2>>,
         d: SweepReflexChainDirection,
     ) {
         assert!(self.stack.len() >= 1);
@@ -80,7 +77,7 @@ impl<V: IndexType, Vec2: Vector2D<S>, S: Scalar> SweepReflexChain<V, Vec2, S> {
                 .vec
                 .angle(vec2s[self.stack[l - 1]].vec, vec2s[self.stack[l - 2]].vec);
             if d == SweepReflexChainDirection::Left {
-                if angle > S::ZERO {
+                if angle > Vec2::S::ZERO {
                     break;
                 }
                 indices.extend([
@@ -91,7 +88,7 @@ impl<V: IndexType, Vec2: Vector2D<S>, S: Scalar> SweepReflexChain<V, Vec2, S> {
             } else {
                 // right or no preference
 
-                if angle < S::ZERO {
+                if angle < Vec2::S::ZERO {
                     break;
                 }
                 indices.extend([
@@ -163,7 +160,7 @@ impl<V: IndexType, Vec2: Vector2D<S>, S: Scalar> SweepReflexChain<V, Vec2, S> {
         &mut self,
         value: usize,
         indices: &mut Vec<V>,
-        vec2s: &Vec<IndexedVertexPoint<Vec2, S>>,
+        vec2s: &Vec<IndexedVertexPoint<Vec2>>,
         d: SweepReflexChainDirection,
     ) -> &Self {
         #[cfg(feature = "sweep_debug_print")]
@@ -186,7 +183,7 @@ impl<V: IndexType, Vec2: Vector2D<S>, S: Scalar> SweepReflexChain<V, Vec2, S> {
         &mut self,
         value: usize,
         indices: &mut Vec<V>,
-        vec2s: &Vec<IndexedVertexPoint<Vec2, S>>,
+        vec2s: &Vec<IndexedVertexPoint<Vec2>>,
     ) -> &Self {
         self.add(value, indices, vec2s, SweepReflexChainDirection::Right)
     }
@@ -196,7 +193,7 @@ impl<V: IndexType, Vec2: Vector2D<S>, S: Scalar> SweepReflexChain<V, Vec2, S> {
         &mut self,
         value: usize,
         indices: &mut Vec<V>,
-        vec2s: &Vec<IndexedVertexPoint<Vec2, S>>,
+        vec2s: &Vec<IndexedVertexPoint<Vec2>>,
     ) -> &Self {
         self.add(value, indices, vec2s, SweepReflexChainDirection::Left)
     }

@@ -62,7 +62,9 @@ impl Vector<f32> for Vec2 {
     }
 }
 
-impl Vector2D<f32> for Vec2 {
+impl Vector2D for Vec2 {
+    type S = f32;
+    
     #[inline(always)]
     fn from_xy(x: f32, y: f32) -> Self {
         Vec2::new(x, y)
