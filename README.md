@@ -1,7 +1,7 @@
 # Procedural Modelling
 
 [![Documentation](https://docs.rs/procedural_modelling/badge.svg)](https://docs.rs/procedural_modelling)
-[![crates.io](https://img.shields.io/crates/v/procedural_modelling)](https://crates.io/crates/procedural_modelling) 
+[![crates.io](https://img.shields.io/crates/v/procedural_modelling)](https://crates.io/crates/procedural_modelling)
 [![Downloads](https://img.shields.io/crates/d/procedural_modelling)](https://crates.io/crates/procedural_modelling)
 [![License](https://img.shields.io/crates/l/procedural_modelling)](https://bevyengine.org/learn/quick-start/plugin-development/#licensing)
 [![Build Status](https://github.com/bevy-procedural/modelling/actions/workflows/rust.yml/badge.svg)](https://github.com/bevy-procedural/modelling/actions)
@@ -13,11 +13,9 @@ Uses a datastructure based on half-edge meshes to represent (open) manifold mesh
 
 Currently there are quite a few crates that implement boolean operations and tesselation to achieve some other goal. We want to provide a common implementation to satisfy these very similar requirements and improve code-reuse among these projects so they can focus on their original goal.
 
-
 ## WARNING
 
 This crate is still in a _very_ early stage of development. Expect frequent API modifications, bugs, and missing features. Feel free to contribute by opening issues, pull requests or sharing your ideas in [Github Discussion](https://github.com/bevy-procedural/modelling/discussions).
-
 
 ## Usage
 
@@ -40,7 +38,7 @@ for _ in 0..5 {
 mesh.to_bevy(RenderAssetUsages::default())
 ```
 
-## Examples 
+## Examples
 
 <!--
 Try the live examples!
@@ -52,69 +50,90 @@ Or run the [examples](https://github.com/bevy-procedural/modelling/tree/main/exa
 
 For package development, we recommend using the `editor`-subcrate. This example has a little [egui](https://github.com/jakobhellermann/bevy-inspector-egui/)-editor. Run it using `cargo watch -w editor/src -w src -x "run -p editor --profile fast-dev"`. The `fast-dev` profile will enable optimizations for the dependencies, but not for the package itself. This will slow down the first build _significantly_, but incremental builds are slightly faster and bevy's performance (bevy is used as the renderer in the examples) improves a lot.
 
-
 ## Feature Progress
 
-- [ ] Attributes
-  - [x] Positions
-  - [x] Normals
-  - [ ] Smooth Surface Groups
-  - [ ] Tangents
-  - [ ] UV Coordinates
-  - [ ] Custom Attributes
-- [ ] Triangulation
-  - [(x)] Montone Sweep-Line
-  - [x] Constrained Delaunay (using Delaunator)
-- [ ] Primitives
-  - [x] Polygon, Star
-  - [x] Cuboid
-  - [x] Cylinder, Cone, Frustum, Tetrahedron, Octahedron
-  - [ ] Dodecahedron, Icosahedron
-  - [ ] UV Sphere
-  - [ ] Cube Sphere
-  - [ ] Icosphere
-  - [ ] Torus
-- [ ] Builder Primitives
-  - [x] Lines
-  - [ ] Quadratic Bezier Curves
-  - [ ] Cubic Bezier Curves
-  - [ ] Curved Surfaces (Bezier Surfaces / Parametric Surfaces / NURBS / Spline Networks...?)
-- [ ] Operations   
-  - [x] Extrude 
-  - [ ] Loft
-  - [ ] Inset
-  - [ ] Plane Intersection
-  - [ ] Union
-  - [ ] Intersection
-  - [ ] Difference
-  - [ ] Symmetric Difference
-  - [ ] (Anisotropic) Simplification / LODs
-  - [ ] Stitching
-  - [ ] Subdivision
-  - [ ] Morphing
-  - [ ] Voxelization
-- [ ] Tools
-  - [ ] Geodesic Pathfinding
-  - [ ] Raycasting
-  - [ ] Topology Analysis
-  - [ ] Spatial Data Structures
-- [ ] Debug Visualizations
-  - [x] Indices
-  - [ ] Normals
-  - [ ] Tangents
-  - [ ] Topology
-- [ ] Backends
-  - [x] Bevy
-  - [ ] wgpu
-
-
+-   [ ] Attributes
+    -   [x] Positions
+    -   [x] Normals
+    -   [ ] Smooth Surface Groups
+    -   [ ] Tangents
+    -   [ ] UV Coordinates
+    -   [ ] Custom Attributes
+-   [ ] Triangulation
+    -   [x] Montone Sweep-Line
+    -   [x] Constrained Delaunay (using [Spade](https://github.com/Stoeoef/spade))
+-   [ ] Primitives
+    -   [x] Polygon, Star
+    -   [x] Cuboid
+    -   [x] Cylinder, Cone, Frustum, Tetrahedron, Octahedron
+    -   [ ] Dodecahedron, Icosahedron
+    -   [ ] UV Sphere
+    -   [ ] Cube Sphere
+    -   [ ] Icosphere
+    -   [ ] Torus
+-   [ ] Builder Primitives
+    -   [x] Lines
+    -   [ ] Quadratic Bezier Curves
+    -   [ ] Cubic Bezier Curves
+    -   [ ] Curved Surfaces (Bezier Surfaces / Parametric Surfaces / NURBS / Spline Networks...?)
+-   [ ] Operations
+    -   [x] Extrude
+    -   [ ] Loft
+    -   [ ] Inset
+    -   [ ] Plane Intersection
+    -   [ ] Union
+    -   [ ] Intersection
+    -   [ ] Difference
+    -   [ ] Symmetric Difference
+    -   [ ] (Anisotropic) Simplification / LODs
+    -   [ ] Stitching
+    -   [ ] Subdivision
+    -   [ ] Morphing
+    -   [ ] Voxelization
+-   [ ] Tools
+    -   [ ] Geodesic Pathfinding
+    -   [ ] Raycasting
+    -   [ ] Topology Analysis
+    -   [ ] Spatial Data Structures
+-   [ ] Debug Visualizations
+    -   [x] Indices
+    -   [ ] Normals
+    -   [ ] Tangents
+    -   [ ] Topology
+-   [ ] Backends
+    -   [x] Bevy
+    -   [ ] wgpu
 
 ## Features
 
 The following features are available:
 
-* `meshopt` -- Use [Meshopt](https://github.com/gwihlidal/meshopt-rs) to optimize the performance of generated meshes. 
-* `bevy` -- Compiles with support for bevy. Necessary for the examples and the editor.
+-   `meshopt` -- Use [Meshopt](https://github.com/gwihlidal/meshopt-rs) to optimize the performance of generated meshes.
+-   `bevy` -- Compiles with support for bevy. Necessary for the examples and the editor.
+
+## Triangulation algorithms
+
+The package supports different triangulation algorithms. The robustness and rendering speed of the produced triangulations varies significantly. These performance differences usually only matter for meshes with extremely large flat surfaces. In the table below, we compare the performance of the different algorithms for a circle with 100, 1000, and 10000 vertices.
+
+-   **EarCut** Simple but slow textbook-algorithm for reference.
+-   **Sweep** Very fast sweep-line algorithm without any guarantees on the quality of the triangulation.
+-   **Delaunay** Slow, but large flat surfaces might render faster. Currently uses [Spade](https://github.com/Stoeoef/spade). TODO: allow Delaunay refinements!
+-   **EdgeFlip** Same output as Delaunay, but without external dependencies and using a very slow edge-flipping algorithm.
+-   **MinWeight** Minimizes the overall edge length of the triangulation. Very slow, but produces the theoretically fastest rendering triangulations for large flat surfaces.
+-   **Heuristic** Heuristic algorithm that tries to find a compromise between the speed of `Sweep` and the quality of `EdgeMin`.
+
+| Algorithm  | Worst Case | Circle 100   | Circle 1000 | Circle 10000 |
+| ---------- | ---------- | ------------ | ----------- | ------------ |
+| EarCut     | n^2        | 0ms¹ (0fps)² |             |              |
+| Sweep      | n log n    |              |             |              |
+| Delaunay   | n log n    |              |             |              |
+| EdgeFlip   | n^3        |              |             |              |
+| MinWeight³ | 2^n        |              |             |              |
+| Heuristic  |            |              |             |              |
+
+¹) Time in ms for triangulation on a Intel i7-12700K (single threaded)
+²) when rendering one million vertices worth of the mesh with the bevy 0.14 pbr shader on a Nvidia GeForce RTX 4060 Ti
+³) TODO: Number of iterations
 
 ## Supported Bevy Versions
 
@@ -122,16 +141,15 @@ The following table shows the compatibility of `procedural_modelling` with certa
 
 | bevy | bevy_procedural_meshes |
 | ---- | ---------------------- |
-| 0.14 | 0.2.*, main            |
-| 0.13 | 0.1.*                  |
+| 0.14 | 0.2.\*, main           |
+| 0.13 | 0.1.\*                 |
 
 ## License
 
-Except where noted (below and/or in individual files), all code in these repositories is dual-licensed, allowing you the flexibility to choose between:
+Except where noted (below and/or in individual files), all code in this repository is dual-licensed, allowing you the flexibility to choose between:
 
- - The MIT License (LICENSE-MIT or http://opensource.org/licenses/MIT)
- - The Apache License, Version 2.0 (LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0).
-
+-   The MIT License (LICENSE-MIT or http://opensource.org/licenses/MIT)
+-   The Apache License, Version 2.0 (LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0).
 
 ## Contribution
 

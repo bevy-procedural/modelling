@@ -29,7 +29,7 @@ pub enum TriangulationAlgorithm {
     /// Min-Weight Triangulation. Results can be rendered slightly faster on most graphics hardware. Runs in O(n^3) time.
     MinWeight,
 
-    /// Delaunay Triangulation. Results are optimized for numerical stability. Currently runs in O(n^3) time (TODO: optimize).
+    /// Delaunay Triangulation using Spade. Results are optimized for numerical stability. Currently runs in O(n^3) time (TODO: optimize).
     Delaunay,
 }
 
@@ -39,11 +39,11 @@ pub enum GenerateNormals {
     /// Do not generate normals. (no vertex duplication)
     None,
 
-    /// Generate flat normals per face. (some vertex duplication)
+    /// Generate flat normals per face. (full vertex duplication)
     #[default]
     Flat,
 
-    /// Generate smooth normals for smooth surfaces. (some vertex duplication)
+    /// Generate smooth normals for smooth surfaces. (partial vertex duplication)
     Smooth,
 
     /// Generate only smooth normals. (no vertex duplication)

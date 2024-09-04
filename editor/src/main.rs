@@ -99,7 +99,7 @@ fn _make_spiral(settings: &MeshSettings) -> MeshVec3 {
 }
 
 fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
-    let mut mesh = MeshVec3::regular_star(2.0, 1.0, 100);
+    let mut mesh = MeshVec3::regular_star(2.0, 1.0, 6);
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh
 }
