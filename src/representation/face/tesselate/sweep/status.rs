@@ -43,26 +43,26 @@ impl<V: IndexType, Vec2: Vector2D> IntervalData<V, Vec2> {
         assert!(p1 <= p2);
         p1 <= pos.x() && pos.x() <= p2
     }
+
+    pub fn is_circular(&self) -> bool {
+        (self.left.start == self.right.end && self.right.start == self.left.end)
+            || (self.left.start == self.right.start && self.left.end == self.right.end)
+    }
+
+    pub fn is_end(&self) -> bool {
+        self.left.end == self.right.end
+    }
 }
 
 // TODO: local indices
-/*
-impl std::fmt::Display for IntervalData {
+impl<V: IndexType, Vec2: Vector2D> std::fmt::Display for IntervalData<V, Vec2> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "lowest: {} ", self.helper.index)?;
-        write!(
-            f,
-            "left: {}->{} ",
-            self.left.start.index, self.left.end.index
-        )?;
-        write!(
-            f,
-            "right: {}->{} ",
-            self.right.start.index, self.right.end.index
-        )?;
+        write!(f, "lowest: {} ", self.helper)?;
+        write!(f, "left: {}->{} ", self.left.start, self.left.end)?;
+        write!(f, "right: {}->{} ", self.right.start, self.right.end)?;
         Ok(())
     }
-}*/
+}
 
 pub struct SweepLineStatus<V: IndexType, Vec2: Vector2D> {
     /// The sweep lines, ordered by the target vertex index of the left edge
@@ -81,6 +81,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
 
     pub fn insert(&mut self, value: IntervalData<V, Vec2>) {
         // TODO: assert that the pos is in between the start and end
+        assert!(!value.is_circular());
         self.right.insert(value.right.end, value.left.end);
         self.left.insert(value.left.end, value);
     }
@@ -124,7 +125,7 @@ impl<V: IndexType, Vec2: Vector2D> std::fmt::Display for SweepLineStatus<V, Vec2
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "SweepLineStatus:\n")?;
         for (k, v) in &self.left {
-            write!(f, "  {}: {:?}\n", k, v)?;
+            write!(f, "  {}: {}\n", k, *v)?;
         }
         Ok(())
     }

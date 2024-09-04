@@ -49,6 +49,7 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
 
     /// Processes the next event in the queue. Returns true if there are more events to process.
     pub fn work(self: &mut Self, indices: &mut Vec<V>, meta: &mut SweepMeta) -> bool {
+        // TODO: don't pop the queue but just iterate over the vector
         let Some(event) = self.queue.pop() else {
             return false;
         };
@@ -142,7 +143,23 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
     ) {
         // TODO: modify instead of remove
         if let Some(mut v) = self.sls.remove_left(event.here) {
-            println!("{:?} {:?}", event, v.stacks.len());
+            if v.is_end() {
+                // There can be end vertices that were undetected because they
+                // had the same y-coordinate as other regular vertices.
+                // This routine will fix this
+                // TODO: assert that the previous vertex hat the same y-coordinate
+
+                #[cfg(feature = "sweep_debug_print")]
+                println!("Reinterpret as end");
+
+                #[cfg(feature = "sweep_debug")]
+                meta.update_type(event.here, VertexType::End);
+
+                self.sls.insert(v);
+                self.end(event, indices);
+                return;
+            }
+
             let mut stacks = if let Some(fixup) = v.fixup {
                 #[cfg(feature = "sweep_debug_print")]
                 println!("fixup regular l: {:?}", fixup);
@@ -164,7 +181,23 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
                 fixup: None,
             })
         } else if let Some(mut v) = self.sls.remove_right(event.here) {
-            println!("{:?} {:?}", event, v.stacks.len());
+            if v.is_end() {
+                // There can be end vertices that were undetected because they
+                // had the same y-coordinate as other regular vertices.
+                // This routine will fix this
+                // TODO: assert that the previous vertex hat the same y-coordinate
+
+                #[cfg(feature = "sweep_debug_print")]
+                println!("Reinterpret as end");
+
+                #[cfg(feature = "sweep_debug")]
+                meta.update_type(event.here, VertexType::End);
+                
+                self.sls.insert(v);
+                self.end(event, indices);
+                return;
+            }
+
             if let Some(mut fixup) = v.fixup {
                 #[cfg(feature = "sweep_debug_print")]
                 println!("fixup regular r: {:?}", fixup);
@@ -186,7 +219,10 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
             #[cfg(feature = "sweep_debug_print")]
             println!("Reinterpret as start");
 
-            // could be start with two vertices with the same y-coordinate
+            // If there are two or more vertices with the same y-coordinate, they will all be labeled "regular"
+            // In that case, the first one must be treated as a start
+            // We start with some checks whether this is plausible and not a bug
+
             assert!(self.queue.len() > 0);
             let dist = self.queue.last().unwrap().vec.y() - event.vec.y();
 

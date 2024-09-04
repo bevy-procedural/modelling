@@ -113,7 +113,7 @@ fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
 
         // Back edge
         Vec3::new(-1.0, 0.0, 1.0),
-        Vec3::new(0.0, 0.0, 1.5),
+        //Vec3::new(0.0, 0.0, 1.5),
         Vec3::new(1.0, 0.0, 1.0),
 
         // Inner

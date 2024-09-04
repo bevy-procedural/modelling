@@ -22,16 +22,17 @@ pub enum VertexType {
     /// Merge two parts of the sweep line at this scan reflex vertex
     Merge,
 
-    /// Polygon is monotone at this vertex
+    /// Polygon is monotone at this vertex.
+    /// Can be a hidden Start or End vertex that will be discovered during the sweep
     Regular,
-
     // Skip collinear vertices
     //Skip,
 }
 
 impl VertexType {
-    // TODO: When there are two vertices with the same y-coordinate, the vertex type is not well defined. i.e., the first one should be Start and all others should be regular
     /// Calculate the vertex type based on the previous, current and next vertices.
+    /// This is not exact, since we cannot detect Starts and Ends when the y-coordinate is the same.
+    /// In those cases, they will be detected as regular vertices and the sweep line will fix this later.
     pub fn new<V: IndexType, Vec2: Vector2D>(
         prev: Vec2,
         here: Vec2,
@@ -44,7 +45,7 @@ impl VertexType {
         let is_below_prev = prev.y() - here.y() > tol;
         let is_below_next = next.y() - here.y() > tol;
 
-        // Skip collinear points
+        // Optimization: Skip collinear points
         // TODO: cannot skip that easily; the chain has to be fixed when doing this
         /*if cross.abs() <= tol {
             return VertexType::Skip;
@@ -58,7 +59,6 @@ impl VertexType {
             } else if cross < -tol {
                 VertexType::Split
             } else {
-                // This handles the edge case where the cross product is within the tolerance, i.e., points are collinear
                 VertexType::Regular
             }
         } else if is_below_prev && is_below_next {
@@ -67,7 +67,6 @@ impl VertexType {
             } else if cross < -tol {
                 VertexType::Merge
             } else {
-                // Similar handling for when the cross product is within the tolerance
                 VertexType::Regular
             }
         } else {
