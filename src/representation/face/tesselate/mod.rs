@@ -11,6 +11,8 @@ mod convex;
 mod delaunay;
 mod ear_clipping;
 mod min_weight;
+
+/// The Sweep-line triangulation algorithm 
 pub mod sweep;
 
 /// The algorithm to use for triangulating a face.

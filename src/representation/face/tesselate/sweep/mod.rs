@@ -13,6 +13,7 @@ pub use vertex_type::VertexType;
 #[derive(Debug, Clone, Copy, PartialEq)]
 /// Meta information for debuggin the sweep algorithm
 pub struct SweepMeta {
+    /// The type of the vertex in the reflex chain
     pub vertex_type: VertexType,
 }
 

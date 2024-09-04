@@ -63,12 +63,14 @@ pub trait Scalar:
 }
 
 
+/// A scalar that is ordered.
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct OrderedFloats<S: Scalar> {
     value: S,
 }
 
 impl<S: Scalar> OrderedFloats<S> {
+    /// Create a new ordered float.
     pub fn new(value: S) -> Self {
         OrderedFloats { value }
     }

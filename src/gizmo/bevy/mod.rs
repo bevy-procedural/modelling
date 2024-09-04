@@ -16,6 +16,7 @@ pub fn show_vertex_indices(texts: &mut ResMut<Text3dGizmos>, mesh: &MeshVec3) {
     });
 }
 
+/// Show the sweep-line triangulation meta information of a mesh.
 pub fn show_sweep_types(texts: &mut ResMut<Text3dGizmos>, mesh: &MeshVec3) {
     mesh.vertices().for_each(|v| {
         texts.write(
