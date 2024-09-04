@@ -3,7 +3,7 @@
 use super::{IndexType, Mesh};
 use crate::representation::{
     payload::{bevy::BevyPayload, Payload},
-    tesselate::{GenerateNormals, TriangulationAlgorithm},
+    tesselate::{GenerateNormals, TesselationMeta, TriangulationAlgorithm},
 };
 use bevy::render::{
     mesh::{PrimitiveTopology, VertexAttributeValues},
@@ -56,13 +56,18 @@ where
     /// Replace the mesh's attributes with the current mesh.
     /// Requires the mesh to be a triangle list and have the MAIN_WORLD usage.
     pub fn bevy_set(&self, mesh: &mut bevy::render::mesh::Mesh) {
+        self.bevy_set_ex(mesh, &mut TesselationMeta::default());
+    }
+
+    pub fn bevy_set_ex(&self, mesh: &mut bevy::render::mesh::Mesh, meta: &mut TesselationMeta<BevyPayload>) {
         assert!(mesh.primitive_topology() == PrimitiveTopology::TriangleList);
         assert!(mesh.asset_usage.contains(RenderAssetUsages::MAIN_WORLD));
         Self::bevy_remove_attributes(mesh);
 
         // use https://crates.io/crates/stats_alloc to measure memory usage
         let now = Instant::now();
-        let (is, mut vs) = self.tesselate(TriangulationAlgorithm::Sweep, GenerateNormals::None);
+        let (is, mut vs) =
+            self.tesselate(TriangulationAlgorithm::Sweep, GenerateNormals::None, meta);
         let elapsed = now.elapsed();
         println!("///////////////////\nTriangulation took {:.2?}", elapsed);
 

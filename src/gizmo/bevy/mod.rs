@@ -3,7 +3,9 @@
 use bevy::prelude::*;
 use text::{Text3dGizmo, Text3dGizmos};
 
-use crate::representation::bevy::MeshVec3;
+use crate::representation::{
+    bevy::MeshVec3, payload::bevy::BevyPayload, tesselate::TesselationMeta,
+};
 pub mod text;
 
 /// Show the vertex indices of a mesh in blue.
@@ -16,14 +18,17 @@ pub fn show_vertex_indices(texts: &mut ResMut<Text3dGizmos>, mesh: &MeshVec3) {
     });
 }
 
-/// Show the sweep-line triangulation meta information of a mesh.
-pub fn show_sweep_types(texts: &mut ResMut<Text3dGizmos>, mesh: &MeshVec3) {
-    mesh.vertices().for_each(|v| {
+/// Visualized the tesselation meta data of a mesh.
+pub fn show_tesselation_meta(
+    texts: &mut ResMut<Text3dGizmos>,
+    mesh: &MeshVec3,
+    meta: &TesselationMeta<BevyPayload>,
+) {
+    for (i, (pos, t)) in meta.sweep.vertex_type.iter().enumerate() {
         texts.write(
-            Text3dGizmo::new(v.id().to_string(), v.vertex().clone())
-                .with_color(Color::srgb(0.0, 0.0, 1.0)),
+            Text3dGizmo::new(format!("{:?}", t), *pos).with_color(Color::srgb(1.0, 0.0, 0.0)),
         );
-    });
+    }
 }
 
 /// Show the edge indices of a mesh.

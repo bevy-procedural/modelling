@@ -15,10 +15,6 @@ pub struct BevyPayload {
 
     /// The uv coordinates of the vertex.
     uv: Vec2,
-
-    #[cfg(feature = "sweep_debug")]
-    /// The type of vertex in the sweep algorithm.
-    pub sweep: crate::representation::tesselate::sweep::SweepMeta,
 }
 
 impl Payload for BevyPayload {
@@ -34,9 +30,6 @@ impl Payload for BevyPayload {
             position: self.position + *v,
             normal: self.normal,
             uv: self.uv,
-
-            #[cfg(feature = "sweep_debug")]
-            sweep: self.sweep,
         }
     }
 
@@ -46,9 +39,6 @@ impl Payload for BevyPayload {
             position: t.apply(self.position),
             normal: t.apply_vec(self.normal),
             uv: self.uv,
-
-            #[cfg(feature = "sweep_debug")]
-            sweep: self.sweep,
         }
     }
 
@@ -73,9 +63,6 @@ impl Payload for BevyPayload {
             position: v,
             normal: Vec3::ZERO,
             uv: Vec2::ZERO,
-            
-            #[cfg(feature = "sweep_debug")]
-            sweep: Default::default(),
         }
     }
 }

@@ -16,7 +16,7 @@ use procedural_modelling::{
         self,
         bevy::{text::Text3dGizmos, *},
     },
-    representation::bevy::MeshVec3,
+    representation::{bevy::MeshVec3, tesselate::TesselationMeta},
 };
 use std::{env, f32::consts::PI};
 
@@ -160,6 +160,7 @@ fn update_meshes(
     mut settings: ResMut<GlobalSettings>,
     windows: Query<&Window>,
     camera_q: Query<(&Camera, &GlobalTransform)>,
+    mut texts: ResMut<Text3dGizmos>,
 ) {
     let window = windows.single();
     let (camera, camera_transform) = camera_q.single();
@@ -183,7 +184,10 @@ fn update_meshes(
 
     for (handle, settings) in query.iter() {
         let mesh = make_mesh(settings);
-        mesh.bevy_set(assets.get_mut(handle).unwrap());
+        let mut meta = TesselationMeta::default();
+        mesh.bevy_set_ex(assets.get_mut(handle).unwrap(), &mut meta);
+
+        show_tesselation_meta(&mut texts, &mesh, &meta);
     }
 }
 
@@ -209,7 +213,6 @@ fn setup_meshes(
         MeshSettings::default(),
         Name::new("Generated Shape"),
     ));
-    show_sweep_types(&mut texts, &mesh);
 
     if false {
         show_vertex_indices(&mut texts, &mesh);

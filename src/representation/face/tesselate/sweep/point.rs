@@ -32,9 +32,9 @@ where
     pub next: usize,
 
     pub vec: Vec2,
+    
     /// Precomputed vertex type
     pub vertex_type: VertexType,
-
 }
 
 impl<Vec2: Vector2D> EventPoint<Vec2> {
