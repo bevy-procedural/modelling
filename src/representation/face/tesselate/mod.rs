@@ -12,27 +12,36 @@ mod delaunay;
 mod ear_clipping;
 mod min_weight;
 
-/// The Sweep-line triangulation algorithm 
+/// The Sweep-line triangulation algorithm
 pub mod sweep;
 
 /// The algorithm to use for triangulating a face.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum TriangulationAlgorithm {
-    /// The fastest algorithm (Ear Clipping for small triangles, Sweep for larger ones).
-    #[default]
-    Fast,
+    /// Extremely fast, but only works for convex polygons. And even then, results are usually numerically unstable. Runs in O(n) time.
+    Fan,
 
-    /// The Ear Clipping algorithm. Works for arbitrary simple polygons. Runs in O(n^2) time.
+    /// Simple but slow textbook-algorithm for reference. Runs in O(n^2) time.
     EarClipping,
 
-    /// The Sweep algorithm. Works for arbitrary polygons (yes, they don't have to be simple). Runs in O(n log n) time.
+    /// Very fast sweep-line algorithm without any guarantees on the quality of the triangulation. Works for arbitrary polygons (yes, they don't have to be simple). Runs in O(n log n) time. See [CMSC 754](https://www.cs.umd.edu/class/spring2020/cmsc754/Lects/lect05-triangulate.pdf).
     Sweep,
 
-    /// Min-Weight Triangulation. Results can be rendered slightly faster on most graphics hardware. Runs in O(n^3) time.
+    /// Slow, but large flat surfaces might render faster. Currently uses [Spade](https://github.com/Stoeoef/spade). TODO: allow Delaunay refinements! Runs in O(n log n) time.
+    Delaunay,
+
+    /// Same output as Delaunay, but without external dependencies and using a very slow edge-flipping algorithm. Runs in O(n^3) time.
+    EdgeFlip,
+
+    /// Minimizes the overall edge length of the triangulation. Very slow, but produces the theoretically fastest rendering triangulations for large flat surfaces. Runs in O(2^n) time.
     MinWeight,
 
-    /// Delaunay Triangulation using Spade. Results are optimized for numerical stability. Currently runs in O(n^3) time (TODO: optimize).
-    Delaunay,
+    /// Heuristic algorithm that tries to find a compromise between the speed of `Sweep` and the quality of `EdgeMin`.
+    Heuristic,
+
+    /// Automatically choose the "best" algorithm based on the input, i.e., with the given ratio of numerical stability and performance. Currently, it uses specialized implementations for the smallest polygons, then uses `Delaunay`, then `Heuristic`, and finally falls back to `Sweep` for the largest polygons.
+    #[default]
+    Auto,
 }
 
 /// The algorithm to use for generating normals.
@@ -105,7 +114,7 @@ where
         }
 
         match algorithm {
-            TriangulationAlgorithm::Fast => {
+            TriangulationAlgorithm::Auto => {
                 if n < 15 {
                     // TODO: find a good threshold
                     self.ear_clipping(mesh, indices, local_indices, false);
@@ -131,6 +140,15 @@ where
                 self.expand_local_indices(mesh, indices, local_indices, |mesh, indices| {
                     self.delaunay_triangulation(mesh, indices);
                 });
+            }
+            TriangulationAlgorithm::EdgeFlip => {
+                panic!("TriangulationAlgorithm::EdgeFlip is not implemented yet");
+            }
+            TriangulationAlgorithm::Fan => {
+                panic!("TriangulationAlgorithm::Fan is not implemented yet");
+            }
+            TriangulationAlgorithm::Heuristic => {
+                panic!("TriangulationAlgorithm::Heuristic is not implemented yet");
             }
         }
     }

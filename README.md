@@ -115,25 +115,31 @@ The following features are available:
 
 The package supports different triangulation algorithms. The robustness and rendering speed of the produced triangulations varies significantly. These performance differences usually only matter for meshes with extremely large flat surfaces. In the table below, we compare the performance of the different algorithms for a circle with 100, 1000, and 10000 vertices.
 
--   **EarCut** Simple but slow textbook-algorithm for reference.
--   **Sweep** Very fast sweep-line algorithm without any guarantees on the quality of the triangulation.
--   **Delaunay** Slow, but large flat surfaces might render faster. Currently uses [Spade](https://github.com/Stoeoef/spade). TODO: allow Delaunay refinements!
--   **EdgeFlip** Same output as Delaunay, but without external dependencies and using a very slow edge-flipping algorithm.
--   **MinWeight** Minimizes the overall edge length of the triangulation. Very slow, but produces the theoretically fastest rendering triangulations for large flat surfaces.
+-   **Fan** Extremely fast, but only works for convex polygons. And even then, results are usually numerically unstable. Runs in O(n) time.
+    Fan
+-   **EarClipping** Simple but slow textbook-algorithm for reference. Runs in O(n^2) time.
+-   **Sweep** Very fast sweep-line algorithm without any guarantees on the quality of the triangulation. Works for arbitrary polygons (yes, they don't have to be simple). Runs in O(n log n) time. See [CMSC 754](https://www.cs.umd.edu/class/spring2020/cmsc754/Lects/lect05-triangulate.pdf).
+-   **Delaunay** Slow, but large flat surfaces might render faster. Currently uses [Spade](https://github.com/Stoeoef/spade). TODO: allow Delaunay refinements! Runs in O(n log n) time.
+-   **EdgeFlip** Same output as Delaunay, but without external dependencies and using a very slow edge-flipping algorithm. Runs in O(n^3) time.
+    EdgeFlip,
+-   **MinWeight** Minimizes the overall edge length of the triangulation. Very slow, but produces the theoretically fastest rendering triangulations for large flat surfaces. Runs in O(2^n) time.
 -   **Heuristic** Heuristic algorithm that tries to find a compromise between the speed of `Sweep` and the quality of `EdgeMin`.
+-   **Auto** (default) Automatically choose the "best" algorithm based on the input, i.e., with the given ratio of numerical stability and performance. Currently, it uses specialized implementations for the smallest polygons, then uses `Delaunay`, then `Heuristic`, and finally falls back to `Sweep` for the largest polygons.
 
-| Algorithm  | Worst Case | Circle 100   | Circle 1000 | Circle 10000 |
-| ---------- | ---------- | ------------ | ----------- | ------------ |
-| EarCut     | n^2        | 0ms¹ (0fps)² |             |              |
-| Sweep      | n log n    |              |             |              |
-| Delaunay   | n log n    |              |             |              |
-| EdgeFlip   | n^3        |              |             |              |
-| MinWeight³ | 2^n        |              |             |              |
-| Heuristic  |            |              |             |              |
+| Algorithm   | Requirements | Worst Case | Circle 100   | Circle 1000 | Circle 10000 |
+| ----------- | ------------ | ---------- | ------------ | ----------- | ------------ |
+| Fan         | Convex       | n          | 0ms¹ (0fps)² |             |              |
+| EarClipping | Simple       | n^2        |              |             |              |
+| Sweep       | None         | n log n    |              |             |              |
+| Delaunay    | Simple       | n log n    |              |             |              |
+| EdgeFlip    | Simple       | n^3        |              |             |              |
+| MinWeight³  | Simple       | 2^n        |              |             |              |
+| Heuristic   | ?            |            |              |             |              |
+| Auto        | ?            | n^2        |              |             |              |
 
-¹) Time in ms for triangulation on a Intel i7-12700K (single threaded)
-²) when rendering one million vertices worth of the mesh with the bevy 0.14 pbr shader on a Nvidia GeForce RTX 4060 Ti
-³) TODO: Number of iterations
+-   ¹) Time for triangulation on a Intel i7-12700K (single threaded)
+-   ²) when rendering one million vertices worth of the mesh with the bevy 0.14 pbr shader on a Nvidia GeForce RTX 4060 Ti
+-   ³) TODO: Number of iterations
 
 ## Supported Bevy Versions
 

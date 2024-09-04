@@ -38,7 +38,7 @@ fn bench_spirals(c: &mut Criterion) {
             &mesh,
             |b, para: &MeshVec3| {
                 b.iter(|| {
-                    para.tesselate(TriangulationAlgorithm::Fast, GenerateNormals::None);
+                    para.tesselate(TriangulationAlgorithm::Auto, GenerateNormals::None);
                 })
             },
         );
