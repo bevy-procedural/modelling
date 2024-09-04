@@ -22,8 +22,11 @@ pub enum VertexType {
     /// Merge two parts of the sweep line at this scan reflex vertex
     Merge,
 
-    /// Polygon is monotone at this vertex 
+    /// Polygon is monotone at this vertex
     Regular,
+
+    // Skip collinear vertices
+    //Skip,
 }
 
 impl VertexType {
@@ -41,6 +44,12 @@ impl VertexType {
         let is_below_prev = prev.y() - here.y() > tol;
         let is_below_next = next.y() - here.y() > tol;
 
+        // Skip collinear points
+        // TODO: cannot skip that easily; the chain has to be fixed when doing this
+        /*if cross.abs() <= tol {
+            return VertexType::Skip;
+        }*/
+
         if (is_above_prev && is_above_next)
             || (is_below_prev && is_below_next && cross.abs() <= tol)
         {
@@ -49,9 +58,7 @@ impl VertexType {
             } else if cross < -tol {
                 VertexType::Split
             } else {
-                // This handles the edge case where the cross product is within the tolerance
-                // TODO: What is this?
-                println!("WARN: Cross product is within tolerance");
+                // This handles the edge case where the cross product is within the tolerance, i.e., points are collinear
                 VertexType::Regular
             }
         } else if is_below_prev && is_below_next {
@@ -61,8 +68,6 @@ impl VertexType {
                 VertexType::Merge
             } else {
                 // Similar handling for when the cross product is within the tolerance
-                // TODO: What is this?
-                println!("WARN: Cross product is within tolerance");
                 VertexType::Regular
             }
         } else {

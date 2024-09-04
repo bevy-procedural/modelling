@@ -1,4 +1,4 @@
-use super::{chain::SweepReflexChain, point::IndexedVertexPoint};
+use super::{chain::SweepReflexChain, point::LocallyIndexedVertex};
 use crate::{math::Vector2D, representation::IndexType};
 use std::collections::HashMap;
 
@@ -12,7 +12,7 @@ impl EdgeData {
     pub fn x_at_y<V: IndexType, Vec2: Vector2D>(
         &self,
         y: Vec2::S,
-        vec2s: &Vec<IndexedVertexPoint<Vec2>>,
+        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
     ) -> Vec2::S {
         let e = vec2s[self.end].vec;
         let s = vec2s[self.start].vec;
@@ -37,7 +37,7 @@ pub struct IntervalData<V: IndexType, Vec2: Vector2D> {
 }
 
 impl<V: IndexType, Vec2: Vector2D> IntervalData<V, Vec2> {
-    pub fn contains(&self, pos: &Vec2, vec2s: &Vec<IndexedVertexPoint<Vec2>>) -> bool {
+    pub fn contains(&self, pos: &Vec2, vec2s: &Vec<LocallyIndexedVertex<Vec2>>) -> bool {
         let p1 = self.left.x_at_y::<V, Vec2>(pos.y(), vec2s);
         let p2 = self.right.x_at_y::<V, Vec2>(pos.y(), vec2s);
         assert!(p1 <= p2);
@@ -113,7 +113,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
     pub fn find_by_position(
         &self,
         pos: &Vec2,
-        vec2s: &Vec<IndexedVertexPoint<Vec2>>,
+        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
     ) -> Option<(&usize, &IntervalData<V, Vec2>)> {
         // TODO: faster search using a BTreeMap
         self.left.iter().find(|(_, v)| v.contains(pos, vec2s))

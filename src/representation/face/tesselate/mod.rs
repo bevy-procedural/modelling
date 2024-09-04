@@ -163,7 +163,7 @@ where
                     indices,
                     local_indices,
                     meta,
-                    |mesh, indices, meta| {
+                    |mesh, indices, _| {
                         self.delaunay_triangulation(mesh, indices);
                     },
                 );

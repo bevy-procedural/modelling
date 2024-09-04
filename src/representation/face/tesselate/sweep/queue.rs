@@ -3,11 +3,11 @@ use super::point;
 use super::status;
 use super::vertex_type;
 use super::SweepMeta;
-use crate::math::Vector2D;
-use crate::representation::payload::Payload;
+use crate::math::{Scalar, Vector2D};
+use crate::representation::tesselate::TesselationMeta;
 use crate::representation::{tesselate::sweep::chain::SweepReflexChainDirection, IndexType};
 use chain::SweepReflexChain;
-use point::{EventPoint, IndexedVertexPoint};
+use point::{EventPoint, LocallyIndexedVertex};
 use status::{EdgeData, IntervalData, SweepLineStatus};
 pub use vertex_type::VertexType;
 
@@ -18,7 +18,7 @@ pub struct SweepEventQueue<Vec2: Vector2D, V: IndexType> {
 
     /// Indexed vertex points
     /// TODO: do everything with the queue data structure? Can probably avoid a clone or two.
-    vec2s: Vec<IndexedVertexPoint<Vec2>>,
+    vec2s: Vec<LocallyIndexedVertex<Vec2>>,
 
     /// sweep line status indexed by x-coordinate
     sls: SweepLineStatus<V, Vec2>,
@@ -26,9 +26,10 @@ pub struct SweepEventQueue<Vec2: Vector2D, V: IndexType> {
 
 impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
     /// Creates a new event queue from a list of indexed vertex points
-    pub fn new(vec2s: &Vec<IndexedVertexPoint<Vec2>>) -> Self {
+    pub fn new(vec2s: &Vec<LocallyIndexedVertex<Vec2>>) -> Self {
         let mut event_queue: Vec<EventPoint<Vec2>> = Vec::new();
         for here in 0..vec2s.len() {
+            println!("here: {:?}", vec2s[here]);
             event_queue.push(EventPoint::new::<V>(here, &vec2s));
         }
         event_queue.sort_unstable();
@@ -42,16 +43,12 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
 
     pub fn extract_meta(&self) -> SweepMeta {
         SweepMeta {
-            vertex_type: self
-                .queue
-                .iter()
-                .map(|e| (e.here, e.vertex_type))
-                .collect(),
+            vertex_type: self.queue.iter().map(|e| (e.here, e.vertex_type)).collect(),
         }
     }
 
     /// Processes the next event in the queue. Returns true if there are more events to process.
-    pub fn work(self: &mut Self, indices: &mut Vec<V>) -> bool {
+    pub fn work(self: &mut Self, indices: &mut Vec<V>, meta: &mut SweepMeta) -> bool {
         let Some(event) = self.queue.pop() else {
             return false;
         };
@@ -62,9 +59,12 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
         match event.vertex_type {
             VertexType::Start => self.start(&event),
             VertexType::Merge => self.merge(&event, indices),
-            VertexType::Regular => self.regular(&event, indices),
+            VertexType::Regular => self.regular(&event, indices, meta),
             VertexType::Split => self.split(&event, indices),
             VertexType::End => self.end(&event, indices),
+            /*VertexType::Skip => {
+                // Skip collinear vertices
+            }*/
             VertexType::Undefined => {
                 panic!("Vertex type is Undefined");
             }
@@ -134,7 +134,7 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
     }
 
     /// Handle a regular vertex
-    fn regular(self: &mut Self, event: &EventPoint<Vec2>, indices: &mut Vec<V>) {
+    fn regular(self: &mut Self, event: &EventPoint<Vec2>, indices: &mut Vec<V>, meta: &mut SweepMeta) {
         // TODO: modify instead of remove
         if let Some(mut v) = self.sls.remove_left(event.here) {
             let mut stacks = if let Some(fixup) = v.fixup {
@@ -176,7 +176,23 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
                 fixup: None,
             })
         } else {
-            panic!("Regular vertex not found in sweep line status");
+            // could be start with two vertices with the same y-coordinate
+            assert!(self.queue.len() > 0);
+            let dist = self.queue.last().unwrap().vec.y() - event.vec.y();
+            
+            // be generous with the tolerance
+            assert!(
+                dist.abs() <= Vec2::S::EPS * Vec2::S::from(10.0),
+                "Regular vertex not found in sweep line status"
+            );
+
+            // treat this one as a start
+            self.start(event);
+
+            // update the meta info
+            #[cfg(feature = "sweep_debug")]
+            meta.update_type(event.here, VertexType::Start);
+
         }
     }
 

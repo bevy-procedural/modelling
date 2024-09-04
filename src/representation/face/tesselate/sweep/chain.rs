@@ -1,4 +1,4 @@
-use super::point::IndexedVertexPoint;
+use super::point::LocallyIndexedVertex;
 use crate::{math::Scalar, math::Vector2D, representation::IndexType};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -61,7 +61,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepReflexChain<V, Vec2> {
         &mut self,
         value: usize,
         indices: &mut Vec<V>,
-        vec2s: &Vec<IndexedVertexPoint<Vec2>>,
+        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
         d: SweepReflexChainDirection,
     ) {
         assert!(self.stack.len() >= 1);
@@ -160,7 +160,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepReflexChain<V, Vec2> {
         &mut self,
         value: usize,
         indices: &mut Vec<V>,
-        vec2s: &Vec<IndexedVertexPoint<Vec2>>,
+        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
         d: SweepReflexChainDirection,
     ) -> &Self {
         #[cfg(feature = "sweep_debug_print")]
@@ -183,7 +183,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepReflexChain<V, Vec2> {
         &mut self,
         value: usize,
         indices: &mut Vec<V>,
-        vec2s: &Vec<IndexedVertexPoint<Vec2>>,
+        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
     ) -> &Self {
         self.add(value, indices, vec2s, SweepReflexChainDirection::Right)
     }
@@ -193,7 +193,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepReflexChain<V, Vec2> {
         &mut self,
         value: usize,
         indices: &mut Vec<V>,
-        vec2s: &Vec<IndexedVertexPoint<Vec2>>,
+        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
     ) -> &Self {
         self.add(value, indices, vec2s, SweepReflexChainDirection::Left)
     }

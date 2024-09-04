@@ -2,7 +2,7 @@ use super::{
     super::{payload::Payload, IndexType, Mesh},
     Face,
 };
-use crate::math::{LineSegment2D, Scalar, Transform, Vector, Vector3D};
+use crate::math::{LineSegment2D, Scalar, Transform, Vector, Vector2D, Vector3D};
 use itertools::Itertools;
 
 impl<E: IndexType, F: IndexType> Face<E, F> {
@@ -101,6 +101,7 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
 
     /// Get the normal of the face. Assumes the face is planar.
     /// Uses Newell's method to handle concave faces.
+    /// TODO: Why not faster? Can't we find the normal using 3 vertices?
     pub fn normal<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> P::Vec
     where
         P::Vec: Vector3D<S = P::S>,
@@ -123,26 +124,25 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
             );
         }
 
-        normal * P::Vec::from_xyz(P::S::from(-0.5), P::S::from(-0.5), P::S::from(-0.5))
+        let s05 = P::S::from(-0.5);
+        normal * P::Vec::from_xyz(s05, s05, s05)
     }
 
     // TODO: check for degenerated faces; empty triangles, collinear points etc...
 
-    /*
-    /// Get the normal of the face. Assumes the face is planar.
-    pub fn vertices_2d<'a, V: IndexType, P: Payload>(
+    /*pub fn vertices_2d<'a, V: IndexType, P: Payload>(
         &'a self,
         mesh: &'a Mesh<E, usize, F, P>,
     ) -> impl Iterator<Item = P::Vec> + Clone + ExactSizeIterator + 'a
     where
-        P::Vec: Vector2D<P::S>,
+        P::Vec: Vector2D<S = P::S>,
     {
         assert!(self.is_planar2(mesh));
         assert!(P::Vec::dimensions() == 2);
         self.vertices(mesh).map(|v| *v.vertex())
     }*/
 
-    /// Get the normal of the face. Assumes the face is planar.
+    /// Get an iterator over the 2d vertices of the face rotated to the XY plane.
     pub fn vertices_2d<'a, V: IndexType, P: Payload>(
         &'a self,
         mesh: &'a Mesh<E, V, F, P>,
@@ -153,9 +153,9 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
         // TODO: overload this in a way that allows different dimensions
         assert!(P::Vec::dimensions() == 3);
 
-        let normal = self.normal(mesh);
         let z_axis = P::Vec::from_xyz(0.0.into(), 0.0.into(), 1.0.into());
-        let rotation = P::Trans::from_rotation_arc(normal.normalize(), z_axis.normalize());
+        let rotation =
+            P::Trans::from_rotation_arc(self.normal(mesh).normalize(), z_axis.normalize());
         self.vertices(mesh)
             .map(move |v| (rotation.apply(*v.vertex()).xy(), v.id()))
     }
