@@ -13,6 +13,7 @@ pub use vertex_type::VertexType;
 /// Meta information for debuggin the sweep algorithm
 #[derive(Debug, Clone, PartialEq)]
 pub struct SweepMeta {
+    #[cfg(feature = "sweep_debug")]
     /// The type of the vertex in the reflex chain
     pub vertex_type: Vec<(usize, VertexType)>,
 }
@@ -20,6 +21,7 @@ pub struct SweepMeta {
 impl Default for SweepMeta {
     fn default() -> Self {
         SweepMeta {
+            #[cfg(feature = "sweep_debug")]
             vertex_type: Vec::new(),
         }
     }

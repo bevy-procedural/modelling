@@ -120,13 +120,12 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
     }
 }
 
-/*
-impl std::fmt::Display for SweepLineStatus {
+impl<V: IndexType, Vec2: Vector2D> std::fmt::Display for SweepLineStatus<V, Vec2> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "SweepLineStatus:\n")?;
         for (k, v) in &self.left {
-            write!(f, "  {}: {}\n", k, v)?;
+            write!(f, "  {}: {:?}\n", k, v)?;
         }
         Ok(())
     }
-}*/
+}

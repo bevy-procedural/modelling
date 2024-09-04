@@ -54,7 +54,7 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
         };
 
         #[cfg(feature = "sweep_debug_print")]
-        println!("###### {:?} {}", event.vertex_type, event.here.index);
+        println!("###### {:?} {}", event.vertex_type, event.here);
 
         match event.vertex_type {
             VertexType::Start => self.start(&event),
@@ -134,9 +134,15 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
     }
 
     /// Handle a regular vertex
-    fn regular(self: &mut Self, event: &EventPoint<Vec2>, indices: &mut Vec<V>, meta: &mut SweepMeta) {
+    fn regular(
+        self: &mut Self,
+        event: &EventPoint<Vec2>,
+        indices: &mut Vec<V>,
+        meta: &mut SweepMeta,
+    ) {
         // TODO: modify instead of remove
         if let Some(mut v) = self.sls.remove_left(event.here) {
+            println!("{:?} {:?}", event, v.stacks.len());
             let mut stacks = if let Some(fixup) = v.fixup {
                 #[cfg(feature = "sweep_debug_print")]
                 println!("fixup regular l: {:?}", fixup);
@@ -158,6 +164,7 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
                 fixup: None,
             })
         } else if let Some(mut v) = self.sls.remove_right(event.here) {
+            println!("{:?} {:?}", event, v.stacks.len());
             if let Some(mut fixup) = v.fixup {
                 #[cfg(feature = "sweep_debug_print")]
                 println!("fixup regular r: {:?}", fixup);
@@ -176,10 +183,13 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
                 fixup: None,
             })
         } else {
+            #[cfg(feature = "sweep_debug_print")]
+            println!("Reinterpret as start");
+
             // could be start with two vertices with the same y-coordinate
             assert!(self.queue.len() > 0);
             let dist = self.queue.last().unwrap().vec.y() - event.vec.y();
-            
+
             // be generous with the tolerance
             assert!(
                 dist.abs() <= Vec2::S::EPS * Vec2::S::from(10.0),
@@ -192,7 +202,6 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
             // update the meta info
             #[cfg(feature = "sweep_debug")]
             meta.update_type(event.here, VertexType::Start);
-
         }
     }
 

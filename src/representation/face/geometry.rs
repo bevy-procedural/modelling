@@ -164,6 +164,7 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
     pub fn center<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> P::Vec {
         let mut center = P::Vec::zero();
         let mut count = 0;
+        // TODO: use a more stable averaging algorithm
         for a in self.vertices(mesh).map(|v| *v.vertex()) {
             center += a;
             count += 1;

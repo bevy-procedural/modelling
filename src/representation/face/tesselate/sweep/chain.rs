@@ -201,4 +201,8 @@ impl<V: IndexType, Vec2: Vector2D> SweepReflexChain<V, Vec2> {
     pub fn is_done(&self) -> bool {
         self.stack.len() <= 2
     }
+
+    pub fn len(&self) -> usize {
+        self.stack.len()
+    }
 }

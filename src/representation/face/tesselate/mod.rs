@@ -64,7 +64,6 @@ pub enum GenerateNormals {
 /// Meta information for debugging the tesselation algorithm
 #[derive(Debug, Clone, Default)]
 pub struct TesselationMeta {
-    #[cfg(feature = "sweep_debug")]
     /// Meta information for debugging the sweep algorithm
     pub sweep: sweep::SweepMeta,
 }
@@ -91,9 +90,9 @@ where
         f(mesh, indices, meta);
         if !local_indices {
             for i in v0..indices.len() {
-                indices[i] = V::new(v0 + (indices[i].index() + 1) % n);
+                indices[i] = V::new(v0 + (indices[i].index() + (n - 1)) % n);
             }
-            
+
             #[cfg(feature = "sweep_debug")]
             meta.sweep.expand(v0, n);
         }
