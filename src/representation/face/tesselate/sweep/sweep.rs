@@ -1,7 +1,8 @@
 use super::{
     chain::{ReflexChain, ReflexChainDirection},
+    interval::{IntervalBoundaryEdge, SweepLineInterval},
     point::{EventPoint, LocallyIndexedVertex},
-    status::{EdgeData, IntervalData, SweepLineStatus},
+    status::SweepLineStatus,
     SweepMeta, VertexType,
 };
 use crate::{math::Vector2D, representation::IndexType};
@@ -80,11 +81,11 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
     /// Start a new sweep line at the given event
     fn start(self: &mut Self, event: &EventPoint<Vec2>) {
         // Both reflex
-        self.sls.insert(IntervalData {
+        self.sls.insert(SweepLineInterval {
             helper: event.here,
-            left: EdgeData::new(event.here, event.next),
-            right: EdgeData::new(event.here, event.prev),
-            stacks: ReflexChain::single(event.here),
+            left: IntervalBoundaryEdge::new(event.here, event.next),
+            right: IntervalBoundaryEdge::new(event.here, event.prev),
+            chain: ReflexChain::single(event.here),
             fixup: None,
         });
     }
@@ -103,27 +104,27 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
 
             fixup.right(event.here, self.indices, self.vec2s);
             assert!(fixup.is_done());
-            left.stacks
+            left.chain
         } else {
-            left.stacks
+            left.chain
         };
 
         let mut new_fixup = if let Some(fixup) = right.fixup {
             #[cfg(feature = "sweep_debug_print")]
             println!("fixup merge r: {}", fixup);
 
-            right.stacks.left(event.here, self.indices, self.vec2s);
-            assert!(right.stacks.is_done());
+            right.chain.left(event.here, self.indices, self.vec2s);
+            assert!(right.chain.is_done());
             fixup
         } else {
-            right.stacks
+            right.chain
         };
 
-        self.sls.insert(IntervalData {
+        self.sls.insert(SweepLineInterval {
             helper: event.here,
             left: left.left,
             right: right.right,
-            stacks: {
+            chain: {
                 new_stacks.right(event.here, self.indices, self.vec2s);
                 new_stacks
             },
@@ -141,7 +142,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
     fn hidden_end(
         self: &mut Self,
         event: &EventPoint<Vec2>,
-        interval: IntervalData<V, Vec2>,
+        interval: SweepLineInterval<V, Vec2>,
         meta: &mut SweepMeta,
         event_i: usize,
         queue: &Vec<EventPoint<Vec2>>,
@@ -172,7 +173,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
         event_i: usize,
         queue: &Vec<EventPoint<Vec2>>,
     ) {
-        // TODO: modify sls instead of remove and insert
+        // PERF: optional; modify sls instead of remove and insert
         if let Some(mut interval) = self.sls.remove_left(event.here) {
             if interval.is_end() {
                 self.hidden_end(event, interval, meta, event_i, queue);
@@ -183,17 +184,17 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
                 #[cfg(feature = "sweep_debug_print")]
                 println!("fixup regular l: {}", fixup);
 
-                interval.stacks.left(event.here, self.indices, self.vec2s);
-                assert!(interval.stacks.is_done());
+                interval.chain.left(event.here, self.indices, self.vec2s);
+                assert!(interval.chain.is_done());
                 fixup
             } else {
-                interval.stacks
+                interval.chain
             };
-            self.sls.insert(IntervalData {
+            self.sls.insert(SweepLineInterval {
                 helper: event.here,
-                left: EdgeData::new(event.here, event.next),
+                left: IntervalBoundaryEdge::new(event.here, event.next),
                 right: interval.right,
-                stacks: {
+                chain: {
                     stacks.left(event.here, self.indices, self.vec2s);
                     stacks
                 },
@@ -212,13 +213,13 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
                 fixup.right(event.here, self.indices, self.vec2s);
                 assert!(fixup.is_done());
             }
-            self.sls.insert(IntervalData {
+            self.sls.insert(SweepLineInterval {
                 helper: event.here,
                 left: interval.left,
-                right: EdgeData::new(event.here, event.prev),
-                stacks: {
-                    interval.stacks.right(event.here, self.indices, self.vec2s);
-                    interval.stacks
+                right: IntervalBoundaryEdge::new(event.here, event.prev),
+                chain: {
+                    interval.chain.right(event.here, self.indices, self.vec2s);
+                    interval.chain
                 },
                 fixup: None,
             })
@@ -268,33 +269,33 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
             let mut x = ReflexChain::single(t);
             x.left(event.here, self.indices, self.vec2s);
             x
-        } else if line.stacks.direction() == ReflexChainDirection::Right {
+        } else if line.chain.direction() == ReflexChainDirection::Right {
             let mut x = ReflexChain::single(line.helper);
             x.left(event.here, self.indices, self.vec2s);
             x
         } else {
-            let mut x = ReflexChain::single(line.stacks.first());
+            let mut x = ReflexChain::single(line.chain.first());
             x.left(event.here, self.indices, self.vec2s);
             x
         };
 
-        self.sls.insert(IntervalData {
+        self.sls.insert(SweepLineInterval {
             helper: event.here,
             left: line.left,
-            right: EdgeData::new(event.here, event.prev),
-            stacks: {
-                let mut x = line.stacks.clone();
+            right: IntervalBoundaryEdge::new(event.here, event.prev),
+            chain: {
+                let mut x = line.chain.clone();
                 x.right(event.here, self.indices, self.vec2s);
                 x
             },
             fixup: None,
         });
 
-        self.sls.insert(IntervalData {
+        self.sls.insert(SweepLineInterval {
             helper: event.here,
-            left: EdgeData::new(event.here, event.next),
+            left: IntervalBoundaryEdge::new(event.here, event.next),
             right: line.right,
-            stacks,
+            chain: stacks,
             fixup: None,
         });
     }
@@ -313,7 +314,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
             assert!(fixup.is_done());
         }
 
-        line.stacks.left(event.here, self.indices, self.vec2s);
-        assert!(line.stacks.is_done());
+        line.chain.left(event.here, self.indices, self.vec2s);
+        assert!(line.chain.is_done());
     }
 }

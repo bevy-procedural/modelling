@@ -4,6 +4,7 @@ mod chain;
 mod point;
 mod sweep;
 mod status;
+mod interval;
 mod vertex_type;
 use point::LocallyIndexedVertex;
 pub use sweep::sweep_line_triangulation;

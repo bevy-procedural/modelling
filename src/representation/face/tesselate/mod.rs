@@ -84,17 +84,21 @@ where
     ) where
         P::Vec: Vector3D<S = P::S>,
     {
-        // TODO: counting again and again is rather slow. Cache this values
-        let n = self.num_vertices(mesh);
-        let v0: usize = indices.len();
-        f(mesh, indices, meta);
         if !local_indices {
+            // TODO: counting again and again is rather slow. Cache these values
+
+            let n = self.num_vertices(mesh);
+            let v0: usize = indices.len();
+            f(mesh, indices, meta);
+
             for i in v0..indices.len() {
                 indices[i] = V::new(v0 + (indices[i].index() + (n - 1)) % n);
             }
 
             #[cfg(feature = "sweep_debug")]
             meta.sweep.expand(v0, n);
+        } else {
+            f(mesh, indices, meta);
         }
     }
 

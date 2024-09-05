@@ -14,7 +14,7 @@ where
     where
         P::Vec: Vector3D<S = P::S>,
     {
-        // TODO: This shortens edges producing invalid meshess!
+        // TODO: This shortens edges producing invalid meshes!
         let vs: Vec<(P::Vec2, V)> = self.vertices_2d::<V, P>(mesh).collect();
         assert!(vs.len() == self.vertices(mesh).count());
         let mut vsh: HashMap<V, P::Vec2> = HashMap::new();

@@ -22,7 +22,7 @@ where
         debug_assert!(!self.has_self_intersections(mesh));
 
         let mut cdt = ConstrainedDelaunayTriangulation::<Point2<_>>::new();
-        //TODO: faster: ConstrainedDelaunayTriangulation::bulk_load()
+        //PERF: faster: ConstrainedDelaunayTriangulation::bulk_load()
         let mut last = None;
         let mut first = None;
         for (i2, (vec2, _)) in self.vertices_2d::<V, P>(mesh).enumerate() {
