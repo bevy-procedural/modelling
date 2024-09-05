@@ -38,7 +38,7 @@ where
 }
 
 impl<Vec2: Vector2D> EventPoint<Vec2> {
-    pub fn new<V: IndexType>(here: usize, vec2s: &Vec<LocallyIndexedVertex<Vec2>>) -> Self {
+    pub fn classify<V: IndexType>(here: usize, vec2s: &Vec<LocallyIndexedVertex<Vec2>>) -> Self {
         let prev = (here + vec2s.len() - 1) % vec2s.len();
         let next = (here + 1) % vec2s.len();
 
@@ -67,7 +67,7 @@ impl<Vec2: Vector2D> std::cmp::Eq for EventPoint<Vec2> {}
 
 impl<Vec2: Vector2D> std::cmp::PartialOrd for EventPoint<Vec2> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        if let Some(res) = self.vec.y().partial_cmp(&other.vec.y()) {
+        if let Some(res) = (-self.vec.y()).partial_cmp(&(-other.vec.y())) {
             if res == std::cmp::Ordering::Equal {
                 other.vec.x().partial_cmp(&self.vec.x())
             } else {
@@ -82,7 +82,7 @@ impl<Vec2: Vector2D> std::cmp::PartialOrd for EventPoint<Vec2> {
 impl<Vec2: Vector2D> std::cmp::Ord for EventPoint<Vec2> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         // TODO: Undefined behavior if float comparison is not defined
-        if let Some(res) = self.vec.y().partial_cmp(&other.vec.y()) {
+        if let Some(res) = (-self.vec.y()).partial_cmp(&(-other.vec.y())) {
             if res == std::cmp::Ordering::Equal {
                 other
                     .vec

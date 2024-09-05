@@ -2,10 +2,11 @@ use super::{Face, Mesh, Payload, TesselationMeta};
 use crate::{math::Vector3D, representation::IndexType};
 mod chain;
 mod point;
-mod queue;
+mod sweep;
 mod status;
 mod vertex_type;
 use point::LocallyIndexedVertex;
+pub use sweep::sweep_line_triangulation;
 pub use vertex_type::VertexType;
 
 // See https://www.cs.umd.edu/class/spring2020/cmsc754/Lects/lect05-triangulate.pdf
@@ -71,13 +72,6 @@ where
             .map(|(i, (p, _))| LocallyIndexedVertex::new(p, i))
             .collect();
 
-        let mut event_queue = queue::SweepEventQueue::<P::Vec2, V>::new(&vec2s);
-
-        #[cfg(feature = "sweep_debug")]
-        {
-            meta.sweep = event_queue.extract_meta();
-        }
-
-        while event_queue.work(indices, &mut meta.sweep) {}
+        sweep_line_triangulation(indices, &vec2s, &mut meta.sweep);
     }
 }

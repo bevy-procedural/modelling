@@ -2,7 +2,7 @@ use super::{
     super::{payload::Payload, IndexType, Mesh},
     Face,
 };
-use crate::math::{LineSegment2D, Scalar, Transform, Vector, Vector2D, Vector3D};
+use crate::math::{LineSegment2D, Scalar, Transform, Vector, Vector3D};
 use itertools::Itertools;
 
 impl<E: IndexType, F: IndexType> Face<E, F> {

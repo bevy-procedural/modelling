@@ -25,8 +25,7 @@ pub fn show_tesselation_meta(
     for (index, t) in meta.sweep.vertex_type.iter() {
         texts.write(
             Text3dGizmo::new(
-                // TODO: remove  +1
-                format!("{} {:?}", index + 1, t),
+                format!("{} {:?}", index, t),
                 *mesh.vertices().nth(*index).unwrap().payload().vertex(),
             )
             .with_color(Color::srgb(1.0, 0.0, 0.0)),

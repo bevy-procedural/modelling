@@ -70,6 +70,7 @@ impl<V: IndexType, Vec2: Vector2D> ReflexChain<V, Vec2> {
         }
     }
 
+    #[inline]
     fn add_same_direction(
         &mut self,
         value: usize,
@@ -124,6 +125,7 @@ impl<V: IndexType, Vec2: Vector2D> ReflexChain<V, Vec2> {
         self.stack.push(value);
     }
 
+    #[inline]
     fn add_opposite_direction(
         &mut self,
         value: usize,
@@ -169,6 +171,7 @@ impl<V: IndexType, Vec2: Vector2D> ReflexChain<V, Vec2> {
     }
 
     /// Add a new value to the reflex chain
+    #[inline]
     pub fn add(
         &mut self,
         value: usize,
@@ -192,6 +195,7 @@ impl<V: IndexType, Vec2: Vector2D> ReflexChain<V, Vec2> {
     }
 
     /// Add a new value to the right reflex chain
+    #[inline]
     pub fn right(
         &mut self,
         value: usize,
@@ -202,6 +206,7 @@ impl<V: IndexType, Vec2: Vector2D> ReflexChain<V, Vec2> {
     }
 
     /// Add a new value to the left reflex chain
+    #[inline]
     pub fn left(
         &mut self,
         value: usize,
