@@ -297,8 +297,12 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
         let mut line = self.sls.remove_left(event.here).unwrap();
         assert!(line.is_end());
 
-        if let Some(_fixup) = line.fixup {
-            todo!("Handle fixup");
+        if let Some(mut fixup) = line.fixup {
+            #[cfg(feature = "sweep_debug_print")]
+            println!("fixup end: {}", fixup);
+
+            fixup.right(event.here, indices, &self.vec2s);
+            assert!(fixup.is_done());
         }
 
         line.stacks.left(event.here, indices, &self.vec2s);
