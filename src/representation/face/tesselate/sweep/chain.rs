@@ -1,8 +1,10 @@
+use core::fmt;
+
 use super::point::LocallyIndexedVertex;
 use crate::{math::Scalar, math::Vector2D, representation::IndexType};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SweepReflexChainDirection {
+pub enum ReflexChainDirection {
     /// The reflex chain is completely on the left
     Left,
     /// The reflex chain is completely on the right
@@ -20,26 +22,32 @@ pub enum SweepReflexChainDirection {
 /// edge has its bottom endpoint below the sweep line. Hence, we place the start vertex before the other
 /// chain. The currently active chain is indicated by d.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct SweepReflexChain<V: IndexType, Vec2: Vector2D> {
+pub struct ReflexChain<V: IndexType, Vec2: Vector2D> {
     stack: Vec<usize>,
-    d: SweepReflexChainDirection,
+    d: ReflexChainDirection,
 
     /// Bind the types to the chain. There is no need to mix the types and it simplifies the type signatures.
     phantom: std::marker::PhantomData<(V, Vec2)>,
 }
 
-impl<V: IndexType, Vec2: Vector2D> SweepReflexChain<V, Vec2> {
+impl<V: IndexType, Vec2: Vector2D> fmt::Display for ReflexChain<V, Vec2> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}{:?}", self.d, self.stack)
+    }
+}
+
+impl<V: IndexType, Vec2: Vector2D> ReflexChain<V, Vec2> {
     /// Create an empty reflex chain
     pub fn new() -> Self {
-        SweepReflexChain {
+        ReflexChain {
             stack: Vec::new(),
-            d: SweepReflexChainDirection::None,
+            d: ReflexChainDirection::None,
             phantom: std::marker::PhantomData,
         }
     }
 
     /// Get the direction of the chain
-    pub fn direction(&self) -> SweepReflexChainDirection {
+    pub fn direction(&self) -> ReflexChainDirection {
         self.d
     }
 
@@ -48,11 +56,16 @@ impl<V: IndexType, Vec2: Vector2D> SweepReflexChain<V, Vec2> {
         self.stack.first().unwrap().clone()
     }
 
+    /// Get the last element of the chain
+    pub fn last(&self) -> usize {
+        self.stack.last().unwrap().clone()
+    }
+
     /// Create a new reflex chain with a single value
     pub fn single(v: usize) -> Self {
-        SweepReflexChain {
+        ReflexChain {
             stack: vec![v],
-            d: SweepReflexChainDirection::None,
+            d: ReflexChainDirection::None,
             phantom: std::marker::PhantomData,
         }
     }
@@ -62,7 +75,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepReflexChain<V, Vec2> {
         value: usize,
         indices: &mut Vec<V>,
         vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
-        d: SweepReflexChainDirection,
+        d: ReflexChainDirection,
     ) {
         assert!(self.stack.len() >= 1);
         // TODO: assert for direction not none?
@@ -76,7 +89,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepReflexChain<V, Vec2> {
             let angle = vec2s[value]
                 .vec
                 .angle(vec2s[self.stack[l - 1]].vec, vec2s[self.stack[l - 2]].vec);
-            if d == SweepReflexChainDirection::Left {
+            if d == ReflexChainDirection::Left {
                 if angle > Vec2::S::ZERO {
                     break;
                 }
@@ -115,7 +128,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepReflexChain<V, Vec2> {
         &mut self,
         value: usize,
         indices: &mut Vec<V>,
-        d: SweepReflexChainDirection,
+        d: ReflexChainDirection,
     ) {
         assert!(self.d != d);
         // TODO: assert for direction not none?
@@ -127,7 +140,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepReflexChain<V, Vec2> {
         } else {
             // there is enough on the stack to consume
             for i in 1..self.stack.len() {
-                if d == SweepReflexChainDirection::Left {
+                if d == ReflexChainDirection::Left {
                     indices.extend([
                         V::new(self.stack[i - 1]),
                         V::new(value),
@@ -155,17 +168,17 @@ impl<V: IndexType, Vec2: Vector2D> SweepReflexChain<V, Vec2> {
         }
     }
 
-    /// Add a new value to the left reflex chain
+    /// Add a new value to the reflex chain
     pub fn add(
         &mut self,
         value: usize,
         indices: &mut Vec<V>,
         vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
-        d: SweepReflexChainDirection,
+        d: ReflexChainDirection,
     ) -> &Self {
         #[cfg(feature = "sweep_debug_print")]
-        println!("left: {:?} {} {:?}", self.d, value, self.stack);
-        if self.d == SweepReflexChainDirection::None {
+        println!("chain add: {:?} {} {:?}", self.d, value, self.stack);
+        if self.d == ReflexChainDirection::None {
             assert!(self.stack.len() <= 1);
             self.stack.push(value);
             self.d = d;
@@ -185,7 +198,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepReflexChain<V, Vec2> {
         indices: &mut Vec<V>,
         vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
     ) -> &Self {
-        self.add(value, indices, vec2s, SweepReflexChainDirection::Right)
+        self.add(value, indices, vec2s, ReflexChainDirection::Right)
     }
 
     /// Add a new value to the left reflex chain
@@ -195,7 +208,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepReflexChain<V, Vec2> {
         indices: &mut Vec<V>,
         vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
     ) -> &Self {
-        self.add(value, indices, vec2s, SweepReflexChainDirection::Left)
+        self.add(value, indices, vec2s, ReflexChainDirection::Left)
     }
 
     pub fn is_done(&self) -> bool {

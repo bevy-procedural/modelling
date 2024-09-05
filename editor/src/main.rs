@@ -105,38 +105,23 @@ fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
 
     let mut mesh = MeshVec3::polygon(&[
         
-        // Broken 1
         
-         // Front edge
-        Vec3::new(1.0, 0.0, -1.0),
-        Vec3::new(-1.0, 0.0, -1.0),
-
-        // Back edge
-        Vec3::new(-1.0, 0.0, 1.0),
-        //Vec3::new(0.0, 0.0, 1.5),
-        Vec3::new(1.0, 0.0, 1.0),
-
-        // Inner
-        Vec3::new(0.5, 0.0, 0.0),
-
-
-        /*
         // Fixup crash
 
         // Front edge
         Vec3::new(1.0, 0.0, -1.0),
-        Vec3::new(0.8, 0.0, -1.0),
-        Vec3::new(0.6, 0.0, -1.0),
         Vec3::new(0.0, 0.0, -0.8),
+        Vec3::new(-0.6, 0.0, -1.0),
+        Vec3::new(-0.8, 0.0, -0.8),
         Vec3::new(-1.0, 0.0, -1.0),
 
         // Back edge
         Vec3::new(-1.0, 0.0, 1.0),
-        Vec3::new(-0.8, 0.0, 1.0),
-        Vec3::new(-0.6, 0.0, 1.0),
         Vec3::new(0.0, 0.0, 0.8),
+        Vec3::new(0.6, 0.0, 1.0),
+        Vec3::new(0.8, 0.0, 0.8),
         Vec3::new(1.0, 0.0, 1.0),
-        */
+        
     ]);
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh

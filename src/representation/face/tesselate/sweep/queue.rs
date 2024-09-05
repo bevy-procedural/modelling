@@ -4,9 +4,8 @@ use super::status;
 use super::vertex_type;
 use super::SweepMeta;
 use crate::math::{Scalar, Vector2D};
-use crate::representation::tesselate::TesselationMeta;
-use crate::representation::{tesselate::sweep::chain::SweepReflexChainDirection, IndexType};
-use chain::SweepReflexChain;
+use crate::representation::{tesselate::sweep::chain::ReflexChainDirection, IndexType};
+use chain::ReflexChain;
 use point::{EventPoint, LocallyIndexedVertex};
 use status::{EdgeData, IntervalData, SweepLineStatus};
 pub use vertex_type::VertexType;
@@ -63,9 +62,9 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
             VertexType::Regular => self.regular(&event, indices, meta),
             VertexType::Split => self.split(&event, indices),
             VertexType::End => self.end(&event, indices),
-            /*VertexType::Skip => {
-                // Skip collinear vertices
-            }*/
+            VertexType::Skip => {
+                todo!("Skip collinear vertices");
+            }
             VertexType::Undefined => {
                 panic!("Vertex type is Undefined");
             }
@@ -84,7 +83,7 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
             helper: event.here,
             left: EdgeData::new(event.here, event.next),
             right: EdgeData::new(event.here, event.prev),
-            stacks: SweepReflexChain::single(event.here),
+            stacks: ReflexChain::single(event.here),
             fixup: None,
         });
     }
@@ -99,7 +98,7 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
 
         let mut new_stacks = if let Some(mut fixup) = left.fixup {
             #[cfg(feature = "sweep_debug_print")]
-            println!("fixup merge l: {:?}", fixup);
+            println!("fixup merge l: {}", fixup);
 
             fixup.right(event.here, indices, &self.vec2s);
             assert!(fixup.is_done());
@@ -110,7 +109,7 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
 
         let mut new_fixup = if let Some(fixup) = right.fixup {
             #[cfg(feature = "sweep_debug_print")]
-            println!("fixup merge r: {:?}", fixup);
+            println!("fixup merge r: {}", fixup);
 
             right.stacks.left(event.here, indices, &self.vec2s);
             assert!(right.stacks.is_done());
@@ -142,12 +141,12 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
         meta: &mut SweepMeta,
     ) {
         // TODO: modify instead of remove
-        if let Some(mut v) = self.sls.remove_left(event.here) {
-            if v.is_end() {
+        if let Some(mut interval) = self.sls.remove_left(event.here) {
+            if interval.is_end() {
                 // There can be end vertices that were undetected because they
                 // had the same y-coordinate as other regular vertices.
                 // This routine will fix this
-                // TODO: assert that the previous vertex hat the same y-coordinate
+                // TODO: assert that the previous vertex has the same y-coordinate
 
                 #[cfg(feature = "sweep_debug_print")]
                 println!("Reinterpret as end");
@@ -155,63 +154,63 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
                 #[cfg(feature = "sweep_debug")]
                 meta.update_type(event.here, VertexType::End);
 
-                self.sls.insert(v);
+                self.sls.insert(interval);
                 self.end(event, indices);
                 return;
             }
 
-            let mut stacks = if let Some(fixup) = v.fixup {
+            let mut stacks = if let Some(fixup) = interval.fixup {
                 #[cfg(feature = "sweep_debug_print")]
-                println!("fixup regular l: {:?}", fixup);
+                println!("fixup regular l: {}", fixup);
 
-                v.stacks.left(event.here, indices, &self.vec2s);
-                assert!(v.stacks.is_done());
+                interval.stacks.left(event.here, indices, &self.vec2s);
+                assert!(interval.stacks.is_done());
                 fixup
             } else {
-                v.stacks
+                interval.stacks
             };
             self.sls.insert(IntervalData {
                 helper: event.here,
                 left: EdgeData::new(event.here, event.next),
-                right: v.right,
+                right: interval.right,
                 stacks: {
                     stacks.left(event.here, indices, &self.vec2s);
                     stacks
                 },
                 fixup: None,
             })
-        } else if let Some(mut v) = self.sls.remove_right(event.here) {
-            if v.is_end() {
+        } else if let Some(mut interval) = self.sls.remove_right(event.here) {
+            if interval.is_end() {
                 // There can be end vertices that were undetected because they
                 // had the same y-coordinate as other regular vertices.
                 // This routine will fix this
-                // TODO: assert that the previous vertex hat the same y-coordinate
+                // TODO: assert that the previous vertex has the same y-coordinate
 
                 #[cfg(feature = "sweep_debug_print")]
                 println!("Reinterpret as end");
 
                 #[cfg(feature = "sweep_debug")]
                 meta.update_type(event.here, VertexType::End);
-                
-                self.sls.insert(v);
+
+                self.sls.insert(interval);
                 self.end(event, indices);
                 return;
             }
 
-            if let Some(mut fixup) = v.fixup {
+            if let Some(mut fixup) = interval.fixup {
                 #[cfg(feature = "sweep_debug_print")]
-                println!("fixup regular r: {:?}", fixup);
+                println!("fixup regular r: {}", fixup);
 
                 fixup.right(event.here, indices, &self.vec2s);
                 assert!(fixup.is_done());
             }
             self.sls.insert(IntervalData {
                 helper: event.here,
-                left: v.left,
+                left: interval.left,
                 right: EdgeData::new(event.here, event.prev),
                 stacks: {
-                    v.stacks.right(event.here, indices, &self.vec2s);
-                    v.stacks
+                    interval.stacks.right(event.here, indices, &self.vec2s);
+                    interval.stacks
                 },
                 fixup: None,
             })
@@ -250,9 +249,27 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
             .0;
         let line = self.sls.remove_left(i).unwrap();
 
-        if let Some(_fixup) = line.fixup {
-            todo!("Handle fixup");
-        }
+        let stacks = if let Some(mut fixup) = line.fixup {
+            #[cfg(feature = "sweep_debug_print")]
+            println!("fixup split: {}", fixup);
+
+            let t = fixup.first();
+
+            fixup.right(event.here, indices, &self.vec2s);
+            assert!(fixup.is_done());
+
+            let mut x = ReflexChain::single(t);
+            x.left(event.here, indices, &self.vec2s);
+            x
+        } else if line.stacks.direction() == ReflexChainDirection::Right {
+            let mut x = ReflexChain::single(line.helper);
+            x.left(event.here, indices, &self.vec2s);
+            x
+        } else {
+            let mut x = ReflexChain::single(line.stacks.first());
+            x.left(event.here, indices, &self.vec2s);
+            x
+        };
 
         self.sls.insert(IntervalData {
             helper: event.here,
@@ -266,15 +283,6 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
             fixup: None,
         });
 
-        let stacks = if line.stacks.direction() == SweepReflexChainDirection::Right {
-            let mut x = SweepReflexChain::single(line.helper);
-            x.left(event.here, indices, &self.vec2s);
-            x
-        } else {
-            let mut x = SweepReflexChain::single(line.stacks.first());
-            x.left(event.here, indices, &self.vec2s);
-            x
-        };
         self.sls.insert(IntervalData {
             helper: event.here,
             left: EdgeData::new(event.here, event.next),
@@ -287,6 +295,7 @@ impl<Vec2: Vector2D, V: IndexType> SweepEventQueue<Vec2, V> {
     /// End a sweep line at the given event
     fn end(self: &mut Self, event: &EventPoint<Vec2>, indices: &mut Vec<V>) {
         let mut line = self.sls.remove_left(event.here).unwrap();
+        assert!(line.is_end());
 
         if let Some(_fixup) = line.fixup {
             todo!("Handle fixup");

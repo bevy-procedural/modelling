@@ -1,5 +1,8 @@
-use super::{chain::SweepReflexChain, point::LocallyIndexedVertex};
-use crate::{math::Vector2D, representation::IndexType};
+use super::{chain::ReflexChain, point::LocallyIndexedVertex};
+use crate::{
+    math::Vector2D,
+    representation::{tesselate::sweep::chain::ReflexChainDirection, IndexType},
+};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -27,13 +30,25 @@ impl EdgeData {
         EdgeData { start, end }
     }
 }
+
+// TODO: proper documentation for this type!
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct IntervalData<V: IndexType, Vec2: Vector2D> {
+    /// The lowest vertex index of the interval.
+    /// Things can be connected to this vertex when needed.
     pub helper: usize,
+
+    /// The edge to the left of the interval
     pub left: EdgeData,
+
+    /// The edge to the right of the interval
     pub right: EdgeData,
-    pub stacks: SweepReflexChain<V, Vec2>,
-    pub fixup: Option<SweepReflexChain<V, Vec2>>,
+
+    pub stacks: ReflexChain<V, Vec2>,
+
+    /// Whether there was a merge that needs to be fixed up.
+    pub fixup: Option<ReflexChain<V, Vec2>>,
 }
 
 impl<V: IndexType, Vec2: Vector2D> IntervalData<V, Vec2> {
@@ -44,13 +59,47 @@ impl<V: IndexType, Vec2: Vector2D> IntervalData<V, Vec2> {
         p1 <= pos.x() && pos.x() <= p2
     }
 
-    pub fn is_circular(&self) -> bool {
+    fn is_circular(&self) -> bool {
         (self.left.start == self.right.end && self.right.start == self.left.end)
             || (self.left.start == self.right.start && self.left.end == self.right.end)
     }
 
     pub fn is_end(&self) -> bool {
         self.left.end == self.right.end
+    }
+
+    pub fn sanity_check(&self) -> bool {
+        assert!(!self.is_circular());
+        match self.stacks.direction() {
+            ReflexChainDirection::None => {
+                assert!(self.stacks.len() == 1);
+                assert_eq!(self.left.start, self.stacks.first());
+                assert_eq!(self.right.start, self.stacks.first());
+            }
+            ReflexChainDirection::Left => {
+                assert!(self.stacks.len() >= 2);
+                if let Some(fixup) = &self.fixup {
+                    assert!(fixup.len() >= 2);
+                    assert_eq!(self.right.start, self.stacks.first());
+                    assert_eq!(self.left.start, fixup.first());
+                } else {
+                    assert_eq!(self.right.start, self.stacks.first());
+                    assert_eq!(self.left.start, self.stacks.last());
+                }
+            }
+            ReflexChainDirection::Right => {
+                assert!(self.stacks.len() >= 2);
+                if let Some(fixup) = &self.fixup {
+                    assert!(fixup.len() >= 2);
+                    assert_eq!(self.left.start, self.stacks.first());
+                    assert_eq!(self.right.start, fixup.first());
+                } else {
+                    assert_eq!(self.left.start, self.stacks.first());
+                    assert_eq!(self.right.start, self.stacks.last());
+                }
+            }
+        };
+        return true;
     }
 }
 
@@ -60,6 +109,10 @@ impl<V: IndexType, Vec2: Vector2D> std::fmt::Display for IntervalData<V, Vec2> {
         write!(f, "lowest: {} ", self.helper)?;
         write!(f, "left: {}->{} ", self.left.start, self.left.end)?;
         write!(f, "right: {}->{} ", self.right.start, self.right.end)?;
+        write!(f, "stacks: {} ", self.stacks)?;
+        if let Some(fixup) = &self.fixup {
+            write!(f, "fixup: {}", fixup)?;
+        }
         Ok(())
     }
 }
@@ -81,7 +134,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
 
     pub fn insert(&mut self, value: IntervalData<V, Vec2>) {
         // TODO: assert that the pos is in between the start and end
-        assert!(!value.is_circular());
+        debug_assert!(value.sanity_check());
         self.right.insert(value.right.end, value.left.end);
         self.left.insert(value.left.end, value);
     }

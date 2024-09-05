@@ -10,23 +10,28 @@ pub enum VertexType {
     /// Undefined vertex type.
     Undefined,
 
-    /// Start a new sweep line here
+    /// Start a new sweep line here.
+    /// Both edges lie to the right of v, but the interior angle is smaller than π.
     Start,
 
-    /// End the sweep line here
+    /// End the sweep line here.
+    /// Both edges lie to the left of v, but the interior angle is larger than π.
     End,
 
-    /// Split the sweep line in two parts at this scan reflex vertex
+    /// Split the sweep line in two parts at this scan reflex vertex.
     Split,
 
-    /// Merge two parts of the sweep line at this scan reflex vertex
+    /// Merge two parts of the sweep line at this scan reflex vertex.
     Merge,
 
     /// Polygon is monotone at this vertex.
-    /// Can be a hidden Start or End vertex that will be discovered during the sweep
+    /// Can be a hidden Start or End vertex that will be discovered during the sweep.
+    /// One edge is to the left, and one to the right, and the polygon interior is above or below.
+    /// TODO: Distinguish upper- and lower-chain regular vertices at this point already
     Regular,
-    // Skip collinear vertices
-    //Skip,
+
+    /// Skip collinear vertices
+    Skip,
 }
 
 impl VertexType {
