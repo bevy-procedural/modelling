@@ -76,6 +76,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineInterval<V, Vec2> {
             || (self.left.start == self.right.start && self.left.end == self.right.end)
     }
 
+    /// When the intervals are connected, the next vertex must be the end. 
     pub fn is_end(&self) -> bool {
         self.left.end == self.right.end
     }

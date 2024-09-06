@@ -47,7 +47,7 @@ impl<Vec2: Vector2D> EventPoint<Vec2> {
             vec: vec2s[here].vec,
             prev,
             next,
-            vertex_type: VertexType::new::<V, Vec2>(
+            vertex_type: VertexType::detect::<V, Vec2>(
                 vec2s[prev].vec,
                 vec2s[here].vec,
                 vec2s[next].vec,
