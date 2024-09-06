@@ -102,28 +102,38 @@ fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
     /*let mut mesh = MeshVec3::regular_star(2.0, 2.0f32.sqrt(), 10000);
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh*/
-    
-    let mut mesh = MeshVec3::polygon(&[
-        
-        
-        // Fixup crash
 
-        // Front edge
-        Vec3::new(1.0, 0.0, -1.0),
-        Vec3::new(0.5, 0.0, 0.9),
-        Vec3::new(0.0, 0.0, -0.8),
-        Vec3::new(-0.6, 0.0, -1.0),
-        Vec3::new(-0.8, 0.0, -0.8),
-        Vec3::new(-1.0, 0.0, -1.0),
+    let mut mesh = MeshVec3::polygon(
+        &[
 
-        // Back edge
-        Vec3::new(-1.0, 0.0, 1.0),
-        Vec3::new(0.0, 0.0, 0.8),
-        Vec3::new(0.6, 0.0, 1.0),
-        Vec3::new(0.8, 0.0, 0.8),
-        Vec3::new(1.0, 0.0, 1.0),
-        
-    ]);
+            // Front edge
+            Vec3::new(1.0, 0.0, -1.0),
+            Vec3::new(0.5, 0.0, 0.9),
+            Vec3::new(0.0, 0.0, -0.8),
+            Vec3::new(-0.6, 0.0, -1.0),
+            Vec3::new(-0.8, 0.0, -0.8),
+            Vec3::new(-1.0, 0.0, -1.0),
+
+            // Back edge
+            Vec3::new(-1.0, 0.0, 1.0),
+            Vec3::new(0.0, 0.0, 0.8),
+            Vec3::new(0.6, 0.0, 1.0),
+            Vec3::new(0.8, 0.0, 0.8),
+            Vec3::new(1.0, 0.0, 1.0),
+        ]
+        /*&[
+            [7.15814, 0.0],
+            [2.027697, 2.542652],
+            [-1.5944574, 6.98577],
+            [-0.36498743, 0.17576863],
+            [-2.3863406, -1.149202],
+            [-0.11696472, -0.5124569],
+            [0.40876004, -0.5125686],
+        ]
+        .iter()
+        .map(|v| Vec3::new(v[0], 0.0, v[1]))
+        .collect::<Vec<_>>(),*/
+    );
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh
 }

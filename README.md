@@ -50,6 +50,8 @@ Or run the [examples](https://github.com/bevy-procedural/modelling/tree/main/exa
 
 For package development, we recommend using the `editor`-subcrate. This example has a little [egui](https://github.com/jakobhellermann/bevy-inspector-egui/)-editor. Run it using `cargo watch -w editor/src -w src -x "run -p editor --profile fast-dev"`. The `fast-dev` profile will enable optimizations for the dependencies, but not for the package itself. This will slow down the first build _significantly_, but incremental builds are slightly faster and bevy's performance (bevy is used as the renderer in the examples) improves a lot.
 
+When developing tests, we recommend `cargo watch -w editor/src -w src -x "test --profile fast-dev --features sweep_debug_print"`.
+
 ## Feature Progress
 
 -   [ ] Attributes
@@ -137,7 +139,7 @@ The package supports different triangulation algorithms. The robustness and rend
 | Heuristic   | ?            |            |              |             |              |
 | Auto        | ?            | n^2        |              |             |              |
 
--   ¹) Time for triangulation on a Intel i7-12700K (single threaded)
+-   ¹) Time for triangulation on a Intel i7-12700K (single threaded). Run the benchmarks using `cargo bench --features benchmarks` and `cargo flamegraph --unit-test -- representation::face::tesselate::sweep::sweep::tests::sweep_tricky_shape`.
 -   ²) when rendering one million vertices worth of the mesh with the bevy 0.14 pbr shader on a Nvidia GeForce RTX 4060 Ti
 -   ³) TODO: Number of iterations
 

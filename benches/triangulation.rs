@@ -27,18 +27,27 @@ fn make_spiral() -> MeshVec3 {
 }
 
 fn bench_spirals(c: &mut Criterion) {
-    let mut group = c.benchmark_group("Tesselate");
+    let mut group = c.benchmark_group("Triangulation");
 
     for (name, mesh) in [
-        ("Spiral", make_spiral()),
-        ("Star", MeshVec3::regular_star(2.0, 0.9, 1000)),
+        //("Spiral", make_spiral()),
+        //("Star", MeshVec3::regular_star(2.0, 0.9, 1000)),
+
+        ("Circle100", MeshVec3::regular_star(1.0, 1.0, 100)),
+        ("Circle1000", MeshVec3::regular_star(1.0, 1.0, 1000)),
+        ("Circle10000", MeshVec3::regular_star(1.0, 1.0, 10000)),
     ] {
         group.bench_with_input(
             BenchmarkId::new("Auto", name),
             &mesh,
             |b, para: &MeshVec3| {
                 b.iter(|| {
-                    para.tesselate(TriangulationAlgorithm::Auto, GenerateNormals::None);
+                    let mut meta = Default::default();
+                    para.tesselate(
+                        TriangulationAlgorithm::Auto,
+                        GenerateNormals::None,
+                        &mut meta,
+                    );
                 })
             },
         );
@@ -47,7 +56,12 @@ fn bench_spirals(c: &mut Criterion) {
             &mesh,
             |b, para: &MeshVec3| {
                 b.iter(|| {
-                    para.tesselate(TriangulationAlgorithm::EarClipping, GenerateNormals::None);
+                    let mut meta = Default::default();
+                    para.tesselate(
+                        TriangulationAlgorithm::EarClipping,
+                        GenerateNormals::None,
+                        &mut meta,
+                    );
                 })
             },
         );
@@ -56,7 +70,12 @@ fn bench_spirals(c: &mut Criterion) {
             &mesh,
             |b, para: &MeshVec3| {
                 b.iter(|| {
-                    para.tesselate(TriangulationAlgorithm::Delaunay, GenerateNormals::None);
+                    let mut meta = Default::default();
+                    para.tesselate(
+                        TriangulationAlgorithm::Delaunay,
+                        GenerateNormals::None,
+                        &mut meta,
+                    );
                 })
             },
         );
@@ -65,5 +84,8 @@ fn bench_spirals(c: &mut Criterion) {
     group.finish();
 }
 
+/// Create the benchmark group
 criterion_group!(benches, bench_spirals);
+
+/// Run the benchmark
 criterion_main!(benches);

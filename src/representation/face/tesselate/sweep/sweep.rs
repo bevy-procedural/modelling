@@ -5,7 +5,10 @@ use super::{
     status::SweepLineStatus,
     SweepMeta, VertexType,
 };
-use crate::{math::Vector2D, representation::IndexType};
+use crate::{
+    math::{Scalar, Vector2D},
+    representation::IndexType,
+};
 
 /// Perform the sweep line triangulation
 ///
@@ -24,7 +27,8 @@ pub fn sweep_line_triangulation<Vec2: Vector2D, V: IndexType>(
     }
     event_queue.sort_unstable();
 
-    println!("Event queue: {:?}", event_queue);
+    //println!("Event queue: {:?}", event_queue);
+    
     let vt = event_queue.first().unwrap().vertex_type;
     assert!(
         vt == VertexType::Start || vt == VertexType::Regular,
@@ -165,9 +169,13 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
         let Some(previous) = queue.get(event_i - 1) else {
             panic!("Convergent sweep line at the first event");
         };
+        // we have to be very generous with the epsilon here because of the numerical instability of the vertex type classification
+        // PERF: is there a numerical stable way to do this?
         assert!(
-            previous.vec.y() == event.vec.y(),
-            "Expected an end vertex, but found no evidence"
+            (previous.vec.y() - event.vec.y()).abs() <= Vec2::S::EPS * 1000.0.into(),
+            "Expected an end vertex, but found no evidence {} != {}",
+            previous.vec.y(),
+            event.vec.y()
         );
         debug_assert!(interval.is_end());
 
@@ -250,9 +258,13 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
             let Some(next) = queue.get(event_i + 1) else {
                 panic!("Regular vertex not found in sweep line status");
             };
+            // we have to be very generous with the epsilon here because of the numerical instability of the vertex type classification
+            // PERF: is there a numerical stable way to do this?
             assert!(
-                next.vec.y() == event.vec.y(),
-                "Regular vertex not found in sweep line status"
+                (next.vec.y() - event.vec.y()).abs() <= Vec2::S::EPS * 1000.0.into(),
+                "Expected a start vertex, but found no evidence {} != {}",
+                next.vec.y(),
+                event.vec.y()
             );
 
             // treat this one as a start
@@ -555,11 +567,49 @@ mod tests {
             [1.0, -1.0],
         ]));
     }
-    
+
+    #[test]
+    fn numerical_hell_1() {
+        verify_triangulation(&liv_from_array(&[
+            [2.001453, 0.0],
+            [0.7763586, 2.3893864],
+            [-3.2887821, 2.3894396],
+            [-2.7725635, -2.0143867],
+            [0.023867942, -0.07345794],
+        ]));
+    }
+
+    #[test]
+    fn numerical_hell_2() {
+        verify_triangulation(&liv_from_array(&[
+            [2.8768363, 0.0],
+            [1.6538008, 2.0738008],
+            [-0.5499903, 2.4096634],
+            [-6.9148006, 3.3299913],
+            [-7.8863497, -3.7978687],
+            [-0.8668613, -3.7979746],
+            [1.1135457, -1.3963413],
+        ]));
+    }
+
+    /*
+    #[test]
+    fn numerical_hell_3() {
+        verify_triangulation(&liv_from_array(&[
+            [7.15814, 0.0],
+            [2.027697, 2.542652],
+            [-1.5944574, 6.98577],
+            [-0.36498743, 0.17576863],
+            [-2.3863406, -1.149202],
+            [-0.11696472, -0.5124569],
+            [0.40876004, -0.5125686],
+        ]));
+    }
+
     #[test]
     fn sweep_fuzz() {
-        for _ in 1..1 {
-            let vec2s = random_star(3, 100, 0.01, 10.0);
+        for _ in 1..100000 {
+            let vec2s = random_star(3, 9, f32::EPS, 10.0);
 
             println!(
                 "vec2s: {:?}",
@@ -568,9 +618,5 @@ mod tests {
 
             verify_triangulation(&vec2s);
         }
-    }
-
-    // Problematic cases:
-    // [[2.001453, 0.0], [0.7763586, 2.3893864], [-3.2887821, 2.3894396], [-2.7725635, -2.0143867], [0.023867942, -0.07345794]]
-    // [[2.8768363, 0.0], [1.6538008, 2.0738008], [-0.5499903, 2.4096634], [-6.9148006, 3.3299913], [-7.8863497, -3.7978687], [-0.8668613, -3.7979746], [1.1135457, -1.3963413]]
+    }*/
 }
