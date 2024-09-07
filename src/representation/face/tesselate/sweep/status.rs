@@ -7,8 +7,9 @@ use std::collections::{BTreeSet, HashMap};
 
 // PERF: Insert / remove is much more frequent than find_by_position. It could be a good idea to not build the heap until we have a find_by_position call with a large number of intervals.
 
+/// Sweep Line Interval Sorter
 #[derive(Debug, Clone)]
-struct SweepLineIntervalSorter<Vec2: Vector2D> {
+struct SLISorter<Vec2: Vector2D> {
     /// The left end index of the interval
     left: usize,
 
@@ -19,16 +20,16 @@ struct SweepLineIntervalSorter<Vec2: Vector2D> {
     to: Vec2,
 }
 
-impl<Vec2: Vector2D> PartialEq for SweepLineIntervalSorter<Vec2> {
+impl<Vec2: Vector2D> PartialEq for SLISorter<Vec2> {
     fn eq(&self, other: &Self) -> bool {
         // the left index is unique for each interval
         self.left == other.left
     }
 }
 
-impl<Vec2: Vector2D> Eq for SweepLineIntervalSorter<Vec2> {}
+impl<Vec2: Vector2D> Eq for SLISorter<Vec2> {}
 
-impl<Vec2: Vector2D> PartialOrd for SweepLineIntervalSorter<Vec2> {
+impl<Vec2: Vector2D> PartialOrd for SLISorter<Vec2> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         let c: Vec2::S = Vec2::S::min(other.from.y(), self.from.y());
 
@@ -39,14 +40,14 @@ impl<Vec2: Vector2D> PartialOrd for SweepLineIntervalSorter<Vec2> {
     }
 }
 
-impl<Vec2: Vector2D> Ord for SweepLineIntervalSorter<Vec2> {
+impl<Vec2: Vector2D> Ord for SLISorter<Vec2> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.partial_cmp(other)
             .expect("Ordering failed - are there NaN or inf values in your mesh?")
     }
 }
 
-impl<Vec2: Vector2D> std::fmt::Display for SweepLineIntervalSorter<Vec2> {
+impl<Vec2: Vector2D> std::fmt::Display for SLISorter<Vec2> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -56,7 +57,7 @@ impl<Vec2: Vector2D> std::fmt::Display for SweepLineIntervalSorter<Vec2> {
     }
 }
 
-impl<Vec2: Vector2D> SweepLineIntervalSorter<Vec2> {
+impl<Vec2: Vector2D> SLISorter<Vec2> {
     fn x_at_y(&self, y: Vec2::S) -> Vec2::S {
         let s = self.from;
         let e = self.to;
@@ -72,16 +73,16 @@ impl<Vec2: Vector2D> SweepLineIntervalSorter<Vec2> {
 
     pub fn new(left: usize, from: Vec2, to: Vec2) -> Self {
         assert!(from.y() >= to.y());
-        SweepLineIntervalSorter { left, from, to }
+        SLISorter { left, from, to }
     }
 
     pub fn from_interval<V: IndexType>(
         interval: &SweepLineInterval<V, Vec2>,
         vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
-    ) -> SweepLineIntervalSorter<Vec2> {
+    ) -> SLISorter<Vec2> {
         let from = vec2s[interval.left.start].vec;
         let to = vec2s[interval.left.end].vec;
-        SweepLineIntervalSorter::new(interval.left.end, from, to)
+        SLISorter::new(interval.left.end, from, to)
     }
 }
 
@@ -91,13 +92,13 @@ impl<Vec2: Vector2D> SweepLineIntervalSorter<Vec2> {
 /// that are currently inside the polygon.
 pub struct SweepLineStatus<V: IndexType, Vec2: Vector2D> {
     /// The sweep lines, ordered by the target vertex index of the left edge
-    left: HashMap<usize, (SweepLineInterval<V, Vec2>, SweepLineIntervalSorter<Vec2>)>,
+    left: HashMap<usize, SweepLineInterval<V, Vec2>>,
 
     /// Maps right targets to left targets
     right: HashMap<usize, usize>,
 
     /// Use a b-tree to quickly find the correct interval
-    tree: BTreeSet<SweepLineIntervalSorter<Vec2>>,
+    tree: BTreeSet<SLISorter<Vec2>>,
 }
 
 impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
@@ -117,36 +118,44 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
         // TODO: assert that the pos is in between the start and end
         debug_assert!(value.sanity_check());
 
-        let sis = SweepLineIntervalSorter::from_interval(&value, vec2s);
+        let sis = SLISorter::from_interval(&value, vec2s);
 
         // PERF: is it necessary to store the sis twice or can we remove them with another method?
         assert!(self.tree.insert(sis.clone()));
         self.right.insert(value.right.end, value.left.end);
-        self.left.insert(value.left.end, (value, sis));
+        self.left.insert(value.left.end, value);
     }
 
     pub fn get_left(&self, key: usize) -> Option<&SweepLineInterval<V, Vec2>> {
-        self.left.get(&key).map(|(v, _)| v)
+        self.left.get(&key)
     }
 
     pub fn get_right(&self, key: usize) -> Option<&SweepLineInterval<V, Vec2>> {
         self.right.get(&key).and_then(|key| self.get_left(*key))
     }
 
-    pub fn remove_left(&mut self, key: usize) -> Option<SweepLineInterval<V, Vec2>> {
-        if let Some((v, sis)) = self.left.remove(&key) {
+    pub fn remove_left(
+        &mut self,
+        key: usize,
+        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
+    ) -> Option<SweepLineInterval<V, Vec2>> {
+        if let Some(v) = self.left.remove(&key) {
+            assert!(self.tree.remove(&SLISorter::from_interval(&v, vec2s)));
             self.right.remove(&v.right.end);
-            assert!(self.tree.remove(&sis));
             Some(v)
         } else {
             None
         }
     }
 
-    pub fn remove_right(&mut self, key: usize) -> Option<SweepLineInterval<V, Vec2>> {
+    pub fn remove_right(
+        &mut self,
+        key: usize,
+        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
+    ) -> Option<SweepLineInterval<V, Vec2>> {
         if let Some(k) = self.right.remove(&key) {
-            self.left.remove(&k).map(|(v, sis)| {
-                assert!(self.tree.remove(&sis));
+            self.left.remove(&k).map(|v| {
+                assert!(self.tree.remove(&SLISorter::from_interval(&v, vec2s)));
                 v
             })
         } else {
@@ -155,11 +164,10 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
     }
 
     pub fn tree_sanity_check(&self, at: Vec2::S) -> bool {
-        let mut last: Option<&SweepLineIntervalSorter<Vec2>> = None;
+        let mut last: Option<&SLISorter<Vec2>> = None;
         for sorter in &self.tree {
             if let Some(l) = last {
-                let last_at =
-                    SweepLineIntervalSorter::new(l.left, Vec2::from_xy(l.x_at_y(at), at), l.to);
+                let last_at = SLISorter::new(l.left, Vec2::from_xy(l.x_at_y(at), at), l.to);
                 assert!(
                     last_at <= *sorter,
                     "Tree is not sorted correctly at {} because {} <= {} does not hold.",
@@ -178,14 +186,14 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
     fn find_linearly(&self, pos: &Vec2, vec2s: &Vec<LocallyIndexedVertex<Vec2>>) -> Option<usize> {
         self.left
             .iter()
-            .find(|(_, v)| v.0.contains(pos, vec2s))
+            .find(|(_, v)| v.contains(pos, vec2s))
             .map(|(k, _)| *k)
     }
 
     /// Find an interval by its coordinates on the sweep line using binary search.
     /// This runs in O(B * log n) time.
     fn find_btree(&self, pos: &Vec2, vec2s: &Vec<LocallyIndexedVertex<Vec2>>) -> Option<usize> {
-        let sorter = SweepLineIntervalSorter::new(usize::MAX, *pos, *pos);
+        let sorter = SLISorter::new(usize::MAX, *pos, *pos);
 
         debug_assert!(
             self.tree_sanity_check(pos.y()),
@@ -229,7 +237,7 @@ impl<V: IndexType, Vec2: Vector2D> std::fmt::Display for SweepLineStatus<V, Vec2
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "SweepLineStatus:\n")?;
         for (k, v) in &self.left {
-            write!(f, "  {}: {}\n", k, v.0)?;
+            write!(f, "  {}: {}\n", k, v)?;
         }
         Ok(())
     }

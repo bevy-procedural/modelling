@@ -136,8 +136,8 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
     /// Merge two parts of the sweep line at the given event
     fn merge(self: &mut Self, event: &EventPoint<Vec2>) {
         // left and right are swapped because "remove_right" will get the left one _from_ the right (and vice versa)
-        let left = self.sls.remove_right(event.here).unwrap();
-        let mut right = self.sls.remove_left(event.here).unwrap();
+        let left = self.sls.remove_right(event.here, &self.vec2s).unwrap();
+        let mut right = self.sls.remove_left(event.here, &self.vec2s).unwrap();
 
         assert!(!left.is_end(), "Mustn't merge with an end vertex");
         assert!(!right.is_end(), "Mustn't merge with an end vertex");
@@ -227,7 +227,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
         queue: &Vec<EventPoint<Vec2>>,
     ) {
         // PERF: optional; modify sls instead of remove and insert
-        if let Some(mut interval) = self.sls.remove_left(event.here) {
+        if let Some(mut interval) = self.sls.remove_left(event.here, &self.vec2s) {
             if interval.is_end() {
                 self.hidden_end(event, interval, meta, event_i, queue);
                 return;
@@ -256,7 +256,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
                 },
                 self.vec2s,
             )
-        } else if let Some(mut interval) = self.sls.remove_right(event.here) {
+        } else if let Some(mut interval) = self.sls.remove_right(event.here, &self.vec2s) {
             if interval.is_end() {
                 self.hidden_end(event, interval, meta, event_i, queue);
                 return;
@@ -324,7 +324,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
                     self.sls
                 )
             });
-        let line = self.sls.remove_left(i).unwrap();
+        let line = self.sls.remove_left(i, &self.vec2s).unwrap();
         assert!(!line.is_end(), "A split vertex must not be an end vertex");
 
         let stacks = if let Some(mut fixup) = line.fixup {
@@ -379,7 +379,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
     /// End a sweep line at the given event
     #[inline]
     fn end(self: &mut Self, event: &EventPoint<Vec2>) {
-        let mut line = self.sls.remove_left(event.here).unwrap();
+        let mut line = self.sls.remove_left(event.here, &self.vec2s).unwrap();
         assert!(line.is_end());
 
         if let Some(mut fixup) = line.fixup {
