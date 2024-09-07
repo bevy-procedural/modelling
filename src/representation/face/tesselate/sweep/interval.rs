@@ -5,7 +5,7 @@ use crate::{
 };
 
 /// This represents a single edge constraining a sweep line interval.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct IntervalBoundaryEdge {
     pub start: usize,
     pub end: usize,
@@ -37,15 +37,18 @@ impl IntervalBoundaryEdge {
     pub fn beam<V: IndexType, Vec2: Vector2D>(
         &self,
         vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
-    ) -> (Vec2::S, Vec2::S, Vec2::S) {
+    ) -> Option<(Vec2::S, Vec2::S, Vec2::S)> {
         let e = vec2s[self.end].vec;
         let s = vec2s[self.start].vec;
         let dx = e.x() - s.x();
         let dy = e.y() - s.y();
+        if dy == Vec2::S::ZERO {
+            return None;
+        }
         let a = dx / dy;
         let b = s.x() - a * s.y();
         let c = s.y();
-        (a, b, c)
+        Some((a, b, c))
     }
 }
 

@@ -33,6 +33,7 @@ pub fn generate_zigzag<Vec2: Vector2D>(n: usize) -> Vec<Vec2> {
 }
 
 /// Perform the sweep line triangulation
+/// The sweep line moves from the top (positive y) to the bottom (negative y).
 ///
 /// `indices` is the list of indices where the new triangles are appended (in local coordinates)
 /// `vec2s` is the list of 2d-vertices with local indices
@@ -578,7 +579,7 @@ mod tests {
         ]));
     }
 
-   /* #[test]
+    #[test]
     fn sweep_tricky_quad() {
         verify_triangulation(&liv_from_array(&[
             [1.0, 0.0],
@@ -605,9 +606,9 @@ mod tests {
             [0.8, -0.8],
             [1.0, -1.0],
         ]));
-    }*/
+    }
 
-    /*#[test]
+    #[test]
     fn sweep_zigzag() {
         verify_triangulation(
             &generate_zigzag(101)
@@ -616,7 +617,7 @@ mod tests {
                 .map(|(i, v)| LocallyIndexedVertex::new(*v, i))
                 .collect(),
         );
-    }*/
+    }
 
     #[test]
     fn numerical_hell_1() {

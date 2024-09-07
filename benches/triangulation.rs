@@ -32,13 +32,13 @@ fn bench_spirals(c: &mut Criterion) {
     for (name, mesh) in [
         //("Spiral", make_spiral()),
         //("Star", MeshVec3::regular_star(2.0, 0.9, 1000)),
-        //("Circle100", MeshVec3::regular_star(1.0, 1.0, 100)),
+        ("Circle100", MeshVec3::regular_star(1.0, 1.0, 100)),
         //("Circle1000", MeshVec3::regular_star(1.0, 1.0, 1000)),
         ("Circle10000", MeshVec3::regular_star(1.0, 1.0, 10000)),
         (
-            "Zigzag1001",
+            "Zigzag10001",
             MeshVec3::polygon(
-                &generate_zigzag::<Vec2>(1001)
+                &generate_zigzag::<Vec2>(10001)
                     .iter()
                     .map(|v| Vec3::new(v.x, v.y, 0.0))
                     .collect::<Vec<_>>(),
