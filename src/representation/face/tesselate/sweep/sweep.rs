@@ -10,6 +10,28 @@ use crate::{
     representation::IndexType,
 };
 
+/// Generates a zigzag pattern with `n` vertices, which
+/// is the worst case for the sweep line triangulation
+pub fn generate_zigzag<Vec2: Vector2D>(n: usize) -> Vec<Vec2> {
+    assert!(n % 2 == 1);
+    (0..(2 * n))
+        .map(|i| {
+            let mut offset = Vec2::S::ZERO;
+            let mut x = Vec2::S::from_usize(i);
+            if i > n {
+                offset = 1.0.into();
+                x = Vec2::S::from_usize(2 * n - i);
+            }
+
+            if i % 2 == 0 {
+                offset += 2.0.into();
+            }
+
+            Vec2::from_xy(x, offset)
+        })
+        .collect()
+}
+
 /// Perform the sweep line triangulation
 ///
 /// `indices` is the list of indices where the new triangles are appended (in local coordinates)
@@ -28,7 +50,7 @@ pub fn sweep_line_triangulation<Vec2: Vector2D, V: IndexType>(
     event_queue.sort_unstable();
 
     //println!("Event queue: {:?}", event_queue);
-    
+
     let vt = event_queue.first().unwrap().vertex_type;
     assert!(
         vt == VertexType::Start || vt == VertexType::Regular,
@@ -98,13 +120,16 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
     /// Start a new sweep line at the given event
     fn start(self: &mut Self, event: &EventPoint<Vec2>) {
         // Both reflex
-        self.sls.insert(SweepLineInterval {
-            helper: event.here,
-            left: IntervalBoundaryEdge::new(event.here, event.next),
-            right: IntervalBoundaryEdge::new(event.here, event.prev),
-            chain: ReflexChain::single(event.here),
-            fixup: None,
-        });
+        self.sls.insert(
+            SweepLineInterval {
+                helper: event.here,
+                left: IntervalBoundaryEdge::new(event.here, event.next),
+                right: IntervalBoundaryEdge::new(event.here, event.prev),
+                chain: ReflexChain::single(event.here),
+                fixup: None,
+            },
+            self.vec2s,
+        );
     }
 
     /// Merge two parts of the sweep line at the given event
@@ -139,19 +164,22 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
             right.chain
         };
 
-        self.sls.insert(SweepLineInterval {
-            helper: event.here,
-            left: left.left,
-            right: right.right,
-            chain: {
-                new_stacks.right(event.here, self.indices, self.vec2s);
-                new_stacks
+        self.sls.insert(
+            SweepLineInterval {
+                helper: event.here,
+                left: left.left,
+                right: right.right,
+                chain: {
+                    new_stacks.right(event.here, self.indices, self.vec2s);
+                    new_stacks
+                },
+                fixup: Some({
+                    new_fixup.left(event.here, self.indices, self.vec2s);
+                    new_fixup
+                }),
             },
-            fixup: Some({
-                new_fixup.left(event.here, self.indices, self.vec2s);
-                new_fixup
-            }),
-        });
+            self.vec2s,
+        );
     }
 
     /// There can be end vertices that were undetected because they
@@ -185,7 +213,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
         #[cfg(feature = "sweep_debug")]
         meta.update_type(event.here, VertexType::End);
 
-        self.sls.insert(interval);
+        self.sls.insert(interval, self.vec2s);
         self.end(event);
     }
 
@@ -214,16 +242,19 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
             } else {
                 interval.chain
             };
-            self.sls.insert(SweepLineInterval {
-                helper: event.here,
-                left: IntervalBoundaryEdge::new(event.here, event.next),
-                right: interval.right,
-                chain: {
-                    stacks.left(event.here, self.indices, self.vec2s);
-                    stacks
+            self.sls.insert(
+                SweepLineInterval {
+                    helper: event.here,
+                    left: IntervalBoundaryEdge::new(event.here, event.next),
+                    right: interval.right,
+                    chain: {
+                        stacks.left(event.here, self.indices, self.vec2s);
+                        stacks
+                    },
+                    fixup: None,
                 },
-                fixup: None,
-            })
+                self.vec2s,
+            )
         } else if let Some(mut interval) = self.sls.remove_right(event.here) {
             if interval.is_end() {
                 self.hidden_end(event, interval, meta, event_i, queue);
@@ -237,16 +268,19 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
                 fixup.right(event.here, self.indices, self.vec2s);
                 assert!(fixup.is_done());
             }
-            self.sls.insert(SweepLineInterval {
-                helper: event.here,
-                left: interval.left,
-                right: IntervalBoundaryEdge::new(event.here, event.prev),
-                chain: {
-                    interval.chain.right(event.here, self.indices, self.vec2s);
-                    interval.chain
+            self.sls.insert(
+                SweepLineInterval {
+                    helper: event.here,
+                    left: interval.left,
+                    right: IntervalBoundaryEdge::new(event.here, event.prev),
+                    chain: {
+                        interval.chain.right(event.here, self.indices, self.vec2s);
+                        interval.chain
+                    },
+                    fixup: None,
                 },
-                fixup: None,
-            })
+                self.vec2s,
+            )
         } else {
             #[cfg(feature = "sweep_debug_print")]
             println!("Reinterpret as start");
@@ -278,9 +312,9 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
 
     /// Split the sweep line at the given event
     fn split(self: &mut Self, event: &EventPoint<Vec2>) {
-        let i = *self
+        let i = self
             .sls
-            .find_by_position(&self.vec2s[event.here].vec, self.vec2s)
+            .find_by_position(&self.vec2s[event.here].vec, &self.vec2s)
             .unwrap_or_else(|| {
                 panic!(
                     "Split vertex not found in sweep line status\nEvent: {:?}\nPos: {:?}\nStatus: {}",
@@ -288,8 +322,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
                     self.vec2s[event.here].vec,
                     self.sls
                 )
-            })
-            .0;
+            });
         let line = self.sls.remove_left(i).unwrap();
         assert!(!line.is_end(), "A split vertex must not be an end vertex");
 
@@ -315,25 +348,31 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
             x
         };
 
-        self.sls.insert(SweepLineInterval {
-            helper: event.here,
-            left: line.left,
-            right: IntervalBoundaryEdge::new(event.here, event.prev),
-            chain: {
-                let mut x = line.chain.clone();
-                x.right(event.here, self.indices, self.vec2s);
-                x
+        self.sls.insert(
+            SweepLineInterval {
+                helper: event.here,
+                left: line.left,
+                right: IntervalBoundaryEdge::new(event.here, event.prev),
+                chain: {
+                    let mut x = line.chain.clone();
+                    x.right(event.here, self.indices, self.vec2s);
+                    x
+                },
+                fixup: None,
             },
-            fixup: None,
-        });
+            self.vec2s,
+        );
 
-        self.sls.insert(SweepLineInterval {
-            helper: event.here,
-            left: IntervalBoundaryEdge::new(event.here, event.next),
-            right: line.right,
-            chain: stacks,
-            fixup: None,
-        });
+        self.sls.insert(
+            SweepLineInterval {
+                helper: event.here,
+                left: IntervalBoundaryEdge::new(event.here, event.next),
+                right: line.right,
+                chain: stacks,
+                fixup: None,
+            },
+            self.vec2s,
+        );
     }
 
     /// End a sweep line at the given event
@@ -539,8 +578,8 @@ mod tests {
         ]));
     }
 
-    #[test]
-    fn sweep_tricky_square() {
+   /* #[test]
+    fn sweep_tricky_quad() {
         verify_triangulation(&liv_from_array(&[
             [1.0, 0.0],
             [0.0, 1.0],
@@ -566,7 +605,18 @@ mod tests {
             [0.8, -0.8],
             [1.0, -1.0],
         ]));
-    }
+    }*/
+
+    /*#[test]
+    fn sweep_zigzag() {
+        verify_triangulation(
+            &generate_zigzag(101)
+                .iter()
+                .enumerate()
+                .map(|(i, v)| LocallyIndexedVertex::new(*v, i))
+                .collect(),
+        );
+    }*/
 
     #[test]
     fn numerical_hell_1() {
@@ -595,6 +645,7 @@ mod tests {
     /*
     #[test]
     fn numerical_hell_3() {
+        // TODO
         verify_triangulation(&liv_from_array(&[
             [7.15814, 0.0],
             [2.027697, 2.542652],

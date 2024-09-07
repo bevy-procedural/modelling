@@ -34,6 +34,9 @@ pub trait Scalar:
     /// Converts the scalar to a 64-bit floating point number.
     fn to_f64(self) -> f64;
 
+    /// Converts a usize to the scalar.
+    fn from_usize(value: usize) -> Self;
+
     /// Returns the absolute value of the scalar.
     fn abs(self) -> Self {
         if self.is_positive() {
@@ -45,6 +48,21 @@ pub trait Scalar:
 
     /// Returns the arcus cosine of the scalar.
     fn acos(self) -> Self;
+
+    /// Returns the maximum of two scalars.
+    fn max(a: Self, b: Self) -> Self;
+
+    /// Returns the minimum of two scalars.
+    fn min(a: Self, b: Self) -> Self;
+
+    /// Returns the square root of the scalar.
+    fn sqrt(self) -> Self;
+
+    /// Whether the scalar is finite.
+    fn is_finite(self) -> bool;
+
+    /// Whether the scalar is NaN.
+    fn is_nan(self) -> bool;
 
     /// Returns the determinant of a 3x3 matrix.
     fn det3(

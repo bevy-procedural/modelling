@@ -103,6 +103,8 @@ fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh*/
 
+    //let n = 11;
+
     let mut mesh = MeshVec3::polygon(
         &[
 
@@ -133,6 +135,23 @@ fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
         .iter()
         .map(|v| Vec3::new(v[0], 0.0, v[1]))
         .collect::<Vec<_>>(),*/
+        
+        /*&(0..(2 * n))
+            .map(|i| {
+                let mut offset = 0.0;
+                let mut x = i as f32;
+                if i > n {
+                    offset = 1.0;
+                    x = (2*n - i) as f32;
+                }
+
+                if i % 2 == 0 {
+                    offset += 2.0;
+                }
+
+                Vec3::new(x, 0.0, offset)
+            })
+            .collect::<Vec<_>>(),*/
     );
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh

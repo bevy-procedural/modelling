@@ -26,4 +26,35 @@ impl Scalar for f32 {
     fn to_f64(self) -> f64 {
         self as f64
     }
+
+    #[inline(always)]
+    fn from_usize(value: usize) -> Self {
+        value as f32
+    }
+
+    #[inline(always)]
+    fn max(a: Self, b: Self) -> Self {
+        f32::max(a, b)
+    }
+
+    #[inline(always)]
+    fn min(a: Self, b: Self) -> Self {
+        f32::min(a, b)
+    }
+
+    #[inline(always)]
+    fn sqrt(self) -> Self {
+        f32::sqrt(self)
+    }
+
+    #[inline(always)]
+    fn is_finite(self) -> bool {
+        f32::is_finite(self)
+    }
+
+    #[inline(always)]
+    fn is_nan(self) -> bool {
+        f32::is_nan(self)
+    }
+    
 }

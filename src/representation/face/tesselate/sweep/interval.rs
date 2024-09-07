@@ -1,6 +1,6 @@
 use super::{chain::ReflexChain, point::LocallyIndexedVertex};
 use crate::{
-    math::{IndexType, Vector2D},
+    math::{IndexType, Scalar, Vector2D},
     representation::tesselate::sweep::chain::ReflexChainDirection,
 };
 
@@ -25,8 +25,27 @@ impl IntervalBoundaryEdge {
         let s = vec2s[self.start].vec;
         let dx = e.x() - s.x();
         let dy = e.y() - s.y();
-        // TODO: handle division by zero
-        s.x() + dx * (y - s.y()) / dy
+        if dy == Vec2::S::ZERO {
+            // when parallel to the sweep line, we can just use the x-coordinate of the end vertex
+            e.x()
+        } else {
+            s.x() + dx * (y - s.y()) / dy
+        }
+    }
+
+    /// Calculate the parameters of the beam f(y) = a*y + b where y >= c
+    pub fn beam<V: IndexType, Vec2: Vector2D>(
+        &self,
+        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
+    ) -> (Vec2::S, Vec2::S, Vec2::S) {
+        let e = vec2s[self.end].vec;
+        let s = vec2s[self.start].vec;
+        let dx = e.x() - s.x();
+        let dy = e.y() - s.y();
+        let a = dx / dy;
+        let b = s.x() - a * s.y();
+        let c = s.y();
+        (a, b, c)
     }
 }
 
@@ -76,7 +95,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineInterval<V, Vec2> {
             || (self.left.start == self.right.start && self.left.end == self.right.end)
     }
 
-    /// When the intervals are connected, the next vertex must be the end. 
+    /// When the intervals are connected, the next vertex must be the end.
     pub fn is_end(&self) -> bool {
         self.left.end == self.right.end
     }
