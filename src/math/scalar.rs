@@ -1,3 +1,8 @@
+pub trait HasZero {
+    /// A value of zero.
+    const ZERO: Self;
+}
+
 /// To be used as a scalar in n-dimensional space.
 pub trait Scalar:
     Copy
@@ -14,6 +19,7 @@ pub trait Scalar:
     + std::ops::Sub<Output = Self>
     + std::ops::Neg<Output = Self>
     + From<f32>
+    + HasZero
     + 'static
 {
     /// The value of Ludolph's number.
@@ -21,9 +27,6 @@ pub trait Scalar:
 
     /// The value of the machine epsilon.
     const EPS: Self;
-
-    /// A value of zero.
-    const ZERO: Self;
 
     /// A value of one.
     const ONE: Self;
@@ -83,10 +86,15 @@ pub trait Scalar:
     }
 
     /// Calculate the sum of a list of scalars. Should try to achieve good numerical stability.
-    fn sum<I: Iterator<Item = Self>>(values: I) -> Self;
+    fn sum<I: Iterator<Item = Self>>(values: I) -> Self {
+        neumaier_summation(values).0
+    }
 
     /// Calculate the mean of a list of scalars. Should try to achieve good numerical stability.
-    fn mean<I: Iterator<Item = Self>>(values: I) -> Self;
+    fn mean<I: Iterator<Item = Self>>(values: I) -> Self {
+        let (sum, n) = neumaier_summation(values);
+        sum / Self::from_usize(n)
+    }
 }
 
 /// A scalar that is ordered.
@@ -110,4 +118,47 @@ impl<S: Scalar> std::cmp::Ord for OrderedFloats<S> {
             .partial_cmp(&other.value)
             .unwrap_or(std::cmp::Ordering::Equal)
     }
+}
+
+/// Neumaier summation algorithm.
+/// This is a more numerically stable way to sum up a list of scalars.
+/// It is especially useful when the scalars are of different magnitudes.
+/// It's slightly more precise than Kahan summation.
+pub fn neumaier_summation<S: Scalar, I: Iterator<Item = S>>(iter: I) -> (S, usize) {
+    let mut sum = S::ZERO;
+    let mut c = S::ZERO;
+    let mut count = 0;
+    for value in iter {
+        count += 1;
+        let t = sum + value;
+        if sum.abs() >= value.abs() {
+            c += (sum - t) + value;
+        } else {
+            c += (value - t) + sum;
+        }
+        sum = t;
+    }
+    (sum + c, count)
+}
+
+/// Kahan summation algorithm.
+/// This is a more numerically stable way to sum up a list of scalars.
+/// It can be overloaded with a very broad range of floating point types.
+pub fn kahan_summation<
+    X: std::ops::Add<Output = X> + HasZero + std::ops::Sub<Output = X> + Copy,
+    I: Iterator<Item = X>,
+>(
+    iter: I,
+) -> (X, usize) {
+    let mut sum = X::ZERO;
+    let mut c = X::ZERO;
+    let mut count = 0;
+    for value in iter {
+        count += 1;
+        let y = value - c;
+        let t = sum + y;
+        c = (t - sum) - y;
+        sum = t;
+    }
+    (sum, count)
 }

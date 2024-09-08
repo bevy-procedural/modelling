@@ -1,6 +1,6 @@
 use super::chain::ReflexChain;
 use crate::{
-    math::{IndexType, Scalar, Vector2D},
+    math::{HasZero, IndexType, Vector2D},
     representation::tesselate::{sweep::chain::ReflexChainDirection, IndexedVertex2D},
 };
 

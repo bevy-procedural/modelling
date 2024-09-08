@@ -1,4 +1,4 @@
-use super::{Scalar, Vector};
+use super::{Scalar, HasZero, Vector};
 
 /// Trait for a polygon in n-dimensional space.
 pub trait Polygon<V: Vector<Self::S>>: Clone + PartialEq + std::fmt::Debug + 'static {

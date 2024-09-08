@@ -1,5 +1,5 @@
 use crate::{
-    math::{Scalar, Vector2D},
+    math::{HasZero, Vector2D},
     representation::{
         tesselate::{IndexedVertex2D, Triangulation},
         IndexType,

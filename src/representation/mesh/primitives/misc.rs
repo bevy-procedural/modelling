@@ -1,6 +1,6 @@
 use rand::Rng;
 
-use crate::math::{Scalar, Vector2D};
+use crate::math::{Scalar, HasZero, Vector2D};
 
 /// Generates a zigzag pattern with `n` vertices, which
 /// is the worst case for the sweep line triangulation

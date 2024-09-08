@@ -1,11 +1,14 @@
 //! Plain f64 implementation of the mathematical traits.
 
-use crate::math::Scalar;
+use crate::math::{HasZero, Scalar};
+
+impl HasZero for f64 {
+    const ZERO: Self = 0.0;
+}
 
 impl Scalar for f64 {
     const PI: Self = std::f64::consts::PI;
     const EPS: Self = std::f64::EPSILON;
-    const ZERO: Self = 0.0;
     const ONE: Self = 1.0;
 
     #[inline(always)]
@@ -56,21 +59,5 @@ impl Scalar for f64 {
     #[inline(always)]
     fn is_nan(self) -> bool {
         f64::is_nan(self)
-    }
-
-    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
-        // PERF: Is this a numerically stable way to sum up floating point numbers?
-        iter.sum()
-    }
-
-    fn mean<I: Iterator<Item = Self>>(iter: I) -> Self {
-        // PERF: Is this a numerically stable way to sum up floating point numbers?
-        let mut sum = 0.0;
-        let mut count = 0;
-        for value in iter {
-            sum += value;
-            count += 1;
-        }
-        sum / count as f64
     }
 }

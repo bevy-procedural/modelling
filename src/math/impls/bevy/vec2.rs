@@ -1,15 +1,14 @@
-use crate::math::{Vector, Vector2D};
+use crate::math::{neumaier_summation, HasZero, Vector, Vector2D};
 use bevy::math::{Affine2, Vec2, Vec3};
+
+impl HasZero for Vec2 {
+    const ZERO: Self = Vec2::ZERO;
+}
 
 impl Vector<f32> for Vec2 {
     type Vec2 = Vec2;
     type Vec3 = Vec3;
     type Trans = Affine2;
-
-    #[inline(always)]
-    fn zero() -> Self {
-        Vec2::ZERO
-    }
 
     #[inline(always)]
     fn dimensions() -> usize {
@@ -69,7 +68,7 @@ impl Vector<f32> for Vec2 {
 
 impl Vector2D for Vec2 {
     type S = f32;
-    
+
     #[inline(always)]
     fn from_xy(x: f32, y: f32) -> Self {
         Vec2::new(x, y)

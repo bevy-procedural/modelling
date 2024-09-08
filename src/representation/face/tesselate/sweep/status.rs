@@ -1,6 +1,6 @@
 use super::interval::SweepLineInterval;
 use crate::{
-    math::{Scalar, Vector2D},
+    math::{HasZero, Scalar, Vector2D},
     representation::{tesselate::IndexedVertex2D, IndexType},
 };
 use std::collections::{BTreeSet, HashMap};

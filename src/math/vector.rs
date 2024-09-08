@@ -1,4 +1,4 @@
-use super::{Scalar, Transform, Vector2D, Vector3D};
+use super::{kahan_summation, HasZero, Scalar, Transform, Vector2D, Vector3D};
 
 /// Trait for coordinates in n-dimensional space.
 pub trait Vector<S: Scalar>:
@@ -16,6 +16,7 @@ pub trait Vector<S: Scalar>:
     + std::ops::Div<Output = Self>
     + std::ops::Sub<Output = Self>
     + std::ops::Neg<Output = Self>
+    + HasZero
     + 'static
 {
     /// The 2d vector type used in the coordinates.
@@ -26,9 +27,6 @@ pub trait Vector<S: Scalar>:
 
     /// The rotation type used in the vector.
     type Trans: Transform<S = S, Vec = Self>;
-
-    /// Returns the origin vector.
-    fn zero() -> Self;
 
     /// Returns the number of dimensions.
     fn dimensions() -> usize;
@@ -75,14 +73,12 @@ pub trait Vector<S: Scalar>:
 
     /// Sum of vectors, ideally numerically stable.
     fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
-        // PERF: Use a stable summation algorithm
-        iter.fold(Self::zero(), |a, b| a + b)
+        kahan_summation(iter).0
     }
 
     /// Mean of vectors, ideally numerically stable.
     fn mean<I: Iterator<Item = Self>>(iter: I) -> Self {
-        // PERF: Use a stable summation algorithm
-        let (sum, count) = iter.fold((Self::zero(), 0), |(a, b), c| (a + c, b + 1));
-        sum * (S::ONE / S::from_usize(count))
+        let (sum, count) = kahan_summation(iter);
+        sum / Self::splat(S::from_usize(count))
     }
 }

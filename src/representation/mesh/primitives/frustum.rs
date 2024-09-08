@@ -1,6 +1,6 @@
 use super::super::{IndexType, Mesh};
 use crate::{
-    math::{Scalar, Transform, Vector3D},
+    math::{HasZero, Scalar, Transform, Vector3D},
     representation::payload::Payload,
 };
 
