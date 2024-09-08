@@ -6,34 +6,12 @@ use super::{
     SweepMeta, VertexType,
 };
 use crate::{
-    math::{Scalar, Vector2D},
+    math::Vector2D,
     representation::{
         tesselate::{IndexedVertex2D, Triangulation},
         IndexType,
     },
 };
-
-/// Generates a zigzag pattern with `n` vertices, which
-/// is the worst case for the sweep line triangulation
-pub fn generate_zigzag<Vec2: Vector2D>(n: usize) -> Vec<Vec2> {
-    assert!(n % 2 == 1);
-    (0..(2 * n))
-        .map(|i| {
-            let mut offset = Vec2::S::ZERO;
-            let mut x = Vec2::S::from_usize(i);
-            if i > n {
-                offset = 1.0.into();
-                x = Vec2::S::from_usize(2 * n - i);
-            }
-
-            if i % 2 == 0 {
-                offset += 2.0.into();
-            }
-
-            Vec2::from_xy(x, offset)
-        })
-        .collect()
-}
 
 /// Perform the sweep line triangulation
 /// The sweep line moves from the top (positive y) to the bottom (negative y).
@@ -413,9 +391,11 @@ mod tests {
     use std::collections::HashMap;
 
     use super::*;
-    use crate::math::{impls::bevy::Bevy2DPolygon, Polygon, Scalar};
+    use crate::{
+        math::{impls::bevy::Bevy2DPolygon, Polygon, Scalar},
+        representation::primitives::{generate_zigzag, random_star},
+    };
     use bevy::math::Vec2;
-    use rand::Rng;
 
     fn verify_triangulation(vec2s: &Vec<IndexedVertex2D<usize, Vec2>>) {
         assert!(
@@ -436,26 +416,6 @@ mod tests {
         tri.verify_no_intersections(&vec2s);
         tri.verify_non_degenerate_triangle(&vec_hm);
         tri.verify_area::<Vec2, Bevy2DPolygon>(&vec2s, &vec_hm);
-    }
-
-    fn random_star(
-        min_vert: usize,
-        max_vert: usize,
-        min_r: f32,
-        max_r: f32,
-    ) -> Vec<IndexedVertex2D<usize, Vec2>> {
-        let mut vec2s = Vec::new();
-        let mut rng = rand::thread_rng();
-        let n = rng.gen_range(min_vert..max_vert);
-        for i in 0..n {
-            let phi = i as f32 / n as f32 * 2.0 * std::f32::consts::PI;
-            let r = rng.gen_range(min_r..max_r);
-            let x = r * phi.cos();
-            let y = r * phi.sin();
-            vec2s.push(IndexedVertex2D::new(Vec2::from_xy(x, y), vec2s.len()));
-        }
-
-        vec2s
     }
 
     fn liv_from_array(arr: &[[f32; 2]]) -> Vec<IndexedVertex2D<usize, Vec2>> {
@@ -604,7 +564,7 @@ mod tests {
     #[test]
     fn sweep_fuzz() {
         for _ in 1..1000 {
-            let vec2s = random_star(3, 9, f32::EPS, 10.0);
+            let vec2s = IndexedVertex2D::from_vector(random_star::<Vec2>(3, 9, f32::EPS, 10.0));
 
             println!(
                 "vec2s: {:?}",

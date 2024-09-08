@@ -131,9 +131,9 @@ The package supports different triangulation algorithms. The robustness and rend
 | Algorithm   | Requirements | Worst Case | Circle 10 | Circle 100   | Circle 1000 | Circle 10000 | ZigZag 10001 |
 | ----------- | ------------ | ---------- | --------- | ------------ | ----------- | ------------ | ------------ |
 | Fan         | Convex       | n          |           | 0ms¹ (0fps)² |             |              |              |
-| EarClipping | Simple       | n^2        | 0.7840µs  | 33.831µs     | 3.0958ms    | 140.91ms     | 55.660s      |
-| Sweep       | None         | n log n    | 0.7683µs  | 13.683µs     | 139.14µs    | 1.5743ms     | 10.177ms     |
-| Delaunay    | Simple       | n log n    | 2.8992µs  | 33.396µs     | 333.95µs    | 3.7875ms     | 654.76ms     |
+| EarClipping | Simple       | n^2        | 0.784µs   | 33.83µs      | 3.095ms     | 140.9ms      | 55.66s       |
+| Sweep       | None         | n log n    | 0.768µs   | 12.70µs      | 139.1µs     | 1.422ms      | 9.057ms      |
+| Delaunay    | Simple       | n log n    | 2.899µs   | 33.39µs      | 334.0µs     | 3.788ms      | 654.8ms      |
 | EdgeFlip    | Simple       | n^3        |           |              |             |              |              |
 | MinWeight³  | Simple       | 2^n        |           |              |             |              |              |
 | Heuristic   | ?            |            |           |              |             |              |              |

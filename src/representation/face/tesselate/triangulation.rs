@@ -15,6 +15,14 @@ impl<I: IndexType, Vec2: Vector2D> IndexedVertex2D<I, Vec2> {
     pub fn new(vec: Vec2, index: I) -> Self {
         IndexedVertex2D { vec, index }
     }
+
+    /// Convert a vector of Vector2Ds to a vector of indexed vertices
+    pub fn from_vector(vec: Vec<Vec2>) -> Vec<Self> {
+        vec.into_iter()
+            .enumerate()
+            .map(|(i, v)| IndexedVertex2D::new(v, I::new(i)))
+            .collect()
+    }
 }
 
 /// A triangulation of a polygon

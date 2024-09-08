@@ -6,8 +6,7 @@ use bevy::{
 };
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use procedural_modelling::representation::{
-    bevy::MeshVec3,
-    tesselate::{sweep::generate_zigzag, GenerateNormals, TriangulationAlgorithm},
+    bevy::MeshVec3, primitives::generate_zigzag, tesselate::{GenerateNormals, TriangulationAlgorithm}
 };
 use std::f32::consts::PI;
 

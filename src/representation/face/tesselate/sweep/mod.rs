@@ -9,7 +9,7 @@ mod point;
 mod status;
 mod sweep;
 mod vertex_type;
-pub use sweep::{generate_zigzag, sweep_line_triangulation};
+pub use sweep::sweep_line_triangulation;
 pub use vertex_type::VertexType;
 
 // See https://www.cs.umd.edu/class/spring2020/cmsc754/Lects/lect05-triangulate.pdf
