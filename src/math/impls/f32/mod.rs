@@ -33,13 +33,13 @@ impl Scalar for f32 {
     }
 
     #[inline(always)]
-    fn max(a: Self, b: Self) -> Self {
-        f32::max(a, b)
+    fn max(self: &Self, b: Self) -> Self {
+        f32::max(*self, b)
     }
 
     #[inline(always)]
-    fn min(a: Self, b: Self) -> Self {
-        f32::min(a, b)
+    fn min(self: &Self, b: Self) -> Self {
+        f32::min(*self, b)
     }
 
     #[inline(always)]

@@ -21,7 +21,7 @@ pub trait Scalar:
 
     /// The value of the machine epsilon.
     const EPS: Self;
-    
+
     /// A value of zero.
     const ZERO: Self;
 
@@ -50,10 +50,10 @@ pub trait Scalar:
     fn acos(self) -> Self;
 
     /// Returns the maximum of two scalars.
-    fn max(a: Self, b: Self) -> Self;
+    fn max(self: &Self, b: Self) -> Self;
 
     /// Returns the minimum of two scalars.
-    fn min(a: Self, b: Self) -> Self;
+    fn min(self: &Self, b: Self) -> Self;
 
     /// Returns the square root of the scalar.
     fn sqrt(self) -> Self;
@@ -79,7 +79,6 @@ pub trait Scalar:
         a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g)
     }
 }
-
 
 /// A scalar that is ordered.
 #[derive(Debug, Clone, PartialEq, PartialOrd)]

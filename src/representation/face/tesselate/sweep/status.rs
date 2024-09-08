@@ -31,7 +31,7 @@ impl<Vec2: Vector2D> Eq for SLISorter<Vec2> {}
 
 impl<Vec2: Vector2D> PartialOrd for SLISorter<Vec2> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        let c: Vec2::S = Vec2::S::min(other.from.y(), self.from.y());
+        let c: Vec2::S = other.from.y().min(self.from.y());
 
         // compare the horizontal positions at the current vertical position of the sweep line
         // Since the boundaries of the development of the sweep line segments
@@ -126,14 +126,6 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
         self.left.insert(value.left.end, value);
     }
 
-    pub fn get_left(&self, key: usize) -> Option<&SweepLineInterval<V, Vec2>> {
-        self.left.get(&key)
-    }
-
-    pub fn get_right(&self, key: usize) -> Option<&SweepLineInterval<V, Vec2>> {
-        self.right.get(&key).and_then(|key| self.get_left(*key))
-    }
-
     pub fn remove_left(
         &mut self,
         key: usize,
@@ -148,6 +140,10 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
         } else {
             None
         }
+    }
+
+    pub fn peek_left(&self, key: usize) -> Option<&SweepLineInterval<V, Vec2>> {
+        self.left.get(&key)
     }
 
     pub fn remove_right(
@@ -165,6 +161,10 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
         } else {
             None
         }
+    }
+
+    pub fn peek_right(&self, key: usize) -> Option<&SweepLineInterval<V, Vec2>> {
+        self.right.get(&key).and_then(|k| self.peek_left(*k))
     }
 
     pub fn tree_sanity_check(&self, at: Vec2::S) -> bool {

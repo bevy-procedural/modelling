@@ -60,7 +60,7 @@ fn bench_spirals(c: &mut Criterion) {
                 })
             },
         );
-        group.bench_with_input(
+        /*group.bench_with_input(
             BenchmarkId::new("Ears", name),
             &mesh,
             |b, para: &MeshVec3| {
@@ -87,7 +87,7 @@ fn bench_spirals(c: &mut Criterion) {
                     );
                 })
             },
-        );
+        );*/
     }
 
     group.finish();

@@ -13,7 +13,7 @@ pub enum VertexType {
     /// Start a new sweep line here.
     /// Both edges lie to the right of v, but the interior angle is smaller than π.
     Start,
-    
+
     /// A start vertex that is detected late.
     StartLate,
 
@@ -23,11 +23,6 @@ pub enum VertexType {
     /// Split vertex that is detected late.
     SplitLate,
 
-    /// Could be a Start or a Split vertex - numerical errors make the distinction ambiguous.
-    /// The sweep line will fix this later.
-    StartOrSplit,
-
-    
     /// End the sweep line here.
     /// Both edges lie to the left of v, but the interior angle is larger than π.
     End,
@@ -41,19 +36,16 @@ pub enum VertexType {
     /// Merge vertex that is detected late.
     MergeLate,
 
-    /// Could be an End or a Merge vertex - numerical errors make the distinction ambiguous.
-    /// The sweep line will fix this later.
-    EndOrMerge,
-
     /// Polygon is monotone at this vertex.
     /// Can be a hidden Start or End vertex that will be discovered during the sweep.
     /// One edge is to the left, and one to the right, and the polygon interior is above or below.
     /// TODO: Distinguish upper- and lower-chain regular vertices at this point already
     Regular,
 
-    /// If two vertices are parallel to the sweep line, we cannot say whether
+    /// If two vertices are parallel to the sweep line we cannot say whether
     /// the vertex is a regular, start, split, end or merge vertex.
-    /// However, the algorithm can usually later classify this based on the sweep line status.
+    /// However, the algorithm can usually later classify this based on the sweep line status
+    /// and assign StartLate, SplitLate, EndLate or MergeLate.
     Undecisive,
 }
 
@@ -82,7 +74,9 @@ impl VertexType {
             } else if cross < -tol {
                 VertexType::Split
             } else {
-                VertexType::StartOrSplit
+                // you might assume that this can only be a start or split vertex, but 
+                // "numerical_hell_6" is an example where this is in fact a merge vertex
+                VertexType::Undecisive
             }
         } else if is_below_prev && is_below_next {
             if cross > tol {
@@ -90,15 +84,11 @@ impl VertexType {
             } else if cross < -tol {
                 VertexType::Merge
             } else {
-                VertexType::EndOrMerge
+                VertexType::Undecisive
             }
         } else {
-            // If the cross product is (close to) zero, the three points are collinear.
-            if cross.abs() <= tol {
-                VertexType::Undecisive // TODO: Collinear fine. Problems only arise when the sweep line is parallel to the edge
-            } else {
-                VertexType::Regular
-            }
+            // TODO: When parallel to the sweep line, convert to `Undecisive`
+            VertexType::Regular
         }
     }
 }

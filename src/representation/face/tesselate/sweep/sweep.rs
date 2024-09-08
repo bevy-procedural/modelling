@@ -44,13 +44,12 @@ pub fn sweep_line_triangulation<Vec2: Vector2D, V: IndexType>(
     meta: &mut SweepMeta,
 ) {
     assert!(vec2s.len() >= 3, "At least 3 vertices are required");
+
     let mut event_queue: Vec<EventPoint<Vec2>> = Vec::new();
     for here in 0..vec2s.len() {
         event_queue.push(EventPoint::classify::<V>(here, &vec2s));
     }
     event_queue.sort_unstable();
-
-    //println!("Event queue: {:?}", event_queue);
 
     let vt = event_queue.first().unwrap().vertex_type;
     assert!(
@@ -75,23 +74,17 @@ pub fn sweep_line_triangulation<Vec2: Vector2D, V: IndexType>(
 
     let mut q = SweepContext::new(indices, vec2s);
 
-    for (event_i, event) in event_queue.iter().enumerate() {
+    for event in event_queue.iter() {
         #[cfg(feature = "sweep_debug_print")]
         println!("###### {:?} {}", event.vertex_type, event.here);
 
         match event.vertex_type {
             VertexType::Start => q.start(&event),
-            VertexType::Split => q.split(&event),
-            VertexType::StartOrSplit => {
-                assert!(q.start_or_split(&event, meta, event_i, &event_queue))
-            }
-
+            VertexType::Split => assert!(q.try_split(&event)),
             VertexType::Merge => q.merge(&event),
             VertexType::End => q.end(&event),
-            VertexType::EndOrMerge => assert!(q.end_or_merge(&event, meta, event_i, &event_queue)),
-
-            VertexType::Regular => q.regular(&event, meta, event_i, &event_queue),
-            VertexType::Undecisive => q.regular(&event, meta, event_i, &event_queue),
+            VertexType::Regular => q.regular(&event, meta),
+            VertexType::Undecisive => q.regular(&event, meta),
             _ => {
                 panic!("Unsupported vertex type {:?}", event.vertex_type);
             }
@@ -140,18 +133,13 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
     }
 
     /// Split the sweep line at the given event
-    fn split(self: &mut Self, event: &EventPoint<Vec2>) {
-        let i = self
+    fn try_split(self: &mut Self, event: &EventPoint<Vec2>) -> bool {
+        let Some(i) = self
             .sls
             .find_by_position(&self.vec2s[event.here].vec, &self.vec2s)
-            .unwrap_or_else(|| {
-                panic!(
-                    "Split vertex not found in sweep line status\nEvent: {:?}\nPos: {:?}\nStatus: {}",
-                    event,
-                    self.vec2s[event.here].vec,
-                    self.sls
-                )
-            });
+        else {
+            return false;
+        };
         let line = self.sls.remove_left(i, &self.vec2s).unwrap();
         assert!(!line.is_end(), "A split vertex must not be an end vertex");
 
@@ -202,55 +190,43 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
             },
             self.vec2s,
         );
+
+        return true;
     }
 
-    /// Detects and handles either a start or split vertex
-    fn start_or_split(
-        self: &mut Self,
-        event: &EventPoint<Vec2>,
-        meta: &mut SweepMeta,
-        event_i: usize,
-        queue: &Vec<EventPoint<Vec2>>,
-    ) -> bool {
-        #[cfg(feature = "sweep_debug_print")]
-        println!("Reinterpret as start");
-
-        // If there are two or more vertices with the same y-coordinate, they will all be labeled "regular"
-        // In that case, the first one must be treated as a start or split.
-        // We start with some checks whether this is plausible and not a bug
-
+    /// Detects and handles either a start or split vertex in the situation where it's difficult to distinguish
+    fn start_or_split(self: &mut Self, event: &EventPoint<Vec2>, meta: &mut SweepMeta) -> bool {
+        /*
         let Some(next) = queue.get(event_i + 1) else {
             panic!("Regular vertex not found in sweep line status");
         };
 
-        // we have to be very generous with the epsilon here because of the numerical instability of the vertex type classification
-        // TODO: is there a numerical stable way to do this? The gap can be really large
-        assert!(
-            (next.vec.y() - event.vec.y()).abs() <= Vec2::S::EPS * 1000.0.into(),
+        // Generally, this should only happen when they are extremely close to each other.
+        // But due to numerical instabilities, this is hard to test.
+        debug_assert!(
+            (next.vec.y() - event.vec.y()).abs() <= Vec2::S::EPS * 2.0.into(),
             "Expected a start vertex, but found no evidence {} != {}",
             next.vec.y(),
             event.vec.y()
-        );
+        );*/
 
-        // TODO: reuse the i
-        // TODO: Instead, use winding direction to determine the type?
-        let maybe_i = self
-            .sls
-            .find_by_position(&self.vec2s[event.here].vec, &self.vec2s);
-
-        if let Some(_) = maybe_i {
-            self.split(event);
+        if self.try_split(event) {
+            #[cfg(feature = "sweep_debug_print")]
+            println!("Reinterpret as split");
 
             // update the meta info
             #[cfg(feature = "sweep_debug")]
-            meta.update_type(event.here, VertexType::Split);
+            meta.update_type(event.here, VertexType::SplitLate);
         } else {
+            #[cfg(feature = "sweep_debug_print")]
+            println!("Reinterpret as start");
+
             // treat this one as a start
             self.start(event);
 
             // update the meta info
             #[cfg(feature = "sweep_debug")]
-            meta.update_type(event.here, VertexType::Start);
+            meta.update_type(event.here, VertexType::StartLate);
         }
 
         return true;
@@ -274,47 +250,12 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
         assert!(line.chain.is_done());
     }
 
-    /// There can be end vertices that were undetected because they
-    /// had the same y-coordinate as other regular vertices.
-    /// This routine will fix this
-    #[inline]
-    fn hidden_end(
-        self: &mut Self,
-        event: &EventPoint<Vec2>,
-        interval: SweepLineInterval<V, Vec2>,
-        meta: &mut SweepMeta,
-        event_i: usize,
-        queue: &Vec<EventPoint<Vec2>>,
-    ) {
-        let Some(previous) = queue.get(event_i - 1) else {
-            panic!("Convergent sweep line at the first event");
-        };
-
-        // we have to be very generous with the epsilon here because of the numerical instability of the vertex type classification
-        // PERF: is there a numerical stable way to do this?
-        assert!(
-            (previous.vec.y() - event.vec.y()).abs() <= Vec2::S::EPS * 1000.0.into(),
-            "Expected an end vertex, but found no evidence {} != {}",
-            previous.vec.y(),
-            event.vec.y()
-        );
-        debug_assert!(interval.is_end());
-
-        #[cfg(feature = "sweep_debug_print")]
-        println!("Reinterpret as end");
-
-        #[cfg(feature = "sweep_debug")]
-        meta.update_type(event.here, VertexType::End);
-
-        self.sls.insert(interval, self.vec2s);
-        self.end(event);
-    }
-
     /// Merge two parts of the sweep line at the given event
     fn merge(self: &mut Self, event: &EventPoint<Vec2>) {
         // left and right are swapped because "remove_right" will get the left one _from_ the right (and vice versa)
         let left = self.sls.remove_right(event.here, &self.vec2s).unwrap();
-        let mut right = self.sls.remove_left(event.here, &self.vec2s).unwrap();
+        let mut right: SweepLineInterval<V, Vec2> =
+            self.sls.remove_left(event.here, &self.vec2s).unwrap();
 
         assert!(!left.is_end(), "Mustn't merge with an end vertex");
         assert!(!right.is_end(), "Mustn't merge with an end vertex");
@@ -360,98 +301,70 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
         );
     }
 
-    fn hidden_merge(
-        self: &mut Self,
-        event: &EventPoint<Vec2>,
-        interval: SweepLineInterval<V, Vec2>,
-        meta: &mut SweepMeta,
-        event_i: usize,
-        queue: &Vec<EventPoint<Vec2>>,
-    ) {
-        let Some(previous) = queue.get(event_i - 1) else {
+    /// Detects and handles either an end or merge vertex
+    fn end_or_merge(self: &mut Self, event: &EventPoint<Vec2>, meta: &mut SweepMeta) -> bool {
+        // Try to find a pair of intervals that can be merged
+        let (maybe_interval, has_other) = {
+            let left = self.sls.peek_left(event.here);
+            let right = self.sls.peek_right(event.here);
+            if left.is_some() {
+                (left, right.is_some())
+            } else {
+                (right, false)
+            }
+        };
+        let Some(interval) = maybe_interval else {
+            return false;
+        };
+
+        /*let Some(previous) = queue.get(event_i - 1) else {
             panic!("Convergent sweep line at the first event");
         };
 
         // we have to be very generous with the epsilon here because of the numerical instability of the vertex type classification
-        // TODO: is there a numerical stable way to do this? Why can the gap be really large?
-        assert!(
+        // PERF: is there a numerical stable way to do this? Why can the gap be really large?
+        debug_assert!(
             (previous.vec.y() - event.vec.y()).abs() <= Vec2::S::EPS * 1000.0.into(),
             "Expected an merge vertex, but found no evidence {} != {}",
             previous.vec.y(),
             event.vec.y()
-        );
-        debug_assert!(!interval.is_end());
+        );*/
 
-        #[cfg(feature = "sweep_debug_print")]
-        println!("Reinterpret as merge");
+        if interval.is_end() {
+            #[cfg(feature = "sweep_debug_print")]
+            println!("Reinterpret as end");
 
-        #[cfg(feature = "sweep_debug")]
-        meta.update_type(event.here, VertexType::Merge);
+            #[cfg(feature = "sweep_debug")]
+            meta.update_type(event.here, VertexType::EndLate);
 
-        self.sls.insert(interval, self.vec2s);
-        self.merge(event);
-    }
+            self.end(event);
 
-    /// Detects and handles either an end or merge vertex
-    fn end_or_merge_i(
-        self: &mut Self,
-        event: &EventPoint<Vec2>,
-        interval: SweepLineInterval<V, Vec2>,
-        maybe_other: Option<SweepLineInterval<V, Vec2>>,
-        meta: &mut SweepMeta,
-        event_i: usize,
-        queue: &Vec<EventPoint<Vec2>>,
-    ) -> bool {
-        if let Some(other) = maybe_other {
-            // TODO: only run this where necessary; avoid the remove if you push it again afterwards!
-            self.sls.insert(other, self.vec2s);
-
-            self.hidden_merge(event, interval, meta, event_i, queue);
             return true;
         }
 
-        if interval.is_end() {
-            self.hidden_end(event, interval, meta, event_i, queue);
+        if has_other {
+            #[cfg(feature = "sweep_debug_print")]
+            println!("Reinterpret as merge");
+
+            #[cfg(feature = "sweep_debug")]
+            meta.update_type(event.here, VertexType::MergeLate);
+
+            self.merge(event);
+
             return true;
         }
 
         return false;
     }
 
-    /// Detects and handles either an end or merge vertex
-    fn end_or_merge(
-        self: &mut Self,
-        event: &EventPoint<Vec2>,
-        meta: &mut SweepMeta,
-        event_i: usize,
-        queue: &Vec<EventPoint<Vec2>>,
-    ) -> bool {
-        if let Some(interval) = self.sls.remove_left(event.here, &self.vec2s) {
-            let other = self.sls.remove_right(event.here, &self.vec2s);
-            self.end_or_merge_i(event, interval.clone(), other, meta, event_i, queue)
-        } else if let Some(interval) = self.sls.remove_right(event.here, &self.vec2s) {
-            let other = self.sls.remove_left(event.here, &self.vec2s);
-            self.end_or_merge_i(event, interval.clone(), other, meta, event_i, queue)
-        } else {
-            false
-        }
-    }
-
     /// Handle a regular vertex
-    fn regular(
-        self: &mut Self,
-        event: &EventPoint<Vec2>,
-        meta: &mut SweepMeta,
-        event_i: usize,
-        queue: &Vec<EventPoint<Vec2>>,
-    ) {
+    fn regular(self: &mut Self, event: &EventPoint<Vec2>, meta: &mut SweepMeta) {
+        if self.end_or_merge(event, meta) {
+            return;
+        }
+
         // PERF: optional; modify sls instead of remove and insert
         if let Some(mut interval) = self.sls.remove_left(event.here, &self.vec2s) {
-            let other = self.sls.remove_right(event.here, &self.vec2s);
-            if self.end_or_merge_i(event, interval.clone(), other, meta, event_i, queue) {
-                return;
-            }
-
             let mut stacks = if let Some(fixup) = interval.fixup {
                 #[cfg(feature = "sweep_debug_print")]
                 println!("fixup regular l: {}", fixup);
@@ -476,11 +389,6 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
                 self.vec2s,
             )
         } else if let Some(mut interval) = self.sls.remove_right(event.here, &self.vec2s) {
-            let other = self.sls.remove_left(event.here, &self.vec2s);
-            if self.end_or_merge_i(event, interval.clone(), other, meta, event_i, queue) {
-                return;
-            }
-
             if let Some(mut fixup) = interval.fixup {
                 #[cfg(feature = "sweep_debug_print")]
                 println!("fixup regular r: {}", fixup);
@@ -502,7 +410,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
                 self.vec2s,
             )
         } else {
-            self.start_or_split(event, meta, event_i, queue);
+            self.start_or_split(event, meta);
         }
     }
 }
@@ -794,9 +702,10 @@ mod tests {
         ]));
     }
 
-    /*#[test]
+    #[test]
     fn numerical_hell_6() {
         // has vertices with quite different y that still cause problems with being to parallel to the sweep line
+        // vertex 2 might appear to be a start or split, but it turns out to be a merge. Quite tricky.
         verify_triangulation(&liv_from_array(&[
             [1.9081093, 0.0],
             [0.0056778197, 0.007119762],
@@ -806,12 +715,14 @@ mod tests {
             [-0.63087374, -2.7640438],
             [0.28846893, -0.36172837],
         ]));
-    }*/
+    }
 
-    /*
+    /// This is effective to find special examples where the triangulation fails
+    /// You might want to increase the number of iterations to >= 1000000 and adjust
+    /// the random_star parameters to find nastier examples
     #[test]
     fn sweep_fuzz() {
-        for _ in 1..1000000 {
+        for _ in 1..1000 {
             let vec2s = random_star(3, 9, f32::EPS, 10.0);
 
             println!(
@@ -821,5 +732,5 @@ mod tests {
 
             verify_triangulation(&vec2s);
         }
-    }*/
+    }
 }
