@@ -69,4 +69,20 @@ pub trait Vector<S: Scalar>:
 
     /// Normalizes the vector.
     fn normalize(&self) -> Self;
+
+    /// Creates a vector with all the same coordinates.
+    fn splat(value: S) -> Self;
+
+    /// Sum of vectors, ideally numerically stable.
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        // PERF: Use a stable summation algorithm
+        iter.fold(Self::zero(), |a, b| a + b)
+    }
+
+    /// Mean of vectors, ideally numerically stable.
+    fn mean<I: Iterator<Item = Self>>(iter: I) -> Self {
+        // PERF: Use a stable summation algorithm
+        let (sum, count) = iter.fold((Self::zero(), 0), |(a, b), c| (a + c, b + 1));
+        sum * (S::ONE / S::from_usize(count))
+    }
 }

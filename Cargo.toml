@@ -56,7 +56,7 @@ spade = "^2.9.0"
 criterion = { version = "0.5.1", features = ["html_reports"], optional = true }
 
 [features]
-default = ["bevy"]
+default = ["bevy", "sweep_debug"]
 bevy = ["dep:bevy", "dep:bevy-inspector-egui", "bevy/bevy_gizmos", "bevy/default_font"]
 dynamic = ["bevy/dynamic_linking"]
 meshopt = ["dep:meshopt"]

@@ -144,18 +144,15 @@ impl<'a, I: IndexType> Triangulation<'a, I> {
         vec2s: &Vec<IndexedVertex2D<I, V>>,
         vec_hm: &HashMap<I, V>,
     ) {
-        let mut area = V::S::ZERO;
-        // PERF: better summing algorithm?
-        for i in (0..self.indices.len()).step_by(3) {
-            let v0 = vec_hm[&self.indices[i]];
-            let v1 = vec_hm[&self.indices[i + 1]];
-            let v2 = vec_hm[&self.indices[i + 2]];
+        let area = V::S::from(0.5)
+            * V::S::sum((0..self.indices.len()).step_by(3).into_iter().map(|i| {
+                let v0 = vec_hm[&self.indices[i]];
+                let v1 = vec_hm[&self.indices[i + 1]];
+                let v2 = vec_hm[&self.indices[i + 2]];
 
-            // Use the determinant to calculate the area of the triangle
-            let triangle_area = V::S::from(0.5)
-                * ((v1.x() - v0.x()) * (v2.y() - v0.y()) - (v1.y() - v0.y()) * (v2.x() - v0.x()));
-            area += triangle_area;
-        }
+                // Use the determinant to calculate the area of the triangle
+                (v1.x() - v0.x()) * (v2.y() - v0.y()) - (v1.y() - v0.y()) * (v2.x() - v0.x())
+            }));
 
         let reference = Poly::from_iter(vec2s.iter().map(|v| v.vec)).area();
 

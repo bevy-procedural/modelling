@@ -1,4 +1,6 @@
 use crate::math::Polygon;
+use crate::math::Scalar;
+use bevy::math::f32;
 use bevy::math::Vec2;
 
 /// A polygon in 2D space.
@@ -21,13 +23,9 @@ impl Polygon<Vec2> for Bevy2DPolygon {
     }
 
     fn signed_area(&self) -> f32 {
-        let mut area = 0.0;
-        // PERF: better summing algorithm?
-        for i in 0..self.vertices.len() {
+        0.5 * f32::sum((0..self.vertices.len()).into_iter().map(|i| {
             let j = (i + 1) % self.vertices.len();
-            area += self.vertices[i].x * self.vertices[j].y;
-            area -= self.vertices[j].x * self.vertices[i].y;
-        }
-        0.5 * area
+            self.vertices[i].x * self.vertices[j].y - self.vertices[j].x * self.vertices[i].y
+        }))
     }
 }

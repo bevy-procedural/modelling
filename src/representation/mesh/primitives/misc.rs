@@ -36,6 +36,7 @@ pub fn random_star<Vec2: Vector2D>(
     let mut rng = rand::thread_rng();
     let n = rng.gen_range(min_vert..max_vert);
     for i in 0..n {
+        // TODO: which direction should the star be oriented?
         let phi = i as f32 / n as f32 * 2.0 * std::f32::consts::PI;
         let r = rng.gen_range(min_r..max_r);
         let x = r * phi.cos();

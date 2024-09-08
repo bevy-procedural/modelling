@@ -60,6 +60,11 @@ impl Vector<f32> for Vec2 {
     fn normalize(&self) -> Self {
         Vec2::normalize(*self)
     }
+
+    #[inline(always)]
+    fn splat(value: f32) -> Self {
+        Vec2::splat(value)
+    }
 }
 
 impl Vector2D for Vec2 {

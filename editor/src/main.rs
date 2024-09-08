@@ -16,7 +16,7 @@ use procedural_modelling::{
         self,
         bevy::{text::Text3dGizmos, *},
     },
-    representation::{bevy::MeshVec3, tesselate::TesselationMeta},
+    representation::{bevy::MeshVec3, primitives::generate_zigzag, tesselate::TesselationMeta},
 };
 use std::{env, f32::consts::PI};
 
@@ -106,7 +106,7 @@ fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
     //let n = 11;
 
     let mut mesh = MeshVec3::polygon(
-        /*&[
+        /* &[
 
             // Front edge
             Vec3::new(1.0, 0.0, -1.0),
@@ -123,7 +123,12 @@ fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
             Vec3::new(0.8, 0.0, 0.8),
             Vec3::new(1.0, 0.0, 1.0),
         ]*/
-        &[
+        /*&random_star::<Vec2>(5, 6, 0.1, 1.0)
+            .iter()
+            .map(|v| Vec3::new(v[0], 0.0, v[1]))
+            .collect::<Vec<_>>(),
+            */
+        /*&[
             [1.9081093, 0.0],
             [0.0056778197, 0.007119762],
             [-0.0015940086, 0.0069838036],
@@ -134,23 +139,11 @@ fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
         ]
         .iter()
         .map(|v| Vec3::new(v[0], 0.0, v[1]))
-        .collect::<Vec<_>>(),
-        /*&(0..(2 * n))
-        .map(|i| {
-            let mut offset = 0.0;
-            let mut x = i as f32;
-            if i > n {
-                offset = 1.0;
-                x = (2*n - i) as f32;
-            }
-
-            if i % 2 == 0 {
-                offset += 2.0;
-            }
-
-            Vec3::new(x, 0.0, offset)
-        })
         .collect::<Vec<_>>(),*/
+        &generate_zigzag::<Vec2>(101)
+            .iter()
+            .map(|v| Vec3::new(v[0], 0.0, -v[1]))
+            .collect::<Vec<_>>(),
     );
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh

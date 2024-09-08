@@ -28,4 +28,9 @@ pub trait Polygon<V: Vector<Self::S>>: Clone + PartialEq + std::fmt::Debug + 'st
     fn is_ccw(&self) -> bool {
         self.signed_area() >= Self::S::ZERO
     }
+
+       /// Returns whether the polygon is clockwise oriented or zero.
+       fn is_cw(&self) -> bool {
+        self.signed_area() >= Self::S::ZERO
+    }
 }

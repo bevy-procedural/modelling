@@ -5,8 +5,6 @@ use crate::{
 };
 use std::collections::{BTreeSet, HashMap};
 
-// PERF: Insert / remove is much more frequent than find_by_position. It could be a good idea to not build the heap until we have a find_by_position call with a large number of intervals.
-
 /// Sweep Line Interval Sorter
 #[derive(Debug, Clone)]
 struct SLISorter<Vec2: Vector2D> {

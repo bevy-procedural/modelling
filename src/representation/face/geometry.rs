@@ -101,31 +101,28 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
 
     /// Get the normal of the face. Assumes the face is planar.
     /// Uses Newell's method to handle concave faces.
-    /// TODO: Why not faster? Can't we find the normal using 3 vertices?
+    /// PERF: Why not faster? Can't we find the normal using 3 vertices?
     pub fn normal<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> P::Vec
     where
         P::Vec: Vector3D<S = P::S>,
     {
         // TODO: overload this in a way that allows different dimensions
-
         // TODO: allows only for slight curvature...
         debug_assert!(self.may_be_curved() || self.is_planar2(mesh));
 
-        let mut normal = P::Vec::zero();
-        for (a, b) in self
-            .vertices(mesh)
-            .map(|v| *v.vertex())
-            .circular_tuple_windows::<(_, _)>()
-        {
-            normal += P::Vec::from_xyz(
-                (a.z() + b.z()) * (b.y() - a.y()),
-                (a.x() + b.x()) * (b.z() - a.z()),
-                (a.y() + b.y()) * (b.x() - a.x()),
-            );
-        }
-
-        let s05 = P::S::from(-0.5);
-        normal * P::Vec::from_xyz(s05, s05, s05)
+        let normal = P::Vec::sum(
+            self.vertices(mesh)
+                .map(|v| *v.vertex())
+                .circular_tuple_windows::<(_, _)>()
+                .map(|(a, b)| {
+                    P::Vec::from_xyz(
+                        (a.z() + b.z()) * (b.y() - a.y()),
+                        (a.x() + b.x()) * (b.z() - a.z()),
+                        (a.y() + b.y()) * (b.x() - a.x()),
+                    )
+                }),
+        );
+        normal * P::Vec::splat(P::S::from(-0.5))
     }
 
     // TODO: check for degenerated faces; empty triangles, collinear points etc...
@@ -162,13 +159,6 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
 
     /// Naive method to get the center of the face by averaging the vertices.
     pub fn center<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> P::Vec {
-        let mut center = P::Vec::zero();
-        let mut count = 0;
-        // TODO: use a more stable averaging algorithm
-        for a in self.vertices(mesh).map(|v| *v.vertex()) {
-            center += a;
-            count += 1;
-        }
-        center * P::S::from(1.0 / (count as f32))
+        P::Vec::mean(self.vertices(mesh).map(|v| *v.vertex()))
     }
 }

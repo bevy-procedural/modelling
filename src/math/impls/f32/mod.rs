@@ -57,5 +57,20 @@ impl Scalar for f32 {
     fn is_nan(self) -> bool {
         f32::is_nan(self)
     }
-    
+
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        // PERF: Is this a numerically stable way to sum up floating point numbers?
+        iter.sum()
+    }
+
+    fn mean<I: Iterator<Item = Self>>(iter: I) -> Self {
+        // PERF: Is this a numerically stable way to sum up floating point numbers?
+        let mut sum = 0.0;
+        let mut count = 0;
+        for value in iter {
+            sum += value;
+            count += 1;
+        }
+        sum / count as f32
+    }
 }

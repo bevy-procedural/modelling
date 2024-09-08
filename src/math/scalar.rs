@@ -24,7 +24,7 @@ pub trait Scalar:
 
     /// A value of zero.
     const ZERO: Self;
-    
+
     /// A value of one.
     const ONE: Self;
 
@@ -81,6 +81,12 @@ pub trait Scalar:
     ) -> Self {
         a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g)
     }
+
+    /// Calculate the sum of a list of scalars. Should try to achieve good numerical stability.
+    fn sum<I: Iterator<Item = Self>>(values: I) -> Self;
+
+    /// Calculate the mean of a list of scalars. Should try to achieve good numerical stability.
+    fn mean<I: Iterator<Item = Self>>(values: I) -> Self;
 }
 
 /// A scalar that is ordered.
