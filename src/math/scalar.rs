@@ -1,3 +1,4 @@
+/// A trait for types that have a zero value.
 pub trait HasZero {
     /// A value of zero.
     const ZERO: Self;

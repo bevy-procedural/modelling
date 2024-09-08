@@ -1,4 +1,4 @@
-use super::{Scalar, HasZero, Vector};
+use super::{HasZero, Scalar, Vector};
 
 /// Trait for a polygon in n-dimensional space.
 pub trait Polygon<V: Vector<Self::S>>: Clone + PartialEq + std::fmt::Debug + 'static {
@@ -29,8 +29,8 @@ pub trait Polygon<V: Vector<Self::S>>: Clone + PartialEq + std::fmt::Debug + 'st
         self.signed_area() >= Self::S::ZERO
     }
 
-       /// Returns whether the polygon is clockwise oriented or zero.
-       fn is_cw(&self) -> bool {
+    /// Returns whether the polygon is clockwise oriented or zero.
+    fn is_cw(&self) -> bool {
         self.signed_area() >= Self::S::ZERO
     }
 }

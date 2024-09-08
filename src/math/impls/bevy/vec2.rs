@@ -1,4 +1,4 @@
-use crate::math::{neumaier_summation, HasZero, Vector, Vector2D};
+use crate::math::{HasZero, Vector, Vector2D};
 use bevy::math::{Affine2, Vec2, Vec3};
 
 impl HasZero for Vec2 {
