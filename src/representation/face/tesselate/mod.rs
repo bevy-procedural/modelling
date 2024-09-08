@@ -122,8 +122,7 @@ where
                 self.min_weight_triangulation_stoch(mesh, indices);
             }
             TriangulationAlgorithm::Delaunay => {
-                self.delaunay_triangulation(mesh, indices);
-                todo!("Transform indices back to global indices");
+                self.delaunay_triangulation(mesh, &mut Triangulation::new(indices));
             }
             TriangulationAlgorithm::EdgeFlip => {
                 panic!("TriangulationAlgorithm::EdgeFlip is not implemented yet");

@@ -1,11 +1,11 @@
-use super::{Face, Mesh, Payload};
+use super::{Face, Mesh, Payload, Triangulation};
 use crate::{
     math::{Scalar, Vector, Vector3D},
     representation::IndexType,
 };
 use spade::{ConstrainedDelaunayTriangulation, Point2, Triangulation as _};
 
-// TODO: allow Delaunay refinements! 
+// TODO: allow Delaunay refinements!
 
 impl<E, F> Face<E, F>
 where
@@ -16,7 +16,7 @@ where
     pub fn delaunay_triangulation<V: IndexType, P: Payload>(
         &self,
         mesh: &Mesh<E, V, F, P>,
-        indices: &mut Vec<V>,
+        indices: &mut Triangulation<V>,
     ) where
         P::Vec: Vector3D<S = P::S>,
     {
@@ -27,7 +27,9 @@ where
         //PERF: faster: ConstrainedDelaunayTriangulation::bulk_load()
         let mut last = None;
         let mut first = None;
-        for (i2, (vec2, _)) in self.vertices_2d::<V, P>(mesh).enumerate() {
+        let mut i2v = Vec::new();
+        for (i2, (vec2, global_index)) in self.vertices_2d::<V, P>(mesh).enumerate() {
+            i2v.push(global_index);
             let i = cdt
                 .insert(Point2::new(vec2.x().to_f64(), vec2.y().to_f64()))
                 .unwrap();
@@ -41,21 +43,14 @@ where
         }
         assert!(cdt.add_constraint(last.unwrap(), first.unwrap()));
 
-        let i0 = indices.len();
         cdt.inner_faces().for_each(|face| {
             let [p0, p1, p2] = face.vertices();
-            let v0 = V::new(p0.index());
-            let v1 = V::new(p1.index());
-            let v2 = V::new(p2.index());
+            let v0 = i2v[p0.index()];
+            let v1 = i2v[p1.index()];
+            let v2 = i2v[p2.index()];
 
-            //if self.is_inside(mesh, i2v[p0.index()], i2v[p1.index()], i2v[p2.index()]) {
-            if self.is_inside(
-                mesh,
-                V::new(i0 + p0.index()),
-                V::new(i0 + p1.index()),
-                V::new(i0 + p2.index()),
-            ) {
-                indices.extend(&[v0, v1, v2]);
+            if self.is_inside(mesh, v0, v1, v2) {
+                indices.insert_triangle(v0, v1, v2);
             }
         });
     }
