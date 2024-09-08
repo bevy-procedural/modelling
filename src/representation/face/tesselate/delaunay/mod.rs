@@ -5,6 +5,8 @@ use crate::{
 };
 use spade::{ConstrainedDelaunayTriangulation, Point2, Triangulation as _};
 
+// TODO: allow Delaunay refinements! 
+
 impl<E, F> Face<E, F>
 where
     E: IndexType,

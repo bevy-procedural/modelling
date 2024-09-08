@@ -30,8 +30,10 @@ pub enum VertexType {
     /// TODO: Distinguish upper- and lower-chain regular vertices at this point already
     Regular,
 
-    /// Skip collinear vertices
-    Skip,
+    /// If two vertices are parallel to the sweep line, we cannot say whether
+    /// the vertex is a regular, start, split, end or merge vertex.
+    /// However, the algorithm can usually later classify this based on the sweep line status.
+    Undecisive,
 }
 
 impl VertexType {
@@ -45,16 +47,11 @@ impl VertexType {
         tol: Vec2::S,
     ) -> Self {
         let cross = (here - prev).cross2d(&(next - here));
+
         let is_above_prev = here.y() - prev.y() > tol;
         let is_above_next = here.y() - next.y() > tol;
         let is_below_prev = prev.y() - here.y() > tol;
         let is_below_next = next.y() - here.y() > tol;
-
-        // Optimization: Skip collinear points
-        // TODO: cannot skip that easily; the chain has to be fixed when doing this
-        /*if cross.abs() <= tol {
-            return VertexType::Skip;
-        }*/
 
         if (is_above_prev && is_above_next)
             || (is_below_prev && is_below_next && cross.abs() <= tol)
@@ -64,7 +61,7 @@ impl VertexType {
             } else if cross < -tol {
                 VertexType::Split
             } else {
-                VertexType::Regular
+                VertexType::Undecisive
             }
         } else if is_below_prev && is_below_next {
             if cross > tol {
@@ -72,10 +69,15 @@ impl VertexType {
             } else if cross < -tol {
                 VertexType::Merge
             } else {
-                VertexType::Regular
+                VertexType::Undecisive
             }
         } else {
-            VertexType::Regular
+            // If the cross product is (close to) zero, the three points are collinear.
+            if cross.abs() <= tol {
+                VertexType::Undecisive
+            } else {
+                VertexType::Regular
+            }
         }
     }
 }
@@ -99,7 +101,6 @@ mod tests {
         );
     }
 
-    
     fn detect_vertex_type_merge() {
         assert_eq!(
             VertexType::detect::<usize, Vec2>(
@@ -111,7 +112,7 @@ mod tests {
             VertexType::Merge
         );
     }
-        
+
     fn detect_vertex_type_split() {
         assert_eq!(
             VertexType::detect::<usize, Vec2>(
@@ -136,7 +137,6 @@ mod tests {
         );
     }
 
-    
     fn detect_vertex_type_regular() {
         assert_eq!(
             VertexType::detect::<usize, Vec2>(

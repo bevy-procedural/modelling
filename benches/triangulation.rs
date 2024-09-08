@@ -32,6 +32,7 @@ fn bench_spirals(c: &mut Criterion) {
     for (name, mesh) in [
         //("Spiral", make_spiral()),
         //("Star", MeshVec3::regular_star(2.0, 0.9, 1000)),
+        ("Circle10", MeshVec3::regular_star(1.0, 1.0, 10)),
         ("Circle100", MeshVec3::regular_star(1.0, 1.0, 100)),
         ("Circle1000", MeshVec3::regular_star(1.0, 1.0, 1000)),
         ("Circle10000", MeshVec3::regular_star(1.0, 1.0, 10000)),
@@ -59,7 +60,7 @@ fn bench_spirals(c: &mut Criterion) {
                 })
             },
         );
-        /*group.bench_with_input(
+        group.bench_with_input(
             BenchmarkId::new("Ears", name),
             &mesh,
             |b, para: &MeshVec3| {
@@ -72,7 +73,7 @@ fn bench_spirals(c: &mut Criterion) {
                     );
                 })
             },
-        );*/
+        );
         group.bench_with_input(
             BenchmarkId::new("Delaunay", name),
             &mesh,

@@ -83,9 +83,7 @@ pub fn sweep_line_triangulation<Vec2: Vector2D, V: IndexType>(
             VertexType::Regular => q.regular(&event, meta, event_i, &event_queue),
             VertexType::Split => q.split(&event),
             VertexType::End => q.end(&event),
-            VertexType::Skip => {
-                todo!("Skip collinear vertices");
-            }
+            VertexType::Undecisive => q.regular(&event, meta, event_i, &event_queue),
             VertexType::Undefined => {
                 panic!("Vertex type is Undefined");
             }
@@ -198,6 +196,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
         let Some(previous) = queue.get(event_i - 1) else {
             panic!("Convergent sweep line at the first event");
         };
+
         // we have to be very generous with the epsilon here because of the numerical instability of the vertex type classification
         // PERF: is there a numerical stable way to do this?
         assert!(
@@ -218,6 +217,38 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
         self.end(event);
     }
 
+    fn hidden_merge(
+        self: &mut Self,
+        event: &EventPoint<Vec2>,
+        interval: SweepLineInterval<V, Vec2>,
+        meta: &mut SweepMeta,
+        event_i: usize,
+        queue: &Vec<EventPoint<Vec2>>,
+    ) {
+        let Some(previous) = queue.get(event_i - 1) else {
+            panic!("Convergent sweep line at the first event");
+        };
+
+        // we have to be very generous with the epsilon here because of the numerical instability of the vertex type classification
+        // PERF: is there a numerical stable way to do this?
+        assert!(
+            (previous.vec.y() - event.vec.y()).abs() <= Vec2::S::EPS * 1000.0.into(),
+            "Expected an merge vertex, but found no evidence {} != {}",
+            previous.vec.y(),
+            event.vec.y()
+        );
+        debug_assert!(!interval.is_end());
+
+        #[cfg(feature = "sweep_debug_print")]
+        println!("Reinterpret as merge");
+
+        #[cfg(feature = "sweep_debug")]
+        meta.update_type(event.here, VertexType::Merge);
+
+        self.sls.insert(interval, self.vec2s);
+        self.merge(event);
+    }
+
     /// Handle a regular vertex
     fn regular(
         self: &mut Self,
@@ -228,6 +259,13 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
     ) {
         // PERF: optional; modify sls instead of remove and insert
         if let Some(mut interval) = self.sls.remove_left(event.here, &self.vec2s) {
+            // TODO: only run this where necessary; avoid the remove if you push it again afterwards!
+            if let Some(other) = self.sls.remove_right(event.here, &self.vec2s) {
+                self.sls.insert(other, self.vec2s);
+                self.hidden_merge(event, interval, meta, event_i, queue);
+                return;
+            }
+
             if interval.is_end() {
                 self.hidden_end(event, interval, meta, event_i, queue);
                 return;
@@ -257,6 +295,12 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
                 self.vec2s,
             )
         } else if let Some(mut interval) = self.sls.remove_right(event.here, &self.vec2s) {
+            // TODO: only run this where necessary; avoid the remove if you push it again afterwards!
+            if let Some(other) = self.sls.remove_left(event.here, &self.vec2s) {
+                self.sls.insert(other, self.vec2s);
+                self.hidden_merge(event, interval, meta, event_i, queue);
+                return;
+            }
             if interval.is_end() {
                 self.hidden_end(event, interval, meta, event_i, queue);
                 return;
@@ -287,7 +331,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
             println!("Reinterpret as start");
 
             // If there are two or more vertices with the same y-coordinate, they will all be labeled "regular"
-            // In that case, the first one must be treated as a start
+            // In that case, the first one must be treated as a start or split.
             // We start with some checks whether this is plausible and not a bug
 
             let Some(next) = queue.get(event_i + 1) else {
@@ -302,12 +346,26 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
                 event.vec.y()
             );
 
-            // treat this one as a start
-            self.start(event);
+            // TODO: reuse the i
+            // TODO: Instead, use winding direction to determine the type?
+            let maybe_i = self
+                .sls
+                .find_by_position(&self.vec2s[event.here].vec, &self.vec2s);
 
-            // update the meta info
-            #[cfg(feature = "sweep_debug")]
-            meta.update_type(event.here, VertexType::Start);
+            if let Some(i) = maybe_i {
+                self.split(event);
+
+                // update the meta info
+                #[cfg(feature = "sweep_debug")]
+                meta.update_type(event.here, VertexType::Split);
+            } else {
+                // treat this one as a start
+                self.start(event);
+
+                // update the meta info
+                #[cfg(feature = "sweep_debug")]
+                meta.update_type(event.here, VertexType::Start);
+            }
         }
     }
 
@@ -643,10 +701,8 @@ mod tests {
         ]));
     }
 
-    /*
     #[test]
     fn numerical_hell_3() {
-        // TODO
         verify_triangulation(&liv_from_array(&[
             [7.15814, 0.0],
             [2.027697, 2.542652],
@@ -659,8 +715,21 @@ mod tests {
     }
 
     #[test]
+    fn numerical_hell_4() {
+        verify_triangulation(&liv_from_array(&[
+            [5.1792994, 0.0],
+            [0.46844417, 0.5874105],
+            [-0.13406669, 0.58738416],
+            [-7.662568, 3.6900969],
+            [-2.7504041, -1.3245257],
+            [-0.4468068, -1.9575921],
+            [0.7220693, -0.90544575],
+        ]));
+    }
+
+    #[test]
     fn sweep_fuzz() {
-        for _ in 1..100000 {
+        for _ in 1..1000000 {
             let vec2s = random_star(3, 9, f32::EPS, 10.0);
 
             println!(
@@ -670,5 +739,5 @@ mod tests {
 
             verify_triangulation(&vec2s);
         }
-    }*/
+    }
 }

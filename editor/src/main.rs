@@ -106,7 +106,7 @@ fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
     //let n = 11;
 
     let mut mesh = MeshVec3::polygon(
-        &[
+        /*&[
 
             // Front edge
             Vec3::new(1.0, 0.0, -1.0),
@@ -122,36 +122,35 @@ fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
             Vec3::new(0.6, 0.0, 1.0),
             Vec3::new(0.8, 0.0, 0.8),
             Vec3::new(1.0, 0.0, 1.0),
-        ]
-        /*&[
-            [7.15814, 0.0],
-            [2.027697, 2.542652],
-            [-1.5944574, 6.98577],
-            [-0.36498743, 0.17576863],
-            [-2.3863406, -1.149202],
-            [-0.11696472, -0.5124569],
-            [0.40876004, -0.5125686],
+        ]*/
+        &[
+            [5.1792994, 0.0],
+            [0.46844417, 0.5874105],
+            [-0.13406669, 0.58738416],
+            [-7.662568, 3.6900969],
+            [-2.7504041, -1.3245257],
+            [-0.4468068, -1.9575921],
+            [0.7220693, -0.90544575],
         ]
         .iter()
         .map(|v| Vec3::new(v[0], 0.0, v[1]))
-        .collect::<Vec<_>>(),*/
-        
+        .collect::<Vec<_>>(),
         /*&(0..(2 * n))
-            .map(|i| {
-                let mut offset = 0.0;
-                let mut x = i as f32;
-                if i > n {
-                    offset = 1.0;
-                    x = (2*n - i) as f32;
-                }
+        .map(|i| {
+            let mut offset = 0.0;
+            let mut x = i as f32;
+            if i > n {
+                offset = 1.0;
+                x = (2*n - i) as f32;
+            }
 
-                if i % 2 == 0 {
-                    offset += 2.0;
-                }
+            if i % 2 == 0 {
+                offset += 2.0;
+            }
 
-                Vec3::new(x, 0.0, offset)
-            })
-            .collect::<Vec<_>>(),*/
+            Vec3::new(x, 0.0, offset)
+        })
+        .collect::<Vec<_>>(),*/
     );
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh

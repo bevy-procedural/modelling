@@ -115,29 +115,29 @@ The following features are available:
 
 ## Triangulation algorithms
 
-The package supports different triangulation algorithms. The robustness and rendering speed of the produced triangulations varies significantly. These performance differences usually only matter for meshes with extremely large flat surfaces. In the table below, we compare the performance of the different algorithms for a circle with 100, 1000, and 10000 vertices.
+The package supports different triangulation algorithms. The robustness and rendering speed of the produced triangulations varies significantly. These performance differences usually only matter for meshes with extremely large flat surfaces. In the table below, we compare the performance of the different algorithms for a circle with 100, 1000, and 10000 vertices. The "ZigZag" mesh has 10001 vertices and is designed to demonstrate the worst-case for the Sweep algorithm.
 
 -   **Fan** Extremely fast, but only works for convex polygons. And even then, results are usually numerically unstable. Runs in O(n) time.
     Fan
 -   **EarClipping** Simple but slow textbook-algorithm for reference. Runs in O(n^2) time.
--   **Sweep** Very fast sweep-line algorithm without any guarantees on the quality of the triangulation. Works for arbitrary polygons (yes, they don't have to be simple). Runs in O(n log n) time. See [CMSC 754](https://www.cs.umd.edu/class/spring2020/cmsc754/Lects/lect05-triangulate.pdf).
--   **Delaunay** Slow, but large flat surfaces might render faster. Currently uses [Spade](https://github.com/Stoeoef/spade). TODO: allow Delaunay refinements! Runs in O(n log n) time.
+-   **Sweep** Very fast sweep-line algorithm that might produces triangulations with unnecessarily long edges. Works for arbitrary polygons (yes, they don't have to be simple). Runs in O(n log n) time. See [CMSC 754](https://www.cs.umd.edu/class/spring2020/cmsc754/Lects/lect05-triangulate.pdf).
+-   **Delaunay** Slow, but large flat surfaces might render faster. Currently uses [Spade](https://github.com/Stoeoef/spade). Runs in O(n log n) time.
 -   **EdgeFlip** Same output as Delaunay, but without external dependencies and using a very slow edge-flipping algorithm. Runs in O(n^3) time.
     EdgeFlip,
 -   **MinWeight** Minimizes the overall edge length of the triangulation. Very slow, but produces the theoretically fastest rendering triangulations for large flat surfaces. Runs in O(2^n) time.
 -   **Heuristic** Heuristic algorithm that tries to find a compromise between the speed of `Sweep` and the quality of `EdgeMin`.
 -   **Auto** (default) Automatically choose the "best" algorithm based on the input, i.e., with the given ratio of numerical stability and performance. Currently, it uses specialized implementations for the smallest polygons, then uses `Delaunay`, then `Heuristic`, and finally falls back to `Sweep` for the largest polygons.
 
-| Algorithm   | Requirements | Worst Case | Circle 100   | Circle 1000 | Circle 10000 | ZigZag 10001 |
-| ----------- | ------------ | ---------- | ------------ | ----------- | ------------ | ------------ |
-| Fan         | Convex       | n          | 0ms¹ (0fps)² |             |              |              |
-| EarClipping | Simple       | n^2        | 33.831µs     | 3.0958ms    | 140.91ms     | 55660ms      |
-| Sweep       | None         | n log n    | 13.683µs     | 139.14µs    | 1.5743ms     | 10.177ms     |
-| Delaunay    | Simple       | n log n    | 33.396µs     | 333.95µs    | 3.7875ms     | 654.76ms     |
-| EdgeFlip    | Simple       | n^3        |              |             |              |              |
-| MinWeight³  | Simple       | 2^n        |              |             |              |              |
-| Heuristic   | ?            |            |              |             |              |              |
-| Auto        | ?            | n^2        |              |             |              |              |
+| Algorithm   | Requirements | Worst Case | Circle 10 | Circle 100   | Circle 1000 | Circle 10000 | ZigZag 10001 |
+| ----------- | ------------ | ---------- | --------- | ------------ | ----------- | ------------ | ------------ |
+| Fan         | Convex       | n          |           | 0ms¹ (0fps)² |             |              |              |
+| EarClipping | Simple       | n^2        | 0.7840µs  | 33.831µs     | 3.0958ms    | 140.91ms     | 55.660s      |
+| Sweep       | None         | n log n    | 0.7683µs  | 13.683µs     | 139.14µs    | 1.5743ms     | 10.177ms     |
+| Delaunay    | Simple       | n log n    | 2.8992µs  | 33.396µs     | 333.95µs    | 3.7875ms     | 654.76ms     |
+| EdgeFlip    | Simple       | n^3        |           |              |             |              |              |
+| MinWeight³  | Simple       | 2^n        |           |              |             |              |              |
+| Heuristic   | ?            |            |           |              |             |              |              |
+| Auto        | ?            | n^2        |           |              |             |              |              |
 
 -   ¹) Time for triangulation on a Intel i7-12700K (single threaded). Run the benchmarks using `cargo bench --features benchmarks` and `cargo flamegraph --unit-test -- representation::face::tesselate::sweep::sweep::tests::sweep_tricky_shape`.
 -   ²) when rendering one million vertices worth of the mesh with the bevy 0.14 pbr shader on a Nvidia GeForce RTX 4060 Ti
