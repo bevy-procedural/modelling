@@ -6,6 +6,7 @@ impl Scalar for f32 {
     const PI: Self = std::f32::consts::PI;
     const EPS: Self = std::f32::EPSILON;
     const ZERO: Self = 0.0;
+    const ONE: Self = 1.0;
 
     #[inline(always)]
     fn is_positive(self) -> bool {

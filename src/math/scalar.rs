@@ -24,6 +24,9 @@ pub trait Scalar:
 
     /// A value of zero.
     const ZERO: Self;
+    
+    /// A value of one.
+    const ONE: Self;
 
     /// Returns whether the scalar is strictly positive.
     fn is_positive(self) -> bool;

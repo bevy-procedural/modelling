@@ -93,8 +93,5 @@ fn bench_spirals(c: &mut Criterion) {
     group.finish();
 }
 
-/// Create the benchmark group
 criterion_group!(benches, bench_spirals);
-
-/// Run the benchmark
 criterion_main!(benches);

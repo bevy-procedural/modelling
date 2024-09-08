@@ -1,7 +1,10 @@
-use core::fmt;
-
-use super::point::LocallyIndexedVertex;
-use crate::{math::Scalar, math::Vector2D, representation::IndexType};
+use crate::{
+    math::{Scalar, Vector2D},
+    representation::{
+        tesselate::{IndexedVertex2D, Triangulation},
+        IndexType,
+    },
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ReflexChainDirection {
@@ -30,8 +33,8 @@ pub struct ReflexChain<V: IndexType, Vec2: Vector2D> {
     phantom: std::marker::PhantomData<(V, Vec2)>,
 }
 
-impl<V: IndexType, Vec2: Vector2D> fmt::Display for ReflexChain<V, Vec2> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl<V: IndexType, Vec2: Vector2D> std::fmt::Display for ReflexChain<V, Vec2> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}{:?}", self.d, self.stack)
     }
 }
@@ -74,8 +77,8 @@ impl<V: IndexType, Vec2: Vector2D> ReflexChain<V, Vec2> {
     fn add_same_direction(
         &mut self,
         value: usize,
-        indices: &mut Vec<V>,
-        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
+        indices: &mut Triangulation<V>,
+        vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
         d: ReflexChainDirection,
     ) {
         assert!(self.stack.len() >= 1);
@@ -94,22 +97,14 @@ impl<V: IndexType, Vec2: Vector2D> ReflexChain<V, Vec2> {
                 if angle > Vec2::S::ZERO {
                     break;
                 }
-                indices.extend([
-                    V::new(self.stack[l - 1]),
-                    V::new(value),
-                    V::new(self.stack[l - 2]),
-                ]);
+                indices.insert_triangle_local(self.stack[l - 1], value, self.stack[l - 2], vec2s);
             } else {
                 // right or no preference
 
                 if angle < Vec2::S::ZERO {
                     break;
                 }
-                indices.extend([
-                    V::new(self.stack[l - 1]),
-                    V::new(self.stack[l - 2]),
-                    V::new(value),
-                ]);
+                indices.insert_triangle_local(self.stack[l - 1], self.stack[l - 2], value, vec2s);
             }
 
             #[cfg(feature = "sweep_debug_print")]
@@ -129,7 +124,8 @@ impl<V: IndexType, Vec2: Vector2D> ReflexChain<V, Vec2> {
     fn add_opposite_direction(
         &mut self,
         value: usize,
-        indices: &mut Vec<V>,
+        indices: &mut Triangulation<V>,
+        vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
         d: ReflexChainDirection,
     ) {
         assert!(self.d != d);
@@ -143,17 +139,9 @@ impl<V: IndexType, Vec2: Vector2D> ReflexChain<V, Vec2> {
             // there is enough on the stack to consume
             for i in 1..self.stack.len() {
                 if d == ReflexChainDirection::Left {
-                    indices.extend([
-                        V::new(self.stack[i - 1]),
-                        V::new(value),
-                        V::new(self.stack[i]),
-                    ]);
+                    indices.insert_triangle_local(self.stack[i - 1], value, self.stack[i], vec2s);
                 } else {
-                    indices.extend([
-                        V::new(self.stack[i - 1]),
-                        V::new(self.stack[i]),
-                        V::new(value),
-                    ]);
+                    indices.insert_triangle_local(self.stack[i - 1], self.stack[i], value, vec2s);
                 }
 
                 #[cfg(feature = "sweep_debug_print")]
@@ -175,8 +163,8 @@ impl<V: IndexType, Vec2: Vector2D> ReflexChain<V, Vec2> {
     pub fn add(
         &mut self,
         value: usize,
-        indices: &mut Vec<V>,
-        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
+        indices: &mut Triangulation<V>,
+        vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
         d: ReflexChainDirection,
     ) -> &Self {
         #[cfg(feature = "sweep_debug_print")]
@@ -188,7 +176,7 @@ impl<V: IndexType, Vec2: Vector2D> ReflexChain<V, Vec2> {
         } else if self.d == d {
             self.add_same_direction(value, indices, vec2s, d);
         } else {
-            self.add_opposite_direction(value, indices, d);
+            self.add_opposite_direction(value, indices, vec2s, d);
         }
 
         self
@@ -199,8 +187,8 @@ impl<V: IndexType, Vec2: Vector2D> ReflexChain<V, Vec2> {
     pub fn right(
         &mut self,
         value: usize,
-        indices: &mut Vec<V>,
-        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
+        indices: &mut Triangulation<V>,
+        vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
     ) -> &Self {
         self.add(value, indices, vec2s, ReflexChainDirection::Right)
     }
@@ -210,8 +198,8 @@ impl<V: IndexType, Vec2: Vector2D> ReflexChain<V, Vec2> {
     pub fn left(
         &mut self,
         value: usize,
-        indices: &mut Vec<V>,
-        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
+        indices: &mut Triangulation<V>,
+        vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
     ) -> &Self {
         self.add(value, indices, vec2s, ReflexChainDirection::Left)
     }

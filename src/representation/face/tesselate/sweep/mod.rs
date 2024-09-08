@@ -1,26 +1,28 @@
-use super::{Face, Mesh, Payload, TesselationMeta};
-use crate::{math::Vector3D, representation::IndexType};
+use super::{Face, Mesh, Payload, TesselationMeta, Triangulation};
+use crate::{
+    math::Vector3D,
+    representation::{tesselate::IndexedVertex2D, IndexType},
+};
 mod chain;
-mod point;
-mod sweep;
-mod status;
 mod interval;
+mod point;
+mod status;
+mod sweep;
 mod vertex_type;
-use point::LocallyIndexedVertex;
-pub use sweep::{generate_zigzag,sweep_line_triangulation};
+pub use sweep::{generate_zigzag, sweep_line_triangulation};
 pub use vertex_type::VertexType;
 
 // See https://www.cs.umd.edu/class/spring2020/cmsc754/Lects/lect05-triangulate.pdf
 
 /// Meta information for debuggin the sweep algorithm
 #[derive(Debug, Clone, PartialEq)]
-pub struct SweepMeta {
+pub struct SweepMeta<V: IndexType> {
     #[cfg(feature = "sweep_debug")]
     /// The type of the vertex in the reflex chain
-    pub vertex_type: Vec<(usize, VertexType)>,
+    pub vertex_type: Vec<(V, VertexType)>,
 }
 
-impl Default for SweepMeta {
+impl<V: IndexType> Default for SweepMeta<V> {
     fn default() -> Self {
         SweepMeta {
             #[cfg(feature = "sweep_debug")]
@@ -29,18 +31,10 @@ impl Default for SweepMeta {
     }
 }
 
-impl SweepMeta {
-    /// Expand the indices to global indices
-    #[cfg(feature = "sweep_debug")]
-    pub fn expand(&mut self, v0: usize, n: usize) {
-        for (i, _) in self.vertex_type.iter_mut() {
-            *i = v0 + (*i + (n - 1)) % n;
-        }
-    }
-
+impl<V: IndexType> SweepMeta<V> {
     /// Update the type of a vertex
     #[cfg(feature = "sweep_debug")]
-    pub fn update_type(&mut self, i: usize, t: VertexType) {
+    pub fn update_type(&mut self, i: V, t: VertexType) {
         // TODO: Not efficient
         for (j, ty) in self.vertex_type.iter_mut() {
             if *j == i {
@@ -59,8 +53,8 @@ where
     pub fn sweep_line<V: IndexType, P: Payload>(
         &self,
         mesh: &Mesh<E, V, F, P>,
-        indices: &mut Vec<V>,
-        meta: &mut TesselationMeta,
+        indices: &mut Triangulation<V>,
+        meta: &mut TesselationMeta<V>,
     ) where
         P::Vec: Vector3D<S = P::S>,
     {
@@ -69,13 +63,9 @@ where
         // TODO: Improve performance by directly using the nd-vertices instead of converting to 2d
         let vec2s: Vec<_> = self
             .vertices_2d::<V, P>(mesh)
-            .enumerate()
-            .map(|(i, (p, _))| LocallyIndexedVertex::new(p, i))
+            .map(|(p, i)| IndexedVertex2D::<V, P::Vec2>::new(p, i))
             .collect();
 
-        sweep_line_triangulation(indices, &vec2s, &mut meta.sweep);
+        sweep_line_triangulation::<V, P::Vec2>(indices, &vec2s, &mut meta.sweep);
     }
 }
-
-
-

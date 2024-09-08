@@ -1,13 +1,16 @@
 use super::{
     chain::{ReflexChain, ReflexChainDirection},
     interval::{IntervalBoundaryEdge, SweepLineInterval},
-    point::{EventPoint, LocallyIndexedVertex},
+    point::EventPoint,
     status::SweepLineStatus,
     SweepMeta, VertexType,
 };
 use crate::{
     math::{Scalar, Vector2D},
-    representation::IndexType,
+    representation::{
+        tesselate::{IndexedVertex2D, Triangulation},
+        IndexType,
+    },
 };
 
 /// Generates a zigzag pattern with `n` vertices, which
@@ -38,10 +41,10 @@ pub fn generate_zigzag<Vec2: Vector2D>(n: usize) -> Vec<Vec2> {
 /// `indices` is the list of indices where the new triangles are appended (in local coordinates)
 /// `vec2s` is the list of 2d-vertices with local indices
 /// `meta` is a structure where debug information can be stored
-pub fn sweep_line_triangulation<Vec2: Vector2D, V: IndexType>(
-    indices: &mut Vec<V>,
-    vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
-    meta: &mut SweepMeta,
+pub fn sweep_line_triangulation<V: IndexType, Vec2: Vector2D>(
+    indices: &mut Triangulation<V>,
+    vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
+    meta: &mut SweepMeta<V>,
 ) {
     assert!(vec2s.len() >= 3, "At least 3 vertices are required");
 
@@ -68,7 +71,7 @@ pub fn sweep_line_triangulation<Vec2: Vector2D, V: IndexType>(
     {
         meta.vertex_type = event_queue
             .iter()
-            .map(|e| (e.here, e.vertex_type))
+            .map(|e| (vec2s[e.here].index, e.vertex_type))
             .collect();
     }
 
@@ -96,23 +99,23 @@ pub fn sweep_line_triangulation<Vec2: Vector2D, V: IndexType>(
 }
 
 /// Central event queue of the sweep line triangulation
-struct SweepContext<'a, Vec2: Vector2D, V: IndexType> {
+struct SweepContext<'a, 'b, Vec2: Vector2D, V: IndexType> {
     /// sweep line status lexicographically indexed by y and then x
     sls: SweepLineStatus<V, Vec2>,
 
     /// The list of indices where the new triangles are appended (in local coordinates)
-    indices: &'a mut Vec<V>,
+    tri: &'a mut Triangulation<'b, V>,
 
     /// The list of 2d-vertices with local indices
-    vec2s: &'a Vec<LocallyIndexedVertex<Vec2>>,
+    vec2s: &'a Vec<IndexedVertex2D<V, Vec2>>,
 }
 
-impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
+impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
     /// Creates a new event queue from a list of indexed vertex points
-    fn new(indices: &'a mut Vec<V>, vec2s: &'a Vec<LocallyIndexedVertex<Vec2>>) -> Self {
+    fn new(tri: &'a mut Triangulation<'b, V>, vec2s: &'a Vec<IndexedVertex2D<V, Vec2>>) -> Self {
         return Self {
             sls: SweepLineStatus::new(),
-            indices,
+            tri,
             vec2s,
         };
     }
@@ -149,19 +152,19 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
 
             let t = fixup.first();
 
-            fixup.right(event.here, self.indices, self.vec2s);
+            fixup.right(event.here, self.tri, self.vec2s);
             assert!(fixup.is_done());
 
             let mut x = ReflexChain::single(t);
-            x.left(event.here, self.indices, self.vec2s);
+            x.left(event.here, self.tri, self.vec2s);
             x
         } else if line.chain.direction() == ReflexChainDirection::Right {
             let mut x = ReflexChain::single(line.helper);
-            x.left(event.here, self.indices, self.vec2s);
+            x.left(event.here, self.tri, self.vec2s);
             x
         } else {
             let mut x = ReflexChain::single(line.chain.first());
-            x.left(event.here, self.indices, self.vec2s);
+            x.left(event.here, self.tri, self.vec2s);
             x
         };
 
@@ -172,7 +175,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
                 right: IntervalBoundaryEdge::new(event.here, event.prev),
                 chain: {
                     let mut x = line.chain;
-                    x.right(event.here, self.indices, self.vec2s);
+                    x.right(event.here, self.tri, self.vec2s);
                     x
                 },
                 fixup: None,
@@ -195,7 +198,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
     }
 
     /// Detects and handles either a start or split vertex in the situation where it's difficult to distinguish
-    fn start_or_split(self: &mut Self, event: &EventPoint<Vec2>, meta: &mut SweepMeta) -> bool {
+    fn start_or_split(self: &mut Self, event: &EventPoint<Vec2>, meta: &mut SweepMeta<V>) -> bool {
         /*
         let Some(next) = queue.get(event_i + 1) else {
             panic!("Regular vertex not found in sweep line status");
@@ -216,7 +219,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
 
             // update the meta info
             #[cfg(feature = "sweep_debug")]
-            meta.update_type(event.here, VertexType::SplitLate);
+            meta.update_type(self.vec2s[event.here].index, VertexType::SplitLate);
         } else {
             #[cfg(feature = "sweep_debug_print")]
             println!("Reinterpret as start");
@@ -226,7 +229,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
 
             // update the meta info
             #[cfg(feature = "sweep_debug")]
-            meta.update_type(event.here, VertexType::StartLate);
+            meta.update_type(self.vec2s[event.here].index, VertexType::StartLate);
         }
 
         return true;
@@ -242,11 +245,11 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
             #[cfg(feature = "sweep_debug_print")]
             println!("fixup end: {}", fixup);
 
-            fixup.right(event.here, self.indices, self.vec2s);
+            fixup.right(event.here, self.tri, self.vec2s);
             assert!(fixup.is_done());
         }
 
-        line.chain.left(event.here, self.indices, self.vec2s);
+        line.chain.left(event.here, self.tri, self.vec2s);
         assert!(line.chain.is_done());
     }
 
@@ -265,7 +268,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
             #[cfg(feature = "sweep_debug_print")]
             println!("fixup merge l: {}", fixup);
 
-            fixup.right(event.here, self.indices, self.vec2s);
+            fixup.right(event.here, self.tri, self.vec2s);
             assert!(fixup.is_done());
             left.chain
         } else {
@@ -276,7 +279,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
             #[cfg(feature = "sweep_debug_print")]
             println!("fixup merge r: {}", fixup);
 
-            right.chain.left(event.here, self.indices, self.vec2s);
+            right.chain.left(event.here, self.tri, self.vec2s);
             assert!(right.chain.is_done());
             fixup
         } else {
@@ -289,11 +292,11 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
                 left: left.left,
                 right: right.right,
                 chain: {
-                    new_stacks.right(event.here, self.indices, self.vec2s);
+                    new_stacks.right(event.here, self.tri, self.vec2s);
                     new_stacks
                 },
                 fixup: Some({
-                    new_fixup.left(event.here, self.indices, self.vec2s);
+                    new_fixup.left(event.here, self.tri, self.vec2s);
                     new_fixup
                 }),
             },
@@ -302,7 +305,12 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
     }
 
     /// Handle a regular vertex
-    fn regular(self: &mut Self, event: &EventPoint<Vec2>, meta: &mut SweepMeta, undecisive: bool) {
+    fn regular(
+        self: &mut Self,
+        event: &EventPoint<Vec2>,
+        meta: &mut SweepMeta<V>,
+        undecisive: bool,
+    ) {
         // PERF: find whether to expect the left or right side beforehand. The lookup is expensive.
 
         if let Some(mut interval) = self.sls.remove_left(event.here, &self.vec2s) {
@@ -311,7 +319,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
                     #[cfg(feature = "sweep_debug_print")]
                     println!("Reinterpret as end");
                     #[cfg(feature = "sweep_debug")]
-                    meta.update_type(event.here, VertexType::EndLate);
+                    meta.update_type(self.vec2s[event.here].index, VertexType::EndLate);
                     // re-insert is faster than peeking since late vertex classification is rare
                     self.sls.insert(interval, self.vec2s);
                     self.end(event);
@@ -321,7 +329,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
                     #[cfg(feature = "sweep_debug_print")]
                     println!("Reinterpret as merge");
                     #[cfg(feature = "sweep_debug")]
-                    meta.update_type(event.here, VertexType::MergeLate);
+                    meta.update_type(self.vec2s[event.here].index, VertexType::MergeLate);
                     self.sls.insert(interval, self.vec2s);
                     self.merge(event);
                     return;
@@ -332,7 +340,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
                 #[cfg(feature = "sweep_debug_print")]
                 println!("fixup regular l: {}", fixup);
 
-                interval.chain.left(event.here, self.indices, self.vec2s);
+                interval.chain.left(event.here, self.tri, self.vec2s);
                 assert!(interval.chain.is_done());
                 fixup
             } else {
@@ -344,7 +352,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
                     left: IntervalBoundaryEdge::new(event.here, event.next),
                     right: interval.right,
                     chain: {
-                        stacks.left(event.here, self.indices, self.vec2s);
+                        stacks.left(event.here, self.tri, self.vec2s);
                         stacks
                     },
                     fixup: None,
@@ -357,7 +365,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
                     #[cfg(feature = "sweep_debug_print")]
                     println!("Reinterpret as end");
                     #[cfg(feature = "sweep_debug")]
-                    meta.update_type(event.here, VertexType::EndLate);
+                    meta.update_type(self.vec2s[event.here].index, VertexType::EndLate);
                     // re-insert is faster than peeking since late vertex classification is rare
                     self.sls.insert(interval, self.vec2s);
                     self.end(event);
@@ -367,18 +375,18 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
                     #[cfg(feature = "sweep_debug_print")]
                     println!("Reinterpret as merge");
                     #[cfg(feature = "sweep_debug")]
-                    meta.update_type(event.here, VertexType::MergeLate);
+                    meta.update_type(self.vec2s[event.here].index, VertexType::MergeLate);
                     self.sls.insert(interval, self.vec2s);
                     self.merge(event);
                     return;
                 }
             }
-            
+
             if let Some(mut fixup) = interval.fixup {
                 #[cfg(feature = "sweep_debug_print")]
                 println!("fixup regular r: {}", fixup);
 
-                fixup.right(event.here, self.indices, self.vec2s);
+                fixup.right(event.here, self.tri, self.vec2s);
                 assert!(fixup.is_done());
             }
             self.sls.insert(
@@ -387,7 +395,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
                     left: interval.left,
                     right: IntervalBoundaryEdge::new(event.here, event.prev),
                     chain: {
-                        interval.chain.right(event.here, self.indices, self.vec2s);
+                        interval.chain.right(event.here, self.tri, self.vec2s);
                         interval.chain
                     },
                     fixup: None,
@@ -402,144 +410,32 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use super::*;
-    use crate::math::{impls::bevy::Bevy2DPolygon, LineSegment2D, Polygon, Scalar};
+    use crate::math::{impls::bevy::Bevy2DPolygon, Polygon, Scalar};
     use bevy::math::Vec2;
     use rand::Rng;
 
-    /// Check for non-degenerate triangles (no zero-area triangles)
-    fn verify_non_degenerate_triangle<Vec2: Vector2D>(
-        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
-        indices: &Vec<usize>,
-    ) {
-        for i in (0..indices.len()).step_by(3) {
-            let v0 = vec2s[indices[i]].vec;
-            let v1 = vec2s[indices[i + 1]].vec;
-            let v2 = vec2s[indices[i + 2]].vec;
-
-            // Use the determinant to check if the triangle has a non-zero area
-            let area =
-                (v1.x() - v0.x()) * (v2.y() - v0.y()) - (v1.y() - v0.y()) * (v2.x() - v0.x());
-            assert!(
-                area.abs() > Vec2::S::EPS,
-                "Triangle has zero or negative area"
-            );
-        }
-    }
-
-    /// Check for valid indices (i.e., they should be within the bounds of the vertices)
-    fn verify_indices<Vec2: Vector2D>(
-        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
-        indices: &Vec<usize>,
-    ) {
-        // Check that the triangulation returns the correct number of triangles
-        let num_vertices = vec2s.len();
-        let num_triangles = indices.len() / 3;
-        assert_eq!(
-            num_triangles,
-            num_vertices - 2,
-            "Invalid number of triangles generated"
-        );
-
-        // Check for valid indices (i.e., they should be within the bounds of the vertices)
-        for &index in indices {
-            assert!(index < num_vertices, "Index out of bounds in triangulation");
-        }
-    }
-
-    /// Check, that all indices are used at lest once
-    fn verify_all_indices_used(indices: &Vec<usize>, num_vertices: usize) {
-        let mut used = vec![false; num_vertices];
-        for &index in indices {
-            used[index] = true;
-        }
-        assert!(
-            used.iter().all(|&u| u),
-            "Not all vertices are used in triangulation"
-        );
-    }
-
-    /// Check for valid triangulation (no intersecting edges)
-    fn verify_no_intersections<Vec2: Vector2D>(
-        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
-        indices: &Vec<usize>,
-    ) {
-        let num_vertices = vec2s.len();
-        for i in (0..num_vertices).step_by(3) {
-            for j in (0..num_vertices).step_by(3) {
-                if i == j {
-                    continue;
-                }
-                for k in 0..3 {
-                    for l in 0..3 {
-                        let v0 = vec2s[indices[(i + k) % 3]].vec;
-                        let v1 = vec2s[indices[(i + k + 1) % 3]].vec;
-
-                        let v2 = vec2s[indices[(j + l) % 3]].vec;
-                        let v3 = vec2s[indices[(j + l + 1) % 3]].vec;
-
-                        assert!(
-                            LineSegment2D::new(v0, v1)
-                                .intersect_line(
-                                    &LineSegment2D::new(v2, v3),
-                                    Vec2::S::EPS,  // be strict about parallel edges
-                                    -Vec2::S::EPS  // Allow intersections/touching at the endpoints
-                                )
-                                .is_none(),
-                            "Intersecting edges in triangulation\n{:?} -> {:?}\n{:?} -> {:?}",
-                            v0,
-                            v1,
-                            v2,
-                            v3
-                        );
-                    }
-                }
-            }
-        }
-    }
-
-    /// Calculate the area of the polygon and check if it is the same as the sum of the areas of the triangles
-    fn verify_area(vec2s: &Vec<LocallyIndexedVertex<bevy::math::Vec2>>, indices: &Vec<usize>) {
-        let mut area = 0.0;
-        // PERF: better summing algorithm?
-        for i in (0..indices.len()).step_by(3) {
-            let v0 = vec2s[indices[i]].vec;
-            let v1 = vec2s[indices[i + 1]].vec;
-            let v2 = vec2s[indices[i + 2]].vec;
-
-            // Use the determinant to calculate the area of the triangle
-            let triangle_area =
-                0.5 * ((v1.x - v0.x) * (v2.y - v0.y) - (v1.y - v0.y) * (v2.x - v0.x));
-            area += triangle_area;
-        }
-
-        let reference = Bevy2DPolygon::from_iter(vec2s.iter().map(|v| v.vec)).area();
-
-        // Check if the area of the polygon is the same as the sum of the areas of the triangles
-        assert!(
-            (1.0 - area / reference).abs() <= (1.0 + 5.0 * f32::EPS),
-            "Area of the polygon is not equal to the sum of the areas of the triangles ({} != {})",
-            area,
-            reference
-        );
-    }
-
-    fn verify_triangulation(vec2s: &Vec<LocallyIndexedVertex<Vec2>>) {
+    fn verify_triangulation(vec2s: &Vec<IndexedVertex2D<usize, Vec2>>) {
         assert!(
             Bevy2DPolygon::from_iter(vec2s.iter().map(|v| v.vec)).is_ccw(),
             "Polygon must be counterclockwise"
         );
 
-        let mut indices = Vec::<usize>::new();
+        let mut indices = Vec::new();
+        let mut tri = Triangulation::new(&mut indices);
         let mut meta = SweepMeta::default();
-        let num_vertices = vec2s.len();
-        sweep_line_triangulation(&mut indices, &vec2s, &mut meta);
+        sweep_line_triangulation(&mut tri, &vec2s, &mut meta);
 
-        verify_indices(&vec2s, &indices);
-        verify_all_indices_used(&indices, num_vertices);
-        verify_no_intersections(&vec2s, &indices);
-        verify_non_degenerate_triangle(&vec2s, &indices);
-        verify_area(&vec2s, &indices);
+        let vec_hm: HashMap<usize, Vec2> =
+            vec2s.iter().enumerate().map(|(i, v)| (i, v.vec)).collect();
+
+        tri.verify_indices(&vec2s);
+        tri.verify_all_indices_used(&vec2s);
+        tri.verify_no_intersections(&vec2s);
+        tri.verify_non_degenerate_triangle(&vec_hm);
+        tri.verify_area::<Vec2, Bevy2DPolygon>(&vec2s, &vec_hm);
     }
 
     fn random_star(
@@ -547,7 +443,7 @@ mod tests {
         max_vert: usize,
         min_r: f32,
         max_r: f32,
-    ) -> Vec<LocallyIndexedVertex<Vec2>> {
+    ) -> Vec<IndexedVertex2D<usize, Vec2>> {
         let mut vec2s = Vec::new();
         let mut rng = rand::thread_rng();
         let n = rng.gen_range(min_vert..max_vert);
@@ -556,16 +452,16 @@ mod tests {
             let r = rng.gen_range(min_r..max_r);
             let x = r * phi.cos();
             let y = r * phi.sin();
-            vec2s.push(LocallyIndexedVertex::new(Vec2::from_xy(x, y), vec2s.len()));
+            vec2s.push(IndexedVertex2D::new(Vec2::from_xy(x, y), vec2s.len()));
         }
 
         vec2s
     }
 
-    fn liv_from_array(arr: &[[f32; 2]]) -> Vec<LocallyIndexedVertex<Vec2>> {
+    fn liv_from_array(arr: &[[f32; 2]]) -> Vec<IndexedVertex2D<usize, Vec2>> {
         arr.iter()
             .enumerate()
-            .map(|(i, &v)| LocallyIndexedVertex::new(Vec2::from_xy(v[0], v[1]), i))
+            .map(|(i, &v)| IndexedVertex2D::new(Vec2::from_xy(v[0], v[1]), i))
             .collect()
     }
 
@@ -619,7 +515,7 @@ mod tests {
             &generate_zigzag(101)
                 .iter()
                 .enumerate()
-                .map(|(i, v)| LocallyIndexedVertex::new(*v, i))
+                .map(|(i, v)| IndexedVertex2D::new(*v, i))
                 .collect(),
         );
     }

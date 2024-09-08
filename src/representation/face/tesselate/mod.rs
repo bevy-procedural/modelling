@@ -11,6 +11,8 @@ mod convex;
 mod delaunay;
 mod ear_clipping;
 mod min_weight;
+mod triangulation;
+pub use triangulation::{IndexedVertex2D, Triangulation};
 
 /// The Sweep-line triangulation algorithm
 pub mod sweep;
@@ -63,9 +65,9 @@ pub enum GenerateNormals {
 
 /// Meta information for debugging the tesselation algorithm
 #[derive(Debug, Clone, Default)]
-pub struct TesselationMeta {
+pub struct TesselationMeta<V:IndexType> {
     /// Meta information for debugging the sweep algorithm
-    pub sweep: sweep::SweepMeta,
+    pub sweep: sweep::SweepMeta<V>,
 }
 
 impl<E, F> Face<E, F>
@@ -74,13 +76,13 @@ where
     F: IndexType,
 {
     /// Expand local indices to global indices if requested to.
+    /// TODO: Remove this. It doesn't really take care of the local vertex ids - they aren't necessarily consecutive!
     fn expand_local_indices<V: IndexType, P: Payload>(
         &self,
         mesh: &Mesh<E, V, F, P>,
         indices: &mut Vec<V>,
         local_indices: bool,
-        meta: &mut TesselationMeta,
-        f: impl Fn(&Mesh<E, V, F, P>, &mut Vec<V>, &mut TesselationMeta),
+        f: impl Fn(&Mesh<E, V, F, P>, &mut Vec<V>),
     ) where
         P::Vec: Vector3D<S = P::S>,
     {
@@ -89,16 +91,13 @@ where
 
             let n = self.num_vertices(mesh);
             let v0: usize = indices.len();
-            f(mesh, indices, meta);
+            f(mesh, indices);
 
             for i in v0..indices.len() {
                 indices[i] = V::new(v0 + (indices[i].index() + (n - 1)) % n);
             }
-
-            #[cfg(feature = "sweep_debug")]
-            meta.sweep.expand(v0, n);
         } else {
-            f(mesh, indices, meta);
+            f(mesh, indices);
         }
     }
 
@@ -108,7 +107,7 @@ where
         indices: &mut Vec<V>,
         algorithm: TriangulationAlgorithm,
         local_indices: bool,
-        meta: &mut TesselationMeta,
+        meta: &mut TesselationMeta<V>,
     ) where
         P::Vec: Vector3D<S = P::S>,
     {
@@ -135,41 +134,23 @@ where
                     // TODO: find a good threshold
                     self.ear_clipping(mesh, indices, local_indices, false);
                 } else {
-                    self.expand_local_indices(
-                        mesh,
-                        indices,
-                        local_indices,
-                        meta,
-                        |mesh, indices, meta| self.sweep_line(mesh, indices, meta),
-                    );
+                    self.sweep_line(mesh, &mut Triangulation::new(indices), meta);
                 }
             }
             TriangulationAlgorithm::EarClipping => {
                 self.ear_clipping(mesh, indices, local_indices, false);
             }
             TriangulationAlgorithm::Sweep => {
-                self.expand_local_indices(
-                    mesh,
-                    indices,
-                    local_indices,
-                    meta,
-                    |mesh, indices, meta| self.sweep_line(mesh, indices, meta),
-                );
+                self.sweep_line(mesh, &mut Triangulation::new(indices), meta);
             }
             TriangulationAlgorithm::MinWeight => {
                 assert!(local_indices == false);
                 self.min_weight_triangulation_stoch(mesh, indices);
             }
             TriangulationAlgorithm::Delaunay => {
-                self.expand_local_indices(
-                    mesh,
-                    indices,
-                    local_indices,
-                    meta,
-                    |mesh, indices, _| {
-                        self.delaunay_triangulation(mesh, indices);
-                    },
-                );
+                self.expand_local_indices(mesh, indices, local_indices, |mesh, indices| {
+                    self.delaunay_triangulation(mesh, indices);
+                });
             }
             TriangulationAlgorithm::EdgeFlip => {
                 panic!("TriangulationAlgorithm::EdgeFlip is not implemented yet");
@@ -193,7 +174,7 @@ where
         indices: &mut Vec<V>,
         algorithm: TriangulationAlgorithm,
         generate_normals: GenerateNormals,
-        meta: &mut TesselationMeta,
+        meta: &mut TesselationMeta<V>,
     ) where
         P::Vec: Vector3D<S = P::S>,
     {

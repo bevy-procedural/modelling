@@ -3,7 +3,7 @@
 use bevy::prelude::*;
 use text::{Text3dGizmo, Text3dGizmos};
 
-use crate::representation::{bevy::MeshVec3, payload::Payload, tesselate::TesselationMeta};
+use crate::{math::IndexType, representation::{bevy::MeshVec3, payload::Payload, tesselate::TesselationMeta}};
 pub mod text;
 
 /// Show the vertex indices of a mesh in blue.
@@ -17,16 +17,16 @@ pub fn show_vertex_indices(texts: &mut ResMut<Text3dGizmos>, mesh: &MeshVec3) {
 }
 
 /// Visualized the tesselation meta data of a mesh.
-pub fn show_tesselation_meta(
+pub fn show_tesselation_meta<V: IndexType>(
     texts: &mut ResMut<Text3dGizmos>,
     mesh: &MeshVec3,
-    meta: &TesselationMeta,
+    meta: &TesselationMeta<V>,
 ) {
     for (index, t) in meta.sweep.vertex_type.iter() {
         texts.write(
             Text3dGizmo::new(
                 format!("{} {:?}", index, t),
-                *mesh.vertices().nth(*index).unwrap().payload().vertex(),
+                *mesh.vertices().nth(index.index()).unwrap().payload().vertex(),
             )
             .with_color(Color::srgb(1.0, 0.0, 0.0)),
         );
