@@ -20,6 +20,8 @@ pub struct SweepMeta<V: IndexType> {
     #[cfg(feature = "sweep_debug")]
     /// The type of the vertex in the reflex chain
     pub vertex_type: Vec<(V, VertexType)>,
+
+    phantom: std::marker::PhantomData<V>,
 }
 
 impl<V: IndexType> Default for SweepMeta<V> {
@@ -27,6 +29,7 @@ impl<V: IndexType> Default for SweepMeta<V> {
         SweepMeta {
             #[cfg(feature = "sweep_debug")]
             vertex_type: Vec::new(),
+            phantom: std::marker::PhantomData,
         }
     }
 }

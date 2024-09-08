@@ -176,7 +176,7 @@ impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
     }
 
     /// Detects and handles either a start or split vertex in the situation where it's difficult to distinguish
-    fn start_or_split(self: &mut Self, event: &EventPoint<Vec2>, meta: &mut SweepMeta<V>) -> bool {
+    fn start_or_split(self: &mut Self, event: &EventPoint<Vec2>, _meta: &mut SweepMeta<V>) -> bool {
         /*
         let Some(next) = queue.get(event_i + 1) else {
             panic!("Regular vertex not found in sweep line status");
@@ -197,7 +197,7 @@ impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
 
             // update the meta info
             #[cfg(feature = "sweep_debug")]
-            meta.update_type(self.vec2s[event.here].index, VertexType::SplitLate);
+            _meta.update_type(self.vec2s[event.here].index, VertexType::SplitLate);
         } else {
             #[cfg(feature = "sweep_debug_print")]
             println!("Reinterpret as start");
@@ -207,7 +207,7 @@ impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
 
             // update the meta info
             #[cfg(feature = "sweep_debug")]
-            meta.update_type(self.vec2s[event.here].index, VertexType::StartLate);
+            _meta.update_type(self.vec2s[event.here].index, VertexType::StartLate);
         }
 
         return true;

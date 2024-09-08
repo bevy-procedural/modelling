@@ -65,7 +65,7 @@ pub enum GenerateNormals {
 
 /// Meta information for debugging the tesselation algorithm
 #[derive(Debug, Clone, Default)]
-pub struct TesselationMeta<V:IndexType> {
+pub struct TesselationMeta<V: IndexType> {
     /// Meta information for debugging the sweep algorithm
     pub sweep: sweep::SweepMeta<V>,
 }
