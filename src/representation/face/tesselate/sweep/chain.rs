@@ -1,6 +1,3 @@
-use core::fmt;
-
-use super::point::LocallyIndexedVertex;
 use crate::{math::Scalar, math::Vector2D, representation::IndexType};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -30,8 +27,8 @@ pub struct ReflexChain<V: IndexType, Vec2: Vector2D> {
     phantom: std::marker::PhantomData<(V, Vec2)>,
 }
 
-impl<V: IndexType, Vec2: Vector2D> fmt::Display for ReflexChain<V, Vec2> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl<V: IndexType, Vec2: Vector2D> std::fmt::Display for ReflexChain<V, Vec2> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}{:?}", self.d, self.stack)
     }
 }
@@ -75,7 +72,7 @@ impl<V: IndexType, Vec2: Vector2D> ReflexChain<V, Vec2> {
         &mut self,
         value: usize,
         indices: &mut Vec<V>,
-        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
+        vec2s: &Vec<Vec2>,
         d: ReflexChainDirection,
     ) {
         assert!(self.stack.len() >= 1);
@@ -87,9 +84,7 @@ impl<V: IndexType, Vec2: Vector2D> ReflexChain<V, Vec2> {
             if l <= 1 {
                 break;
             }
-            let angle = vec2s[value]
-                .vec
-                .angle(vec2s[self.stack[l - 1]].vec, vec2s[self.stack[l - 2]].vec);
+            let angle = vec2s[value].angle(vec2s[self.stack[l - 1]], vec2s[self.stack[l - 2]]);
             if d == ReflexChainDirection::Left {
                 if angle > Vec2::S::ZERO {
                     break;
@@ -176,7 +171,7 @@ impl<V: IndexType, Vec2: Vector2D> ReflexChain<V, Vec2> {
         &mut self,
         value: usize,
         indices: &mut Vec<V>,
-        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
+        vec2s: &Vec<Vec2>,
         d: ReflexChainDirection,
     ) -> &Self {
         #[cfg(feature = "sweep_debug_print")]
@@ -196,23 +191,13 @@ impl<V: IndexType, Vec2: Vector2D> ReflexChain<V, Vec2> {
 
     /// Add a new value to the right reflex chain
     #[inline]
-    pub fn right(
-        &mut self,
-        value: usize,
-        indices: &mut Vec<V>,
-        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
-    ) -> &Self {
+    pub fn right(&mut self, value: usize, indices: &mut Vec<V>, vec2s: &Vec<Vec2>) -> &Self {
         self.add(value, indices, vec2s, ReflexChainDirection::Right)
     }
 
     /// Add a new value to the left reflex chain
     #[inline]
-    pub fn left(
-        &mut self,
-        value: usize,
-        indices: &mut Vec<V>,
-        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
-    ) -> &Self {
+    pub fn left(&mut self, value: usize, indices: &mut Vec<V>, vec2s: &Vec<Vec2>) -> &Self {
         self.add(value, indices, vec2s, ReflexChainDirection::Left)
     }
 
