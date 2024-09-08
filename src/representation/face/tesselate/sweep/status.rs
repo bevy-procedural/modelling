@@ -1,4 +1,4 @@
-use super::interval::SweepLineInterval;
+use super::{interval::SweepLineInterval, point::LocallyIndexedVertex};
 use crate::{
     math::{Scalar, Vector2D},
     representation::IndexType,
@@ -78,10 +78,10 @@ impl<Vec2: Vector2D> SLISorter<Vec2> {
 
     pub fn from_interval<V: IndexType>(
         interval: &SweepLineInterval<V, Vec2>,
-        vec2s: &Vec<Vec2>,
+        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
     ) -> SLISorter<Vec2> {
-        let from = vec2s[interval.left.start];
-        let to = vec2s[interval.left.end];
+        let from = vec2s[interval.left.start].vec;
+        let to = vec2s[interval.left.end].vec;
         SLISorter::new(interval.left.end, from, to)
     }
 }
@@ -110,7 +110,11 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
         }
     }
 
-    pub fn insert(&mut self, value: SweepLineInterval<V, Vec2>, vec2s: &Vec<Vec2>) {
+    pub fn insert(
+        &mut self,
+        value: SweepLineInterval<V, Vec2>,
+        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
+    ) {
         // TODO: assert that the pos is in between the start and end
         debug_assert!(value.sanity_check());
 
@@ -125,7 +129,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
     pub fn remove_left(
         &mut self,
         key: usize,
-        vec2s: &Vec<Vec2>,
+        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
     ) -> Option<SweepLineInterval<V, Vec2>> {
         if let Some(v) = self.left.remove(&key) {
             self.tree
@@ -145,7 +149,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
     pub fn remove_right(
         &mut self,
         key: usize,
-        vec2s: &Vec<Vec2>,
+        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
     ) -> Option<SweepLineInterval<V, Vec2>> {
         if let Some(k) = self.right.remove(&key) {
             self.left.remove(&k).map(|v| {
@@ -183,7 +187,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
 
     /// Find an interval by its coordinates on the sweep line using linear search.
     /// This runs in O(n) time.
-    fn find_linearly(&self, pos: &Vec2, vec2s: &Vec<Vec2>) -> Option<usize> {
+    fn find_linearly(&self, pos: &Vec2, vec2s: &Vec<LocallyIndexedVertex<Vec2>>) -> Option<usize> {
         self.left
             .iter()
             .find(|(_, v)| v.contains(pos, vec2s))
@@ -192,7 +196,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
 
     /// Find an interval by its coordinates on the sweep line using binary search.
     /// This runs in O(B * log n) time.
-    fn find_btree(&self, pos: &Vec2, vec2s: &Vec<Vec2>) -> Option<usize> {
+    fn find_btree(&self, pos: &Vec2, vec2s: &Vec<LocallyIndexedVertex<Vec2>>) -> Option<usize> {
         let sorter = SLISorter::new(usize::MAX, *pos, *pos);
 
         debug_assert!(
@@ -230,7 +234,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
     }
 
     /// Delayed initialization of the b-tree
-    fn init_btree(&mut self, vec2s: &Vec<Vec2>) {
+    fn init_btree(&mut self, vec2s: &Vec<LocallyIndexedVertex<Vec2>>) {
         assert!(self.tree.is_none());
         let mut tree = BTreeSet::new();
         for (_, v) in &self.left {
@@ -243,7 +247,11 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
     /// The algorithm will use a BTree if there are enough intervals to make it worthwhile.
     /// For a small number of intervals, a linear search will be used.
     /// The BTree will only be initialized and kept alive during the insert/remove operations once it is needed for the first time.
-    pub fn find_by_position(&mut self, pos: &Vec2, vec2s: &Vec<Vec2>) -> Option<usize> {
+    pub fn find_by_position(
+        &mut self,
+        pos: &Vec2,
+        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
+    ) -> Option<usize> {
         const MIN_INTERVALS_FOR_BTREE: usize = 8;
 
         if self.left.len() > MIN_INTERVALS_FOR_BTREE || self.tree.is_some() {
