@@ -83,8 +83,8 @@ pub fn sweep_line_triangulation<Vec2: Vector2D, V: IndexType>(
             VertexType::Split => assert!(q.try_split(&event)),
             VertexType::Merge => q.merge(&event),
             VertexType::End => q.end(&event),
-            VertexType::Regular => q.regular(&event, meta),
-            VertexType::Undecisive => q.regular(&event, meta),
+            VertexType::Regular => q.regular(&event, meta, false),
+            VertexType::Undecisive => q.regular(&event, meta, true),
             _ => {
                 panic!("Unsupported vertex type {:?}", event.vertex_type);
             }
@@ -171,7 +171,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
                 left: line.left,
                 right: IntervalBoundaryEdge::new(event.here, event.prev),
                 chain: {
-                    let mut x = line.chain.clone();
+                    let mut x = line.chain;
                     x.right(event.here, self.indices, self.vec2s);
                     x
                 },
@@ -301,70 +301,33 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
         );
     }
 
-    /// Detects and handles either an end or merge vertex
-    fn end_or_merge(self: &mut Self, event: &EventPoint<Vec2>, meta: &mut SweepMeta) -> bool {
-        // Try to find a pair of intervals that can be merged
-        let (maybe_interval, has_other) = {
-            let left = self.sls.peek_left(event.here);
-            let right = self.sls.peek_right(event.here);
-            if left.is_some() {
-                (left, right.is_some())
-            } else {
-                (right, false)
-            }
-        };
-        let Some(interval) = maybe_interval else {
-            return false;
-        };
-
-        /*let Some(previous) = queue.get(event_i - 1) else {
-            panic!("Convergent sweep line at the first event");
-        };
-
-        // we have to be very generous with the epsilon here because of the numerical instability of the vertex type classification
-        // PERF: is there a numerical stable way to do this? Why can the gap be really large?
-        debug_assert!(
-            (previous.vec.y() - event.vec.y()).abs() <= Vec2::S::EPS * 1000.0.into(),
-            "Expected an merge vertex, but found no evidence {} != {}",
-            previous.vec.y(),
-            event.vec.y()
-        );*/
-
-        if interval.is_end() {
-            #[cfg(feature = "sweep_debug_print")]
-            println!("Reinterpret as end");
-
-            #[cfg(feature = "sweep_debug")]
-            meta.update_type(event.here, VertexType::EndLate);
-
-            self.end(event);
-
-            return true;
-        }
-
-        if has_other {
-            #[cfg(feature = "sweep_debug_print")]
-            println!("Reinterpret as merge");
-
-            #[cfg(feature = "sweep_debug")]
-            meta.update_type(event.here, VertexType::MergeLate);
-
-            self.merge(event);
-
-            return true;
-        }
-
-        return false;
-    }
-
     /// Handle a regular vertex
-    fn regular(self: &mut Self, event: &EventPoint<Vec2>, meta: &mut SweepMeta) {
-        if self.end_or_merge(event, meta) {
-            return;
-        }
+    fn regular(self: &mut Self, event: &EventPoint<Vec2>, meta: &mut SweepMeta, undecisive: bool) {
+        // PERF: find whether to expect the left or right side beforehand. The lookup is expensive.
 
-        // PERF: optional; modify sls instead of remove and insert
         if let Some(mut interval) = self.sls.remove_left(event.here, &self.vec2s) {
+            if undecisive {
+                if interval.is_end() {
+                    #[cfg(feature = "sweep_debug_print")]
+                    println!("Reinterpret as end");
+                    #[cfg(feature = "sweep_debug")]
+                    meta.update_type(event.here, VertexType::EndLate);
+                    // re-insert is faster than peeking since late vertex classification is rare
+                    self.sls.insert(interval, self.vec2s);
+                    self.end(event);
+                    return;
+                }
+                if self.sls.peek_right(event.here).is_some() {
+                    #[cfg(feature = "sweep_debug_print")]
+                    println!("Reinterpret as merge");
+                    #[cfg(feature = "sweep_debug")]
+                    meta.update_type(event.here, VertexType::MergeLate);
+                    self.sls.insert(interval, self.vec2s);
+                    self.merge(event);
+                    return;
+                }
+            }
+
             let mut stacks = if let Some(fixup) = interval.fixup {
                 #[cfg(feature = "sweep_debug_print")]
                 println!("fixup regular l: {}", fixup);
@@ -389,6 +352,28 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
                 self.vec2s,
             )
         } else if let Some(mut interval) = self.sls.remove_right(event.here, &self.vec2s) {
+            if undecisive {
+                if interval.is_end() {
+                    #[cfg(feature = "sweep_debug_print")]
+                    println!("Reinterpret as end");
+                    #[cfg(feature = "sweep_debug")]
+                    meta.update_type(event.here, VertexType::EndLate);
+                    // re-insert is faster than peeking since late vertex classification is rare
+                    self.sls.insert(interval, self.vec2s);
+                    self.end(event);
+                    return;
+                }
+                if self.sls.peek_left(event.here).is_some() {
+                    #[cfg(feature = "sweep_debug_print")]
+                    println!("Reinterpret as merge");
+                    #[cfg(feature = "sweep_debug")]
+                    meta.update_type(event.here, VertexType::MergeLate);
+                    self.sls.insert(interval, self.vec2s);
+                    self.merge(event);
+                    return;
+                }
+            }
+            
             if let Some(mut fixup) = interval.fixup {
                 #[cfg(feature = "sweep_debug_print")]
                 println!("fixup regular r: {}", fixup);

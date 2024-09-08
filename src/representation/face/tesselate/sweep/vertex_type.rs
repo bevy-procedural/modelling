@@ -74,7 +74,7 @@ impl VertexType {
             } else if cross < -tol {
                 VertexType::Split
             } else {
-                // you might assume that this can only be a start or split vertex, but 
+                // you might assume that this can only be a start or split vertex, but
                 // "numerical_hell_6" is an example where this is in fact a merge vertex
                 VertexType::Undecisive
             }
@@ -87,8 +87,14 @@ impl VertexType {
                 VertexType::Undecisive
             }
         } else {
-            // TODO: When parallel to the sweep line, convert to `Undecisive`
-            VertexType::Regular
+            if (!is_above_next && !is_below_next)
+                || (!is_above_prev && !is_below_prev)
+                || cross.abs() <= tol * 2.0.into()
+            {
+                VertexType::Undecisive
+            } else {
+                VertexType::Regular
+            }
         }
     }
 }
