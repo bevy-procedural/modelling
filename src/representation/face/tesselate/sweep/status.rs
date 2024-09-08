@@ -98,7 +98,7 @@ pub struct SweepLineStatus<V: IndexType, Vec2: Vector2D> {
     right: HashMap<usize, usize>,
 
     /// Use a b-tree to quickly find the correct interval
-    tree: BTreeSet<SLISorter<Vec2>>,
+    tree: Option<BTreeSet<SLISorter<Vec2>>>,
 }
 
 impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
@@ -106,7 +106,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
         SweepLineStatus {
             left: HashMap::new(),
             right: HashMap::new(),
-            tree: BTreeSet::new(),
+            tree: None,
         }
     }
 
@@ -118,10 +118,10 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
         // TODO: assert that the pos is in between the start and end
         debug_assert!(value.sanity_check());
 
-        let sis = SLISorter::from_interval(&value, vec2s);
+        self.tree
+            .as_mut()
+            .map(|tree| assert!(tree.insert(SLISorter::from_interval(&value, vec2s))));
 
-        // PERF: is it necessary to store the sis twice or can we remove them with another method?
-        assert!(self.tree.insert(sis.clone()));
         self.right.insert(value.right.end, value.left.end);
         self.left.insert(value.left.end, value);
     }
@@ -140,7 +140,9 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
         vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
     ) -> Option<SweepLineInterval<V, Vec2>> {
         if let Some(v) = self.left.remove(&key) {
-            assert!(self.tree.remove(&SLISorter::from_interval(&v, vec2s)));
+            self.tree
+                .as_mut()
+                .map(|tree| assert!(tree.remove(&SLISorter::from_interval(&v, vec2s))));
             self.right.remove(&v.right.end);
             Some(v)
         } else {
@@ -155,7 +157,9 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
     ) -> Option<SweepLineInterval<V, Vec2>> {
         if let Some(k) = self.right.remove(&key) {
             self.left.remove(&k).map(|v| {
-                assert!(self.tree.remove(&SLISorter::from_interval(&v, vec2s)));
+                self.tree
+                    .as_mut()
+                    .map(|tree| tree.remove(&SLISorter::from_interval(&v, vec2s)));
                 v
             })
         } else {
@@ -165,7 +169,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
 
     pub fn tree_sanity_check(&self, at: Vec2::S) -> bool {
         let mut last: Option<&SLISorter<Vec2>> = None;
-        for sorter in &self.tree {
+        for sorter in self.tree.as_ref().unwrap() {
             if let Some(l) = last {
                 let last_at = SLISorter::new(l.left, Vec2::from_xy(l.x_at_y(at), at), l.to);
                 assert!(
@@ -203,6 +207,8 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
         // Find the first interval that contains the position
         let x = self
             .tree
+            .as_ref()
+            .expect("The tree should be initialized.")
             .range(sorter.clone()..)
             .next()
             .map(|sorter| sorter.left);
@@ -222,14 +228,36 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
         x
     }
 
+    /// Delayed initialization of the b-tree
+    fn init_btree(&mut self, vec2s: &Vec<LocallyIndexedVertex<Vec2>>) {
+        assert!(self.tree.is_none());
+        let mut tree = BTreeSet::new();
+        for (_, v) in &self.left {
+            tree.insert(SLISorter::from_interval(v, vec2s));
+        }
+        self.tree = Some(tree);
+    }
+
+    /// This will find the left start index of interval that contains the given position or None if no interval contains the position.
+    /// The algorithm will use a BTree if there are enough intervals to make it worthwhile.
+    /// For a small number of intervals, a linear search will be used. 
+    /// The BTree will only be initialized and kept alive during the insert/remove operations once it is needed for the first time. 
     pub fn find_by_position(
-        &self,
+        &mut self,
         pos: &Vec2,
         vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
     ) -> Option<usize> {
-        // TODO: use linear search for small numbers of intervals
-        self.find_btree(pos, vec2s)
-        //self.find_linearly(pos, vec2s)
+
+        const MIN_INTERVALS_FOR_BTREE: usize = 8;
+
+        if self.left.len() > MIN_INTERVALS_FOR_BTREE {
+            if self.tree.is_none() {
+                self.init_btree(vec2s);
+            }
+            self.find_btree(pos, vec2s)
+        } else {
+            self.find_linearly(pos, vec2s)
+        }
     }
 }
 
