@@ -250,7 +250,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
 
         const MIN_INTERVALS_FOR_BTREE: usize = 8;
 
-        if self.left.len() > MIN_INTERVALS_FOR_BTREE {
+        if self.left.len() > MIN_INTERVALS_FOR_BTREE || self.tree.is_some() {
             if self.tree.is_none() {
                 self.init_btree(vec2s);
             }
