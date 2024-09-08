@@ -225,7 +225,12 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
             self.tree,
         );
 
-        x
+        if let Some(i) = x {
+            if self.left[&i].contains(pos, vec2s) {
+                return x;
+            }
+        }
+        None
     }
 
     /// Delayed initialization of the b-tree
@@ -240,14 +245,13 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
 
     /// This will find the left start index of interval that contains the given position or None if no interval contains the position.
     /// The algorithm will use a BTree if there are enough intervals to make it worthwhile.
-    /// For a small number of intervals, a linear search will be used. 
-    /// The BTree will only be initialized and kept alive during the insert/remove operations once it is needed for the first time. 
+    /// For a small number of intervals, a linear search will be used.
+    /// The BTree will only be initialized and kept alive during the insert/remove operations once it is needed for the first time.
     pub fn find_by_position(
         &mut self,
         pos: &Vec2,
         vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
     ) -> Option<usize> {
-
         const MIN_INTERVALS_FOR_BTREE: usize = 8;
 
         if self.left.len() > MIN_INTERVALS_FOR_BTREE || self.tree.is_some() {

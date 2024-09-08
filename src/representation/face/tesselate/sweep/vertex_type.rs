@@ -13,16 +13,37 @@ pub enum VertexType {
     /// Start a new sweep line here.
     /// Both edges lie to the right of v, but the interior angle is smaller than π.
     Start,
-
-    /// End the sweep line here.
-    /// Both edges lie to the left of v, but the interior angle is larger than π.
-    End,
+    
+    /// A start vertex that is detected late.
+    StartLate,
 
     /// Split the sweep line in two parts at this scan reflex vertex.
     Split,
 
+    /// Split vertex that is detected late.
+    SplitLate,
+
+    /// Could be a Start or a Split vertex - numerical errors make the distinction ambiguous.
+    /// The sweep line will fix this later.
+    StartOrSplit,
+
+    
+    /// End the sweep line here.
+    /// Both edges lie to the left of v, but the interior angle is larger than π.
+    End,
+
+    /// An end vertex that is detected late.
+    EndLate,
+
     /// Merge two parts of the sweep line at this scan reflex vertex.
     Merge,
+
+    /// Merge vertex that is detected late.
+    MergeLate,
+
+    /// Could be an End or a Merge vertex - numerical errors make the distinction ambiguous.
+    /// The sweep line will fix this later.
+    EndOrMerge,
 
     /// Polygon is monotone at this vertex.
     /// Can be a hidden Start or End vertex that will be discovered during the sweep.
@@ -61,7 +82,7 @@ impl VertexType {
             } else if cross < -tol {
                 VertexType::Split
             } else {
-                VertexType::Undecisive
+                VertexType::StartOrSplit
             }
         } else if is_below_prev && is_below_next {
             if cross > tol {
@@ -69,12 +90,12 @@ impl VertexType {
             } else if cross < -tol {
                 VertexType::Merge
             } else {
-                VertexType::Undecisive
+                VertexType::EndOrMerge
             }
         } else {
             // If the cross product is (close to) zero, the three points are collinear.
             if cross.abs() <= tol {
-                VertexType::Undecisive
+                VertexType::Undecisive // TODO: Collinear fine. Problems only arise when the sweep line is parallel to the edge
             } else {
                 VertexType::Regular
             }

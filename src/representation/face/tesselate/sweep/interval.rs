@@ -87,9 +87,13 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineInterval<V, Vec2> {
     /// Check whether the interval contains a position
     pub fn contains(&self, pos: &Vec2, vec2s: &Vec<LocallyIndexedVertex<Vec2>>) -> bool {
         let p1 = self.left.x_at_y::<V, Vec2>(pos.y(), vec2s);
+        // return `false` early to speed things up
+        if p1 > pos.x() {
+            return false;
+        }
         let p2 = self.right.x_at_y::<V, Vec2>(pos.y(), vec2s);
         assert!(p1 <= p2);
-        p1 <= pos.x() && pos.x() <= p2
+        return pos.x() <= p2;
     }
 
     /// Check if the interval is circular
