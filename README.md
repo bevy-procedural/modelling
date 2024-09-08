@@ -128,16 +128,16 @@ The package supports different triangulation algorithms. The robustness and rend
 -   **Heuristic** Heuristic algorithm that tries to find a compromise between the speed of `Sweep` and the quality of `EdgeMin`.
 -   **Auto** (default) Automatically choose the "best" algorithm based on the input, i.e., with the given ratio of numerical stability and performance. Currently, it uses specialized implementations for the smallest polygons, then uses `Delaunay`, then `Heuristic`, and finally falls back to `Sweep` for the largest polygons.
 
-| Algorithm   | Requirements | Worst Case | Circle 100   | Circle 1000 | Circle 10000 |
-| ----------- | ------------ | ---------- | ------------ | ----------- | ------------ |
-| Fan         | Convex       | n          | 0ms¹ (0fps)² |             |              |
-| EarClipping | Simple       | n^2        |              |             |              |
-| Sweep       | None         | n log n    |              |             |              |
-| Delaunay    | Simple       | n log n    |              |             |              |
-| EdgeFlip    | Simple       | n^3        |              |             |              |
-| MinWeight³  | Simple       | 2^n        |              |             |              |
-| Heuristic   | ?            |            |              |             |              |
-| Auto        | ?            | n^2        |              |             |              |
+| Algorithm   | Requirements | Worst Case | Circle 100   | Circle 1000 | Circle 10000 | ZigZag 10001 |
+| ----------- | ------------ | ---------- | ------------ | ----------- | ------------ | ------------ |
+| Fan         | Convex       | n          | 0ms¹ (0fps)² |             |              |              |
+| EarClipping | Simple       | n^2        | 33.831µs     | 3.0958ms    | 140.91ms     | 55660ms      |
+| Sweep       | None         | n log n    | 13.683µs     | 139.14µs    | 1.5743ms     | 10.177ms     |
+| Delaunay    | Simple       | n log n    | 33.396µs     | 333.95µs    | 3.7875ms     | 654.76ms     |
+| EdgeFlip    | Simple       | n^3        |              |             |              |              |
+| MinWeight³  | Simple       | 2^n        |              |             |              |              |
+| Heuristic   | ?            |            |              |             |              |              |
+| Auto        | ?            | n^2        |              |             |              |              |
 
 -   ¹) Time for triangulation on a Intel i7-12700K (single threaded). Run the benchmarks using `cargo bench --features benchmarks` and `cargo flamegraph --unit-test -- representation::face::tesselate::sweep::sweep::tests::sweep_tricky_shape`.
 -   ²) when rendering one million vertices worth of the mesh with the bevy 0.14 pbr shader on a Nvidia GeForce RTX 4060 Ti

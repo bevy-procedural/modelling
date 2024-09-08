@@ -33,7 +33,7 @@ fn bench_spirals(c: &mut Criterion) {
         //("Spiral", make_spiral()),
         //("Star", MeshVec3::regular_star(2.0, 0.9, 1000)),
         ("Circle100", MeshVec3::regular_star(1.0, 1.0, 100)),
-        //("Circle1000", MeshVec3::regular_star(1.0, 1.0, 1000)),
+        ("Circle1000", MeshVec3::regular_star(1.0, 1.0, 1000)),
         ("Circle10000", MeshVec3::regular_star(1.0, 1.0, 10000)),
         (
             "Zigzag10001",
@@ -72,7 +72,7 @@ fn bench_spirals(c: &mut Criterion) {
                     );
                 })
             },
-        );
+        );*/
         group.bench_with_input(
             BenchmarkId::new("Delaunay", name),
             &mesh,
@@ -86,7 +86,7 @@ fn bench_spirals(c: &mut Criterion) {
                     );
                 })
             },
-        );*/
+        );
     }
 
     group.finish();
