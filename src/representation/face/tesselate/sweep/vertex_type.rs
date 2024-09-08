@@ -53,7 +53,7 @@ impl VertexType {
     /// Calculate the vertex type based on the previous, current and next vertices.
     /// This is not exact, since we cannot detect Starts and Ends when the y-coordinate is the same.
     /// In those cases, they will be detected as regular vertices and the sweep line will fix this later.
-    pub fn detect<V: IndexType, Vec2: Vector2D>(
+    pub fn classify<V: IndexType, Vec2: Vector2D>(
         prev: Vec2,
         here: Vec2,
         next: Vec2,
@@ -108,7 +108,7 @@ mod tests {
     #[test]
     fn detect_vertex_type_start() {
         assert_eq!(
-            VertexType::detect::<usize, Vec2>(
+            VertexType::classify::<usize, Vec2>(
                 Vec2::from_xy(1.0, 0.0),
                 Vec2::from_xy(0.0, 1.0),
                 Vec2::from_xy(-1.0, 0.0),
@@ -120,7 +120,7 @@ mod tests {
 
     fn detect_vertex_type_merge() {
         assert_eq!(
-            VertexType::detect::<usize, Vec2>(
+            VertexType::classify::<usize, Vec2>(
                 Vec2::from_xy(1.0, 0.0),
                 Vec2::from_xy(0.0, -1.0),
                 Vec2::from_xy(-1.0, 0.0),
@@ -132,7 +132,7 @@ mod tests {
 
     fn detect_vertex_type_split() {
         assert_eq!(
-            VertexType::detect::<usize, Vec2>(
+            VertexType::classify::<usize, Vec2>(
                 Vec2::from_xy(-1.0, 0.0),
                 Vec2::from_xy(0.0, 1.0),
                 Vec2::from_xy(1.0, 0.0),
@@ -144,7 +144,7 @@ mod tests {
 
     fn detect_vertex_type_end() {
         assert_eq!(
-            VertexType::detect::<usize, Vec2>(
+            VertexType::classify::<usize, Vec2>(
                 Vec2::from_xy(-1.0, 0.0),
                 Vec2::from_xy(0.0, -1.0),
                 Vec2::from_xy(1.0, 0.0),
@@ -156,7 +156,7 @@ mod tests {
 
     fn detect_vertex_type_regular() {
         assert_eq!(
-            VertexType::detect::<usize, Vec2>(
+            VertexType::classify::<usize, Vec2>(
                 Vec2::from_xy(-1.0, 0.0),
                 Vec2::from_xy(0.0, 0.0),
                 Vec2::from_xy(1.0, 0.0),
@@ -165,7 +165,7 @@ mod tests {
             VertexType::Regular
         );
         assert_eq!(
-            VertexType::detect::<usize, Vec2>(
+            VertexType::classify::<usize, Vec2>(
                 Vec2::from_xy(1.0, 0.0),
                 Vec2::from_xy(0.0, 0.0),
                 Vec2::from_xy(-1.0, 0.0),
@@ -174,7 +174,7 @@ mod tests {
             VertexType::Regular
         );
         assert_eq!(
-            VertexType::detect::<usize, Vec2>(
+            VertexType::classify::<usize, Vec2>(
                 Vec2::from_xy(0.0, 1.0),
                 Vec2::from_xy(1.0, 0.0),
                 Vec2::from_xy(0.0, -1.0),
@@ -183,7 +183,7 @@ mod tests {
             VertexType::Regular
         );
         assert_eq!(
-            VertexType::detect::<usize, Vec2>(
+            VertexType::classify::<usize, Vec2>(
                 Vec2::from_xy(0.0, -1.0),
                 Vec2::from_xy(1.0, 0.0),
                 Vec2::from_xy(0.0, 1.0),
