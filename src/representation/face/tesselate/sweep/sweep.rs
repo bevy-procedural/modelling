@@ -1,7 +1,7 @@
 use super::{
     chain::{ReflexChain, ReflexChainDirection},
     interval::{IntervalBoundaryEdge, SweepLineInterval},
-    point::{EventPoint, LocallyIndexedVertex},
+    point::EventPoint,
     status::SweepLineStatus,
     SweepMeta, VertexType,
 };
@@ -40,7 +40,7 @@ pub fn generate_zigzag<Vec2: Vector2D>(n: usize) -> Vec<Vec2> {
 /// `meta` is a structure where debug information can be stored
 pub fn sweep_line_triangulation<Vec2: Vector2D, V: IndexType>(
     indices: &mut Vec<V>,
-    vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
+    vec2s: &Vec<Vec2>,
     meta: &mut SweepMeta,
 ) {
     assert!(vec2s.len() >= 3, "At least 3 vertices are required");
@@ -104,12 +104,12 @@ struct SweepContext<'a, Vec2: Vector2D, V: IndexType> {
     indices: &'a mut Vec<V>,
 
     /// The list of 2d-vertices with local indices
-    vec2s: &'a Vec<LocallyIndexedVertex<Vec2>>,
+    vec2s: &'a Vec<Vec2>,
 }
 
 impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
     /// Creates a new event queue from a list of indexed vertex points
-    fn new(indices: &'a mut Vec<V>, vec2s: &'a Vec<LocallyIndexedVertex<Vec2>>) -> Self {
+    fn new(indices: &'a mut Vec<V>, vec2s: &'a Vec<Vec2>) -> Self {
         return Self {
             sls: SweepLineStatus::new(),
             indices,
@@ -136,7 +136,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
     fn try_split(self: &mut Self, event: &EventPoint<Vec2>) -> bool {
         let Some(i) = self
             .sls
-            .find_by_position(&self.vec2s[event.here].vec, &self.vec2s)
+            .find_by_position(&self.vec2s[event.here], &self.vec2s)
         else {
             return false;
         };
@@ -373,7 +373,7 @@ impl<'a, Vec2: Vector2D, V: IndexType> SweepContext<'a, Vec2, V> {
                     return;
                 }
             }
-            
+
             if let Some(mut fixup) = interval.fixup {
                 #[cfg(feature = "sweep_debug_print")]
                 println!("fixup regular r: {}", fixup);
@@ -408,14 +408,11 @@ mod tests {
     use rand::Rng;
 
     /// Check for non-degenerate triangles (no zero-area triangles)
-    fn verify_non_degenerate_triangle<Vec2: Vector2D>(
-        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
-        indices: &Vec<usize>,
-    ) {
+    fn verify_non_degenerate_triangle<Vec2: Vector2D>(vec2s: &Vec<Vec2>, indices: &Vec<usize>) {
         for i in (0..indices.len()).step_by(3) {
-            let v0 = vec2s[indices[i]].vec;
-            let v1 = vec2s[indices[i + 1]].vec;
-            let v2 = vec2s[indices[i + 2]].vec;
+            let v0 = vec2s[indices[i]];
+            let v1 = vec2s[indices[i + 1]];
+            let v2 = vec2s[indices[i + 2]];
 
             // Use the determinant to check if the triangle has a non-zero area
             let area =
@@ -428,10 +425,7 @@ mod tests {
     }
 
     /// Check for valid indices (i.e., they should be within the bounds of the vertices)
-    fn verify_indices<Vec2: Vector2D>(
-        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
-        indices: &Vec<usize>,
-    ) {
+    fn verify_indices<Vec2: Vector2D>(vec2s: &Vec<Vec2>, indices: &Vec<usize>) {
         // Check that the triangulation returns the correct number of triangles
         let num_vertices = vec2s.len();
         let num_triangles = indices.len() / 3;
@@ -460,10 +454,7 @@ mod tests {
     }
 
     /// Check for valid triangulation (no intersecting edges)
-    fn verify_no_intersections<Vec2: Vector2D>(
-        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
-        indices: &Vec<usize>,
-    ) {
+    fn verify_no_intersections<Vec2: Vector2D>(vec2s: &Vec<Vec2>, indices: &Vec<usize>) {
         let num_vertices = vec2s.len();
         for i in (0..num_vertices).step_by(3) {
             for j in (0..num_vertices).step_by(3) {
@@ -472,11 +463,11 @@ mod tests {
                 }
                 for k in 0..3 {
                     for l in 0..3 {
-                        let v0 = vec2s[indices[(i + k) % 3]].vec;
-                        let v1 = vec2s[indices[(i + k + 1) % 3]].vec;
+                        let v0 = vec2s[indices[(i + k) % 3]];
+                        let v1 = vec2s[indices[(i + k + 1) % 3]];
 
-                        let v2 = vec2s[indices[(j + l) % 3]].vec;
-                        let v3 = vec2s[indices[(j + l + 1) % 3]].vec;
+                        let v2 = vec2s[indices[(j + l) % 3]];
+                        let v3 = vec2s[indices[(j + l + 1) % 3]];
 
                         assert!(
                             LineSegment2D::new(v0, v1)
@@ -499,13 +490,13 @@ mod tests {
     }
 
     /// Calculate the area of the polygon and check if it is the same as the sum of the areas of the triangles
-    fn verify_area(vec2s: &Vec<LocallyIndexedVertex<bevy::math::Vec2>>, indices: &Vec<usize>) {
+    fn verify_area(vec2s: &Vec<bevy::math::Vec2>, indices: &Vec<usize>) {
         let mut area = 0.0;
         // PERF: better summing algorithm?
         for i in (0..indices.len()).step_by(3) {
-            let v0 = vec2s[indices[i]].vec;
-            let v1 = vec2s[indices[i + 1]].vec;
-            let v2 = vec2s[indices[i + 2]].vec;
+            let v0 = vec2s[indices[i]];
+            let v1 = vec2s[indices[i + 1]];
+            let v2 = vec2s[indices[i + 2]];
 
             // Use the determinant to calculate the area of the triangle
             let triangle_area =
@@ -513,7 +504,7 @@ mod tests {
             area += triangle_area;
         }
 
-        let reference = Bevy2DPolygon::from_iter(vec2s.iter().map(|v| v.vec)).area();
+        let reference = Bevy2DPolygon::from_points(vec2s).area();
 
         // Check if the area of the polygon is the same as the sum of the areas of the triangles
         assert!(
@@ -524,9 +515,9 @@ mod tests {
         );
     }
 
-    fn verify_triangulation(vec2s: &Vec<LocallyIndexedVertex<Vec2>>) {
+    fn verify_triangulation(vec2s: &Vec<Vec2>) {
         assert!(
-            Bevy2DPolygon::from_iter(vec2s.iter().map(|v| v.vec)).is_ccw(),
+            Bevy2DPolygon::from_points(vec2s).is_ccw(),
             "Polygon must be counterclockwise"
         );
 
@@ -542,12 +533,7 @@ mod tests {
         verify_area(&vec2s, &indices);
     }
 
-    fn random_star(
-        min_vert: usize,
-        max_vert: usize,
-        min_r: f32,
-        max_r: f32,
-    ) -> Vec<LocallyIndexedVertex<Vec2>> {
+    fn random_star(min_vert: usize, max_vert: usize, min_r: f32, max_r: f32) -> Vec<Vec2> {
         let mut vec2s = Vec::new();
         let mut rng = rand::thread_rng();
         let n = rng.gen_range(min_vert..max_vert);
@@ -556,17 +542,14 @@ mod tests {
             let r = rng.gen_range(min_r..max_r);
             let x = r * phi.cos();
             let y = r * phi.sin();
-            vec2s.push(LocallyIndexedVertex::new(Vec2::from_xy(x, y), vec2s.len()));
+            vec2s.push(Vec2::from_xy(x, y));
         }
 
         vec2s
     }
 
-    fn liv_from_array(arr: &[[f32; 2]]) -> Vec<LocallyIndexedVertex<Vec2>> {
-        arr.iter()
-            .enumerate()
-            .map(|(i, &v)| LocallyIndexedVertex::new(Vec2::from_xy(v[0], v[1]), i))
-            .collect()
+    fn liv_from_array(arr: &[[f32; 2]]) -> Vec<Vec2> {
+        arr.iter().map(|&v| Vec2::from_xy(v[0], v[1])).collect()
     }
 
     #[test]
@@ -615,13 +598,7 @@ mod tests {
 
     #[test]
     fn sweep_zigzag() {
-        verify_triangulation(
-            &generate_zigzag(101)
-                .iter()
-                .enumerate()
-                .map(|(i, v)| LocallyIndexedVertex::new(*v, i))
-                .collect(),
-        );
+        verify_triangulation(&generate_zigzag(101));
     }
 
     #[test]
@@ -712,7 +689,7 @@ mod tests {
 
             println!(
                 "vec2s: {:?}",
-                vec2s.iter().map(|v| [v.vec.x, v.vec.y]).collect::<Vec<_>>()
+                vec2s.iter().map(|v| [v.x, v.y]).collect::<Vec<_>>()
             );
 
             verify_triangulation(&vec2s);

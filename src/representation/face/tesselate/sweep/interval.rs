@@ -1,4 +1,4 @@
-use super::{chain::ReflexChain, point::LocallyIndexedVertex};
+use super::chain::ReflexChain;
 use crate::{
     math::{IndexType, Scalar, Vector2D},
     representation::tesselate::sweep::chain::ReflexChainDirection,
@@ -16,13 +16,9 @@ impl IntervalBoundaryEdge {
     ///
     /// This method uses linear interpolation to find the x-coordinate on the edge
     /// defined by the start and end vertices at the specified y-coordinate.
-    pub fn x_at_y<V: IndexType, Vec2: Vector2D>(
-        &self,
-        y: Vec2::S,
-        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
-    ) -> Vec2::S {
-        let e = vec2s[self.end].vec;
-        let s = vec2s[self.start].vec;
+    pub fn x_at_y<V: IndexType, Vec2: Vector2D>(&self, y: Vec2::S, vec2s: &Vec<Vec2>) -> Vec2::S {
+        let e = vec2s[self.end];
+        let s = vec2s[self.start];
         let dx = e.x() - s.x();
         let dy = e.y() - s.y();
         if dy == Vec2::S::ZERO {
@@ -36,10 +32,10 @@ impl IntervalBoundaryEdge {
     /// Calculate the parameters of the beam f(y) = a*y + b where y >= c
     pub fn beam<V: IndexType, Vec2: Vector2D>(
         &self,
-        vec2s: &Vec<LocallyIndexedVertex<Vec2>>,
+        vec2s: &Vec<Vec2>,
     ) -> Option<(Vec2::S, Vec2::S, Vec2::S)> {
-        let e = vec2s[self.end].vec;
-        let s = vec2s[self.start].vec;
+        let e = vec2s[self.end];
+        let s = vec2s[self.start];
         let dx = e.x() - s.x();
         let dy = e.y() - s.y();
         if dy == Vec2::S::ZERO {
@@ -85,7 +81,7 @@ pub struct SweepLineInterval<V: IndexType, Vec2: Vector2D> {
 
 impl<V: IndexType, Vec2: Vector2D> SweepLineInterval<V, Vec2> {
     /// Check whether the interval contains a position
-    pub fn contains(&self, pos: &Vec2, vec2s: &Vec<LocallyIndexedVertex<Vec2>>) -> bool {
+    pub fn contains(&self, pos: &Vec2, vec2s: &Vec<Vec2>) -> bool {
         let p1 = self.left.x_at_y::<V, Vec2>(pos.y(), vec2s);
         // return `false` early to speed things up
         if p1 > pos.x() {
