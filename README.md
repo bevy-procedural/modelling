@@ -132,7 +132,7 @@ The package supports different triangulation algorithms. The robustness and rend
 | ----------- | ------------ | ---------- | --------- | ------------ | ----------- | ------------ | ------------ |
 | Fan         | Convex       | n          |           | 0ms¹ (0fps)² |             |              |              |
 | EarClipping | Simple       | n^2        | 0.784µs   | 33.83µs      | 3.095ms     | 140.9ms      | 55.66s       |
-| Sweep       | None         | n log n    | 0.768µs   | 12.70µs      | 139.1µs     | 1.422ms      | 9.057ms      |
+| Sweep       | None         | n log n    | 1.600µs   | 12.89µs      | 136.7µs     | 1.512ms      | 9.271ms      |
 | Delaunay    | Simple       | n log n    | 2.899µs   | 33.39µs      | 334.0µs     | 3.788ms      | 654.8ms      |
 | EdgeFlip    | Simple       | n^3        |           |              |             |              |              |
 | MinWeight³  | Simple       | 2^n        |           |              |             |              |              |

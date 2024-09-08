@@ -75,32 +75,6 @@ where
     E: IndexType,
     F: IndexType,
 {
-    /// Expand local indices to global indices if requested to.
-    /// TODO: Remove this. It doesn't really take care of the local vertex ids - they aren't necessarily consecutive!
-    fn expand_local_indices<V: IndexType, P: Payload>(
-        &self,
-        mesh: &Mesh<E, V, F, P>,
-        indices: &mut Vec<V>,
-        local_indices: bool,
-        f: impl Fn(&Mesh<E, V, F, P>, &mut Vec<V>),
-    ) where
-        P::Vec: Vector3D<S = P::S>,
-    {
-        if !local_indices {
-            // TODO: counting again and again is rather slow. Cache these values
-
-            let n = self.num_vertices(mesh);
-            let v0: usize = indices.len();
-            f(mesh, indices);
-
-            for i in v0..indices.len() {
-                indices[i] = V::new(v0 + (indices[i].index() + (n - 1)) % n);
-            }
-        } else {
-            f(mesh, indices);
-        }
-    }
-
     fn tesselate_inner<V: IndexType, P: Payload>(
         &self,
         mesh: &Mesh<E, V, F, P>,
@@ -148,9 +122,8 @@ where
                 self.min_weight_triangulation_stoch(mesh, indices);
             }
             TriangulationAlgorithm::Delaunay => {
-                self.expand_local_indices(mesh, indices, local_indices, |mesh, indices| {
-                    self.delaunay_triangulation(mesh, indices);
-                });
+                self.delaunay_triangulation(mesh, indices);
+                todo!("Transform indices back to global indices");
             }
             TriangulationAlgorithm::EdgeFlip => {
                 panic!("TriangulationAlgorithm::EdgeFlip is not implemented yet");

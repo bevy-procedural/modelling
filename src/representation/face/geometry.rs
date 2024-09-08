@@ -81,12 +81,6 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
         !self.has_holes() && !self.has_self_intersections(mesh)
     }
 
-    /// Whether the face is monotone in y direction, i.e.,
-    /// every horizontal line intersects the face at most twice.
-    pub fn is_y_monotone<V: IndexType, P: Payload>(&self, _mesh: &Mesh<E, V, F, P>) -> bool {
-        todo!("implement is_y_monotone");
-    }
-
     /// A fast methods to get the surface normal, but will only work for convex faces.
     pub fn normal_naive<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>) -> P::Vec
     where

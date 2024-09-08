@@ -144,7 +144,7 @@ pub fn neumaier_summation<S: Scalar, I: Iterator<Item = S>>(iter: I) -> (S, usiz
 
 /// Kahan summation algorithm.
 /// This is a more numerically stable way to sum up a list of scalars.
-/// It can be overloaded with a very broad range of floating point types.
+/// It can be overloaded with a very broad range of floating point types including most vectors.
 pub fn kahan_summation<
     X: std::ops::Add<Output = X> + HasZero + std::ops::Sub<Output = X> + Copy,
     I: Iterator<Item = X>,

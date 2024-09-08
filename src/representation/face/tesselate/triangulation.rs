@@ -165,10 +165,8 @@ impl<'a, I: IndexType> Triangulation<'a, I> {
         );
     }
 
-    /// Check, that all indices are used at lest once
+    /// Check that all indices are used at least once
     pub fn verify_all_indices_used<V: Vector2D>(self: &Self, vec2s: &Vec<IndexedVertex2D<I, V>>) {
-        // TODO
-
         let mut seen = HashSet::new();
         for index in self.indices.iter() {
             seen.insert(index);
