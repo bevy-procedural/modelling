@@ -14,9 +14,13 @@ use bevy_panorbit_camera::*;
 use procedural_modelling::{
     gizmo::{
         self,
-        bevy::{show_edges, show_faces, show_vertex_indices, text::Text3dGizmos},
+        bevy::{text::Text3dGizmos, *},
     },
-    representation::bevy::MeshVec3,
+    representation::{
+        bevy::MeshVec3,
+        primitives::{generate_zigzag, random_star},
+        tesselate::{GenerateNormals, TesselationMeta, TriangulationAlgorithm},
+    },
 };
 use std::{env, f32::consts::PI};
 
@@ -98,15 +102,77 @@ fn _make_spiral(settings: &MeshSettings) -> MeshVec3 {
     mesh
 }
 
-fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
-    let mut mesh = MeshVec3::regular_star(2.0, 1.0, 100);
+fn _make_2d_merge_join() -> MeshVec3 {
+    let mut mesh = MeshVec3::polygon(&[
+        // Front edge
+        Vec3::new(1.0, 0.0, -1.0),
+        Vec3::new(0.5, 0.0, 0.9),
+        Vec3::new(0.0, 0.0, -0.8),
+        Vec3::new(-0.6, 0.0, -1.0),
+        Vec3::new(-0.8, 0.0, -0.8),
+        Vec3::new(-1.0, 0.0, -1.0),
+        // Back edge
+        Vec3::new(-1.0, 0.0, 1.0),
+        Vec3::new(0.0, 0.0, 0.8),
+        Vec3::new(0.6, 0.0, 1.0),
+        Vec3::new(0.8, 0.0, 0.8),
+        Vec3::new(1.0, 0.0, 1.0),
+    ]);
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh
 }
 
-fn make_mesh(settings: &MeshSettings) -> MeshVec3 {
-    make_2d_shape(settings)
-    //_make_spiral(settings)
+fn _make_hell_8() -> MeshVec3 {
+    let mut mesh = MeshVec3::polygon(
+        &[
+            [4.5899906, 0.0],
+            [0.7912103, 0.7912103],
+            [-4.2923173e-8, 0.9819677],
+            [-1.2092295, 1.2092295],
+            [-0.835097, -7.30065e-8],
+        ]
+        .iter()
+        .map(|v| Vec3::new(v[0], 0.0, v[1]))
+        .collect::<Vec<_>>(),
+    );
+    mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
+    mesh
+}
+
+fn _make_2d_star(_settings: &MeshSettings) -> MeshVec3 {
+    let mut mesh = MeshVec3::regular_star(2.0, 2.0f32.sqrt(), 10000);
+    mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
+    mesh
+}
+
+fn _make_2d_random_star() -> MeshVec3 {
+    let mut mesh = MeshVec3::polygon(
+        &random_star::<Vec2>(5, 6, 0.1, 1.0)
+            .iter()
+            .map(|v| Vec3::new(v[0], 0.0, v[1]))
+            .collect::<Vec<_>>(),
+    );
+    mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
+    mesh
+}
+
+fn _make_2d_zigzag() -> MeshVec3 {
+    let n = 50;
+    let mut mesh = MeshVec3::polygon(
+        &generate_zigzag::<Vec2>(n)
+            .iter()
+            .map(|v| Vec3::new(v[0], 0.0, -v[1]))
+            .collect::<Vec<_>>(),
+    );
+    mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
+    mesh
+}
+
+fn make_mesh(_settings: &MeshSettings) -> MeshVec3 {
+    //_make_hell_8()
+    //MeshVec3::regular_polygon(1.0, 10000)
+    // _make_spiral(_settings)
+    _make_2d_zigzag()
     //MeshVec3::octahedron(1.0)
 }
 
@@ -141,7 +207,17 @@ pub fn main() {
         ))
         .add_systems(Startup, setup_meshes)
         .add_systems(Update, update_meshes)
+        .add_systems(Update, exit_on_esc)
         .run();
+}
+
+fn exit_on_esc(
+    input: Res<ButtonInput<KeyCode>>,
+    mut app_exit_events: ResMut<Events<bevy::app::AppExit>>,
+) {
+    if input.just_pressed(KeyCode::Escape) {
+        app_exit_events.send(AppExit::Success);
+    }
 }
 
 fn update_meshes(
@@ -150,6 +226,7 @@ fn update_meshes(
     mut settings: ResMut<GlobalSettings>,
     windows: Query<&Window>,
     camera_q: Query<(&Camera, &GlobalTransform)>,
+    mut texts: ResMut<Text3dGizmos>,
 ) {
     let window = windows.single();
     let (camera, camera_transform) = camera_q.single();
@@ -173,7 +250,15 @@ fn update_meshes(
 
     for (handle, settings) in query.iter() {
         let mesh = make_mesh(settings);
-        mesh.bevy_set(assets.get_mut(handle).unwrap());
+        let mut meta = TesselationMeta::default();
+        mesh.bevy_set_ex(
+            assets.get_mut(handle).unwrap(),
+            TriangulationAlgorithm::Sweep,
+            GenerateNormals::Flat,
+            &mut meta,
+        );
+
+        show_tesselation_meta(&mut texts, &mesh, &meta);
     }
 }
 
@@ -181,7 +266,7 @@ fn setup_meshes(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-     mut texts: ResMut<Text3dGizmos>,
+    mut texts: ResMut<Text3dGizmos>,
 ) {
     let mesh = make_mesh(&MeshSettings::default());
     commands.spawn((

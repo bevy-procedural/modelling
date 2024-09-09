@@ -53,21 +53,33 @@ itertools = "^0.13.0"
 meshopt = { version = "^0.3.0", optional = true }
 rand = "^0.8.5"
 spade = "^2.9.0"
-criterion = { version = "0.5.1", features = ["html_reports"], optional = true  }
+criterion = { version = "0.5.1", features = ["html_reports"], optional = true }
 
 [features]
 default = ["bevy"]
-bevy = ["dep:bevy", "dep:bevy-inspector-egui", "bevy/bevy_gizmos"]
+bevy = [
+    "dep:bevy",
+    "dep:bevy-inspector-egui",
+    "bevy/bevy_gizmos",
+    "bevy/default_font",
+]
 dynamic = ["bevy/dynamic_linking"]
 meshopt = ["dep:meshopt"]
 benchmarks = ["dep:criterion"]
-sweep_debug_print = []
+sweep_debug = []
+sweep_debug_print = ["sweep_debug"]
 
 [[example]]
 name = "box"
 path = "examples/box.rs"
 doc-scrape-examples = true
 required-features = ["bevy", "bevy/bevy_pbr"]
+
+[[example]]
+name = "fps_bench"
+path = "examples/fps_bench.rs"
+doc-scrape-examples = true
+required-features = ["bevy", "bevy/bevy_pbr", "bevy/bevy_winit", "bevy/tonemapping_luts"]
 
 [[bench]]
 name = "triangulation"

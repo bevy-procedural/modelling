@@ -3,7 +3,7 @@ use crate::{
     math::Vector3D,
     representation::{
         payload::Payload,
-        tesselate::{GenerateNormals, TriangulationAlgorithm},
+        tesselate::{GenerateNormals, TesselationMeta, TriangulationAlgorithm},
     },
 };
 
@@ -13,7 +13,7 @@ where
     V: IndexType,
     F: IndexType,
     P: Payload,
-    P::Vec: Vector3D<P::S>,
+    P::Vec: Vector3D<S = P::S>,
 {
     /// convert the mesh to triangles and get all indices to do so.
     /// Also optionally duplicates vertices to insert normals etc. (otherwise, return empty vertices)
@@ -21,6 +21,7 @@ where
         &self,
         algorithm: TriangulationAlgorithm,
         generate_normals: GenerateNormals,
+        meta: &mut TesselationMeta<V>,
     ) -> (Vec<V>, Vec<P>) {
         let mut indices = Vec::new();
         let mut vertices = Vec::new();
@@ -31,6 +32,7 @@ where
                 &mut indices,
                 algorithm,
                 generate_normals,
+                meta,
             );
         }
         (indices, vertices)

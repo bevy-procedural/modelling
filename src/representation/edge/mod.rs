@@ -125,7 +125,7 @@ impl<E: IndexType, V: IndexType, F: IndexType> HalfEdge<E, V, F> {
 
     /// Returns the source vertex of the half-edge
     #[inline(always)]
-    pub fn origin<'a, P: Payload>(&'a self, mesh: &'a Mesh<E, V, F, P>) -> &Vertex<E, V, P> {
+    pub fn origin<'a, P: Payload>(&'a self, mesh: &'a Mesh<E, V, F, P>) -> &'a Vertex<E, V, P> {
         mesh.vertex(self.origin)
     }
 

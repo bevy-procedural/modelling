@@ -10,7 +10,7 @@ where
     V: IndexType,
     F: IndexType,
     P: Payload,
-    P::Vec: Vector3D<P::S>,
+    P::Vec: Vector3D<S = P::S>,
 {
     /// create a (rectangular) cuboid
     pub fn cuboid(x: P::S, y: P::S, z: P::S) -> Mesh<E, V, F, P> {

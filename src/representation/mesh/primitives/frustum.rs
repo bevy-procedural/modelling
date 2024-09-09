@@ -1,6 +1,6 @@
 use super::super::{IndexType, Mesh};
 use crate::{
-    math::{Scalar, Transform, Vector3D},
+    math::{HasZero, Transform, Vector3D},
     representation::payload::Payload,
 };
 
@@ -10,7 +10,7 @@ where
     V: IndexType,
     F: IndexType,
     P: Payload,
-    P::Vec: Vector3D<P::S>,
+    P::Vec: Vector3D<S = P::S>,
 {
     /// Creates a (conical) frustum
     pub fn frustum(r1: P::S, r2: P::S, h: P::S, n: usize) -> Mesh<E, V, F, P> {

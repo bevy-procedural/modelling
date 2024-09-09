@@ -1,9 +1,12 @@
 use super::{Scalar, Vector};
 
 /// Trait for coordinates in 2d space.
-pub trait Vector2D<S: Scalar>: Vector<S> {
+pub trait Vector2D: Vector<Self::S> {
+    /// The scalar type of the coordinates used in the vector
+    type S: Scalar;
+
     /// Construct from scalar values.
-    fn from_xy(x: S, y: S) -> Self;
+    fn from_xy(x: Self::S, y: Self::S) -> Self;
 
     /// True iff the vertex curr is a convex corner.
     /// Assume counter-clockwise vertex order.
@@ -14,27 +17,27 @@ pub trait Vector2D<S: Scalar>: Vector<S> {
     }
 
     /// True if the vertex is collinear.
-    fn collinear(&self, a: Self, b: Self, eps: S) -> bool {
+    fn collinear(&self, a: Self, b: Self, eps: Self::S) -> bool {
         let ab = b - a;
         let ac = *self - a;
         ab.cross2d(&ac).abs() <= eps
     }
 
     /// Magnitude of the vector.
-    fn magnitude(&self) -> S;
+    fn magnitude(&self) -> Self::S;
 
     /// Angle between two vectors.
-    fn angle(&self, a: Self, b: Self) -> S;
+    fn angle(&self, a: Self, b: Self) -> Self::S;
 
     /// Returns the barycentric sign of a point in a triangle.
     #[inline(always)]
-    fn barycentric_sign(a: Self, b: Self, c: Self) -> S {
+    fn barycentric_sign(a: Self, b: Self, c: Self) -> Self::S {
         (a - c).cross2d(&(b - c))
     }
 
     /// Returns the cross product of two 2d vectors.
     #[inline(always)]
-    fn cross2d(&self, other: &Self) -> S {
+    fn cross2d(&self, other: &Self) -> Self::S {
         self.x() * other.y() - self.y() * other.x()
     }
 
@@ -51,8 +54,8 @@ pub trait Vector2D<S: Scalar>: Vector<S> {
     }
 
     /// Whether the point is inside the circumcircle of the triangle.
-    #[deprecated(since="0.1.0", note="use something more robust")]
-    fn is_inside_circumcircle(&self, a: Self, b: Self, c: Self, eps: S) -> bool {
+    #[deprecated(since = "0.1.0", note = "use something more robust")]
+    fn is_inside_circumcircle(&self, a: Self, b: Self, c: Self, eps: Self::S) -> bool {
         // https://en.wikipedia.org/wiki/Delaunay_triangulation#Algorithms
 
         let adx = a.x() - self.x();
@@ -61,7 +64,7 @@ pub trait Vector2D<S: Scalar>: Vector<S> {
         let bdy = b.y() - self.y();
         let cdx = c.x() - self.x();
         let cdy = c.y() - self.y();
-        let d = S::det3(
+        let d = Self::S::det3(
             adx,
             ady,
             adx * adx + ady * ady,

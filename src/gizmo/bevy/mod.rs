@@ -3,8 +3,14 @@
 use bevy::prelude::*;
 use text::{Text3dGizmo, Text3dGizmos};
 
-use crate::representation::bevy::MeshVec3;
+use crate::{
+    math::IndexType,
+    representation::{bevy::MeshVec3, tesselate::TesselationMeta},
+};
 pub mod text;
+
+#[cfg(feature = "sweep_debug")]
+use crate::representation::payload::Payload;
 
 /// Show the vertex indices of a mesh in blue.
 pub fn show_vertex_indices(texts: &mut ResMut<Text3dGizmos>, mesh: &MeshVec3) {
@@ -14,6 +20,29 @@ pub fn show_vertex_indices(texts: &mut ResMut<Text3dGizmos>, mesh: &MeshVec3) {
                 .with_color(Color::srgb(0.0, 0.0, 1.0)),
         );
     });
+}
+
+/// Visualized the tesselation meta data of a mesh.
+pub fn show_tesselation_meta<V: IndexType>(
+    _texts: &mut ResMut<Text3dGizmos>,
+    _mesh: &MeshVec3,
+    _meta: &TesselationMeta<V>,
+) {
+    #[cfg(feature = "sweep_debug")]
+    for (index, t) in _meta.sweep.vertex_type.iter() {
+        _texts.write(
+            Text3dGizmo::new(
+                format!("{} {:?}", index, t),
+                *_mesh
+                    .vertices()
+                    .nth(index.index())
+                    .unwrap()
+                    .payload()
+                    .vertex(),
+            )
+            .with_color(Color::srgb(1.0, 0.0, 0.0)),
+        );
+    }
 }
 
 /// Show the edge indices of a mesh.

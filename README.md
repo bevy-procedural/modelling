@@ -1,7 +1,7 @@
 # Procedural Modelling
 
 [![Documentation](https://docs.rs/procedural_modelling/badge.svg)](https://docs.rs/procedural_modelling)
-[![crates.io](https://img.shields.io/crates/v/procedural_modelling)](https://crates.io/crates/procedural_modelling) 
+[![crates.io](https://img.shields.io/crates/v/procedural_modelling)](https://crates.io/crates/procedural_modelling)
 [![Downloads](https://img.shields.io/crates/d/procedural_modelling)](https://crates.io/crates/procedural_modelling)
 [![License](https://img.shields.io/crates/l/procedural_modelling)](https://bevyengine.org/learn/quick-start/plugin-development/#licensing)
 [![Build Status](https://github.com/bevy-procedural/modelling/actions/workflows/rust.yml/badge.svg)](https://github.com/bevy-procedural/modelling/actions)
@@ -13,11 +13,9 @@ Uses a datastructure based on half-edge meshes to represent (open) manifold mesh
 
 Currently there are quite a few crates that implement boolean operations and tesselation to achieve some other goal. We want to provide a common implementation to satisfy these very similar requirements and improve code-reuse among these projects so they can focus on their original goal.
 
-
 ## WARNING
 
 This crate is still in a _very_ early stage of development. Expect frequent API modifications, bugs, and missing features. Feel free to contribute by opening issues, pull requests or sharing your ideas in [Github Discussion](https://github.com/bevy-procedural/modelling/discussions).
-
 
 ## Usage
 
@@ -40,7 +38,7 @@ for _ in 0..5 {
 mesh.to_bevy(RenderAssetUsages::default())
 ```
 
-## Examples 
+## Examples
 
 <!--
 Try the live examples!
@@ -52,69 +50,105 @@ Or run the [examples](https://github.com/bevy-procedural/modelling/tree/main/exa
 
 For package development, we recommend using the `editor`-subcrate. This example has a little [egui](https://github.com/jakobhellermann/bevy-inspector-egui/)-editor. Run it using `cargo watch -w editor/src -w src -x "run -p editor --profile fast-dev"`. The `fast-dev` profile will enable optimizations for the dependencies, but not for the package itself. This will slow down the first build _significantly_, but incremental builds are slightly faster and bevy's performance (bevy is used as the renderer in the examples) improves a lot.
 
+When developing tests, we recommend `cargo watch -w editor/src -w src -x "test --profile fast-dev --features sweep_debug_print"`.
 
 ## Feature Progress
 
-- [ ] Attributes
-  - [x] Positions
-  - [x] Normals
-  - [ ] Smooth Surface Groups
-  - [ ] Tangents
-  - [ ] UV Coordinates
-  - [ ] Custom Attributes
-- [ ] Triangulation
-  - [(x)] Montone Sweep-Line
-  - [x] Constrained Delaunay (using Delaunator)
-- [ ] Primitives
-  - [x] Polygon, Star
-  - [x] Cuboid
-  - [x] Cylinder, Cone, Frustum, Tetrahedron, Octahedron
-  - [ ] Dodecahedron, Icosahedron
-  - [ ] UV Sphere
-  - [ ] Cube Sphere
-  - [ ] Icosphere
-  - [ ] Torus
-- [ ] Builder Primitives
-  - [x] Lines
-  - [ ] Quadratic Bezier Curves
-  - [ ] Cubic Bezier Curves
-  - [ ] Curved Surfaces (Bezier Surfaces / Parametric Surfaces / NURBS / Spline Networks...?)
-- [ ] Operations   
-  - [x] Extrude 
-  - [ ] Loft
-  - [ ] Inset
-  - [ ] Plane Intersection
-  - [ ] Union
-  - [ ] Intersection
-  - [ ] Difference
-  - [ ] Symmetric Difference
-  - [ ] (Anisotropic) Simplification / LODs
-  - [ ] Stitching
-  - [ ] Subdivision
-  - [ ] Morphing
-  - [ ] Voxelization
-- [ ] Tools
-  - [ ] Geodesic Pathfinding
-  - [ ] Raycasting
-  - [ ] Topology Analysis
-  - [ ] Spatial Data Structures
-- [ ] Debug Visualizations
-  - [x] Indices
-  - [ ] Normals
-  - [ ] Tangents
-  - [ ] Topology
-- [ ] Backends
-  - [x] Bevy
-  - [ ] wgpu
-
-
+-   Attributes
+    -   [x] Positions
+    -   [x] Normals
+    -   [ ] Crease Weights
+    -   [ ] Smooth Surface Groups
+    -   [ ] Tangents
+    -   [ ] UV Coordinates
+    -   [ ] Custom Attributes
+-   Triangulation
+    -   [x] Montone Sweep-Line
+    -   [x] Constrained Delaunay (using [Spade](https://github.com/Stoeoef/spade))
+    -   [ ] Steiner Points
+-   Primitives
+    -   [x] Polygon, Star
+    -   [x] Cuboid
+    -   [x] Cylinder, Cone, Frustum, Tetrahedron, Octahedron
+    -   [ ] Dodecahedron, Icosahedron
+    -   [ ] UV Sphere
+    -   [ ] Cube Sphere
+    -   [ ] Icosphere
+    -   [ ] Torus
+-   Builder Primitives
+    -   [x] Lines
+    -   [ ] Quadratic Bezier Curves
+    -   [ ] Cubic Bezier Curves
+    -   [ ] Curved Surfaces (Bezier Surfaces / Parametric Surfaces / NURBS / Spline Networks...?)
+-   Operations
+    -   [x] Extrude
+    -   [ ] Loft
+    -   [ ] Inset
+    -   [ ] Plane Intersection
+    -   [ ] Union
+    -   [ ] Intersection
+    -   [ ] Difference
+    -   [ ] Symmetric Difference
+    -   [ ] (Anisotropic) Simplification / LODs
+    -   [ ] Stitching
+    -   [ ] Subdivision
+    -   [ ] Morphing
+    -   [ ] Voxelization
+-   Tools
+    -   [ ] Geodesic Pathfinding
+    -   [ ] Raycasting
+    -   [ ] Topology Analysis
+    -   [ ] Spatial Data Structures
+-   Debug Visualizations
+    -   [x] Indices
+    -   [ ] Normals
+    -   [ ] Tangents
+    -   [ ] Topology
+-   Backends
+    -   [x] Bevy
+    -   [ ] wgpu
 
 ## Features
 
 The following features are available:
 
-* `meshopt` -- Use [Meshopt](https://github.com/gwihlidal/meshopt-rs) to optimize the performance of generated meshes. 
-* `bevy` -- Compiles with support for bevy. Necessary for the examples and the editor.
+-   `meshopt` -- Use [Meshopt](https://github.com/gwihlidal/meshopt-rs) to optimize the performance of generated meshes.
+-   `bevy` -- Compiles with support for bevy. Necessary for the examples and the editor.
+-   `benchmarks` -- Enable [criterion](https://github.com/bheisler/criterion.rs) for the benchmarks.
+
+For development only:
+
+-   `sweep_debug` -- Collect debug information during the sweepline triangulation and enable visualizations in the bevy backend.
+-   `sweep_debug_print` -- Print debug information for the sweepline triangulation.
+
+## Triangulation algorithms
+
+The package supports different triangulation algorithms. The robustness and rendering speed of the produced triangulations varies significantly. These performance differences usually only matter for meshes with extremely large flat surfaces. In the table below, we compare the performance of the different algorithms for a circle with 100, 1000, and 10000 vertices. The "ZigZag" mesh has 10000 vertices and is designed to demonstrate the worst-case for the Sweep algorithm.
+
+-   **Fan** Extremely fast, but only works for convex polygons. And even then, results are usually numerically unstable. Runs in O(n) time.
+    Fan
+-   **EarClipping** Simple but slow textbook-algorithm for reference. Runs in O(n^2) time. When the input provokes numerical instabilities, e.g., a very large cirlce, the algorithm switches to recovery mode running in up to O(n^3) time.
+-   **Sweep** Very fast sweep-line algorithm that might produces triangulations with unnecessarily long edges. Works for arbitrary polygons (yes, they don't have to be simple). Runs in O(n log n) time. See [CMSC 754](https://www.cs.umd.edu/class/spring2020/cmsc754/Lects/lect05-triangulate.pdf).
+-   **Delaunay** Slow, but large flat surfaces might render faster. Currently uses [Spade](https://github.com/Stoeoef/spade). Runs in O(n log n) time.
+-   **EdgeFlip** Same output as Delaunay, but without external dependencies and using a very slow edge-flipping algorithm. Runs in O(n^3) time.
+    EdgeFlip,
+-   **MinWeight** Minimizes the overall edge length of the triangulation. Very slow, but produces the theoretically fastest rendering triangulations for large flat surfaces. Runs in O(2^n) time.
+-   **Heuristic** Heuristic algorithm that tries to find a compromise between the speed of `Sweep` and the quality of `EdgeMin`.
+-   **Auto** (default) Automatically choose the "best" algorithm based on the input, i.e., with the given ratio of numerical stability and performance. Currently, it uses specialized implementations for the smallest polygons, then uses `Delaunay`, then `Heuristic`, and finally falls back to `Sweep` for the largest polygons.
+
+| Algorithm   | Requirements | Worst Case | Circle 10        | Circle 100         | Circle 1000       | Circle 10000      | ZigZag 1000       | ZigZag 10000      |
+| ----------- | ------------ | ---------- | ---------------- | ------------------ | ----------------- | ----------------- | ----------------- | ----------------- |
+| Fan         | Convex       | n          | 0.258µs (151fps) | 1.781µs¹ (118fps)² | 17.19µs (52.4fps) | 172.4µs (12.5fps) | -                 | -                 |
+| EarClipping | Simple       | n^2        | 0.792µs (150fps) | 35.32µs (118fps)   | 3.164ms (52.1fps) | 3.402s (11.4fps)  | 48.05ms (35.6fps) | 46.03s (9.51fps)  |
+| Sweep       | None         | n log n    | 1.582µs (151fps) | 13.22µs (118fps)   | 139.0µs (44.2fps) | 1.552ms (9.87fps) | 403.1µs (42.8fps) | 4.292ms (9.87fps) |
+| Delaunay    | Simple       | n log n    | 3.037µs (151fps) | 34.00µs (134fps)   | 339.5µs (132fps)  | 3.725ms (129fps)  | 1.796ms (42.1fps) | 166.0ms (9.33fps) |
+| EdgeFlip    | Simple       | n^3        |                  |                    |                   |                   |                   |
+| MinWeight   | Simple       | 2^n        |                  |                    |                   |                   |                   |
+| Heuristic   | Simple       | n log n    |                  |                    |                   |                   |                   |
+| Auto        | Simple       | n log n    |                  |                    |                   |                   |                   |
+
+-   ¹) Time for the triangulation on a Intel i7-12700K (single threaded). Run the benchmarks using `cargo bench --features benchmarks`.
+-   ²) FPS when rendering 100 large, transparent instances with the bevy 0.14.2 pbr shader on a Nvidia GeForce RTX 4060 Ti in Full HD. See `cargo run --example fps_bench --profile release --features="bevy bevy/bevy_pbr bevy/bevy_winit bevy/tonemapping_luts"`. For the non-Delaunay algorithms, the rendering time detoriates for the larger circles since the edge length is not minimized causing significant overdraw.
 
 ## Supported Bevy Versions
 
@@ -122,16 +156,15 @@ The following table shows the compatibility of `procedural_modelling` with certa
 
 | bevy | bevy_procedural_meshes |
 | ---- | ---------------------- |
-| 0.14 | 0.2.*, main            |
-| 0.13 | 0.1.*                  |
+| 0.14 | 0.2.\*, main           |
+| 0.13 | 0.1.\*                 |
 
 ## License
 
-Except where noted (below and/or in individual files), all code in these repositories is dual-licensed, allowing you the flexibility to choose between:
+Except where noted (below and/or in individual files), all code in this repository is dual-licensed, allowing you the flexibility to choose between:
 
- - The MIT License (LICENSE-MIT or http://opensource.org/licenses/MIT)
- - The Apache License, Version 2.0 (LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0).
-
+-   The MIT License (LICENSE-MIT or http://opensource.org/licenses/MIT)
+-   The Apache License, Version 2.0 (LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0).
 
 ## Contribution
 

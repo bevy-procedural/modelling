@@ -75,28 +75,38 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
         (self.num_vertices(mesh) - 2) * 3
     }
 
-    /// Whether a triangle is inside or outside of the face
-    pub fn is_inside<V: IndexType, P: Payload>(
+    /// Whether a triangle shares a halfedge with the face.
+    ///
+    /// If there is no evidence that the triangle is touching the face, return None.
+    /// Given that all vertices are part of this face, this implies that the triangle is part of the face.
+    pub fn triangle_touches_boundary<V: IndexType, P: Payload>(
         &self,
         mesh: &Mesh<E, V, F, P>,
         v0: V,
         v1: V,
         v2: V,
-    ) -> bool {
+    ) -> Option<bool> {
         if let Some(e) = mesh.edge_between(v0, v1) {
-            return !e.is_boundary_self();
+            // it has a common halfedge with another face. That means, it cannot be part of *this* face.
+            if e.face_id() != self.id() {
+                return Some(false);
+            }
+            return Some(!e.is_boundary_self());
         }
         if let Some(e) = mesh.edge_between(v1, v2) {
-            return !e.is_boundary_self();
+            if e.face_id() != self.id() {
+                return Some(false);
+            }
+            return Some(!e.is_boundary_self());
         }
         if let Some(e) = mesh.edge_between(v2, v0) {
-            return !e.is_boundary_self();
+            if e.face_id() != self.id() {
+                return Some(false);
+            }
+            return Some(!e.is_boundary_self());
         }
 
-        //println!("v0: {} {} {}", v0.index(), v1.index(), v2.index());
-
-        return true;
-        //todo!("is_inside: not implemented for faces not touching the boundary");
+        return None;
     }
 }
 

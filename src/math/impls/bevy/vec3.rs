@@ -1,15 +1,14 @@
-use crate::math::{Vector, Vector3D};
+use crate::math::{HasZero, Vector, Vector3D};
 use bevy::math::{Vec2, Vec3};
+
+impl HasZero for Vec3 {
+    const ZERO: Self = Vec3::ZERO;
+}
 
 impl Vector<f32> for Vec3 {
     type Vec2 = Vec2;
     type Vec3 = Vec3;
     type Trans = bevy::transform::components::Transform;
-
-    #[inline(always)]
-    fn zero() -> Self {
-        Vec3::ZERO
-    }
 
     #[inline(always)]
     fn dimensions() -> usize {
@@ -60,9 +59,17 @@ impl Vector<f32> for Vec3 {
     fn normalize(&self) -> Self {
         Vec3::normalize(*self)
     }
+
+    #[inline(always)]
+    fn splat(value: f32) -> Self {
+        Vec3::splat(value)
+    }
+
 }
 
-impl Vector3D<f32> for Vec3 {
+impl Vector3D for Vec3 {
+    type S = f32;
+
     #[inline(always)]
     fn from_xyz(x: f32, y: f32, z: f32) -> Self {
         Vec3::new(x, y, z)

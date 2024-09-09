@@ -8,6 +8,7 @@ mod transform;
 mod vector;
 mod vector2d;
 mod vector3d;
+mod polygon;
 
 pub use index_type::*;
 pub use line_segment::*;
@@ -16,3 +17,4 @@ pub use transform::*;
 pub use vector::*;
 pub use vector2d::*;
 pub use vector3d::*;
+pub use polygon::*;

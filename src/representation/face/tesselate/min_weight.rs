@@ -1,4 +1,4 @@
-use super::{Face, Mesh, Payload};
+use super::{Face, Mesh, Payload, Triangulation};
 use crate::{
     math::{Vector, Vector3D},
     representation::IndexType,
@@ -12,9 +12,9 @@ where
 {
     fn shorten<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>, indices: &mut Vec<V>)
     where
-        P::Vec: Vector3D<P::S>,
+        P::Vec: Vector3D<S = P::S>,
     {
-        // TODO: This shortens edges producing invalid meshess!
+        // TODO: This shortens edges producing invalid meshes!
         let vs: Vec<(P::Vec2, V)> = self.vertices_2d::<V, P>(mesh).collect();
         assert!(vs.len() == self.vertices(mesh).count());
         let mut vsh: HashMap<V, P::Vec2> = HashMap::new();
@@ -69,7 +69,7 @@ where
         mesh: &Mesh<E, V, F, P>,
         indices: &mut Vec<V>,
     ) where
-        P::Vec: Vector3D<P::S>,
+        P::Vec: Vector3D<S = P::S>,
     {
         // TODO: O(n^3) algorithm http://www.ist.tugraz.at/_attach/Publish/Eaa19/Chapter_04_MWT_handout.pdf
         let mut best_indices = Vec::new();
@@ -77,7 +77,7 @@ where
 
         for _ in 1..100 {
             let mut tmp_indices = Vec::new();
-            self.ear_clipping(mesh, &mut tmp_indices, false, true);
+            self.ear_clipping(mesh, &mut Triangulation::new(&mut tmp_indices), true);
 
             // self.shorten(mesh, &mut local_indices);
 

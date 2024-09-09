@@ -5,8 +5,7 @@ use bevy::prelude::*;
 
 // TODO: Convert this to a real gizmo where the text is requested every frame and other texts are deleted. Text widgets are re-used.
 // TODO: move this to its own crate
-// TODO: add little lines and move labels away if they don't fit / would overlap
-// TODO: Hide labels that are on the backside of the object
+// TODO: Hide text when it is behind objects
 
 /// Support for 3d text gizmos
 pub struct Text3dGizmosPlugin;

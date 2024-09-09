@@ -1,12 +1,15 @@
 use super::{Scalar, Vector};
 
 /// Trait for coordinates in 3d space.
-pub trait Vector3D<ScalarType: Scalar>: Vector<ScalarType> {
+pub trait Vector3D: Vector<Self::S> {
+    /// The scalar type of the coordinates used in the vector
+    type S: Scalar;
+
     /// Construct from scalar values.
-    fn from_xyz(x: ScalarType, y: ScalarType, z: ScalarType) -> Self;
+    fn from_xyz(x: Self::S, y: Self::S, z: Self::S) -> Self;
 
     /// Convert to an array.
-    fn to_array(&self) -> [ScalarType; 3] {
+    fn to_array(&self) -> [Self::S; 3] {
         [self.x(), self.y(), self.z()]
     }
 
