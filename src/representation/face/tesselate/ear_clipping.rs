@@ -140,7 +140,7 @@ mod tests {
 
     #[test]
     fn ears_circle() {
-        let n = 10000;
+        let n = 100; // 10000 is more interesting, but runs 5 to 10 seconds
         verify_triangulation(
             &(0..n)
                 .into_iter()

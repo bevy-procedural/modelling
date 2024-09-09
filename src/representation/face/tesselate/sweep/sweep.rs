@@ -463,7 +463,7 @@ mod tests {
     #[test]
     fn sweep_zigzag() {
         verify_triangulation(
-            &generate_zigzag(101)
+            &generate_zigzag(100)
                 .iter()
                 .enumerate()
                 .map(|(i, v)| IndexedVertex2D::new(*v, i))
