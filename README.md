@@ -50,7 +50,7 @@ Or run the [examples](https://github.com/bevy-procedural/modelling/tree/main/exa
 
 For package development, we recommend using the `editor`-subcrate. This example has a little [egui](https://github.com/jakobhellermann/bevy-inspector-egui/)-editor. Run it using `cargo watch -w editor/src -w src -x "run -p editor --profile fast-dev"`. The `fast-dev` profile will enable optimizations for the dependencies, but not for the package itself. This will slow down the first build _significantly_, but incremental builds are slightly faster and bevy's performance (bevy is used as the renderer in the examples) improves a lot.
 
-When developing tests, we recommend `cargo watch -w editor/src -w src -x "test --profile fast-dev --features sweep_debug_print"`.
+When developing tests, we recommend `cargo watch -w editor/src -w src -x "test --profile fast-dev"`.
 
 ## Feature Progress
 
@@ -168,3 +168,26 @@ Except where noted (below and/or in individual files), all code in this reposito
 ## Contribution
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
+
+## How to Contribute
+
+We welcome contributions from the community! Here are some ways you can help:
+
+1.  **Report Bugs:**
+
+    -   If you find a bug, please open an issue on GitHub with detailed information on how to reproduce it.
+
+2.  **Suggest Features:**
+
+    -   Have an idea for a new feature? Open an issue to discuss it. We appreciate feedback and suggestions.
+
+3.  **Submit Pull Requests:**
+
+    -   Fork the repository and create a new branch for your feature or bug fix.
+    -   Assign an issue to yourself or open a new issue to work on.
+    -   Make your changes, ensuring that your code adheres to the project's coding standards.
+    -   Write tests for your changes, if applicable.
+    -   Submit a pull request with a clear description of your changes and the problem they solve.
+
+4.  **Improve Documentation:**
+    -   Help us improve our documentation by fixing typos, clarifying instructions, or adding new sections.
