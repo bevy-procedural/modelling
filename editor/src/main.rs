@@ -169,7 +169,8 @@ fn _make_2d_zigzag() -> MeshVec3 {
 }
 
 fn make_mesh(_settings: &MeshSettings) -> MeshVec3 {
-    _make_hell_8()
+    //_make_hell_8()
+    MeshVec3::regular_polygon(1.0, 10000)
     //_make_spiral(_settings)
     //MeshVec3::octahedron(1.0)
 }

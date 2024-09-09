@@ -24,6 +24,7 @@ pub enum TriangulationAlgorithm {
     Fan,
 
     /// Simple but slow textbook-algorithm for reference. Runs in O(n^2) time.
+    /// When the input provokes numerical instabilities, e.g., a very large cirlce, the algorithm switches to recovery mode running in up to O(n^3) time.
     EarClipping,
 
     /// Very fast sweep-line algorithm that might produces triangulations with unnecessarily long edges. Works for arbitrary polygons (yes, they don't have to be simple). Runs in O(n log n) time. See [CMSC 754](https://www.cs.umd.edu/class/spring2020/cmsc754/Lects/lect05-triangulate.pdf).
@@ -130,7 +131,6 @@ where
                 todo!("TriangulationAlgorithm::Heuristic is not implemented yet");
             }
         }
-
     }
 
     /// Converts the face into a triangle list.

@@ -6,7 +6,9 @@ use bevy::{
 };
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use procedural_modelling::representation::{
-    bevy::MeshVec3, primitives::generate_zigzag, tesselate::{GenerateNormals, TriangulationAlgorithm}
+    bevy::MeshVec3,
+    primitives::generate_zigzag,
+    tesselate::{GenerateNormals, TriangulationAlgorithm},
 };
 use std::f32::consts::PI;
 
@@ -25,8 +27,18 @@ fn make_spiral() -> MeshVec3 {
     mesh
 }
 
-fn bench_spirals(c: &mut Criterion) {
+fn zigzag(n: usize) -> MeshVec3 {
+    MeshVec3::polygon(
+        &generate_zigzag::<Vec2>(n)
+            .iter()
+            .map(|v| Vec3::new(v.x, v.y, 0.0))
+            .collect::<Vec<_>>(),
+    )
+}
+
+fn bench_triangulation(c: &mut Criterion) {
     let mut group = c.benchmark_group("Triangulation");
+    group.sample_size(10);
 
     for (name, mesh) in [
         //("Spiral", make_spiral()),
@@ -35,15 +47,8 @@ fn bench_spirals(c: &mut Criterion) {
         ("Circle100", MeshVec3::regular_star(1.0, 1.0, 100)),
         ("Circle1000", MeshVec3::regular_star(1.0, 1.0, 1000)),
         ("Circle10000", MeshVec3::regular_star(1.0, 1.0, 10000)),
-        (
-            "Zigzag10001",
-            MeshVec3::polygon(
-                &generate_zigzag::<Vec2>(10001)
-                    .iter()
-                    .map(|v| Vec3::new(v.x, v.y, 0.0))
-                    .collect::<Vec<_>>(),
-            ),
-        ),
+        ("Zigzag1001", zigzag(1001)),
+        //("Zigzag10001", zigzag(10001)),
     ] {
         group.bench_with_input(
             BenchmarkId::new("Sweep", name),
@@ -59,7 +64,7 @@ fn bench_spirals(c: &mut Criterion) {
                 })
             },
         );
-        /*group.bench_with_input(
+        group.bench_with_input(
             BenchmarkId::new("Ears", name),
             &mesh,
             |b, para: &MeshVec3| {
@@ -86,11 +91,11 @@ fn bench_spirals(c: &mut Criterion) {
                     );
                 })
             },
-        );*/
+        );
     }
 
     group.finish();
 }
 
-criterion_group!(benches, bench_spirals);
+criterion_group!(benches, bench_triangulation);
 criterion_main!(benches);
