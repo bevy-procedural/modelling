@@ -3,7 +3,10 @@
 use bevy::prelude::*;
 use text::{Text3dGizmo, Text3dGizmos};
 
-use crate::{math::IndexType, representation::{bevy::MeshVec3, tesselate::TesselationMeta}};
+use crate::{
+    math::IndexType,
+    representation::{bevy::MeshVec3, tesselate::TesselationMeta},
+};
 pub mod text;
 
 #[cfg(feature = "sweep_debug")]
@@ -30,7 +33,12 @@ pub fn show_tesselation_meta<V: IndexType>(
         _texts.write(
             Text3dGizmo::new(
                 format!("{} {:?}", index, t),
-                *_mesh.vertices().nth(index.index()).unwrap().payload().vertex(),
+                *_mesh
+                    .vertices()
+                    .nth(index.index())
+                    .unwrap()
+                    .payload()
+                    .vertex(),
             )
             .with_color(Color::srgb(1.0, 0.0, 0.0)),
         );

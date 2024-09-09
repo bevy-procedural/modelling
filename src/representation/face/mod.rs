@@ -75,8 +75,10 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
         (self.num_vertices(mesh) - 2) * 3
     }
 
-    /// Whether a triangle shares a half-edge with the face.
+    /// Whether a triangle shares a halfedge with the face.
+    ///
     /// If there is no evidence that the triangle is touching the face, return None.
+    /// Given that all vertices are part of this face, this implies that the triangle is part of the face.
     pub fn triangle_touches_boundary<V: IndexType, P: Payload>(
         &self,
         mesh: &Mesh<E, V, F, P>,
@@ -85,7 +87,7 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
         v2: V,
     ) -> Option<bool> {
         if let Some(e) = mesh.edge_between(v0, v1) {
-            // it has a common edge with a foreign face. That means, it cannot be inside of this face.
+            // it has a common halfedge with another face. That means, it cannot be part of *this* face.
             if e.face_id() != self.id() {
                 return Some(false);
             }

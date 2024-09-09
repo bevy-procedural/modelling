@@ -16,7 +16,11 @@ use procedural_modelling::{
         self,
         bevy::{text::Text3dGizmos, *},
     },
-    representation::{bevy::MeshVec3, primitives::generate_zigzag, tesselate::TesselationMeta},
+    representation::{
+        bevy::MeshVec3,
+        primitives::{generate_zigzag, random_star},
+        tesselate::TesselationMeta,
+    },
 };
 use std::{env, f32::consts::PI};
 
@@ -83,7 +87,7 @@ fn _make_hex_bridge(settings: &MeshSettings) -> MeshVec3 {
 }
 
 fn _make_spiral(settings: &MeshSettings) -> MeshVec3 {
-    let mut mesh = MeshVec3::regular_star(settings.r, 0.4 /*settings.r2*/, 8 /*settings.n*/);
+    let mut mesh = MeshVec3::regular_star(settings.r, settings.r2, settings.n);
     mesh.transform(
         &Transform::from_translation(Vec3::new(0.0, -0.99, 0.0))
             .with_rotation(Quat::from_rotation_z(PI)),
@@ -98,49 +102,64 @@ fn _make_spiral(settings: &MeshSettings) -> MeshVec3 {
     mesh
 }
 
-fn _make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
-    /*let mut mesh = MeshVec3::regular_star(2.0, 2.0f32.sqrt(), 10000);
+fn _make_2d_merge_join() -> MeshVec3 {
+    let mut mesh = MeshVec3::polygon(&[
+        // Front edge
+        Vec3::new(1.0, 0.0, -1.0),
+        Vec3::new(0.5, 0.0, 0.9),
+        Vec3::new(0.0, 0.0, -0.8),
+        Vec3::new(-0.6, 0.0, -1.0),
+        Vec3::new(-0.8, 0.0, -0.8),
+        Vec3::new(-1.0, 0.0, -1.0),
+        // Back edge
+        Vec3::new(-1.0, 0.0, 1.0),
+        Vec3::new(0.0, 0.0, 0.8),
+        Vec3::new(0.6, 0.0, 1.0),
+        Vec3::new(0.8, 0.0, 0.8),
+        Vec3::new(1.0, 0.0, 1.0),
+    ]);
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
-    mesh*/
+    mesh
+}
 
-    //let n = 11;
-
+fn _make_hell_8() -> MeshVec3 {
     let mut mesh = MeshVec3::polygon(
-        /* &[
-
-            // Front edge
-            Vec3::new(1.0, 0.0, -1.0),
-            Vec3::new(0.5, 0.0, 0.9),
-            Vec3::new(0.0, 0.0, -0.8),
-            Vec3::new(-0.6, 0.0, -1.0),
-            Vec3::new(-0.8, 0.0, -0.8),
-            Vec3::new(-1.0, 0.0, -1.0),
-
-            // Back edge
-            Vec3::new(-1.0, 0.0, 1.0),
-            Vec3::new(0.0, 0.0, 0.8),
-            Vec3::new(0.6, 0.0, 1.0),
-            Vec3::new(0.8, 0.0, 0.8),
-            Vec3::new(1.0, 0.0, 1.0),
-        ]*/
-        /*&random_star::<Vec2>(5, 6, 0.1, 1.0)
-            .iter()
-            .map(|v| Vec3::new(v[0], 0.0, v[1]))
-            .collect::<Vec<_>>(),
-            */
-        /*&[
-            [1.9081093, 0.0],
-            [0.0056778197, 0.007119762],
-            [-0.0015940086, 0.0069838036],
-            [-0.018027846, 0.00868175],
-            [-8.513409, -4.0998445],
-            [-0.63087374, -2.7640438],
-            [0.28846893, -0.36172837],
+        &[
+            [4.5899906, 0.0],
+            [0.7912103, 0.7912103],
+            [-4.2923173e-8, 0.9819677],
+            [-1.2092295, 1.2092295],
+            [-0.835097, -7.30065e-8],
         ]
         .iter()
         .map(|v| Vec3::new(v[0], 0.0, v[1]))
-        .collect::<Vec<_>>(),*/
-        &generate_zigzag::<Vec2>(101)
+        .collect::<Vec<_>>(),
+    );
+    mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
+    mesh
+}
+
+fn _make_2d_star(_settings: &MeshSettings) -> MeshVec3 {
+    let mut mesh = MeshVec3::regular_star(2.0, 2.0f32.sqrt(), 10000);
+    mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
+    mesh
+}
+
+fn _make_2d_random_star() -> MeshVec3 {
+    let mut mesh = MeshVec3::polygon(
+        &random_star::<Vec2>(5, 6, 0.1, 1.0)
+            .iter()
+            .map(|v| Vec3::new(v[0], 0.0, v[1]))
+            .collect::<Vec<_>>(),
+    );
+    mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
+    mesh
+}
+
+fn _make_2d_zigzag() -> MeshVec3 {
+    let n = 101;
+    let mut mesh = MeshVec3::polygon(
+        &generate_zigzag::<Vec2>(n)
             .iter()
             .map(|v| Vec3::new(v[0], 0.0, -v[1]))
             .collect::<Vec<_>>(),
@@ -149,11 +168,10 @@ fn _make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
     mesh
 }
 
-fn make_mesh(settings: &MeshSettings) -> MeshVec3 {
-    //make_2d_shape(settings)
-    _make_spiral(settings)
+fn make_mesh(_settings: &MeshSettings) -> MeshVec3 {
+    _make_hell_8()
+    //_make_spiral(_settings)
     //MeshVec3::octahedron(1.0)
-    //MeshVec3::regular_star(1.0, 2.0, 40)
 }
 
 pub fn main() {

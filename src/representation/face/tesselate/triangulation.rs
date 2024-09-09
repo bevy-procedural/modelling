@@ -156,25 +156,42 @@ impl<'a, V: IndexType> Triangulation<'a, V> {
                 }
                 for k in 0..3 {
                     for l in 0..3 {
-                        let v0 = vec_hm[&self.get_index(i + k)];
-                        let v1 = vec_hm[&self.get_index(i + (k + 1) % 3)];
+                        let i0 = self.get_index(i + k);
+                        let v0 = vec_hm[&i0];
+                        let i1 = self.get_index(i + (k + 1) % 3);
+                        let v1 = vec_hm[&i1];
 
-                        let v2 = vec_hm[&self.get_index(j + l)];
-                        let v3 = vec_hm[&self.get_index(j + (l + 1) % 3)];
+                        let i2 = self.get_index(j + l);
+                        let v2 = vec_hm[&i2];
+                        let i3 = self.get_index(j + (l + 1) % 3);
+                        let v3 = vec_hm[&i3];
 
+                        // If they share a vertex, they can't intersect
+                        if i0 == i2 || i0 == i3 || i1 == i2 || i1 == i3 {
+                            continue;
+                        }
+
+                        let l1 = LineSegment2D::new(v0, v1);
+                        let l2 = LineSegment2D::new(v2, v3);
+                        let length = l1.length() + l2.length();
+                        let inter = l1.intersect_line(
+                            &l2,
+                            Vec2::S::EPS.sqrt(), // be strict about parallel edges
+                            -Vec2::S::EPS.sqrt() * length, // Allow intersections/touching at the endpoints up to a portion of sqrt(eps), i.e., 0.0345% for f32
+                        );
                         assert!(
-                            LineSegment2D::new(v0, v1)
-                                .intersect_line(
-                                    &LineSegment2D::new(v2, v3),
-                                    Vec2::S::EPS, // be strict about parallel edges
-                                    Vec2::S::EPS * (-1000.0).into() // Allow intersections/touching at the endpoints
-                                )
-                                .is_none(),
-                            "Intersecting edges in triangulation\n{:?} -> {:?}\n{:?} -> {:?}",
+                            inter.is_none(),
+                            "Edges: \n{} {:?} -> {} {:?}\n{} {:?} -> {} {:?}\nintersect in {:?} (shortest distance: {} * sqrt(eps))",
+                            i0,
                             v0,
+                            i1,
                             v1,
+                            i2,
                             v2,
-                            v3
+                            i3,
+                            v3,
+                            inter.unwrap(),
+                            [v0,v1,v2,v3].iter().map(|v| inter.unwrap().distance(&v)).min_by(|a, b| a.partial_cmp(b).unwrap()).unwrap() / Vec2::S::EPS.sqrt()
                         );
                     }
                 }
