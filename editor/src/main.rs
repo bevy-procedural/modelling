@@ -83,7 +83,7 @@ fn _make_hex_bridge(settings: &MeshSettings) -> MeshVec3 {
 }
 
 fn _make_spiral(settings: &MeshSettings) -> MeshVec3 {
-    let mut mesh = MeshVec3::regular_star(settings.r, settings.r2, settings.n);
+    let mut mesh = MeshVec3::regular_star(settings.r, 0.4 /*settings.r2*/, 8 /*settings.n*/);
     mesh.transform(
         &Transform::from_translation(Vec3::new(0.0, -0.99, 0.0))
             .with_rotation(Quat::from_rotation_z(PI)),
@@ -98,7 +98,7 @@ fn _make_spiral(settings: &MeshSettings) -> MeshVec3 {
     mesh
 }
 
-fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
+fn _make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
     /*let mut mesh = MeshVec3::regular_star(2.0, 2.0f32.sqrt(), 10000);
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh*/
@@ -150,9 +150,10 @@ fn make_2d_shape(_settings: &MeshSettings) -> MeshVec3 {
 }
 
 fn make_mesh(settings: &MeshSettings) -> MeshVec3 {
-    make_2d_shape(settings)
-    //_make_spiral(settings)
+    //make_2d_shape(settings)
+    _make_spiral(settings)
     //MeshVec3::octahedron(1.0)
+    //MeshVec3::regular_star(1.0, 2.0, 40)
 }
 
 pub fn main() {

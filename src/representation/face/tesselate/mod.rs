@@ -80,60 +80,58 @@ where
         mesh: &Mesh<E, V, F, P>,
         indices: &mut Vec<V>,
         algorithm: TriangulationAlgorithm,
-        local_indices: bool,
         meta: &mut TesselationMeta<V>,
     ) where
         P::Vec: Vector3D<S = P::S>,
     {
+        let mut tri = Triangulation::new(indices);
+
         let n = self.num_vertices(mesh);
         if n < 3 {
             return;
         } else if n == 3 {
-            if local_indices {
-                indices.push(V::new(0));
-                indices.push(V::new(1));
-                indices.push(V::new(2));
-            } else {
-                indices.extend(self.vertices(mesh).map(|v| v.id()));
-            }
+            let (a, b, c) = self.vertices(mesh).map(|v| v.id()).collect_tuple().unwrap();
+            tri.insert_triangle(a, b, c);
             return;
         } else if n == 4 {
-            self.quad_triangulate(mesh, indices, local_indices);
+            self.quad_triangulate(mesh, &mut tri);
             return;
         }
 
         match algorithm {
             TriangulationAlgorithm::Auto => {
+                // TODO: find a good threshold
                 if n < 15 {
-                    // TODO: find a good threshold
-                    self.ear_clipping(mesh, indices, local_indices, false);
+                    self.ear_clipping(mesh, &mut tri, false);
                 } else {
-                    self.sweep_line(mesh, &mut Triangulation::new(indices), meta);
+                    self.sweep_line(mesh, &mut tri, meta);
                 }
             }
             TriangulationAlgorithm::EarClipping => {
-                self.ear_clipping(mesh, indices, local_indices, false);
+                self.ear_clipping(mesh, &mut tri, false);
             }
             TriangulationAlgorithm::Sweep => {
-                self.sweep_line(mesh, &mut Triangulation::new(indices), meta);
+                self.sweep_line(mesh, &mut tri, meta);
             }
             TriangulationAlgorithm::MinWeight => {
-                assert!(local_indices == false);
+                todo!("TriangulationAlgorithm::MinWeight is not implemented yet");
                 self.min_weight_triangulation_stoch(mesh, indices);
             }
             TriangulationAlgorithm::Delaunay => {
-                self.delaunay_triangulation(mesh, &mut Triangulation::new(indices));
+                self.delaunay_triangulation(mesh, &mut tri);
             }
             TriangulationAlgorithm::EdgeFlip => {
-                panic!("TriangulationAlgorithm::EdgeFlip is not implemented yet");
+                todo!("TriangulationAlgorithm::EdgeFlip is not implemented yet");
             }
             TriangulationAlgorithm::Fan => {
-                panic!("TriangulationAlgorithm::Fan is not implemented yet");
+                todo!("TriangulationAlgorithm::Fan is not implemented yet");
             }
             TriangulationAlgorithm::Heuristic => {
-                panic!("TriangulationAlgorithm::Heuristic is not implemented yet");
+                todo!("TriangulationAlgorithm::Heuristic is not implemented yet");
             }
         }
+
+        // TODO: verify tri.ve
     }
 
     /// Converts the face into a triangle list.
@@ -152,7 +150,7 @@ where
     {
         match generate_normals {
             GenerateNormals::None => {
-                self.tesselate_inner(mesh, indices, algorithm, false, meta);
+                self.tesselate_inner(mesh, indices, algorithm, meta);
             }
             GenerateNormals::Flat => {
                 let v0 = vertices.len();
@@ -162,8 +160,9 @@ where
                     p.set_normal(normal);
                     vertices.push(p)
                 });
+                todo!("GenerateNormals::Flat");
                 let mut local_indices = Vec::new();
-                self.tesselate_inner(mesh, &mut local_indices, algorithm, true, meta);
+                self.tesselate_inner(mesh, &mut local_indices, algorithm, meta);
                 indices.extend(local_indices.iter().map(|i| V::new(v0 + i.index())));
             }
             GenerateNormals::Smooth => {
@@ -180,8 +179,9 @@ where
                         p.set_normal(no);
                         vertices.push(p)
                     });
+                todo!("GenerateNormals::Smooth");
                 let mut local_indices = Vec::new();
-                self.tesselate_inner(mesh, &mut local_indices, algorithm, true, meta);
+                self.tesselate_inner(mesh, &mut local_indices, algorithm, meta);
                 let n: usize = self.num_vertices(mesh);
                 indices.extend(
                     local_indices

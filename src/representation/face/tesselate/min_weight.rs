@@ -1,4 +1,4 @@
-use super::{Face, Mesh, Payload};
+use super::{Face, Mesh, Payload, Triangulation};
 use crate::{
     math::{Vector, Vector3D},
     representation::IndexType,
@@ -77,7 +77,7 @@ where
 
         for _ in 1..100 {
             let mut tmp_indices = Vec::new();
-            self.ear_clipping(mesh, &mut tmp_indices, false, true);
+            self.ear_clipping(mesh, &mut Triangulation::new(&mut tmp_indices), true);
 
             // self.shorten(mesh, &mut local_indices);
 

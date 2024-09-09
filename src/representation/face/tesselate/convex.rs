@@ -1,4 +1,4 @@
-use super::{Face, Mesh, Payload};
+use super::{Face, Mesh, Payload, Triangulation};
 use crate::{
     math::{Vector2D, Vector3D},
     representation::IndexType,
@@ -35,8 +35,7 @@ where
     pub fn quad_triangulate<V: IndexType, P: Payload>(
         &self,
         mesh: &Mesh<E, V, F, P>,
-        indices: &mut Vec<V>,
-        local_indices: bool,
+        indices: &mut Triangulation<V>,
     ) where
         P::Vec: Vector3D<S = P::S>,
     {
@@ -44,33 +43,13 @@ where
         let vs1_convex = vs[1].0.convex(vs[0].0, vs[2].0);
         let vs3_convex = !vs1_convex || vs[3].0.convex(vs[2].0, vs[0].0);
         if vs1_convex && vs3_convex {
-            if local_indices {
-                indices.extend([
-                    V::new(0),
-                    V::new(1),
-                    V::new(2),
-                    V::new(0),
-                    V::new(2),
-                    V::new(3),
-                ]);
-            } else {
-                indices.extend([vs[0].1, vs[1].1, vs[2].1, vs[0].1, vs[2].1, vs[3].1]);
-            }
+            indices.insert_triangle(vs[0].1, vs[1].1, vs[2].1);
+            indices.insert_triangle(vs[0].1, vs[2].1, vs[3].1);
         } else {
             // Apparently, either vs[1] or vs[3] is a reflex vertex.
             // Hence, we split the quadrilateral the other way.
-            if local_indices {
-                indices.extend([
-                    V::new(1),
-                    V::new(2),
-                    V::new(3),
-                    V::new(1),
-                    V::new(3),
-                    V::new(0),
-                ]);
-            } else {
-                indices.extend([vs[1].1, vs[2].1, vs[3].1, vs[1].1, vs[3].1, vs[0].1]);
-            }
+            indices.insert_triangle(vs[1].1, vs[2].1, vs[3].1);
+            indices.insert_triangle(vs[1].1, vs[3].1, vs[0].1);
         }
     }
 }

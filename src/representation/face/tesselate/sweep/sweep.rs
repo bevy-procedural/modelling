@@ -413,7 +413,7 @@ mod tests {
 
         tri.verify_indices(&vec2s);
         tri.verify_all_indices_used(&vec2s);
-        tri.verify_no_intersections(&vec2s);
+        tri.verify_no_intersections(&vec_hm);
         tri.verify_non_degenerate_triangle(&vec_hm);
         tri.verify_area::<Vec2, Bevy2DPolygon>(&vec2s, &vec_hm);
     }
@@ -558,7 +558,21 @@ mod tests {
         ]));
     }
 
-    
+    #[test]
+    fn numerical_hell_7() {
+        // this will provoke intersecting edges
+        verify_triangulation(&liv_from_array(&[
+            [6.6260157, 0.0],
+            [1.9645219, 1.9645219],
+            [-1.1334154e-7, 2.5929523],
+            [-4.2611313, 4.2611313],
+            [-6.483927, -5.6684286e-7],
+            [-0.7367656, -0.73676586],
+            [2.8748497e-8, -2.4107995],
+            [0.21069731, -0.21069716],
+        ]));
+    }
+
     /// This is effective to find special examples where the triangulation fails
     /// You might want to increase the number of iterations to >= 1000000 and adjust
     /// the random_star parameters to find nastier examples

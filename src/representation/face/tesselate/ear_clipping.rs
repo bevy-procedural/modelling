@@ -1,4 +1,4 @@
-use super::{Face, Mesh, Payload};
+use super::{Face, Mesh, Payload, Triangulation};
 use crate::{
     math::{Scalar, Vector2D, Vector3D},
     representation::IndexType,
@@ -17,8 +17,7 @@ where
     pub fn ear_clipping<V: IndexType, P: Payload>(
         &self,
         mesh: &Mesh<E, V, F, P>,
-        indices: &mut Vec<V>,
-        local_indices: bool,
+        indices: &mut Triangulation<V>,
         randomize: bool,
     ) where
         P::Vec: Vector3D<S = P::S>,
@@ -91,11 +90,8 @@ where
                 continue;
             }
 
-            if local_indices {
-                indices.extend([V::new(i_a), V::new(i_b), V::new(i_c)]);
-            } else {
-                indices.extend([vs[i_a].1, vs[i_b].1, vs[i_c].1]);
-            }
+            indices.insert_triangle(vs[i_a].1, vs[i_b].1, vs[i_c].1);
+
             clipped[i_b] = true;
             n -= 1;
             fails_since_advance = 0;
