@@ -108,6 +108,13 @@ impl<'a, V: IndexType> Triangulation<'a, V> {
             .extend([vec2s[a].index, vec2s[b].index, vec2s[c].index]);
     }
 
+    /// Map the indices in the triangulation using a hashmap
+    pub fn map_indices(&mut self, id_map: &HashMap<V, V>) {
+        for i in self.start..self.indices.len() {
+            self.indices[i] = id_map[&self.indices[i]];
+        }
+    }
+
     /// Get the number of triangles inserted into the index buffer since the triangulation was created
     pub fn len(self: &Self) -> usize {
         let n = self.indices.len() - self.start;

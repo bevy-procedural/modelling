@@ -45,12 +45,12 @@ fn bench_triangulation(c: &mut Criterion) {
     for (name, mesh) in [
         //("Spiral", _make_spiral()),
         //("Star", MeshVec3::regular_star(2.0, 0.9, 1000)),
-        //("Circle10", MeshVec3::regular_star(1.0, 1.0, 10)),
-        //("Circle100", MeshVec3::regular_star(1.0, 1.0, 100)),
-        //("Circle1000", MeshVec3::regular_star(1.0, 1.0, 1000)),
+        ("Circle10", MeshVec3::regular_star(1.0, 1.0, 10)),
+        ("Circle100", MeshVec3::regular_star(1.0, 1.0, 100)),
+        ("Circle1000", MeshVec3::regular_star(1.0, 1.0, 1000)),
         //("Circle10000", MeshVec3::regular_star(1.0, 1.0, 10000)),
         ("Zigzag1001", zigzag(1000)),
-        ("Zigzag10001", zigzag(10000)),
+        //("Zigzag10001", zigzag(10000)),
     ] {
         let mut create_bench = |f_name: &str, algo: TriangulationAlgorithm| {
             group.bench_with_input(
@@ -65,10 +65,10 @@ fn bench_triangulation(c: &mut Criterion) {
             );
         };
 
-        //create_bench("Sweep", TriangulationAlgorithm::Sweep);
-        //create_bench("Delaunay", TriangulationAlgorithm::Delaunay);
-        //create_bench("Ears", TriangulationAlgorithm::EarClipping);
-        //create_bench("Fan", TriangulationAlgorithm::Fan);
+        create_bench("Sweep", TriangulationAlgorithm::Sweep);
+        create_bench("Delaunay", TriangulationAlgorithm::Delaunay);
+        create_bench("Ears", TriangulationAlgorithm::EarClipping);
+        create_bench("Fan", TriangulationAlgorithm::Fan);
     }
 
     group.finish();

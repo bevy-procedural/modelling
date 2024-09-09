@@ -59,6 +59,7 @@ where
         self.bevy_set_ex(
             mesh,
             TriangulationAlgorithm::Auto,
+            GenerateNormals::Flat,
             &mut TesselationMeta::default(),
         );
     }
@@ -68,6 +69,7 @@ where
         &self,
         mesh: &mut bevy::render::mesh::Mesh,
         algo: TriangulationAlgorithm,
+        normals: GenerateNormals,
         meta: &mut TesselationMeta<V>,
     ) {
         assert!(mesh.primitive_topology() == PrimitiveTopology::TriangleList);
@@ -76,7 +78,7 @@ where
 
         // use https://crates.io/crates/stats_alloc to measure memory usage
         let now = Instant::now();
-        let (is, mut vs) = self.tesselate(algo, GenerateNormals::None, meta);
+        let (is, mut vs) = self.tesselate(algo, normals, meta);
         let elapsed = now.elapsed();
         println!("///////////////////\nTriangulation took {:.2?}", elapsed);
 
@@ -111,9 +113,10 @@ where
         &self,
         usage: RenderAssetUsages,
         algo: TriangulationAlgorithm,
+        normals: GenerateNormals,
     ) -> bevy::render::mesh::Mesh {
         let mut mesh = bevy::render::mesh::Mesh::new(PrimitiveTopology::TriangleList, usage);
-        self.bevy_set_ex(&mut mesh, algo, &mut TesselationMeta::default());
+        self.bevy_set_ex(&mut mesh, algo, normals, &mut TesselationMeta::default());
         mesh
     }
 }

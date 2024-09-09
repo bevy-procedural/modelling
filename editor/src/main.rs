@@ -19,7 +19,7 @@ use procedural_modelling::{
     representation::{
         bevy::MeshVec3,
         primitives::{generate_zigzag, random_star},
-        tesselate::TesselationMeta,
+        tesselate::{GenerateNormals, TesselationMeta, TriangulationAlgorithm},
     },
 };
 use std::{env, f32::consts::PI};
@@ -170,8 +170,8 @@ fn _make_2d_zigzag() -> MeshVec3 {
 
 fn make_mesh(_settings: &MeshSettings) -> MeshVec3 {
     //_make_hell_8()
-    MeshVec3::regular_polygon(1.0, 10000)
-    //_make_spiral(_settings)
+    //MeshVec3::regular_polygon(1.0, 10000)
+    _make_spiral(_settings)
     //MeshVec3::octahedron(1.0)
 }
 
@@ -250,7 +250,12 @@ fn update_meshes(
     for (handle, settings) in query.iter() {
         let mesh = make_mesh(settings);
         let mut meta = TesselationMeta::default();
-        mesh.bevy_set_ex(assets.get_mut(handle).unwrap(), &mut meta);
+        mesh.bevy_set_ex(
+            assets.get_mut(handle).unwrap(),
+            TriangulationAlgorithm::Sweep,
+            GenerateNormals::Flat,
+            &mut meta,
+        );
 
         show_tesselation_meta(&mut texts, &mesh, &meta);
     }

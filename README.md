@@ -147,7 +147,7 @@ The package supports different triangulation algorithms. The robustness and rend
 | Heuristic   | Simple       | n log n    |           |                  |             |              |             |
 | Auto        | Simple       | n log n    |           |                  |             |              |             |
 
--   ¹) Time for triangulation on a Intel i7-12700K (single threaded). Run the benchmarks using `cargo bench --features benchmarks` and `cargo flamegraph --unit-test -- representation::face::tesselate::sweep::sweep::tests::sweep_tricky_shape`.
+-   ¹) Time for triangulation on a Intel i7-12700K (single threaded). Run the benchmarks using `cargo bench --features benchmarks`.
 -   ²) when rendering 100 large, transparent instances with the bevy 0.14 pbr shader on a Nvidia GeForce RTX 4060 Ti in Full HD. See `cargo run --example fps_bench --profile release --features="bevy bevy/bevy_pbr bevy/bevy_winit bevy/tonemapping_luts"`
 -   ³) TODO: Number of iterations
 

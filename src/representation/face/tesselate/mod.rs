@@ -1,5 +1,7 @@
 //! Triangulation Algorithms
 
+use std::collections::HashMap;
+
 use super::{Face, Mesh, Payload};
 use crate::{
     math::{Vector, Vector3D},
@@ -79,14 +81,12 @@ where
     fn tesselate_inner<V: IndexType, P: Payload>(
         &self,
         mesh: &Mesh<E, V, F, P>,
-        indices: &mut Vec<V>,
+        tri: &mut Triangulation<V>,
         algorithm: TriangulationAlgorithm,
         meta: &mut TesselationMeta<V>,
     ) where
         P::Vec: Vector3D<S = P::S>,
     {
-        let mut tri = Triangulation::new(indices);
-
         let n = self.num_vertices(mesh);
         if n < 3 {
             return;
@@ -95,7 +95,7 @@ where
             tri.insert_triangle(a, b, c);
             return;
         } else if n == 4 {
-            self.quad_triangulate(mesh, &mut tri);
+            self.quad_triangulate(mesh, tri);
             return;
         }
 
@@ -103,29 +103,29 @@ where
             TriangulationAlgorithm::Auto => {
                 // TODO: find a good threshold
                 if n < 15 {
-                    self.ear_clipping(mesh, &mut tri, false);
+                    self.ear_clipping(mesh, tri, false);
                 } else {
-                    self.sweep_line(mesh, &mut tri, meta);
+                    self.sweep_line(mesh, tri, meta);
                 }
             }
             TriangulationAlgorithm::EarClipping => {
-                self.ear_clipping(mesh, &mut tri, false);
+                self.ear_clipping(mesh, tri, false);
             }
             TriangulationAlgorithm::Sweep => {
-                self.sweep_line(mesh, &mut tri, meta);
+                self.sweep_line(mesh, tri, meta);
             }
             TriangulationAlgorithm::MinWeight => {
-                self.min_weight_triangulation_stoch(mesh, indices);
+                //self.min_weight_triangulation_stoch(mesh, indices);
                 todo!("TriangulationAlgorithm::MinWeight is not implemented yet");
             }
             TriangulationAlgorithm::Delaunay => {
-                self.delaunay_triangulation(mesh, &mut tri);
+                self.delaunay_triangulation(mesh, tri);
             }
             TriangulationAlgorithm::EdgeFlip => {
                 todo!("TriangulationAlgorithm::EdgeFlip is not implemented yet");
             }
             TriangulationAlgorithm::Fan => {
-                self.fan_triangulation(mesh, &mut tri);
+                self.fan_triangulation(mesh, tri);
             }
             TriangulationAlgorithm::Heuristic => {
                 todo!("TriangulationAlgorithm::Heuristic is not implemented yet");
@@ -147,27 +147,29 @@ where
     ) where
         P::Vec: Vector3D<S = P::S>,
     {
+        let mut tri = Triangulation::new(indices);
+
         match generate_normals {
             GenerateNormals::None => {
-                self.tesselate_inner(mesh, indices, algorithm, meta);
+                self.tesselate_inner(mesh, &mut tri, algorithm, meta);
             }
             GenerateNormals::Flat => {
-                todo!("GenerateNormals::Flat");
-                let v0 = vertices.len();
                 let normal = self.normal(mesh);
+                let mut id_map = HashMap::new();
+                // generate a new list of vertices (full duplication)
                 self.vertices(mesh).for_each(|v| {
                     let mut p = v.payload().clone();
+                    id_map.insert(v.id(), V::new(vertices.len()));
                     p.set_normal(normal);
                     vertices.push(p)
                 });
-                let mut local_indices = Vec::new();
-                self.tesselate_inner(mesh, &mut local_indices, algorithm, meta);
-                indices.extend(local_indices.iter().map(|i| V::new(v0 + i.index())));
+                self.tesselate_inner(mesh, &mut tri, algorithm, meta);
+                tri.map_indices(&id_map);
             }
             GenerateNormals::Smooth => {
-                todo!("GenerateNormals::Smooth");
-                let v0 = vertices.len();
+                // TODO: What's happening here? This doesn't look right at all.
                 let normal = self.normal(mesh);
+                let mut id_map = HashMap::new();
                 self.vertices(mesh)
                     .circular_tuple_windows::<(_, _, _)>()
                     .for_each(|(prev, v, next)| {
@@ -177,16 +179,11 @@ where
                             no = -no;
                         }
                         p.set_normal(no);
+                        id_map.insert(v.id(), V::new(vertices.len()));
                         vertices.push(p)
                     });
-                let mut local_indices = Vec::new();
-                self.tesselate_inner(mesh, &mut local_indices, algorithm, meta);
-                let n: usize = self.num_vertices(mesh);
-                indices.extend(
-                    local_indices
-                        .iter()
-                        .map(|i| V::new(v0 + ((i.index() + n - 1) % n))),
-                );
+                self.tesselate_inner(mesh, &mut tri, algorithm, meta);
+               tri.map_indices(&id_map);
             }
             GenerateNormals::AllSmooth => {
                 todo!("GenerateNormals::AllSmooth")
