@@ -157,7 +157,7 @@ fn _make_2d_random_star() -> MeshVec3 {
 }
 
 fn _make_2d_zigzag() -> MeshVec3 {
-    let n = 101;
+    let n = 50;
     let mut mesh = MeshVec3::polygon(
         &generate_zigzag::<Vec2>(n)
             .iter()
@@ -171,7 +171,8 @@ fn _make_2d_zigzag() -> MeshVec3 {
 fn make_mesh(_settings: &MeshSettings) -> MeshVec3 {
     //_make_hell_8()
     //MeshVec3::regular_polygon(1.0, 10000)
-    _make_spiral(_settings)
+    // _make_spiral(_settings)
+    _make_2d_zigzag()
     //MeshVec3::octahedron(1.0)
 }
 

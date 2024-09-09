@@ -20,7 +20,10 @@ pub fn generate_zigzag<Vec2: Vector2D>(n0: usize) -> Vec<Vec2> {
                 offset += 2.0.into();
             }
 
-            Vec2::from_xy(x, offset)
+            Vec2::from_xy(
+                x / Vec2::S::from_usize(n / 2) - 1.0.into(),
+                offset - 1.0.into(),
+            )
         })
         .collect()
 }

@@ -136,20 +136,19 @@ The package supports different triangulation algorithms. The robustness and rend
 -   **Heuristic** Heuristic algorithm that tries to find a compromise between the speed of `Sweep` and the quality of `EdgeMin`.
 -   **Auto** (default) Automatically choose the "best" algorithm based on the input, i.e., with the given ratio of numerical stability and performance. Currently, it uses specialized implementations for the smallest polygons, then uses `Delaunay`, then `Heuristic`, and finally falls back to `Sweep` for the largest polygons.
 
-| Algorithm   | Requirements | Worst Case | Circle 10 | Circle 100       | Circle 1000 | Circle 10000 | ZigZag 1000 | ZigZag 10000 |
-| ----------- | ------------ | ---------- | --------- | ---------------- | ----------- | ------------ | ----------- | ------------ |
-| Fan         | Convex       | n          | 0.258µs   | 1.781µs¹ (0fps)² | 17.19µs     | 172.4µs      | -           | -            |
-| EarClipping | Simple       | n^2        | 0.792µs   | 35.32µs          | 3.164ms     | 3.402s       | 48.05ms     | 46.03s       |
-| Sweep       | None         | n log n    | 1.582µs   | 13.22µs          | 139.0µs     | 1.552ms      | 403.1µs     | 4.292ms      |
-| Delaunay    | Simple       | n log n    | 3.037µs   | 34.00µs          | 339.5µs     | 3.725ms      | 1.796ms     | 166.0ms      |
-| EdgeFlip    | Simple       | n^3        |           |                  |             |              |             |
-| MinWeight³  | Simple       | 2^n        |           |                  |             |              |             |
-| Heuristic   | Simple       | n log n    |           |                  |             |              |             |
-| Auto        | Simple       | n log n    |           |                  |             |              |             |
+| Algorithm   | Requirements | Worst Case | Circle 10        | Circle 100         | Circle 1000       | Circle 10000      | ZigZag 1000       | ZigZag 10000      |
+| ----------- | ------------ | ---------- | ---------------- | ------------------ | ----------------- | ----------------- | ----------------- | ----------------- |
+| Fan         | Convex       | n          | 0.258µs (151fps) | 1.781µs¹ (118fps)² | 17.19µs (52.4fps) | 172.4µs (12.5fps) | -                 | -                 |
+| EarClipping | Simple       | n^2        | 0.792µs (150fps) | 35.32µs (118fps)   | 3.164ms (52.1fps) | 3.402s (11.4fps)  | 48.05ms (35.6fps) | 46.03s (9.51fps)  |
+| Sweep       | None         | n log n    | 1.582µs (151fps) | 13.22µs (118fps)   | 139.0µs (44.2fps) | 1.552ms (9.87fps) | 403.1µs (42.8fps) | 4.292ms (9.87fps) |
+| Delaunay    | Simple       | n log n    | 3.037µs (151fps) | 34.00µs (134fps)   | 339.5µs (132fps)  | 3.725ms (129fps)  | 1.796ms (42.1fps) | 166.0ms (9.33fps) |
+| EdgeFlip    | Simple       | n^3        |                  |                    |                   |                   |                   |
+| MinWeight   | Simple       | 2^n        |                  |                    |                   |                   |                   |
+| Heuristic   | Simple       | n log n    |                  |                    |                   |                   |                   |
+| Auto        | Simple       | n log n    |                  |                    |                   |                   |                   |
 
--   ¹) Time for triangulation on a Intel i7-12700K (single threaded). Run the benchmarks using `cargo bench --features benchmarks`.
--   ²) when rendering 100 large, transparent instances with the bevy 0.14 pbr shader on a Nvidia GeForce RTX 4060 Ti in Full HD. See `cargo run --example fps_bench --profile release --features="bevy bevy/bevy_pbr bevy/bevy_winit bevy/tonemapping_luts"`
--   ³) TODO: Number of iterations
+-   ¹) Time for the triangulation on a Intel i7-12700K (single threaded). Run the benchmarks using `cargo bench --features benchmarks`.
+-   ²) FPS when rendering 100 large, transparent instances with the bevy 0.14.2 pbr shader on a Nvidia GeForce RTX 4060 Ti in Full HD. See `cargo run --example fps_bench --profile release --features="bevy bevy/bevy_pbr bevy/bevy_winit bevy/tonemapping_luts"`. For the non-Delaunay algorithms, the rendering time detoriates for the larger circles since the edge length is not minimized causing significant overdraw.
 
 ## Supported Bevy Versions
 

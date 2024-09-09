@@ -70,10 +70,10 @@ fn setup(
     mut mesh_list: ResMut<MeshList>,
 ) {
     for algo in [
-        TriangulationAlgorithm::Delaunay,
-        TriangulationAlgorithm::Sweep,
-        //TriangulationAlgorithm::EarClipping,
-        TriangulationAlgorithm::Fan,
+        //TriangulationAlgorithm::Delaunay,
+        //TriangulationAlgorithm::Sweep,
+        TriangulationAlgorithm::EarClipping,
+        //TriangulationAlgorithm::Fan,
     ] {
         for (name, num_vertices, mesh) in [
             ("circle10", 10, MeshVec3::regular_star(1.0, 1.0, 10)),
@@ -87,6 +87,9 @@ fn setup(
             ("zigzag1000", 1000, zigzag(1000)),
             ("zigzag10000", 10000, zigzag(10000)),
         ] {
+            if num_vertices > 1000 && algo == TriangulationAlgorithm::EarClipping {
+                continue;
+            }
             mesh_list.0.push((
                 name.to_string() + format!("_{:?}", algo).as_str(),
                 meshes.add(mesh.to_bevy_ex(RenderAssetUsages::all(), algo, GenerateNormals::Flat)),
@@ -153,16 +156,17 @@ fn update_mesh(
     }
 
     let mesh = mesh_list.0[state.next_mesh_index].clone();
-    let mesh_num_vertices = mesh.2;
-    let material = materials.add(Color::srgba(0.0, 0.0, 1.0, 0.1));
+    let _mesh_num_vertices = mesh.2;
+    let material = materials.add(Color::srgba(0.0, 0.0, 1.0, 0.01));
 
     // Spawn the next mesh
     for i in 0..TARGET_INSTANCES {
-        //(TARGET_VERTICES / mesh_num_vertices) {
+        //(TARGET_VERTICES / _mesh_num_vertices) {
         commands.spawn(PbrBundle {
             mesh: mesh.1.clone(),
             material: material.clone(),
-            transform: Transform::from_scale(Vec3::splat(4.0)),
+            transform: Transform::from_scale(Vec3::splat(4.0))
+                .with_translation(Vec3::splat(0.01 * i as f32)),
             ..default()
         });
     }
