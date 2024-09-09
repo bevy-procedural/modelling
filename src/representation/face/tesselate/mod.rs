@@ -114,8 +114,8 @@ where
                 self.sweep_line(mesh, &mut tri, meta);
             }
             TriangulationAlgorithm::MinWeight => {
-                todo!("TriangulationAlgorithm::MinWeight is not implemented yet");
                 self.min_weight_triangulation_stoch(mesh, indices);
+                todo!("TriangulationAlgorithm::MinWeight is not implemented yet");
             }
             TriangulationAlgorithm::Delaunay => {
                 self.delaunay_triangulation(mesh, &mut tri);
@@ -153,6 +153,7 @@ where
                 self.tesselate_inner(mesh, indices, algorithm, meta);
             }
             GenerateNormals::Flat => {
+                todo!("GenerateNormals::Flat");
                 let v0 = vertices.len();
                 let normal = self.normal(mesh);
                 self.vertices(mesh).for_each(|v| {
@@ -160,12 +161,12 @@ where
                     p.set_normal(normal);
                     vertices.push(p)
                 });
-                todo!("GenerateNormals::Flat");
                 let mut local_indices = Vec::new();
                 self.tesselate_inner(mesh, &mut local_indices, algorithm, meta);
                 indices.extend(local_indices.iter().map(|i| V::new(v0 + i.index())));
             }
             GenerateNormals::Smooth => {
+                todo!("GenerateNormals::Smooth");
                 let v0 = vertices.len();
                 let normal = self.normal(mesh);
                 self.vertices(mesh)
@@ -179,7 +180,6 @@ where
                         p.set_normal(no);
                         vertices.push(p)
                     });
-                todo!("GenerateNormals::Smooth");
                 let mut local_indices = Vec::new();
                 self.tesselate_inner(mesh, &mut local_indices, algorithm, meta);
                 let n: usize = self.num_vertices(mesh);

@@ -16,6 +16,8 @@ use crate::{
 /// Perform the sweep line triangulation
 /// The sweep line moves from the top (positive y) to the bottom (negative y).
 ///
+/// See [CMSC 754](https://web.archive.org/web/20240603202156/https://www.cs.umd.edu/class/spring2020/cmsc754/Lects/lect05-triangulate.pdf) for more information on the algorithm.
+///
 /// `indices` is the list of indices where the new triangles are appended (in local coordinates)
 /// `vec2s` is the list of 2d-vertices with local indices
 /// `meta` is a structure where debug information can be stored

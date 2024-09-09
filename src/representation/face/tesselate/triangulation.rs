@@ -3,16 +3,16 @@ use std::collections::{HashMap, HashSet};
 
 /// A vertex with its index in the global structure
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct IndexedVertex2D<I: IndexType, Vec2: Vector2D> {
+pub struct IndexedVertex2D<V: IndexType, Vec2: Vector2D> {
     /// Position of the point
     pub vec: Vec2,
     /// Index in the global structure
-    pub index: I,
+    pub index: V,
 }
 
-impl<I: IndexType, Vec2: Vector2D> IndexedVertex2D<I, Vec2> {
+impl<V: IndexType, Vec2: Vector2D> IndexedVertex2D<V, Vec2> {
     /// Create a new indexed vertex
-    pub fn new(vec: Vec2, index: I) -> Self {
+    pub fn new(vec: Vec2, index: V) -> Self {
         IndexedVertex2D { vec, index }
     }
 
@@ -20,7 +20,7 @@ impl<I: IndexType, Vec2: Vector2D> IndexedVertex2D<I, Vec2> {
     pub fn from_vector(vec: Vec<Vec2>) -> Vec<Self> {
         vec.into_iter()
             .enumerate()
-            .map(|(i, v)| IndexedVertex2D::new(v, I::new(i)))
+            .map(|(i, v)| IndexedVertex2D::new(v, V::new(i)))
             .collect()
     }
 }
@@ -29,17 +29,17 @@ impl<I: IndexType, Vec2: Vector2D> IndexedVertex2D<I, Vec2> {
 /// Will borrow the index buffer and append new triangles to it.
 /// Most methods will only look at the indices that are added after the borrow startet.
 /// It's fine to add triangles to the index buffer directly while it is borrowed.
-pub struct Triangulation<'a, I: IndexType> {
+pub struct Triangulation<'a, V: IndexType> {
     /// The index buffer
-    indices: &'a mut Vec<I>,
+    indices: &'a mut Vec<V>,
 
     /// The position of the index where _this_ `Triangulation` begins
     start: usize,
 }
 
-impl<'a, I: IndexType> Triangulation<'a, I> {
+impl<'a, V: IndexType> Triangulation<'a, V> {
     /// Create a new triangulation
-    pub fn new(indices: &'a mut Vec<I>) -> Self {
+    pub fn new(indices: &'a mut Vec<V>) -> Self {
         Triangulation {
             start: indices.len(),
             indices,
@@ -47,17 +47,17 @@ impl<'a, I: IndexType> Triangulation<'a, I> {
     }
 
     /// Insert a triangle into the triangulation using global indices
-    pub fn insert_triangle(&mut self, a: I, b: I, c: I) {
+    pub fn insert_triangle(&mut self, a: V, b: V, c: V) {
         self.indices.extend([a, b, c]);
     }
 
     /// Get the ith index that was added to the triangulation
-    pub fn get_index(&self, i: usize) -> I {
+    pub fn get_index(&self, i: usize) -> V {
         self.indices[self.start + i]
     }
 
     /// Get a triangle from the triangulation using the number of the triangle in the triangulation
-    pub fn get_triangle(&self, i: usize) -> (I, I, I) {
+    pub fn get_triangle(&self, i: usize) -> (V, V, V) {
         (
             self.indices[self.start + 3 * i],
             self.indices[self.start + 3 * i + 1],
@@ -66,7 +66,7 @@ impl<'a, I: IndexType> Triangulation<'a, I> {
     }
 
     /// Get the area of a triangle in the triangulation
-    pub fn get_triangle_area<V: Vector2D>(&self, i: usize, vec_hm: &HashMap<I, V>) -> V::S {
+    pub fn get_triangle_area<Vec2d: Vector2D>(&self, i: usize, vec_hm: &HashMap<V, Vec2d>) -> Vec2d::S {
         let (i1, i2, i3) = self.get_triangle(i);
         let v0 = vec_hm[&i1];
         let v1 = vec_hm[&i2];
@@ -77,12 +77,12 @@ impl<'a, I: IndexType> Triangulation<'a, I> {
     }
 
     /// Insert a triangle into the triangulation using local indices
-    pub fn insert_triangle_local<V: Vector2D>(
+    pub fn insert_triangle_local<Vec2d: Vector2D>(
         &mut self,
         a: usize,
         b: usize,
         c: usize,
-        vec2s: &Vec<IndexedVertex2D<I, V>>,
+        vec2s: &Vec<IndexedVertex2D<V, Vec2d>>,
     ) {
         self.indices
             .extend([vec2s[a].index, vec2s[b].index, vec2s[c].index]);
@@ -96,7 +96,7 @@ impl<'a, I: IndexType> Triangulation<'a, I> {
     }
 
     /// Check for non-degenerate triangles (no zero-area triangles)
-    pub fn verify_non_degenerate_triangle<Vec2: Vector2D>(self: &Self, vec_hm: &HashMap<I, Vec2>) {
+    pub fn verify_non_degenerate_triangle<Vec2: Vector2D>(self: &Self, vec_hm: &HashMap<V, Vec2>) {
         for i in self.start..self.len() {
             let area = self.get_triangle_area(i, vec_hm);
             assert!(
@@ -107,7 +107,7 @@ impl<'a, I: IndexType> Triangulation<'a, I> {
     }
 
     /// Check for valid indices (i.e., they should be within the bounds of the vertices)
-    pub fn verify_indices<Vec2: Vector2D>(self: &Self, vec2s: &Vec<IndexedVertex2D<I, Vec2>>) {
+    pub fn verify_indices<Vec2: Vector2D>(self: &Self, vec2s: &Vec<IndexedVertex2D<V, Vec2>>) {
         // Check that the triangulation returns the correct number of triangles
         let num_vertices = vec2s.len();
         let num_triangles = self.len();
@@ -125,7 +125,7 @@ impl<'a, I: IndexType> Triangulation<'a, I> {
     }
 
     /// Check that no two triangles have intersecting edges
-    pub fn verify_no_intersections<Vec2: Vector2D>(self: &Self, vec_hm: &HashMap<I, Vec2>) {
+    pub fn verify_no_intersections<Vec2: Vector2D>(self: &Self, vec_hm: &HashMap<V, Vec2>) {
         let num_vertices = vec_hm.len();
         for i in (0..num_vertices).step_by(3) {
             for j in (0..num_vertices).step_by(3) {
@@ -161,9 +161,9 @@ impl<'a, I: IndexType> Triangulation<'a, I> {
     }
 
     /// Sum the area of all triangles added to the index buffer since the triangulation was created
-    pub fn get_area<V: Vector2D>(self: &Self, vec_hm: &HashMap<I, V>) -> V::S {
-        V::S::from(0.5)
-            * V::S::sum(
+    pub fn get_area<Vec2d: Vector2D>(self: &Self, vec_hm: &HashMap<V, Vec2d>) -> Vec2d::S {
+        Vec2d::S::from(0.5)
+            * Vec2d::S::sum(
                 (0..self.len())
                     .into_iter()
                     .map(|i| self.get_triangle_area(i, vec_hm).abs()),
@@ -171,17 +171,18 @@ impl<'a, I: IndexType> Triangulation<'a, I> {
     }
 
     /// Calculate the area of the polygon and check if it is the same as the sum of the areas of the triangles
-    pub fn verify_area<V: Vector2D, Poly: Polygon<V, S = V::S>>(
+    pub fn verify_area<Vec2d: Vector2D, Poly: Polygon<Vec2d, S = Vec2d::S>>(
         self: &Self,
-        vec2s: &Vec<IndexedVertex2D<I, V>>,
-        vec_hm: &HashMap<I, V>,
+        vec2s: &Vec<IndexedVertex2D<V, Vec2d>>,
+        vec_hm: &HashMap<V, Vec2d>,
     ) {
         let area = self.get_area(vec_hm);
         let reference = Poly::from_iter(vec2s.iter().map(|v| v.vec)).area();
 
         // Check if the area of the polygon is the same as the sum of the areas of the triangles
         assert!(
-            (V::S::ONE - area / reference).abs() <= (V::S::ONE + V::S::from_usize(5) * V::S::EPS),
+            (Vec2d::S::ONE - area / reference).abs()
+                <= (Vec2d::S::ONE + Vec2d::S::from_usize(5) * Vec2d::S::EPS),
             "Area of the polygon is not equal to the sum of the areas of the triangles ({} != {})",
             area,
             reference
@@ -189,7 +190,7 @@ impl<'a, I: IndexType> Triangulation<'a, I> {
     }
 
     /// Check that the set of used indices exactly matches the set of indices in the triangulation
-    pub fn verify_all_indices_used<V: Vector2D>(self: &Self, vec2s: &Vec<IndexedVertex2D<I, V>>) {
+    pub fn verify_all_indices_used<Vec2d: Vector2D>(self: &Self, vec2s: &Vec<IndexedVertex2D<V, Vec2d>>) {
         let mut seen = HashSet::new();
         for i in self.start..self.indices.len() {
             seen.insert(self.indices[i]);

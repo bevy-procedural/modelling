@@ -39,7 +39,7 @@ pub enum VertexType {
     /// Polygon is monotone at this vertex.
     /// Can be a hidden Start or End vertex that will be discovered during the sweep.
     /// One edge is to the left, and one to the right, and the polygon interior is above or below.
-    /// TODO: Distinguish upper- and lower-chain regular vertices at this point already
+    /// PERF: Distinguish upper- and lower-chain regular vertices at this point already
     Regular,
 
     /// If two vertices are parallel to the sweep line we cannot say whether
