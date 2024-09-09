@@ -410,14 +410,7 @@ mod tests {
         let mut meta = SweepMeta::default();
         sweep_line_triangulation(&mut tri, &vec2s, &mut meta);
 
-        let vec_hm: HashMap<usize, Vec2> =
-            vec2s.iter().enumerate().map(|(i, v)| (i, v.vec)).collect();
-
-        tri.verify_indices(&vec2s);
-        tri.verify_all_indices_used(&vec2s);
-        tri.verify_no_intersections(&vec_hm);
-        tri.verify_non_degenerate_triangle(&vec_hm);
-        tri.verify_area::<Vec2, Bevy2DPolygon>(&vec2s, &vec_hm);
+        tri.verify_full::<Vec2, Bevy2DPolygon>(vec2s);
     }
 
     fn liv_from_array(arr: &[[f32; 2]]) -> Vec<IndexedVertex2D<usize, Vec2>> {

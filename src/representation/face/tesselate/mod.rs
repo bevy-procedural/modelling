@@ -131,7 +131,6 @@ where
             }
         }
 
-        // TODO: verify tri.ve
     }
 
     /// Converts the face into a triangle list.

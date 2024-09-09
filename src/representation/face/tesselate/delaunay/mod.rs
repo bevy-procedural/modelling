@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use super::{Face, Mesh, Payload, Triangulation};
 use crate::{
     math::{Scalar, Vector, Vector3D},
@@ -16,7 +18,7 @@ where
     pub fn delaunay_triangulation<V: IndexType, P: Payload>(
         &self,
         mesh: &Mesh<E, V, F, P>,
-        indices: &mut Triangulation<V>,
+        tri: &mut Triangulation<V>,
     ) where
         P::Vec: Vector3D<S = P::S>,
     {
@@ -48,10 +50,20 @@ where
             let v0 = i2v[p0.index()];
             let v1 = i2v[p1.index()];
             let v2 = i2v[p2.index()];
-
-            if self.is_inside(mesh, v0, v1, v2) {
-                indices.insert_triangle(v0, v1, v2);
+            let r = self.triangle_touches_boundary(mesh, v0, v1, v2);
+            if r.is_none() || r.unwrap() {
+                tri.insert_triangle(v0, v1, v2);
             }
+        });
+
+        debug_assert!({
+            let vec2s = self.vec2s(mesh);
+            let vec_hm: HashMap<V, P::Vec2> = vec2s.iter().map(|v| (v.index, v.vec)).collect();
+            tri.verify_indices(&vec_hm);
+            tri.verify_all_indices_used(&vec2s);
+            tri.verify_no_intersections(&vec_hm);
+            tri.verify_non_degenerate_triangle(&vec_hm);
+            true
         });
     }
 }

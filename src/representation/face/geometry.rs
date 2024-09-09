@@ -1,5 +1,6 @@
 use super::{
     super::{payload::Payload, IndexType, Mesh},
+    tesselate::IndexedVertex2D,
     Face,
 };
 use crate::math::{LineSegment2D, Scalar, Transform, Vector, Vector3D};
@@ -149,6 +150,19 @@ impl<E: IndexType, F: IndexType> Face<E, F> {
             P::Trans::from_rotation_arc(self.normal(mesh).normalize(), z_axis.normalize());
         self.vertices(mesh)
             .map(move |v| (rotation.apply(*v.vertex()).xy(), v.id()))
+    }
+
+    /// Get a vector of 2d vertices of the face rotated to the XY plane.
+    pub fn vec2s<'a, V: IndexType, P: Payload>(
+        &'a self,
+        mesh: &'a Mesh<E, V, F, P>,
+    ) -> Vec<IndexedVertex2D<V, <P as Payload>::Vec2>>
+    where
+        P::Vec: Vector3D<S = P::S>,
+    {
+        self.vertices_2d::<V, P>(mesh)
+            .map(|(p, i)| IndexedVertex2D::<V, P::Vec2>::new(p, i))
+            .collect()
     }
 
     /// Naive method to get the center of the face by averaging the vertices.

@@ -5,6 +5,7 @@ use bevy::prelude::*;
 
 // TODO: Convert this to a real gizmo where the text is requested every frame and other texts are deleted. Text widgets are re-used.
 // TODO: move this to its own crate
+// TODO: Hide text when it is behind objects
 
 /// Support for 3d text gizmos
 pub struct Text3dGizmosPlugin;

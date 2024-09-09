@@ -54,17 +54,19 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
 
 ## Feature Progress
 
--   [ ] Attributes
+-   Attributes
     -   [x] Positions
     -   [x] Normals
+    -   [ ] Crease Weights
     -   [ ] Smooth Surface Groups
     -   [ ] Tangents
     -   [ ] UV Coordinates
     -   [ ] Custom Attributes
--   [ ] Triangulation
+-   Triangulation
     -   [x] Montone Sweep-Line
     -   [x] Constrained Delaunay (using [Spade](https://github.com/Stoeoef/spade))
--   [ ] Primitives
+    -   [ ] Steiner Points
+-   Primitives
     -   [x] Polygon, Star
     -   [x] Cuboid
     -   [x] Cylinder, Cone, Frustum, Tetrahedron, Octahedron
@@ -73,12 +75,12 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
     -   [ ] Cube Sphere
     -   [ ] Icosphere
     -   [ ] Torus
--   [ ] Builder Primitives
+-   Builder Primitives
     -   [x] Lines
     -   [ ] Quadratic Bezier Curves
     -   [ ] Cubic Bezier Curves
     -   [ ] Curved Surfaces (Bezier Surfaces / Parametric Surfaces / NURBS / Spline Networks...?)
--   [ ] Operations
+-   Operations
     -   [x] Extrude
     -   [ ] Loft
     -   [ ] Inset
@@ -92,17 +94,17 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
     -   [ ] Subdivision
     -   [ ] Morphing
     -   [ ] Voxelization
--   [ ] Tools
+-   Tools
     -   [ ] Geodesic Pathfinding
     -   [ ] Raycasting
     -   [ ] Topology Analysis
     -   [ ] Spatial Data Structures
--   [ ] Debug Visualizations
+-   Debug Visualizations
     -   [x] Indices
     -   [ ] Normals
     -   [ ] Tangents
     -   [ ] Topology
--   [ ] Backends
+-   Backends
     -   [x] Bevy
     -   [ ] wgpu
 
@@ -112,6 +114,12 @@ The following features are available:
 
 -   `meshopt` -- Use [Meshopt](https://github.com/gwihlidal/meshopt-rs) to optimize the performance of generated meshes.
 -   `bevy` -- Compiles with support for bevy. Necessary for the examples and the editor.
+-   `benchmarks` -- Enable [criterion](https://github.com/bheisler/criterion.rs) for the benchmarks.
+
+For development only:
+
+-   `sweep_debug` -- Collect debug information during the sweepline triangulation and enable visualizations in the bevy backend.
+-   `sweep_debug_print` -- Print debug information for the sweepline triangulation.
 
 ## Triangulation algorithms
 
@@ -130,14 +138,14 @@ The package supports different triangulation algorithms. The robustness and rend
 
 | Algorithm   | Requirements | Worst Case | Circle 10 | Circle 100   | Circle 1000 | Circle 10000 | ZigZag 10001 |
 | ----------- | ------------ | ---------- | --------- | ------------ | ----------- | ------------ | ------------ |
-| Fan         | Convex       | n          |           | 0ms¹ (0fps)² |             |              |              |
+| Fan         | Convex       | n          |           | 0ms¹ (0fps)² |             |              | -            |
 | EarClipping | Simple       | n^2        | 0.784µs   | 33.83µs      | 3.095ms     | 140.9ms      | 55.66s       |
 | Sweep       | None         | n log n    | 1.600µs   | 12.89µs      | 136.7µs     | 1.512ms      | 9.271ms      |
 | Delaunay    | Simple       | n log n    | 2.899µs   | 33.39µs      | 334.0µs     | 3.788ms      | 654.8ms      |
 | EdgeFlip    | Simple       | n^3        |           |              |             |              |              |
 | MinWeight³  | Simple       | 2^n        |           |              |             |              |              |
-| Heuristic   | ?            |            |           |              |             |              |              |
-| Auto        | ?            | n^2        |           |              |             |              |              |
+| Heuristic   | Simple       |            |           |              |             |              |              |
+| Auto        | Simple       | n^2        |           |              |             |              |              |
 
 -   ¹) Time for triangulation on a Intel i7-12700K (single threaded). Run the benchmarks using `cargo bench --features benchmarks` and `cargo flamegraph --unit-test -- representation::face::tesselate::sweep::sweep::tests::sweep_tricky_shape`.
 -   ²) when rendering one million vertices worth of the mesh with the bevy 0.14 pbr shader on a Nvidia GeForce RTX 4060 Ti
