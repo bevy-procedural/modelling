@@ -4,7 +4,7 @@ use bevy::{
     math::{Quat, Vec2, Vec3},
     transform::components::Transform,
 };
-use criterion::{criterion_group, criterion_main, measurement::WallTime, BenchmarkId, Criterion};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use procedural_modelling::representation::{
     bevy::MeshVec3,
     primitives::generate_zigzag,
@@ -38,7 +38,9 @@ fn zigzag(n: usize) -> MeshVec3 {
 
 fn bench_triangulation(c: &mut Criterion) {
     let mut group = c.benchmark_group("Triangulation");
-    group.sample_size(10).measurement_time(Duration::from_secs(5));
+    group
+        .sample_size(10)
+        .measurement_time(Duration::from_secs(5));
 
     for (name, mesh) in [
         //("Spiral", _make_spiral()),
@@ -63,9 +65,9 @@ fn bench_triangulation(c: &mut Criterion) {
             );
         };
 
-        create_bench("Sweep", TriangulationAlgorithm::Sweep);
-        create_bench("Delaunay", TriangulationAlgorithm::Delaunay);
-        create_bench("Ears", TriangulationAlgorithm::EarClipping);
+        //create_bench("Sweep", TriangulationAlgorithm::Sweep);
+        //create_bench("Delaunay", TriangulationAlgorithm::Delaunay);
+        //create_bench("Ears", TriangulationAlgorithm::EarClipping);
         //create_bench("Fan", TriangulationAlgorithm::Fan);
     }
 

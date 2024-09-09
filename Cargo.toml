@@ -56,8 +56,13 @@ spade = "^2.9.0"
 criterion = { version = "0.5.1", features = ["html_reports"], optional = true }
 
 [features]
-default = ["bevy", "sweep_debug"]
-bevy = ["dep:bevy", "dep:bevy-inspector-egui", "bevy/bevy_gizmos", "bevy/default_font"]
+default = ["bevy", "sweep_debug", "benchmarks"]
+bevy = [
+    "dep:bevy",
+    "dep:bevy-inspector-egui",
+    "bevy/bevy_gizmos",
+    "bevy/default_font",
+]
 dynamic = ["bevy/dynamic_linking"]
 meshopt = ["dep:meshopt"]
 benchmarks = ["dep:criterion"]
@@ -69,6 +74,12 @@ name = "box"
 path = "examples/box.rs"
 doc-scrape-examples = true
 required-features = ["bevy", "bevy/bevy_pbr"]
+
+[[example]]
+name = "fps_bench"
+path = "examples/fps_bench.rs"
+doc-scrape-examples = true
+required-features = ["bevy", "bevy/bevy_pbr", "bevy/bevy_winit", "bevy/tonemapping_luts"]
 
 [[bench]]
 name = "triangulation"

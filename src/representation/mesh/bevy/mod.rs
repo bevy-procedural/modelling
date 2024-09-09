@@ -56,19 +56,27 @@ where
     /// Replace the mesh's attributes with the current mesh.
     /// Requires the mesh to be a triangle list and have the MAIN_WORLD usage.
     pub fn bevy_set(&self, mesh: &mut bevy::render::mesh::Mesh) {
-        self.bevy_set_ex(mesh, &mut TesselationMeta::default());
+        self.bevy_set_ex(
+            mesh,
+            TriangulationAlgorithm::Auto,
+            &mut TesselationMeta::default(),
+        );
     }
 
     /// Like bevy_set, but with additional meta information
-    pub fn bevy_set_ex(&self, mesh: &mut bevy::render::mesh::Mesh, meta: &mut TesselationMeta<V>) {
+    pub fn bevy_set_ex(
+        &self,
+        mesh: &mut bevy::render::mesh::Mesh,
+        algo: TriangulationAlgorithm,
+        meta: &mut TesselationMeta<V>,
+    ) {
         assert!(mesh.primitive_topology() == PrimitiveTopology::TriangleList);
         assert!(mesh.asset_usage.contains(RenderAssetUsages::MAIN_WORLD));
         Self::bevy_remove_attributes(mesh);
 
         // use https://crates.io/crates/stats_alloc to measure memory usage
         let now = Instant::now();
-        let (is, mut vs) =
-            self.tesselate(TriangulationAlgorithm::Delaunay, GenerateNormals::None, meta);
+        let (is, mut vs) = self.tesselate(algo, GenerateNormals::None, meta);
         let elapsed = now.elapsed();
         println!("///////////////////\nTriangulation took {:.2?}", elapsed);
 
@@ -95,6 +103,17 @@ where
     pub fn to_bevy(&self, usage: RenderAssetUsages) -> bevy::render::mesh::Mesh {
         let mut mesh = bevy::render::mesh::Mesh::new(PrimitiveTopology::TriangleList, usage);
         self.bevy_set(&mut mesh);
+        mesh
+    }
+
+    /// Convert the mesh to a bevy mesh with additional meta information
+    pub fn to_bevy_ex(
+        &self,
+        usage: RenderAssetUsages,
+        algo: TriangulationAlgorithm,
+    ) -> bevy::render::mesh::Mesh {
+        let mut mesh = bevy::render::mesh::Mesh::new(PrimitiveTopology::TriangleList, usage);
+        self.bevy_set_ex(&mut mesh, algo, &mut TesselationMeta::default());
         mesh
     }
 }
