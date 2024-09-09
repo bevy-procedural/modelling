@@ -123,7 +123,7 @@ For development only:
 
 ## Triangulation algorithms
 
-The package supports different triangulation algorithms. The robustness and rendering speed of the produced triangulations varies significantly. These performance differences usually only matter for meshes with extremely large flat surfaces. In the table below, we compare the performance of the different algorithms for a circle with 100, 1000, and 10000 vertices. The "ZigZag" mesh has 10001 vertices and is designed to demonstrate the worst-case for the Sweep algorithm.
+The package supports different triangulation algorithms. The robustness and rendering speed of the produced triangulations varies significantly. These performance differences usually only matter for meshes with extremely large flat surfaces. In the table below, we compare the performance of the different algorithms for a circle with 100, 1000, and 10000 vertices. The "ZigZag" mesh has 10000 vertices and is designed to demonstrate the worst-case for the Sweep algorithm.
 
 -   **Fan** Extremely fast, but only works for convex polygons. And even then, results are usually numerically unstable. Runs in O(n) time.
     Fan
@@ -136,16 +136,16 @@ The package supports different triangulation algorithms. The robustness and rend
 -   **Heuristic** Heuristic algorithm that tries to find a compromise between the speed of `Sweep` and the quality of `EdgeMin`.
 -   **Auto** (default) Automatically choose the "best" algorithm based on the input, i.e., with the given ratio of numerical stability and performance. Currently, it uses specialized implementations for the smallest polygons, then uses `Delaunay`, then `Heuristic`, and finally falls back to `Sweep` for the largest polygons.
 
-| Algorithm   | Requirements | Worst Case | Circle 10 | Circle 100   | Circle 1000 | Circle 10000 | ZigZag 1001 | ZigZag 10001 |
-| ----------- | ------------ | ---------- | --------- | ------------ | ----------- | ------------ | ----------- | ------------ |
-| Fan         | Convex       | n          |           | 0ms¹ (0fps)² |             |              | -           | -            |
-| EarClipping | Simple       | n^2        | 0.792µs   | 35.32µs      | 3.164ms     | 3.402s       | 376.3ms     | 6.16min      |
-| Sweep       | None         | n log n    | 1.582µs   | 13.22µs      | 139.0µs     | 1.552ms      | 844.0µs     | 9.433ms      |
-| Delaunay    | Simple       | n log n    | 3.037µs   | 34.00µs      | 339.5µs     | 3.725ms      | 6.705ms     | 655.0ms      |
-| EdgeFlip    | Simple       | n^3        |           |              |             |              |             |
-| MinWeight³  | Simple       | 2^n        |           |              |             |              |             |
-| Heuristic   | Simple       |            |           |              |             |              |             |
-| Auto        | Simple       | n^2        |           |              |             |              |             |
+| Algorithm   | Requirements | Worst Case | Circle 10 | Circle 100       | Circle 1000 | Circle 10000 | ZigZag 1000 | ZigZag 10000 |
+| ----------- | ------------ | ---------- | --------- | ---------------- | ----------- | ------------ | ----------- | ------------ |
+| Fan         | Convex       | n          | 0.258µs   | 1.781µs¹ (0fps)² | 17.19µs     | 172.4µs      | -           | -            |
+| EarClipping | Simple       | n^2        | 0.792µs   | 35.32µs          | 3.164ms     | 3.402s       | 48.05ms     | 46.03s       |
+| Sweep       | None         | n log n    | 1.582µs   | 13.22µs          | 139.0µs     | 1.552ms      | 403.1µs     | 4.292ms      |
+| Delaunay    | Simple       | n log n    | 3.037µs   | 34.00µs          | 339.5µs     | 3.725ms      | 1.796ms     | 166.0ms      |
+| EdgeFlip    | Simple       | n^3        |           |                  |             |              |             |
+| MinWeight³  | Simple       | 2^n        |           |                  |             |              |             |
+| Heuristic   | Simple       | n log n    |           |                  |             |              |             |
+| Auto        | Simple       | n log n    |           |                  |             |              |             |
 
 -   ¹) Time for triangulation on a Intel i7-12700K (single threaded). Run the benchmarks using `cargo bench --features benchmarks` and `cargo flamegraph --unit-test -- representation::face::tesselate::sweep::sweep::tests::sweep_tricky_shape`.
 -   ²) when rendering one million vertices worth of the mesh with the bevy 0.14 pbr shader on a Nvidia GeForce RTX 4060 Ti

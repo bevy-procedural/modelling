@@ -125,7 +125,7 @@ where
                 todo!("TriangulationAlgorithm::EdgeFlip is not implemented yet");
             }
             TriangulationAlgorithm::Fan => {
-                todo!("TriangulationAlgorithm::Fan is not implemented yet");
+                self.fan_triangulation(mesh, &mut tri);
             }
             TriangulationAlgorithm::Heuristic => {
                 todo!("TriangulationAlgorithm::Heuristic is not implemented yet");

@@ -1,11 +1,12 @@
 use rand::Rng;
 
-use crate::math::{Scalar, HasZero, Vector2D};
+use crate::math::{HasZero, Scalar, Vector2D};
 
 /// Generates a zigzag pattern with `n` vertices, which
 /// is the worst case for the sweep line triangulation
-pub fn generate_zigzag<Vec2: Vector2D>(n: usize) -> Vec<Vec2> {
-    assert!(n % 2 == 1);
+pub fn generate_zigzag<Vec2: Vector2D>(n0: usize) -> Vec<Vec2> {
+    assert!(n0 >= 2 && n0 % 2 == 0);
+    let n = n0 / 2;
     (0..(2 * n))
         .map(|i| {
             let mut offset = Vec2::S::ZERO;

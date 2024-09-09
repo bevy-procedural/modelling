@@ -14,7 +14,7 @@ where
     pub fn fan_triangulation<V: IndexType, P: Payload>(
         &self,
         mesh: &Mesh<E, V, F, P>,
-        indices: &mut Vec<V>,
+        indices: &mut Triangulation<V>,
     ) {
         debug_assert!(self.may_be_curved() || self.is_planar2(mesh));
         debug_assert!(self.is_convex(mesh));
@@ -23,11 +23,7 @@ where
         self.vertices(mesh)
             .skip(1)
             .tuple_windows::<(_, _)>()
-            .for_each(|(a, b)| {
-                indices.push(center.id());
-                indices.push(a.id());
-                indices.push(b.id());
-            });
+            .for_each(|(a, b)| indices.insert_triangle(center.id(), a.id(), b.id()));
     }
 
     /// Quickly triangulates a (not necessarily convex) quadrilateral.
