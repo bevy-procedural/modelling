@@ -43,7 +43,7 @@ pub enum TriangulationAlgorithm {
     /// Heuristic algorithm that tries to find a compromise between the speed of `Sweep` and the quality of `EdgeMin`.
     Heuristic,
 
-    /// Automatically choose the "best" algorithm based on the input, i.e., with the given ratio of numerical stability and performance. Currently, it uses specialized implementations for the smallest polygons, then uses `Delaunay`, then `Heuristic`, and finally falls back to `Sweep` for the largest polygons.
+    /// Automatically choose the "best" algorithm based on the input, i.e., with the given ratio of numerical stability and performance.
     #[default]
     Auto,
 }
@@ -96,12 +96,8 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
 
         match algorithm {
             TriangulationAlgorithm::Auto => {
-                // TODO: find a good threshold
-                if n < 15 {
-                    self.ear_clipping(mesh, tri, false);
-                } else {
-                    self.sweep_line(mesh, tri, meta);
-                }
+                // TODO: make something smarter
+                self.delaunay_triangulation(mesh, tri);
             }
             TriangulationAlgorithm::EarClipping => {
                 self.ear_clipping(mesh, tri, false);

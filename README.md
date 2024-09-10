@@ -133,7 +133,7 @@ The package supports different triangulation algorithms. The robustness and rend
     EdgeFlip,
 -   **MinWeight** Minimizes the overall edge length of the triangulation. Very slow, but produces the theoretically fastest rendering triangulations for large flat surfaces. Runs in O(2^n) time.
 -   **Heuristic** Heuristic algorithm that tries to find a compromise between the speed of `Sweep` and the quality of `EdgeMin`.
--   **Auto** (default) Automatically choose the "best" algorithm based on the input, i.e., with the given ratio of numerical stability and performance. Currently, it uses specialized implementations for the smallest polygons, then uses `Delaunay`, then `Heuristic`, and finally falls back to `Sweep` for the largest polygons.
+-   **Auto** (default) Automatically choose the "best" algorithm based on the input, i.e., with the given ratio of numerical stability and performance.
 
 | Algorithm   | Requirements | Worst Case | Circle 10        | Circle 100         | Circle 1000       | Circle 10000      | ZigZag 1000       | ZigZag 10000      |
 | ----------- | ------------ | ---------- | ---------------- | ------------------ | ----------------- | ----------------- | ----------------- | ----------------- |

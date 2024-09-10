@@ -12,6 +12,7 @@ use procedural_modelling::representation::{
 };
 use std::{f32::consts::PI, time::Duration};
 
+/*
 fn _make_spiral() -> BevyMesh3d {
     let mut mesh = BevyMesh3d::regular_star(1.0, 0.8, 30);
     mesh.transform(
@@ -25,7 +26,7 @@ fn _make_spiral() -> BevyMesh3d {
         f = mesh.extrude_face_ex(f, trans, true, true);
     }
     mesh
-}
+}*/
 
 fn zigzag(n: usize) -> BevyMesh3d {
     BevyMesh3d::polygon(
@@ -67,8 +68,8 @@ fn bench_triangulation(c: &mut Criterion) {
 
         create_bench("Sweep", TriangulationAlgorithm::Sweep);
         create_bench("Delaunay", TriangulationAlgorithm::Delaunay);
-        create_bench("Ears", TriangulationAlgorithm::EarClipping);
-        create_bench("Fan", TriangulationAlgorithm::Fan);
+        //create_bench("Ears", TriangulationAlgorithm::EarClipping);
+        //create_bench("Fan", TriangulationAlgorithm::Fan);
     }
 
     group.finish();

@@ -6,8 +6,6 @@ use crate::{
 use spade::{ConstrainedDelaunayTriangulation, Point2, Triangulation as _};
 use std::collections::HashMap;
 
-// TODO: allow Delaunay refinements!
-
 impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
     /// Converts the face into a triangle list using the delaunay triangulation.
     pub fn delaunay_triangulation<T: MeshType<E = E, F = F, FP = FP>>(
@@ -22,6 +20,7 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
 
         let mut cdt = ConstrainedDelaunayTriangulation::<Point2<_>>::default();
         //PERF: faster: ConstrainedDelaunayTriangulation::bulk_load()
+        // PERF: allow Delaunay refinements!
         let mut last = None;
         let mut first = None;
         let mut i2v = Vec::new();
@@ -51,6 +50,7 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
             }
         });
 
+        // TODO: make tests to perform these tests. This is too slow, even for debug builds!
         debug_assert!({
             let vec2s = self.vec2s(mesh);
             let vec_hm: HashMap<T::V, T::Vec2> = vec2s.iter().map(|v| (v.index, v.vec)).collect();

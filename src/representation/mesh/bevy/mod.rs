@@ -111,7 +111,7 @@ impl<T: MeshType<VP = BevyVertexPayload, Vec: Vector3D<S = T::S>>> Mesh<T> {
         );
         mesh.insert_attribute(
             bevy::render::mesh::Mesh::ATTRIBUTE_NORMAL,
-            VertexAttributeValues::Float32x3(vs.iter().map(|vp| vp.normal().to_array()).collect()),
+            VertexAttributeValues::Float32x3(vs.iter().map(|vp| (vp as &BevyVertexPayload).normal().to_array()).collect()),
         );
 
         // mesh.duplicate_vertices();

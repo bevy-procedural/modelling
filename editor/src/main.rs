@@ -172,7 +172,7 @@ fn _make_2d_zigzag() -> BevyMesh3d {
 
 fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     //_make_hell_8()
-    BevyMesh3d::regular_polygon(1.0, 100)
+    BevyMesh3d::regular_polygon(1.0, 10000)
     //_make_spiral(_settings)
     //_make_2d_zigzag()
     //BevyMesh3d::octahedron(1.0)
