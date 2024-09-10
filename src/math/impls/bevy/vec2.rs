@@ -1,5 +1,5 @@
-use crate::math::{HasZero, Vector, Vector2D};
-use bevy::math::{Affine2, Vec2, Vec3};
+use crate::math::{HasZero, Transform, Vector, Vector2D};
+use bevy::math::{Affine2, Vec2, Vec3, Vec4};
 
 impl HasZero for Vec2 {
     const ZERO: Self = Vec2::ZERO;
@@ -8,6 +8,7 @@ impl HasZero for Vec2 {
 impl Vector<f32> for Vec2 {
     type Vec2 = Vec2;
     type Vec3 = Vec3;
+    type Vec4 = Vec4;
     type Trans = Affine2;
 
     #[inline(always)]
@@ -28,11 +29,6 @@ impl Vector<f32> for Vec2 {
     #[inline(always)]
     fn dot(&self, other: &Self) -> f32 {
         Vec2::dot(*self, *other)
-    }
-
-    #[inline(always)]
-    fn cross(&self, other: &Self) -> Self {
-        Vec2::new(self.x() * other.y() - self.y() * other.x(), 0.0)
     }
 
     #[inline(always)]
@@ -98,5 +94,55 @@ impl Vector2D for Vec2 {
     /// Angle between two vectors.
     fn angle(&self, a: Self, b: Self) -> f32 {
         Vec2::angle_between(a - *self, b - *self)
+    }
+}
+
+impl Transform for Affine2 {
+    type S = f32;
+    type Vec = Vec2;
+    type Rotator = f32;
+
+    #[inline(always)]
+    fn identity() -> Self {
+        Affine2::IDENTITY
+    }
+
+    fn from_rotation(angle: f32) -> Self {
+        bevy::math::Affine2::from_angle(angle)
+    }
+
+    #[inline(always)]
+    fn from_rotation_arc(from: Vec2, to: Vec2) -> Self {
+        bevy::math::Affine2::from_angle(from.angle_between(to))
+    }
+
+    #[inline(always)]
+    fn from_translation(v: Vec2) -> Self {
+        bevy::math::Affine2::from_translation(v)
+    }
+
+    #[inline(always)]
+    fn from_scale(v: Vec2) -> Self {
+        bevy::math::Affine2::from_scale(v)
+    }
+
+    #[inline(always)]
+    fn with_scale(&self, scale: Self::Vec) -> Self {
+        bevy::math::Affine2::from_scale(scale) * *self
+    }
+
+    #[inline(always)]
+    fn with_translation(&self, v: Self::Vec) -> Self {
+        bevy::math::Affine2::from_translation(v) * *self
+    }
+
+    #[inline(always)]
+    fn apply(&self, v: Vec2) -> Vec2 {
+        bevy::math::Affine2::transform_point2(self, v)
+    }
+
+    #[inline(always)]
+    fn apply_vec(&self, v: Vec2) -> Vec2 {
+        bevy::math::Affine2::transform_vector2(self, v)
     }
 }

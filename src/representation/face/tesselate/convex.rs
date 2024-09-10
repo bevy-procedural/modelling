@@ -11,7 +11,9 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
         &self,
         mesh: &Mesh<T>,
         indices: &mut Triangulation<T::V>,
-    ) {
+    ) where
+        T::Vec: Vector3D<S = T::S>,
+    {
         debug_assert!(self.may_be_curved() || self.is_planar2(mesh));
         debug_assert!(self.is_convex(mesh));
 

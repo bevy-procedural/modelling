@@ -1,7 +1,7 @@
-use crate::representation::{IndexType, Mesh, MeshType, Vertex};
+use crate::representation::{DefaultEdgePayload, IndexType, Mesh, MeshType, Vertex};
 
 impl<T: MeshType> Mesh<T> {
-    /// Creates a new vertex based on `vp` and connects it to vertex `v` with a pair of halfedges 
+    /// Creates a new vertex based on `vp` and connects it to vertex `v` with a pair of halfedges
     /// TODO: Docs
     pub fn add_vertex_via_vertex(
         &mut self,
@@ -58,5 +58,15 @@ impl<T: MeshType> Mesh<T> {
         self.edge_mut(output).set_prev(e2);
 
         return (new, e1, e2);
+    }
+}
+
+impl<T: MeshType> Mesh<T>
+where
+    T::EP: DefaultEdgePayload,
+{
+    /// Same as `add_vertex_via_vertex` but with default edge payloads
+    pub fn add_vertex_via_vertex_default(&mut self, v: T::V, vp: T::VP) -> (T::V, T::E, T::E) {
+        self.add_vertex_via_vertex(v, vp, T::EP::default(), T::EP::default())
     }
 }

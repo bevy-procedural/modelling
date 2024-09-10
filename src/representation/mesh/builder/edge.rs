@@ -78,5 +78,14 @@ impl<T: MeshType> Mesh<T> {
         );
         return (e1, e2);
     }
+}
 
+impl<T: MeshType> Mesh<T>
+where
+    T::EP: DefaultEdgePayload,
+{
+    /// Same as `add_isolated_edge` but with default edge payloads
+    pub fn add_isolated_edge_default(&mut self, a: T::VP, b: T::VP) -> (T::V, T::V) {
+        self.add_isolated_edge(a, T::EP::default(), b, T::EP::default())
+    }
 }

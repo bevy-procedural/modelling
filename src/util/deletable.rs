@@ -33,6 +33,12 @@ impl<T: Deletable<I>, I: IndexType> DeletableVector<T, I> {
         }
     }
 
+    /// Deletes all elements.
+    pub fn clear(&mut self) {
+        self.data.clear();
+        self.deleted.clear();
+    }
+
     /// Returns an iterator over the non-deleted elements.
     pub fn iter(&self) -> impl Iterator<Item = &T> {
         self.data.iter().filter(|f| !f.is_deleted())

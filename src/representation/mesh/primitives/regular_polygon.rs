@@ -20,9 +20,9 @@ where
         let mut mesh = Mesh::<T>::new();
         assert!(v.len() >= 3);
         let (v0, mut current) = mesh.add_isolated_edge(
-            T::VP::from_vec(v[0]),
+            T::VP::from_pos(v[0]),
             Default::default(),
-            T::VP::from_vec(v[1]),
+            T::VP::from_pos(v[1]),
             Default::default(),
         );
         let mut last = current;
@@ -31,7 +31,7 @@ where
             current = mesh
                 .add_vertex_via_vertex(
                     current,
-                    T::VP::from_vec(v[i]),
+                    T::VP::from_pos(v[i]),
                     Default::default(),
                     Default::default(),
                 )
@@ -57,12 +57,12 @@ where
         let mut mesh = Mesh::<T>::new();
 
         let (v0, mut current) = mesh.add_isolated_edge(
-            T::VP::from_vec(T::Vec::from_xy(
+            T::VP::from_pos(T::Vec::from_xy(
                 inner_radius * T::S::from(a0.sin()),
                 inner_radius * T::S::from(a0.cos()),
             )),
             Default::default(),
-            T::VP::from_vec(T::Vec::from_xy(
+            T::VP::from_pos(T::Vec::from_xy(
                 outer_radius * T::S::from(a1.sin()),
                 outer_radius * T::S::from(a1.cos()),
             )),
@@ -81,7 +81,7 @@ where
             current = mesh
                 .add_vertex_via_vertex(
                     current,
-                    T::VP::from_vec(T::Vec::from_xy(
+                    T::VP::from_pos(T::Vec::from_xy(
                         r * T::S::from(angle.sin()),
                         r * T::S::from(angle.cos()),
                     )),

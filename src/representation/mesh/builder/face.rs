@@ -1,5 +1,5 @@
 use crate::{
-    representation::{Face, IndexType, Mesh, MeshType},
+    representation::{DefaultEdgePayload, DefaultFacePayload, Face, IndexType, Mesh, MeshType},
     util::iter::contains_exactly_one,
 };
 
@@ -112,5 +112,30 @@ impl<T: MeshType> Mesh<T> {
             self.edge_mut(e).delete_face();
         }
         self.faces.delete_internal(f);
+    }
+}
+
+impl<T: MeshType> Mesh<T>
+where
+    T::EP: DefaultEdgePayload,
+    T::FP: DefaultFacePayload,
+{
+    /// Same as `close_face_vertices` but with default edge and face payloads
+    pub fn close_face_vertices_default(
+        &mut self,
+        prev: T::V,
+        from: T::V,
+        to: T::V,
+        curved: bool,
+    ) -> T::F {
+        self.close_face_vertices(
+            prev,
+            Default::default(),
+            from,
+            Default::default(),
+            to,
+            Default::default(),
+            curved,
+        )
     }
 }

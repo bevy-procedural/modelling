@@ -1,6 +1,6 @@
 //! Payloads for vertices in n-dimensional space.
 
-use crate::math::{Scalar, Transform, Vector, Vector2D, Vector3D};
+use crate::math::{Quarternion, Scalar, Transform, Vector, Vector2D, Vector3D, Vector4D};
 
 #[cfg(feature = "bevy")]
 pub mod bevy;
@@ -19,9 +19,15 @@ pub trait VertexPayload: Clone + Default + PartialEq + std::fmt::Debug + std::fm
 
     /// The 3d vector type used in the payload.
     type Vec3: Vector3D<S = Self::S>;
+    
+    /// The 4d vector type used in the payload.
+    type Vec4: Vector4D<S = Self::S>;
 
     /// The transformation type used in the payload.
     type Trans: Transform<S = Self::S, Vec = Self::Vec>;
+
+    /// The quarternion type used in the payload.
+    type Quat: Quarternion<S = Self::S, Vec3 = Self::Vec3>;
 
     /// Returns a translated clone of the payload.
     fn translate(&self, v: &Self::Vec) -> Self;
@@ -29,8 +35,11 @@ pub trait VertexPayload: Clone + Default + PartialEq + std::fmt::Debug + std::fm
     /// Returns the coordinates of the payload as a reference.
     fn transform(&self, t: &Self::Trans) -> Self;
 
+    /// Returns the rotated clone of the payload.
+    fn rotate(&self, r: &Self::Quat) -> Self;
+
     /// returns the coordinates of the payload as an array
-    fn vertex(&self) -> &Self::Vec;
+    fn pos(&self) -> &Self::Vec;
 
     /// returns the normals of the payload as an array
     fn normal(&self) -> &Self::Vec;
@@ -39,7 +48,10 @@ pub trait VertexPayload: Clone + Default + PartialEq + std::fmt::Debug + std::fm
     fn set_normal(&mut self, normal: Self::Vec);
 
     /// Creates a payload from a vector.
-    fn from_vec(v: Self::Vec) -> Self;
+    fn from_pos(v: Self::Vec) -> Self;
+
+    /// Set the vector of the payload.
+    fn set_pos(&mut self, v: Self::Vec);
 }
 
 /// An empty vertex payload if you don't need any vertex information.

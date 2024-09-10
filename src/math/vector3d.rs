@@ -19,4 +19,37 @@ pub trait Vector3D: Vector<Self::S> {
         let b = next - prev;
         a.cross(&b)
     }
+    
+    /// Returns the cross product of two vectors.
+    fn cross(&self, other: &Self) -> Self;
+
+    /// Swizzle
+    fn xyz(&self) -> Self {
+        Self::new(self.x(), self.y(), self.z())
+    }
+
+    /// Swizzle
+    fn xzy(&self) -> Self {
+        Self::new(self.x(), self.z(), self.y())
+    }
+
+    /// Swizzle
+    fn yxz(&self) -> Self {
+        Self::new(self.y(), self.x(), self.z())
+    }
+
+    /// Swizzle
+    fn yzx(&self) -> Self {
+        Self::new(self.y(), self.z(), self.x())
+    }
+
+    /// Swizzle
+    fn zxy(&self) -> Self {
+        Self::new(self.z(), self.x(), self.y())
+    }
+
+    /// Swizzle
+    fn zyx(&self) -> Self {
+        Self::new(self.z(), self.y(), self.x())
+    }
 }

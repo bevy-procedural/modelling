@@ -13,14 +13,20 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
     fn vertices_crossed<'a, T: MeshType<E = E, F = F, FP = FP>>(
         &'a self,
         mesh: &'a Mesh<T>,
-    ) -> impl Iterator<Item = T::Vec> + 'a + Clone + ExactSizeIterator {
+    ) -> impl Iterator<Item = T::Vec> + 'a + Clone + ExactSizeIterator
+    where
+        T::Vec: Vector3D<S = T::S>,
+    {
         self.vertices(mesh)
             .circular_tuple_windows::<(_, _, _)>()
             .map(|(a, b, c)| (*b.vertex() - *a.vertex()).cross(&(*c.vertex() - *a.vertex())))
     }
 
     /// Whether the face is convex. Ignores order.
-    pub fn is_convex<T: MeshType<E = E, F = F, FP = FP>>(&self, mesh: &Mesh<T>) -> bool {
+    pub fn is_convex<T: MeshType<E = E, F = F, FP = FP>>(&self, mesh: &Mesh<T>) -> bool
+    where
+        T::Vec: Vector3D<S = T::S>,
+    {
         // TODO: is this correct?
         // TODO: collinear points cause problems
         self.vertices_crossed(mesh)
@@ -30,11 +36,10 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
     }
 
     /// Whether the face is planar.
-    pub fn is_planar<T: MeshType<E = E, F = F, FP = FP>>(&self, mesh: &Mesh<T>, eps: T::S) -> bool {
-        if T::Vec::dimensions() <= 2 {
-            return true;
-        }
-
+    pub fn is_planar<T: MeshType<E = E, F = F, FP = FP>>(&self, mesh: &Mesh<T>, eps: T::S) -> bool
+    where
+        T::Vec: Vector3D<S = T::S>,
+    {
         // TODO: is this correct?
         // TODO: collinear points cause problems
 
@@ -48,7 +53,11 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
     }
 
     /// Whether the face is planar.
-    pub fn is_planar2<T: MeshType<E = E, F = F, FP = FP>>(&self, mesh: &Mesh<T>) -> bool {
+    pub fn is_planar2<T: MeshType<E = E, F = F, FP = FP>>(&self, mesh: &Mesh<T>) -> bool
+    where
+        T::Vec: Vector3D<S = T::S>,
+    {
+        // TODO: eps?
         self.is_planar(mesh, T::S::EPS * 10.0.into())
     }
 
@@ -149,10 +158,12 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
         assert!(T::Vec::dimensions() == 3);
 
         let z_axis = T::Vec::new(0.0.into(), 0.0.into(), 1.0.into());
-        let rotation =
-            T::Trans::from_rotation_arc(self.normal(mesh).normalize(), z_axis.normalize());
+        let rotation = <T::Trans as Transform>::from_rotation_arc(
+            self.normal(mesh).normalize(),
+            z_axis.normalize(),
+        );
         self.vertices(mesh)
-            .map(move |v| (rotation.apply(*v.vertex()).xy(), v.id()))
+            .map(move |v| (rotation.apply(*v.vertex()).vec2(), v.id()))
     }
 
     /// Get a vector of 2d vertices of the face rotated to the XY plane.

@@ -24,18 +24,17 @@ This crate is still in a _very_ early stage of development. Expect frequent API 
 Install using `cargo add procedural_modelling`.
 
 ```rs
-let mut mesh = MeshVec3::regular_star(1.0, 0.8, 30);
-mesh.transform(
-    &Transform::from_translation(Vec3::new(0.0, -0.99, 0.0))
-               .with_rotation(Quat::from_rotation_z(PI)),
-);
-let trans = Transform::from_rotation(Quat::from_rotation_y(0.3))
-                      .with_translation(Vec3::new(0.4, 0.3, 0.0));
+let mut mesh = BevyMesh3d::regular_star(settings.r, settings.r2, settings.n);
+mesh.flip_yz()
+    .rotate(&Quat::from_rotation_z(PI))
+    .translate(&Vec3::new(0.0, -0.99, 0.0));
+let trans = Transform::from_rotation(Quat::from_rotation_y(settings.rot))
+    .with_translation(settings.d1);
 let mut f = mesh.extrude_ex(mesh.edge_between(1, 0).unwrap().id(), trans, true, true);
-for _ in 0..5 {
+for _ in 0..settings.segs {
     f = mesh.extrude_face_ex(f, trans, true, true);
 }
-mesh.to_bevy(RenderAssetUsages::default())
+mesh
 ```
 
 ## Examples

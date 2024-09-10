@@ -1,4 +1,4 @@
-use super::{kahan_summation, HasZero, Scalar, Transform, Vector2D, Vector3D};
+use super::{kahan_summation, HasZero, Scalar, Transform, Vector2D, Vector3D, Vector4D};
 
 /// Trait for coordinates in n-dimensional space.
 pub trait Vector<S: Scalar>:
@@ -19,11 +19,14 @@ pub trait Vector<S: Scalar>:
     + HasZero
     + 'static
 {
-    /// The 2d vector type used in the coordinates.
+    /// The associated 2d vector type
     type Vec2: Vector2D<S = S>;
 
-    /// The 3d vector type used in the coordinates.
+    /// The associated 3d vector type
     type Vec3: Vector3D<S = S>;
+
+    /// The associated 4d vector type
+    type Vec4: Vector4D<S = S>;
 
     /// The rotation type used in the vector.
     type Trans: Transform<S = S, Vec = Self>;
@@ -40,9 +43,6 @@ pub trait Vector<S: Scalar>:
     /// Returns the dot product of two vectors.
     fn dot(&self, other: &Self) -> S;
 
-    /// Returns the cross product of two vectors.
-    fn cross(&self, other: &Self) -> Self;
-
     /// Returns the x-coordinate.
     fn x(&self) -> S;
 
@@ -56,12 +56,12 @@ pub trait Vector<S: Scalar>:
     fn w(&self) -> S;
 
     /// Returns the coordinates as a tuple.
-    fn xy(&self) -> Self::Vec2 {
+    fn vec2(&self) -> Self::Vec2 {
         Self::Vec2::new(self.x(), self.y())
     }
 
     /// Returns the coordinates as a tuple.
-    fn xyz(&self) -> Self::Vec3 {
+    fn vec3(&self) -> Self::Vec3 {
         Self::Vec3::new(self.x(), self.y(), self.z())
     }
 

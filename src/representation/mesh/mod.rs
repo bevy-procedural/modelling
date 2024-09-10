@@ -131,6 +131,11 @@ impl<T: MeshType> Mesh<T> {
         self.vertices.iter()
     }
 
+    /// Returns an mutable iterator over all non-deleted vertices
+    pub fn vertices_mut(&mut self) -> impl Iterator<Item = &mut Vertex<T::E, T::V, T::VP>> {
+        self.vertices.iter_mut()
+    }
+
     /// Returns an iterator over all non-deleted edges
     pub fn edges(&self) -> impl Iterator<Item = &HalfEdge<T::E, T::V, T::F, T::EP>> {
         self.edges.iter()
@@ -142,17 +147,34 @@ impl<T: MeshType> Mesh<T> {
     }
 
     /// Transforms all vertices in the mesh
-    pub fn transform(&mut self, t: &T::Trans) {
+    pub fn transform(&mut self, t: &T::Trans) -> &mut Self {
         for v in self.vertices.iter_mut() {
             v.transform(t);
         }
+        self
     }
 
     /// Translates all vertices in the mesh
-    pub fn translate(&mut self, t: &T::Vec) {
+    pub fn translate(&mut self, t: &T::Vec) -> &mut Self {
         for v in self.vertices.iter_mut() {
             v.translate(t);
         }
+        self
+    }
+
+    /// Rotates all vertices in the mesh
+    pub fn rotate(&mut self, rotation: &T::Quat) -> &mut Self {
+        for v in self.vertices.iter_mut() {
+            v.rotate(rotation);
+        }
+        self
+    }
+
+    /// Clears the mesh (deletes all vertices, edges, and faces)
+    pub fn clear(&mut self) {
+        self.vertices.clear();
+        self.edges.clear();
+        self.faces.clear();
     }
 
     /// Flip all edges (and faces) turning the mesh inside out.

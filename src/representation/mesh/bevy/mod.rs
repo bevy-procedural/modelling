@@ -30,7 +30,9 @@ impl MeshType for BevyMeshType3d32 {
     type Vec = <BevyVertexPayload as VertexPayload>::Vec;
     type Vec2 = <BevyVertexPayload as VertexPayload>::Vec2;
     type Vec3 = <BevyVertexPayload as VertexPayload>::Vec3;
+    type Vec4 = <BevyVertexPayload as VertexPayload>::Vec4;
     type Trans = <BevyVertexPayload as VertexPayload>::Trans;
+    type Quat = <BevyVertexPayload as VertexPayload>::Quat;
 }
 
 /// A mesh with bevy 3D vertices
@@ -39,7 +41,7 @@ pub type BevyMesh3d = Mesh<BevyMeshType3d32>;
 impl<T: MeshType<VP = BevyVertexPayload, Vec: Vector3D<S = T::S>>> Mesh<T> {
     fn raw_vertices(&self) -> Vec<[f32; 3]> {
         self.vertices()
-            .map(|v| v.payload().vertex().to_array())
+            .map(|v| v.payload().pos().to_array())
             .collect()
     }
 
@@ -107,11 +109,15 @@ impl<T: MeshType<VP = BevyVertexPayload, Vec: Vector3D<S = T::S>>> Mesh<T> {
 
         mesh.insert_attribute(
             bevy::render::mesh::Mesh::ATTRIBUTE_POSITION,
-            VertexAttributeValues::Float32x3(vs.iter().map(|vp| vp.vertex().to_array()).collect()),
+            VertexAttributeValues::Float32x3(vs.iter().map(|vp| vp.pos().to_array()).collect()),
         );
         mesh.insert_attribute(
             bevy::render::mesh::Mesh::ATTRIBUTE_NORMAL,
-            VertexAttributeValues::Float32x3(vs.iter().map(|vp| (vp as &BevyVertexPayload).normal().to_array()).collect()),
+            VertexAttributeValues::Float32x3(
+                vs.iter()
+                    .map(|vp| (vp as &BevyVertexPayload).normal().to_array())
+                    .collect(),
+            ),
         );
 
         // mesh.duplicate_vertices();

@@ -6,13 +6,19 @@ pub trait Transform: Clone + Copy + Default + std::fmt::Debug + 'static {
     /// The scalar type of the coordinates and angles used in the rotation.
     type S: Scalar;
 
-    /// The vector type used in the rotation.
+    /// The vector type used in the transformatiom.
     type Vec: Vector<Self::S>;
 
-    /// Returns the identity rotation.
+    /// The rotation type used in the transformation.
+    type Rotator;
+
+    /// Returns the identity transformation.
     fn identity() -> Self;
 
-    /// Returns a rotation from a rotation arc.
+    /// Constructs a transform from a rotation.
+    fn from_rotation(r: Self::Rotator) -> Self;
+
+    /// Constructs a transform from a rotation arc.
     fn from_rotation_arc(from: Self::Vec, to: Self::Vec) -> Self;
 
     /// Constructs a transform from a translation.

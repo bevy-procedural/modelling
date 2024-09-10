@@ -55,7 +55,7 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> Vertex<E, V, VP> {
     /// Returns the vertex coordinates of the payload
     #[inline(always)]
     pub fn vertex(&self) -> &VP::Vec {
-        self.payload.vertex()
+        self.payload.pos()
     }
 
     /// Returns a mutable reference to the payload of the vertex
@@ -103,6 +103,12 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> Vertex<E, V, VP> {
     #[inline(always)]
     pub fn translate(&mut self, transform: &VP::Vec) {
         self.payload = self.payload.translate(transform);
+    }
+
+    /// Rotates the payload.
+    #[inline(always)]
+    pub fn rotate(&mut self, transform: &VP::Quat) {
+        self.payload = self.payload.rotate(transform);
     }
 }
 
