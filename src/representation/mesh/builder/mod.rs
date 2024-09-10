@@ -1,41 +1,55 @@
 //! This module contains the builder functions for the mesh representation.
 
+// TODO
+/*
 mod extrude;
+*/
 mod face;
 mod vertex;
-use crate::representation::{payload::Payload, HalfEdge, IndexType, Mesh, Vertex};
+
+use super::MeshType;
+use crate::representation::{DefaultEdgePayload, HalfEdge, IndexType, Mesh, Vertex};
 pub use face::CloseFace;
 pub use vertex::AddVertex;
 
 // The simplest non-empty mesh: a single edge with two vertices
-impl<E, V, F, P> From<(P, P)> for Mesh<E, V, F, P>
+impl<T: MeshType> From<(T::VP, T::EP, T::VP, T::EP)> for Mesh<T>
 where
-    E: IndexType,
-    V: IndexType,
-    F: IndexType,
-    P: Payload,
+    T::EP: DefaultEdgePayload,
 {
-    fn from((a, b): (P, P)) -> Self {
+    fn from((a, epa, b, epb): (T::VP, T::EP, T::VP, T::EP)) -> Self {
         let mut mesh = Mesh::new();
-        mesh.add_isolated_edge(a, b);
+        mesh.add_isolated_edge(a, epa, b, epb);
         return mesh;
     }
 }
 
-impl<E, V, F, P> Mesh<E, V, F, P>
-where
-    E: IndexType,
-    V: IndexType,
-    F: IndexType,
-    P: Payload,
-{
+impl<T: MeshType> Mesh<T> {
     /// Inserts vertices a and b and adds an isolated edge between a and b.
-    pub fn add_isolated_edge(&mut self, a: P, b: P) -> (V, V) {
+    pub fn add_isolated_edge(
+        &mut self,
+        a: T::VP,
+        epa: T::EP,
+        b: T::VP,
+        epb: T::EP,
+    ) -> (T::V, T::V) {
         let v0 = self.vertices.allocate();
         let v1 = self.vertices.allocate();
         let (e0, e1) = self.insert_full_edge(
-            (IndexType::max(), IndexType::max(), v0, IndexType::max()),
-            (IndexType::max(), IndexType::max(), v1, IndexType::max()),
+            (
+                IndexType::max(),
+                IndexType::max(),
+                v0,
+                IndexType::max(),
+                epa,
+            ),
+            (
+                IndexType::max(),
+                IndexType::max(),
+                v1,
+                IndexType::max(),
+                epb,
+            ),
         );
         self.vertices.set(v0, Vertex::new(e0, a));
         self.vertices.set(v1, Vertex::new(e1, b));
@@ -47,9 +61,9 @@ where
     /// You can set next and prev to IndexType::max() to insert the id of the twin edge there.
     pub fn insert_full_edge(
         &mut self,
-        (next1, prev1, origin1, face1): (E, E, V, F),
-        (next2, prev2, origin2, face2): (E, E, V, F),
-    ) -> (E, E) {
+        (next1, prev1, origin1, face1, ep1): (T::E, T::E, T::V, T::F, T::EP),
+        (next2, prev2, origin2, face2, ep2): (T::E, T::E, T::V, T::F, T::EP),
+    ) -> (T::E, T::E) {
         let e1 = self.edges.allocate();
         let e2 = self.edges.allocate();
         self.edges.set(
@@ -60,6 +74,7 @@ where
                 if prev1 == IndexType::max() { e2 } else { prev1 },
                 origin1,
                 face1,
+                ep1,
             ),
         );
         self.edges.set(
@@ -70,13 +85,14 @@ where
                 if prev2 == IndexType::max() { e1 } else { prev2 },
                 origin2,
                 face2,
+                ep2,
             ),
         );
         return (e1, e2);
     }
 
     /// Removes the provided face.
-    pub fn remove_face(&mut self, f: F) {
+    pub fn remove_face(&mut self, f: T::F) {
         let face = self.face(f);
 
         let edge_ids: Vec<_> = face.edges(self).map(|e| e.id()).collect();

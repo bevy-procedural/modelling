@@ -65,13 +65,28 @@ impl Vector<f32> for Vec3 {
         Vec3::splat(value)
     }
 
+    #[inline(always)]
+    fn from_x(x: f32) -> Self {
+        Vec3::new(x, 0.0, 0.0)
+    }
+
+    #[inline(always)]
+    fn from_xy(x: f32, y: f32) -> Self {
+        Vec3::new(x, y, 0.0)
+    }
+
+    #[inline(always)]
+    fn from_xyz(x: f32, y: f32, z: f32) -> Self {
+        Vec3::new(x, y, z)
+    }
+
 }
 
 impl Vector3D for Vec3 {
     type S = f32;
 
     #[inline(always)]
-    fn from_xyz(x: f32, y: f32, z: f32) -> Self {
+    fn new(x: f32, y: f32, z: f32) -> Self {
         Vec3::new(x, y, z)
     }
 }

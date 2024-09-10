@@ -1,23 +1,19 @@
-use super::{Face, Mesh, Payload, Triangulation};
+use super::{Face, Mesh, Triangulation};
 use crate::{
     math::{Vector, Vector3D},
-    representation::IndexType,
+    representation::{FacePayload, IndexType, MeshType},
 };
 use std::collections::HashMap;
 
-impl<E, F> Face<E, F>
-where
-    E: IndexType,
-    F: IndexType,
-{
-    fn shorten<V: IndexType, P: Payload>(&self, mesh: &Mesh<E, V, F, P>, indices: &mut Vec<V>)
+impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
+    fn shorten<T: MeshType<E = E, F = F, FP = FP>>(&self, mesh: &Mesh<T>, indices: &mut Vec<T::V>)
     where
-        P::Vec: Vector3D<S = P::S>,
+        T::Vec: Vector3D<S = T::S>,
     {
         // TODO: This shortens edges producing invalid meshes!
-        let vs: Vec<(P::Vec2, V)> = self.vertices_2d::<V, P>(mesh).collect();
+        let vs: Vec<(T::Vec2, T::V)> = self.vertices_2d::<T>(mesh).collect();
         assert!(vs.len() == self.vertices(mesh).count());
-        let mut vsh: HashMap<V, P::Vec2> = HashMap::new();
+        let mut vsh: HashMap<T::V, T::Vec2> = HashMap::new();
         for (v, p) in vs {
             vsh.insert(p, v);
         }
@@ -64,16 +60,16 @@ where
     }
 
     /// Use multiple runs of randomized ear-clipping to approximate the minimum weight triangulation
-    pub fn min_weight_triangulation_stoch<V: IndexType, P: Payload>(
+    pub fn min_weight_triangulation_stoch<T: MeshType<E = E, F = F, FP = FP>>(
         &self,
-        mesh: &Mesh<E, V, F, P>,
-        indices: &mut Vec<V>,
+        mesh: &Mesh<T>,
+        indices: &mut Vec<T::V>,
     ) where
-        P::Vec: Vector3D<S = P::S>,
+        T::Vec: Vector3D<S = T::S>,
     {
         // TODO: O(n^3) algorithm http://www.ist.tugraz.at/_attach/Publish/Eaa19/Chapter_04_MWT_handout.pdf
         let mut best_indices = Vec::new();
-        let mut best_dist: P::S = std::f32::INFINITY.into();
+        let mut best_dist: T::S = std::f32::INFINITY.into();
 
         for _ in 1..100 {
             let mut tmp_indices = Vec::new();

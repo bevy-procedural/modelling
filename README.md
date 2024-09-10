@@ -46,7 +46,7 @@ Try the live examples!
  * [3d](https://bevy-procedural.org/examples/modelling/3d)
 -->
 
-Or run the [examples](https://github.com/bevy-procedural/modelling/tree/main/examples) on your computer like, e.g., `cargo run --features="bevy bevy/bevy_pbr" --profile fast-dev --example box`.
+Or run the [examples](https://github.com/bevy-procedural/modelling/tree/main/examples) on your computer like, e.g., `cargo run --features="bevy bevy/bevy_pbr bevy/bevy_winit bevy/tonemapping_luts" --profile fast-dev --example box`.
 
 For package development, we recommend using the `editor`-subcrate. This example has a little [egui](https://github.com/jakobhellermann/bevy-inspector-egui/)-editor. Run it using `cargo watch -w editor/src -w src -x "run -p editor --profile fast-dev"`. The `fast-dev` profile will enable optimizations for the dependencies, but not for the package itself. This will slow down the first build _significantly_, but incremental builds are slightly faster and bevy's performance (bevy is used as the renderer in the examples) improves a lot.
 

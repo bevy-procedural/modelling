@@ -1,35 +1,37 @@
-use super::super::{IndexType, Mesh};
-use crate::{math::Vector3D, representation::{
-    builder::{AddVertex, CloseFace},
-    payload::Payload,
-}};
+use crate::{
+    math::Vector,
+    representation::{
+        builder::{AddVertex, CloseFace},
+        payload::VertexPayload,
+        DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
+    },
+};
 
-impl<E, V, F, P> Mesh<E, V, F, P>
+impl<T: MeshType> Mesh<T>
 where
-    E: IndexType,
-    V: IndexType,
-    F: IndexType,
-    P: Payload,
-    P::Vec: Vector3D<S = P::S>,
+    T::EP: DefaultEdgePayload,
+    T::FP: DefaultFacePayload,
 {
     /// create a (rectangular) cuboid
-    pub fn cuboid(x: P::S, y: P::S, z: P::S) -> Mesh<E, V, F, P> {
+    pub fn cuboid(x: T::S, y: T::S, z: T::S) -> Mesh<T> {
         //assert!(P::dimensions() == 3, "cuboids exist only in 3d space");
-        let mut mesh = Mesh::<E, V, F, P>::new();
-        let make = |x: P::S, y: P::S, z: P::S| P::from_vec(P::Vec::from_xyz(x, y, z));
-        let (v0, v1) = mesh.add_isolated_edge(make(x, y, z), make(-x, y, z));
-        let v2 = mesh.add_vertex((v1, make(-x, -y, z))).0;
-        let v3 = mesh.add_vertex((v2, make(x, -y, z))).0;
-        mesh.close_face((v2, v3, v0, false));
-        let v4 = mesh.add_vertex((v1, make(-x, y, -z))).0;
-        let v5 = mesh.add_vertex((v4, make(-x, -y, -z))).0;
-        mesh.close_face((v4, v5, v2, false));
-        let v6 = mesh.add_vertex((v0, make(x, y, -z))).0;
-        let v7 = mesh.add_vertex((v3, make(x, -y, -z))).0;
-        mesh.close_face((v3, v7, v6, false));
-        mesh.close_face((v2, v5, v7, false));
-        mesh.close_face((v0, v6, v4, false));
-        mesh.close_face((mesh.edge_between(v6, v7).unwrap().id(), false));
+        let ep = Default::default();
+        let fp = Default::default();
+        let mut mesh = Mesh::<T>::new();
+        let make = |x: T::S, y: T::S, z: T::S| T::VP::from_vec(T::Vec::from_xyz(x, y, z));
+        let (v0, v1) = mesh.add_isolated_edge(make(x, y, z), ep, make(-x, y, z), ep);
+        let v2 = mesh.add_vertex((v1, make(-x, -y, z), ep, ep)).0;
+        let v3 = mesh.add_vertex((v2, make(x, -y, z), ep, ep)).0;
+        mesh.close_face((v2, ep, v3, ep, v0, fp, false));
+        let v4 = mesh.add_vertex((v1, make(-x, y, -z), ep, ep)).0;
+        let v5 = mesh.add_vertex((v4, make(-x, -y, -z), ep, ep)).0;
+        mesh.close_face((v4, ep, v5, ep, v2, fp, false));
+        let v6 = mesh.add_vertex((v0, make(x, y, -z), ep, ep)).0;
+        let v7 = mesh.add_vertex((v3, make(x, -y, -z), ep, ep)).0;
+        mesh.close_face((v3, ep, v7, ep, v6, fp, false));
+        mesh.close_face((v2, ep, v5, ep, v7, fp, false));
+        mesh.close_face((v0, ep, v6, ep, v4, fp, false));
+        mesh.close_face((mesh.edge_between(v6, v7).unwrap().id(), fp, false));
         mesh
     }
 }

@@ -57,13 +57,22 @@ pub trait Vector<S: Scalar>:
 
     /// Returns the coordinates as a tuple.
     fn xy(&self) -> Self::Vec2 {
-        Self::Vec2::from_xy(self.x(), self.y())
+        Self::Vec2::new(self.x(), self.y())
     }
 
     /// Returns the coordinates as a tuple.
     fn xyz(&self) -> Self::Vec3 {
-        Self::Vec3::from_xyz(self.x(), self.y(), self.z())
+        Self::Vec3::new(self.x(), self.y(), self.z())
     }
+
+    /// Create a vector from one coordinate
+    fn from_x(x: S) -> Self;
+
+    /// Create a vector from two coordinates. Drops the y-coordinate if not present.
+    fn from_xy(x: S, y: S) -> Self;
+
+    /// Create a vector from three coordinates. Drops the y- and z-coordinate if not present.
+    fn from_xyz(x: S, y: S, z: S) -> Self;
 
     /// Normalizes the vector.
     fn normalize(&self) -> Self;

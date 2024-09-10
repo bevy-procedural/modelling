@@ -109,9 +109,9 @@ mod tests {
     fn detect_vertex_type_start() {
         assert_eq!(
             VertexType::classify::<usize, Vec2>(
-                Vec2::from_xy(1.0, 0.0),
-                Vec2::from_xy(0.0, 1.0),
-                Vec2::from_xy(-1.0, 0.0),
+                Vec2::new(1.0, 0.0),
+                Vec2::new(0.0, 1.0),
+                Vec2::new(-1.0, 0.0),
                 f32::EPS
             ),
             VertexType::Start
@@ -121,9 +121,9 @@ mod tests {
     fn detect_vertex_type_merge() {
         assert_eq!(
             VertexType::classify::<usize, Vec2>(
-                Vec2::from_xy(1.0, 0.0),
-                Vec2::from_xy(0.0, -1.0),
-                Vec2::from_xy(-1.0, 0.0),
+                Vec2::new(1.0, 0.0),
+                Vec2::new(0.0, -1.0),
+                Vec2::new(-1.0, 0.0),
                 f32::EPS
             ),
             VertexType::Merge
@@ -133,9 +133,9 @@ mod tests {
     fn detect_vertex_type_split() {
         assert_eq!(
             VertexType::classify::<usize, Vec2>(
-                Vec2::from_xy(-1.0, 0.0),
-                Vec2::from_xy(0.0, 1.0),
-                Vec2::from_xy(1.0, 0.0),
+                Vec2::new(-1.0, 0.0),
+                Vec2::new(0.0, 1.0),
+                Vec2::new(1.0, 0.0),
                 f32::EPS
             ),
             VertexType::Split
@@ -145,9 +145,9 @@ mod tests {
     fn detect_vertex_type_end() {
         assert_eq!(
             VertexType::classify::<usize, Vec2>(
-                Vec2::from_xy(-1.0, 0.0),
-                Vec2::from_xy(0.0, -1.0),
-                Vec2::from_xy(1.0, 0.0),
+                Vec2::new(-1.0, 0.0),
+                Vec2::new(0.0, -1.0),
+                Vec2::new(1.0, 0.0),
                 f32::EPS
             ),
             VertexType::End
@@ -157,36 +157,36 @@ mod tests {
     fn detect_vertex_type_regular() {
         assert_eq!(
             VertexType::classify::<usize, Vec2>(
-                Vec2::from_xy(-1.0, 0.0),
-                Vec2::from_xy(0.0, 0.0),
-                Vec2::from_xy(1.0, 0.0),
+                Vec2::new(-1.0, 0.0),
+                Vec2::new(0.0, 0.0),
+                Vec2::new(1.0, 0.0),
                 f32::EPS
             ),
             VertexType::Regular
         );
         assert_eq!(
             VertexType::classify::<usize, Vec2>(
-                Vec2::from_xy(1.0, 0.0),
-                Vec2::from_xy(0.0, 0.0),
-                Vec2::from_xy(-1.0, 0.0),
+                Vec2::new(1.0, 0.0),
+                Vec2::new(0.0, 0.0),
+                Vec2::new(-1.0, 0.0),
                 f32::EPS
             ),
             VertexType::Regular
         );
         assert_eq!(
             VertexType::classify::<usize, Vec2>(
-                Vec2::from_xy(0.0, 1.0),
-                Vec2::from_xy(1.0, 0.0),
-                Vec2::from_xy(0.0, -1.0),
+                Vec2::new(0.0, 1.0),
+                Vec2::new(1.0, 0.0),
+                Vec2::new(0.0, -1.0),
                 f32::EPS
             ),
             VertexType::Regular
         );
         assert_eq!(
             VertexType::classify::<usize, Vec2>(
-                Vec2::from_xy(0.0, -1.0),
-                Vec2::from_xy(1.0, 0.0),
-                Vec2::from_xy(0.0, 1.0),
+                Vec2::new(0.0, -1.0),
+                Vec2::new(1.0, 0.0),
+                Vec2::new(0.0, 1.0),
                 f32::EPS
             ),
             VertexType::Regular

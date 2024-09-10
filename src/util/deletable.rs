@@ -12,16 +12,19 @@ pub trait Deletable<I> {
 
     /// Sets the id of the element (un-deletes it).
     fn set_id(&mut self, id: I);
+
+    /// Allocates a new, "deleted" instance (it isn't valid)
+    fn allocate() -> Self;
 }
 
 /// A vector that also keeps track of deleted elements to reallocate them.
 #[derive(Debug, Clone)]
-pub struct DeletableVector<T: Deletable<I> + Default, I: IndexType> {
+pub struct DeletableVector<T: Deletable<I>, I: IndexType> {
     data: Vec<T>,
     deleted: Vec<I>,
 }
 
-impl<T: Deletable<I> + Default, I: IndexType> DeletableVector<T, I> {
+impl<T: Deletable<I>, I: IndexType> DeletableVector<T, I> {
     /// Creates a new empty vector.
     pub fn new() -> Self {
         Self {
@@ -34,7 +37,7 @@ impl<T: Deletable<I> + Default, I: IndexType> DeletableVector<T, I> {
     pub fn iter(&self) -> impl Iterator<Item = &T> {
         self.data.iter().filter(|f| !f.is_deleted())
     }
-    
+
     /// Returns a mutable iterator over the non-deleted elements.
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
         self.data.iter_mut().filter(|f| !f.is_deleted())
@@ -105,19 +108,21 @@ impl<T: Deletable<I> + Default, I: IndexType> DeletableVector<T, I> {
         self.data[index.index()] = v;
     }
 
-    /// Returns the next free index or allocates a new one.
-    pub fn allocate(&mut self) -> I {
-        if let Some(index) = self.deleted.pop() {
-            index
-        } else {
-            self.data.push(T::default());
-            I::new(self.data.len() - 1)
-        }
-    }
-
     /// Marks the element as deleted and remembers it for reallocation.
     pub fn delete_internal(&mut self, f: I) {
         self.data[f.index()].delete();
         self.deleted.push(f);
+    }
+
+    /// Returns the next free index or allocates a new one.
+    /// The element is not deleted anymore, but it is not valid until it is overwritten.
+    /// TODO: How can we force the user to overwrite it afterwards? Not writing to it is a memory leak.
+    pub fn allocate(&mut self) -> I {
+        if let Some(index) = self.deleted.pop() {
+            index
+        } else {
+            self.data.push(T::allocate());
+            I::new(self.data.len() - 1)
+        }
     }
 }

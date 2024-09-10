@@ -412,7 +412,7 @@ mod tests {
     fn liv_from_array(arr: &[[f32; 2]]) -> Vec<IndexedVertex2D<usize, Vec2>> {
         arr.iter()
             .enumerate()
-            .map(|(i, &v)| IndexedVertex2D::new(Vec2::from_xy(v[0], v[1]), i))
+            .map(|(i, &v)| IndexedVertex2D::new(Vec2::new(v[0], v[1]), i))
             .collect()
     }
 

@@ -1,28 +1,21 @@
-use super::{IndexType, Mesh};
+use super::{Mesh, MeshType};
 use crate::{
     math::Vector3D,
-    representation::{
-        payload::Payload,
-        tesselate::{GenerateNormals, TesselationMeta, TriangulationAlgorithm},
-    },
+    representation::tesselate::{GenerateNormals, TesselationMeta, TriangulationAlgorithm},
 };
 
-impl<E, V, F, P> Mesh<E, V, F, P>
-where
-    E: IndexType,
-    V: IndexType,
-    F: IndexType,
-    P: Payload,
-    P::Vec: Vector3D<S = P::S>,
-{
+impl<T: MeshType> Mesh<T> {
     /// convert the mesh to triangles and get all indices to do so.
     /// Also optionally duplicates vertices to insert normals etc. (otherwise, return empty vertices)
     pub fn tesselate(
         &self,
         algorithm: TriangulationAlgorithm,
         generate_normals: GenerateNormals,
-        meta: &mut TesselationMeta<V>,
-    ) -> (Vec<V>, Vec<P>) {
+        meta: &mut TesselationMeta<T::V>,
+    ) -> (Vec<T::V>, Vec<T::VP>)
+    where
+        T::Vec: Vector3D<S = T::S>,
+    {
         let mut indices = Vec::new();
         let mut vertices = Vec::new();
         for f in self.faces() {

@@ -5,15 +5,15 @@ use text::{Text3dGizmo, Text3dGizmos};
 
 use crate::{
     math::IndexType,
-    representation::{bevy::MeshVec3, tesselate::TesselationMeta},
+    representation::{bevy::BevyMesh3d, tesselate::TesselationMeta},
 };
 pub mod text;
 
 #[cfg(feature = "sweep_debug")]
-use crate::representation::payload::Payload;
+use crate::representation::payload::VertexPayload;
 
 /// Show the vertex indices of a mesh in blue.
-pub fn show_vertex_indices(texts: &mut ResMut<Text3dGizmos>, mesh: &MeshVec3) {
+pub fn show_vertex_indices(texts: &mut ResMut<Text3dGizmos>, mesh: &BevyMesh3d) {
     mesh.vertices().for_each(|v| {
         texts.write(
             Text3dGizmo::new(v.id().to_string(), v.vertex().clone())
@@ -25,7 +25,7 @@ pub fn show_vertex_indices(texts: &mut ResMut<Text3dGizmos>, mesh: &MeshVec3) {
 /// Visualized the tesselation meta data of a mesh.
 pub fn show_tesselation_meta<V: IndexType>(
     _texts: &mut ResMut<Text3dGizmos>,
-    _mesh: &MeshVec3,
+    _mesh: &BevyMesh3d,
     _meta: &TesselationMeta<V>,
 ) {
     #[cfg(feature = "sweep_debug")]
@@ -48,7 +48,7 @@ pub fn show_tesselation_meta<V: IndexType>(
 /// Show the edge indices of a mesh.
 /// Boundary edges are red, edges with faces are green.
 /// Use `offset` to slightly shift them towards the face center.
-pub fn show_edges(texts: &mut ResMut<Text3dGizmos>, mesh: &MeshVec3, offset: f32) {
+pub fn show_edges(texts: &mut ResMut<Text3dGizmos>, mesh: &BevyMesh3d, offset: f32) {
     mesh.edges().for_each(|e| {
         if let Some(f) = e.face(mesh) {
             let p0 = e.center(mesh).clone();
@@ -67,7 +67,7 @@ pub fn show_edges(texts: &mut ResMut<Text3dGizmos>, mesh: &MeshVec3, offset: f32
 }
 
 /// Show the face indices of a mesh in green.
-pub fn show_faces(texts: &mut ResMut<Text3dGizmos>, mesh: &MeshVec3) {
+pub fn show_faces(texts: &mut ResMut<Text3dGizmos>, mesh: &BevyMesh3d) {
     mesh.faces().for_each(|f| {
         texts.write(
             Text3dGizmo::new(f.id().to_string(), f.center(mesh).clone())

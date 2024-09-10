@@ -17,7 +17,7 @@ use procedural_modelling::{
         bevy::{text::Text3dGizmos, *},
     },
     representation::{
-        bevy::MeshVec3,
+        bevy::BevyMesh3d,
         primitives::{generate_zigzag, random_star},
         tesselate::{GenerateNormals, TesselationMeta, TriangulationAlgorithm},
     },
@@ -77,17 +77,19 @@ impl Default for MeshSettings {
     }
 }
 
-fn _make_hex_bridge(settings: &MeshSettings) -> MeshVec3 {
-    let mut mesh = MeshVec3::regular_polygon(settings.r, 6); //cuboid(1.0, 1.0, 2.0);
+/*
+fn _make_hex_bridge(settings: &MeshSettings) -> BevyMesh3d {
+    let mut mesh = BevyMesh3d::regular_polygon(settings.r, 6); //cuboid(1.0, 1.0, 2.0);
     mesh.extrude(mesh.edge_between(1, 0).unwrap().id(), settings.d1, true);
     let fe = mesh.extrude_face(1, Vec3::new(0.2, 0.1, 0.2), true);
     mesh.extrude_face(fe, Vec3::new(0.2, -0.1, 0.2), true);
     println!("{}", mesh);
     mesh
-}
+}*/
 
-fn _make_spiral(settings: &MeshSettings) -> MeshVec3 {
-    let mut mesh = MeshVec3::regular_star(settings.r, settings.r2, settings.n);
+/*
+fn _make_spiral(settings: &MeshSettings) -> BevyMesh3d {
+    let mut mesh = BevyMesh3d::regular_star(settings.r, settings.r2, settings.n);
     mesh.transform(
         &Transform::from_translation(Vec3::new(0.0, -0.99, 0.0))
             .with_rotation(Quat::from_rotation_z(PI)),
@@ -100,10 +102,10 @@ fn _make_spiral(settings: &MeshSettings) -> MeshVec3 {
     }
 
     mesh
-}
+}*/
 
-fn _make_2d_merge_join() -> MeshVec3 {
-    let mut mesh = MeshVec3::polygon(&[
+fn _make_2d_merge_join() -> BevyMesh3d {
+    let mut mesh = BevyMesh3d::polygon(&[
         // Front edge
         Vec3::new(1.0, 0.0, -1.0),
         Vec3::new(0.5, 0.0, 0.9),
@@ -122,8 +124,8 @@ fn _make_2d_merge_join() -> MeshVec3 {
     mesh
 }
 
-fn _make_hell_8() -> MeshVec3 {
-    let mut mesh = MeshVec3::polygon(
+fn _make_hell_8() -> BevyMesh3d {
+    let mut mesh = BevyMesh3d::polygon(
         &[
             [4.5899906, 0.0],
             [0.7912103, 0.7912103],
@@ -139,14 +141,14 @@ fn _make_hell_8() -> MeshVec3 {
     mesh
 }
 
-fn _make_2d_star(_settings: &MeshSettings) -> MeshVec3 {
-    let mut mesh = MeshVec3::regular_star(2.0, 2.0f32.sqrt(), 10000);
+fn _make_2d_star(_settings: &MeshSettings) -> BevyMesh3d {
+    let mut mesh = BevyMesh3d::regular_star(2.0, 2.0f32.sqrt(), 10000);
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh
 }
 
-fn _make_2d_random_star() -> MeshVec3 {
-    let mut mesh = MeshVec3::polygon(
+fn _make_2d_random_star() -> BevyMesh3d {
+    let mut mesh = BevyMesh3d::polygon(
         &random_star::<Vec2>(5, 6, 0.1, 1.0)
             .iter()
             .map(|v| Vec3::new(v[0], 0.0, v[1]))
@@ -156,9 +158,9 @@ fn _make_2d_random_star() -> MeshVec3 {
     mesh
 }
 
-fn _make_2d_zigzag() -> MeshVec3 {
+fn _make_2d_zigzag() -> BevyMesh3d {
     let n = 50;
-    let mut mesh = MeshVec3::polygon(
+    let mut mesh = BevyMesh3d::polygon(
         &generate_zigzag::<Vec2>(n)
             .iter()
             .map(|v| Vec3::new(v[0], 0.0, -v[1]))
@@ -168,12 +170,12 @@ fn _make_2d_zigzag() -> MeshVec3 {
     mesh
 }
 
-fn make_mesh(_settings: &MeshSettings) -> MeshVec3 {
+fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     //_make_hell_8()
-    //MeshVec3::regular_polygon(1.0, 10000)
-    // _make_spiral(_settings)
-    _make_2d_zigzag()
-    //MeshVec3::octahedron(1.0)
+    BevyMesh3d::regular_polygon(1.0, 100)
+    //_make_spiral(_settings)
+    //_make_2d_zigzag()
+    //BevyMesh3d::octahedron(1.0)
 }
 
 pub fn main() {
@@ -253,7 +255,7 @@ fn update_meshes(
         let mut meta = TesselationMeta::default();
         mesh.bevy_set_ex(
             assets.get_mut(handle).unwrap(),
-            TriangulationAlgorithm::Sweep,
+            TriangulationAlgorithm::Delaunay,
             GenerateNormals::Flat,
             &mut meta,
         );

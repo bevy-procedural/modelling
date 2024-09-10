@@ -6,7 +6,7 @@ pub trait Vector3D: Vector<Self::S> {
     type S: Scalar;
 
     /// Construct from scalar values.
-    fn from_xyz(x: Self::S, y: Self::S, z: Self::S) -> Self;
+    fn new(x: Self::S, y: Self::S, z: Self::S) -> Self;
 
     /// Convert to an array.
     fn to_array(&self) -> [Self::S; 3] {

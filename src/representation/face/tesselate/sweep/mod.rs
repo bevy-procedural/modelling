@@ -1,7 +1,7 @@
-use super::{Face, Mesh, Payload, TesselationMeta, Triangulation};
+use super::{Face, Mesh, TesselationMeta, Triangulation};
 use crate::{
     math::Vector3D,
-    representation::{tesselate::IndexedVertex2D, IndexType},
+    representation::{tesselate::IndexedVertex2D, FacePayload, IndexType, MeshType},
 };
 mod chain;
 mod interval;
@@ -45,28 +45,24 @@ impl<V: IndexType> SweepMeta<V> {
     }
 }
 
-impl<E, F> Face<E, F>
-where
-    E: IndexType,
-    F: IndexType,
-{
+impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
     /// Uses the sweep line triangulation
-    pub fn sweep_line<V: IndexType, P: Payload>(
+    pub fn sweep_line<T: MeshType<E = E, F = F, FP = FP>>(
         &self,
-        mesh: &Mesh<E, V, F, P>,
-        indices: &mut Triangulation<V>,
-        meta: &mut TesselationMeta<V>,
+        mesh: &Mesh<T>,
+        indices: &mut Triangulation<T::V>,
+        meta: &mut TesselationMeta<T::V>,
     ) where
-        P::Vec: Vector3D<S = P::S>,
+        T::Vec: Vector3D<S = T::S>,
     {
         debug_assert!(self.may_be_curved() || self.is_planar2(mesh));
 
         // TODO: Improve performance by directly using the nd-vertices instead of converting to 2d
         let vec2s: Vec<_> = self
-            .vertices_2d::<V, P>(mesh)
-            .map(|(p, i)| IndexedVertex2D::<V, P::Vec2>::new(p, i))
+            .vertices_2d::<T>(mesh)
+            .map(|(p, i)| IndexedVertex2D::<T::V, T::Vec2>::new(p, i))
             .collect();
 
-        sweep_line_triangulation::<V, P::Vec2>(indices, &vec2s, &mut meta.sweep);
+        sweep_line_triangulation::<T::V, T::Vec2>(indices, &vec2s, &mut meta.sweep);
     }
 }

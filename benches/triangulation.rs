@@ -6,14 +6,14 @@ use bevy::{
 };
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use procedural_modelling::representation::{
-    bevy::MeshVec3,
+    bevy::BevyMesh3d,
     primitives::generate_zigzag,
     tesselate::{GenerateNormals, TriangulationAlgorithm},
 };
 use std::{f32::consts::PI, time::Duration};
 
-fn _make_spiral() -> MeshVec3 {
-    let mut mesh = MeshVec3::regular_star(1.0, 0.8, 30);
+fn _make_spiral() -> BevyMesh3d {
+    let mut mesh = BevyMesh3d::regular_star(1.0, 0.8, 30);
     mesh.transform(
         &Transform::from_translation(Vec3::new(0.0, -0.99, 0.0))
             .with_rotation(Quat::from_rotation_z(PI)),
@@ -27,8 +27,8 @@ fn _make_spiral() -> MeshVec3 {
     mesh
 }
 
-fn zigzag(n: usize) -> MeshVec3 {
-    MeshVec3::polygon(
+fn zigzag(n: usize) -> BevyMesh3d {
+    BevyMesh3d::polygon(
         &generate_zigzag::<Vec2>(n)
             .iter()
             .map(|v| Vec3::new(v.x, v.y, 0.0))
@@ -45,9 +45,9 @@ fn bench_triangulation(c: &mut Criterion) {
     for (name, mesh) in [
         //("Spiral", _make_spiral()),
         //("Star", MeshVec3::regular_star(2.0, 0.9, 1000)),
-        ("Circle10", MeshVec3::regular_star(1.0, 1.0, 10)),
-        ("Circle100", MeshVec3::regular_star(1.0, 1.0, 100)),
-        ("Circle1000", MeshVec3::regular_star(1.0, 1.0, 1000)),
+        ("Circle10", BevyMesh3d::regular_star(1.0, 1.0, 10)),
+        ("Circle100", BevyMesh3d::regular_star(1.0, 1.0, 100)),
+        ("Circle1000", BevyMesh3d::regular_star(1.0, 1.0, 1000)),
         //("Circle10000", MeshVec3::regular_star(1.0, 1.0, 10000)),
         ("Zigzag1001", zigzag(1000)),
         //("Zigzag10001", zigzag(10000)),
@@ -56,7 +56,7 @@ fn bench_triangulation(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new(f_name, name),
                 &mesh,
-                |b, para: &MeshVec3| {
+                |b, para: &BevyMesh3d| {
                     b.iter(|| {
                         let mut meta = Default::default();
                         para.tesselate(algo, GenerateNormals::None, &mut meta);

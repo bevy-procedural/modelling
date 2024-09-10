@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use super::Mesh;
-use crate::representation::{payload::Payload, IndexType};
+use super::{Mesh, MeshType};
+use crate::representation::IndexType;
 
 #[derive(Clone)]
 struct PseudoWingedEdge<E, V, F>
@@ -50,13 +50,7 @@ impl<E: IndexType, V: IndexType, F: IndexType> std::fmt::Display for PseudoWinge
     }
 }
 
-impl<E, V, F, P> Mesh<E, V, F, P>
-where
-    E: IndexType,
-    V: IndexType,
-    F: IndexType,
-    P: Payload,
-{
+impl<T: MeshType> Mesh<T> {
     /// Checks whether the twin of the twin is always the edge itself,
     /// the precursor to the next edge is the same, and the successor of the previous.
     fn check_edge_invariants(&self) -> Result<(), String> {
@@ -186,8 +180,8 @@ where
     }
 
     /// Returns all edges as pseudo-winged edges
-    fn pair_edges(&self) -> Vec<PseudoWingedEdge<E, V, F>> {
-        let mut edges: HashMap<E, PseudoWingedEdge<E, V, F>> = HashMap::new();
+    fn pair_edges(&self) -> Vec<PseudoWingedEdge<T::E, T::V, T::F>> {
+        let mut edges: HashMap<T::E, PseudoWingedEdge<T::E, T::V, T::F>> = HashMap::new();
         self.edges().for_each(|edge| {
             let twin = edge.twin(self);
             if edges.contains_key(&twin.id()) {
@@ -210,7 +204,7 @@ where
             );
         });
 
-        let mut vec: Vec<PseudoWingedEdge<E, V, F>> = edges.values().cloned().collect();
+        let mut vec: Vec<PseudoWingedEdge<T::E, T::V, T::F>> = edges.values().cloned().collect();
         vec.sort_by(|a, b| a.id.cmp(&b.id));
         vec
     }
@@ -231,7 +225,7 @@ where
     }
 }
 
-impl<E: IndexType, V: IndexType, F: IndexType, P: Payload> std::fmt::Display for Mesh<E, V, F, P> {
+impl<T: MeshType> std::fmt::Display for Mesh<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -250,7 +244,10 @@ impl<E: IndexType, V: IndexType, F: IndexType, P: Payload> std::fmt::Display for
                 .collect::<Vec<_>>()
                 .join("\n"),
             if let Err(msg) = self.check() {
-                format!("⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ERROR ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️\n{}" , msg)
+                format!(
+                    "⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ERROR ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️\n{}",
+                    msg
+                )
             } else {
                 "".to_string()
             }

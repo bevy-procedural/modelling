@@ -6,7 +6,7 @@ pub trait Vector2D: Vector<Self::S> {
     type S: Scalar;
 
     /// Construct from scalar values.
-    fn from_xy(x: Self::S, y: Self::S) -> Self;
+    fn new(x: Self::S, y: Self::S) -> Self;
 
     /// True iff the vertex curr is a convex corner.
     /// Assume counter-clockwise vertex order.

@@ -6,7 +6,7 @@ use bevy::{
     window::{PresentMode, WindowResolution},
 };
 use procedural_modelling::representation::{
-    bevy::MeshVec3,
+    bevy::BevyMesh3d,
     primitives::generate_zigzag,
     tesselate::{GenerateNormals, TriangulationAlgorithm},
 };
@@ -55,8 +55,8 @@ fn main() {
         .run();
 }
 
-fn zigzag(n: usize) -> MeshVec3 {
-    MeshVec3::polygon(
+fn zigzag(n: usize) -> BevyMesh3d {
+    BevyMesh3d::polygon(
         &generate_zigzag::<Vec2>(n)
             .iter()
             .map(|v| Vec3::new(v.x, v.y, 0.0))
@@ -76,13 +76,13 @@ fn setup(
         //TriangulationAlgorithm::Fan,
     ] {
         for (name, num_vertices, mesh) in [
-            ("circle10", 10, MeshVec3::regular_star(1.0, 1.0, 10)),
-            ("circle100", 100, MeshVec3::regular_star(1.0, 1.0, 100)),
-            ("circle1000", 1000, MeshVec3::regular_star(1.0, 1.0, 1000)),
+            ("circle10", 10, BevyMesh3d::regular_star(1.0, 1.0, 10)),
+            ("circle100", 100, BevyMesh3d::regular_star(1.0, 1.0, 100)),
+            ("circle1000", 1000, BevyMesh3d::regular_star(1.0, 1.0, 1000)),
             (
                 "circle10000",
                 10000,
-                MeshVec3::regular_star(1.0, 1.0, 10000),
+                BevyMesh3d::regular_star(1.0, 1.0, 10000),
             ),
             ("zigzag1000", 1000, zigzag(1000)),
             ("zigzag10000", 10000, zigzag(10000)),

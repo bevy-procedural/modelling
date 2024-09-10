@@ -1,12 +1,12 @@
 //! Bevy specific implementations for the vertex payload and 3d rotation.
 
-use super::Payload;
+use super::VertexPayload;
 use crate::math::Transform;
 use bevy::math::{Vec2, Vec3};
 
 /// Vertex Payload for Bevy with 3d position, normal, and uv.
 #[derive(Debug, Clone, PartialEq, Default, Copy)]
-pub struct BevyPayload {
+pub struct BevyVertexPayload {
     /// The position of the vertex.
     position: Vec3,
 
@@ -17,7 +17,7 @@ pub struct BevyPayload {
     uv: Vec2,
 }
 
-impl Payload for BevyPayload {
+impl VertexPayload for BevyVertexPayload {
     type S = f32;
     type Vec = Vec3;
     type Vec2 = Vec2;
@@ -67,7 +67,7 @@ impl Payload for BevyPayload {
     }
 }
 
-impl std::fmt::Display for BevyPayload {
+impl std::fmt::Display for BevyVertexPayload {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,

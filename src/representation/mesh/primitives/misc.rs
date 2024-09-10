@@ -20,7 +20,7 @@ pub fn generate_zigzag<Vec2: Vector2D>(n0: usize) -> Vec<Vec2> {
                 offset += 2.0.into();
             }
 
-            Vec2::from_xy(
+            Vec2::new(
                 x / Vec2::S::from_usize(n / 2) - 1.0.into(),
                 offset - 1.0.into(),
             )
@@ -45,7 +45,7 @@ pub fn random_star<Vec2: Vector2D>(
         let r = rng.gen_range(min_r..=max_r);
         let x = r * phi.cos();
         let y = r * phi.sin();
-        vec2s.push(Vec2::from_xy(Vec2::S::from(x), Vec2::S::from(y)));
+        vec2s.push(Vec2::new(Vec2::S::from(x), Vec2::S::from(y)));
     }
 
     vec2s

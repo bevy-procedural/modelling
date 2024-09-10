@@ -1,13 +1,15 @@
-use std::collections::HashSet;
-
-use super::{payload::Payload, Deletable, DeletableVector, Face, HalfEdge, IndexType, Vertex};
 pub mod builder;
 mod check;
+mod mesh_type;
 pub mod primitives;
 mod tesselate;
 
 #[cfg(feature = "bevy")]
 pub mod bevy;
+
+use super::{Deletable, DeletableVector, Face, HalfEdge, Vertex};
+pub use mesh_type::MeshType;
+use std::collections::HashSet;
 
 /// A mesh data structure for (open) manifold meshes.
 ///
@@ -22,25 +24,13 @@ pub mod bevy;
 ///
 /// TODO: to import non-manifold edges, we could use the "tufted cover" https://www.cs.cmu.edu/~kmcrane/Projects/NonmanifoldLaplace/index.html
 #[derive(Debug, Clone)]
-pub struct Mesh<EdgeIndex, VertexIndex, FaceIndex, PayloadType>
-where
-    EdgeIndex: IndexType,
-    VertexIndex: IndexType,
-    FaceIndex: IndexType,
-    PayloadType: Payload,
-{
-    vertices: DeletableVector<Vertex<EdgeIndex, VertexIndex, PayloadType>, VertexIndex>,
-    edges: DeletableVector<HalfEdge<EdgeIndex, VertexIndex, FaceIndex>, EdgeIndex>,
-    faces: DeletableVector<Face<EdgeIndex, FaceIndex>, FaceIndex>,
+pub struct Mesh<T: MeshType> {
+    vertices: DeletableVector<Vertex<T::E, T::V, T::VP>, T::V>,
+    edges: DeletableVector<HalfEdge<T::E, T::V, T::F, T::EP>, T::E>,
+    faces: DeletableVector<Face<T::E, T::F, T::FP>, T::F>,
 }
 
-impl<E, V, F, P> Mesh<E, V, F, P>
-where
-    E: IndexType,
-    V: IndexType,
-    F: IndexType,
-    P: Payload,
-{
+impl<T: MeshType> Mesh<T> {
     /// Creates a new empty mesh
     pub fn new() -> Self {
         Self {
@@ -51,17 +41,17 @@ where
     }
 
     /// Returns a reference to the requested vertex
-    pub fn vertex(&self, index: V) -> &Vertex<E, V, P> {
+    pub fn vertex(&self, index: T::V) -> &Vertex<T::E, T::V, T::VP> {
         &self.vertices.get(index)
     }
 
     /// Returns a reference to the requested edge
-    pub fn edge(&self, index: E) -> &HalfEdge<E, V, F> {
+    pub fn edge(&self, index: T::E) -> &HalfEdge<T::E, T::V, T::F, T::EP> {
         &self.edges.get(index)
     }
 
     /// Returns the half edge from v to w
-    pub fn edge_between(&self, v: V, w: V) -> Option<HalfEdge<E, V, F>> {
+    pub fn edge_between(&self, v: T::V, w: T::V) -> Option<HalfEdge<T::E, T::V, T::F, T::EP>> {
         let v = self.vertex(v).edges(self).find(|e| e.target_id(self) == w);
         if let Some(vv) = v {
             if vv.is_deleted() {
@@ -75,29 +65,29 @@ where
     }
 
     /// Returns the half edge id from v to w. Panics if the edge does not exist.
-    pub fn edge_id_between(&self, v: V, w: V) -> E {
+    pub fn edge_id_between(&self, v: T::V, w: T::V) -> T::E {
         self.edge_between(v, w).unwrap().id()
     }
 
     /// Returns a reference to the requested face
-    pub fn face(&self, index: F) -> &Face<E, F> {
+    pub fn face(&self, index: T::F) -> &Face<T::E, T::F, T::FP> {
         let f = &self.faces.get(index);
         assert!(!f.is_deleted());
         f
     }
 
     /// Returns a mutable reference to the requested vertex
-    pub fn vertex_mut(&mut self, index: V) -> &mut Vertex<E, V, P> {
+    pub fn vertex_mut(&mut self, index: T::V) -> &mut Vertex<T::E, T::V, T::VP> {
         self.vertices.get_mut(index)
     }
 
     /// Returns a mutable reference to the requested edge
-    pub fn edge_mut<'a>(&'a mut self, index: E) -> &'a mut HalfEdge<E, V, F> {
+    pub fn edge_mut<'a>(&'a mut self, index: T::E) -> &'a mut HalfEdge<T::E, T::V, T::F, T::EP> {
         self.edges.get_mut(index)
     }
 
     /// Returns a mutable reference to the requested face
-    pub fn face_mut(&mut self, index: F) -> &mut Face<E, F> {
+    pub fn face_mut(&mut self, index: T::F) -> &mut Face<T::E, T::F, T::FP> {
         self.faces.get_mut(index)
     }
 
@@ -137,29 +127,29 @@ where
     }
 
     /// Returns an iterator over all non-deleted vertices
-    pub fn vertices(&self) -> impl Iterator<Item = &Vertex<E, V, P>> {
+    pub fn vertices(&self) -> impl Iterator<Item = &Vertex<T::E, T::V, T::VP>> {
         self.vertices.iter()
     }
 
     /// Returns an iterator over all non-deleted edges
-    pub fn edges(&self) -> impl Iterator<Item = &HalfEdge<E, V, F>> {
+    pub fn edges(&self) -> impl Iterator<Item = &HalfEdge<T::E, T::V, T::F, T::EP>> {
         self.edges.iter()
     }
 
     /// Returns an iterator over all non-deleted faces
-    pub fn faces(&self) -> impl Iterator<Item = &Face<E, F>> {
+    pub fn faces(&self) -> impl Iterator<Item = &Face<T::E, T::F, T::FP>> {
         self.faces.iter()
     }
 
     /// Transforms all vertices in the mesh
-    pub fn transform(&mut self, t: &P::Trans) {
+    pub fn transform(&mut self, t: &T::Trans) {
         for v in self.vertices.iter_mut() {
             v.transform(t);
         }
     }
 
     /// Translates all vertices in the mesh
-    pub fn translate(&mut self, t: &P::Vec) {
+    pub fn translate(&mut self, t: &T::Vec) {
         for v in self.vertices.iter_mut() {
             v.translate(t);
         }

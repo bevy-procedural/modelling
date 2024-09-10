@@ -5,8 +5,9 @@ use crate::math::{Scalar, Transform, Vector, Vector2D, Vector3D};
 #[cfg(feature = "bevy")]
 pub mod bevy;
 
-/// Trait for the payload of vertices.
-pub trait Payload: Clone + Default + PartialEq + std::fmt::Debug + std::fmt::Display {
+// TODO: remove the `Default` similar to the `DefaultEdgePayload`
+/// A trait that defines how the payload of a vertex should behave.
+pub trait VertexPayload: Clone + Default + PartialEq + std::fmt::Debug + std::fmt::Display {
     /// The scalar type of the coordinates used in the payload. Mainly to choose between f32 and f64. But could also work with integers etc...
     type S: Scalar;
 
@@ -40,3 +41,9 @@ pub trait Payload: Clone + Default + PartialEq + std::fmt::Debug + std::fmt::Dis
     /// Creates a payload from a vector.
     fn from_vec(v: Self::Vec) -> Self;
 }
+
+/// An empty vertex payload if you don't need any vertex information.
+/// Notice that your mesh will behave more like a graph without any payload.
+// TODO: implement this. Requires the VertexPayload to be weaker and use a separate, stronger trait (e.g., `EuclideanVertexPayload`) for the full payload.
+#[derive(Debug, Clone, PartialEq, Default, Copy)]
+pub struct EmptyVertexPayload;

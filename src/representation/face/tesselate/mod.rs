@@ -1,13 +1,12 @@
 //! Triangulation Algorithms
 
-use std::collections::HashMap;
-
-use super::{Face, Mesh, Payload};
+use super::{Face, FacePayload, Mesh};
 use crate::{
     math::{Vector, Vector3D},
-    representation::IndexType,
+    representation::{payload::VertexPayload, IndexType, MeshType},
 };
 use itertools::Itertools;
+use std::collections::HashMap;
 
 mod convex;
 mod delaunay;
@@ -73,19 +72,15 @@ pub struct TesselationMeta<V: IndexType> {
     pub sweep: sweep::SweepMeta<V>,
 }
 
-impl<E, F> Face<E, F>
-where
-    E: IndexType,
-    F: IndexType,
-{
-    fn tesselate_inner<V: IndexType, P: Payload>(
+impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
+    fn tesselate_inner<T: MeshType<E = E, F = F, FP = FP>>(
         &self,
-        mesh: &Mesh<E, V, F, P>,
-        tri: &mut Triangulation<V>,
+        mesh: &Mesh<T>,
+        tri: &mut Triangulation<T::V>,
         algorithm: TriangulationAlgorithm,
-        meta: &mut TesselationMeta<V>,
+        meta: &mut TesselationMeta<T::V>,
     ) where
-        P::Vec: Vector3D<S = P::S>,
+        T::Vec: Vector3D<S = T::S>,
     {
         let n = self.num_vertices(mesh);
         if n < 3 {
@@ -136,16 +131,16 @@ where
     /// Converts the face into a triangle list.
     /// Might duplicate vertices when generating normals.
     /// When vertices is empty, use the original vertex indices without duplication.
-    pub fn tesselate<V: IndexType, P: Payload>(
+    pub fn tesselate<T: MeshType<E = E, F = F, FP = FP>>(
         &self,
-        mesh: &Mesh<E, V, F, P>,
-        vertices: &mut Vec<P>,
-        indices: &mut Vec<V>,
+        mesh: &Mesh<T>,
+        vertices: &mut Vec<T::VP>,
+        indices: &mut Vec<T::V>,
         algorithm: TriangulationAlgorithm,
         generate_normals: GenerateNormals,
-        meta: &mut TesselationMeta<V>,
+        meta: &mut TesselationMeta<T::V>,
     ) where
-        P::Vec: Vector3D<S = P::S>,
+        T::Vec: Vector3D<S = T::S>,
     {
         let mut tri = Triangulation::new(indices);
 
@@ -159,7 +154,7 @@ where
                 // generate a new list of vertices (full duplication)
                 self.vertices(mesh).for_each(|v| {
                     let mut p = v.payload().clone();
-                    id_map.insert(v.id(), V::new(vertices.len()));
+                    id_map.insert(v.id(), T::V::new(vertices.len()));
                     p.set_normal(normal);
                     vertices.push(p)
                 });
@@ -179,11 +174,11 @@ where
                             no = -no;
                         }
                         p.set_normal(no);
-                        id_map.insert(v.id(), V::new(vertices.len()));
+                        id_map.insert(v.id(), T::V::new(vertices.len()));
                         vertices.push(p)
                     });
                 self.tesselate_inner(mesh, &mut tri, algorithm, meta);
-               tri.map_indices(&id_map);
+                tri.map_indices(&id_map);
             }
             GenerateNormals::AllSmooth => {
                 todo!("GenerateNormals::AllSmooth")

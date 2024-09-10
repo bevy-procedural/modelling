@@ -1,33 +1,29 @@
-use super::{Face, Mesh, Payload, Triangulation};
+use super::{Face, Mesh, Triangulation};
 use crate::{
     math::{Scalar, Vector2D, Vector3D},
-    representation::IndexType,
+    representation::{FacePayload, IndexType, MeshType},
 };
 
-impl<E, F> Face<E, F>
-where
-    E: IndexType,
-    F: IndexType,
-{
+impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
     /// Use ear-clipping to triangulate the face.
     /// This is relatively slow: O(n^2).
     ///
     /// Optionally randomize the start position to search the next ear.
     /// This is slightly slower but can generate more versatile results.
-    pub fn ear_clipping<V: IndexType, P: Payload>(
+    pub fn ear_clipping<T: MeshType<E = E, F = F, FP = FP>>(
         &self,
-        mesh: &Mesh<E, V, F, P>,
-        indices: &mut Triangulation<V>,
+        mesh: &Mesh<T>,
+        indices: &mut Triangulation<T::V>,
         randomize: bool,
     ) where
-        P::Vec: Vector3D<S = P::S>,
+        T::Vec: Vector3D<S = T::S>,
     {
-        let eps = <P::S as Scalar>::EPS * 2.0.into();
+        let eps = <T::S as Scalar>::EPS * 2.0.into();
         let mut success_since_fail = 0;
         debug_assert!(self.may_be_curved() || self.is_planar2(mesh));
         debug_assert!(self.is_simple(mesh));
 
-        let vs: Vec<(P::Vec2, V)> = self.vertices_2d::<V, P>(mesh).collect();
+        let vs: Vec<(T::Vec2, T::V)> = self.vertices_2d::<T>(mesh).collect();
 
         let triangle_empty = |a: usize, b: usize, c: usize| {
             let av = vs[a].0;
@@ -103,20 +99,18 @@ mod tests {
     use super::*;
     use crate::{
         math::{impls::bevy::Bevy2DPolygon, Polygon, Scalar},
-        representation::{
-            payload::bevy::BevyPayload, primitives::random_star, tesselate::IndexedVertex2D,
-        },
+        representation::{bevy::BevyMesh3d, primitives::random_star, tesselate::IndexedVertex2D},
     };
     use bevy::math::{Vec2, Vec3};
 
-    fn verify_triangulation(vec2s: &Vec<IndexedVertex2D<usize, Vec2>>) {
+    fn verify_triangulation(vec2s: &Vec<IndexedVertex2D<u32, Vec2>>) {
         assert!(
             Bevy2DPolygon::from_iter(vec2s.iter().map(|v| v.vec)).is_ccw(),
             "Polygon must be counterclockwise"
         );
         let mut indices = Vec::new();
         let mut tri = Triangulation::new(&mut indices);
-        let m = Mesh::<usize, usize, usize, BevyPayload>::polygon(
+        let m = BevyMesh3d::polygon(
             &vec2s
                 .iter()
                 .map(|v| Vec3::new(v.vec.x, 0.0, v.vec.y))
@@ -126,10 +120,10 @@ mod tests {
         tri.verify_full::<Vec2, Bevy2DPolygon>(vec2s);
     }
 
-    fn liv_from_array(arr: &[[f32; 2]]) -> Vec<IndexedVertex2D<usize, Vec2>> {
+    fn liv_from_array(arr: &[[f32; 2]]) -> Vec<IndexedVertex2D<u32, Vec2>> {
         arr.iter()
             .enumerate()
-            .map(|(i, &v)| IndexedVertex2D::new(Vec2::from_xy(v[0], v[1]), i))
+            .map(|(i, &v)| IndexedVertex2D::new(Vec2::new(v[0], v[1]), i as u32))
             .collect()
     }
 
@@ -146,7 +140,7 @@ mod tests {
                 .into_iter()
                 .map(|i| {
                     let a = i as f32 / (n as f32) * std::f32::consts::PI * 2.0;
-                    IndexedVertex2D::new(Vec2::from_xy(a.cos(), a.sin()), i)
+                    IndexedVertex2D::new(Vec2::new(a.cos(), a.sin()), i)
                 })
                 .collect(),
         );

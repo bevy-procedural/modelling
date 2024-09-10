@@ -169,7 +169,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
         let mut last: Option<&SLISorter<Vec2>> = None;
         for sorter in self.tree.as_ref().unwrap() {
             if let Some(l) = last {
-                let last_at = SLISorter::new(l.left, Vec2::from_xy(l.x_at_y(at), at), l.to);
+                let last_at = SLISorter::new(l.left, Vec2::new(l.x_at_y(at), at), l.to);
                 assert!(
                     last_at <= *sorter,
                     "Tree is not sorted correctly at {} because {} <= {} does not hold.",

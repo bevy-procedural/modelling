@@ -64,13 +64,29 @@ impl Vector<f32> for Vec2 {
     fn splat(value: f32) -> Self {
         Vec2::splat(value)
     }
+
+    #[inline(always)]
+    fn from_x(x: f32) -> Self {
+        Vec2::new(x, 0.0)
+    }
+
+    #[inline(always)]
+    fn from_xy(x: f32, y: f32) -> Self {
+        Vec2::new(x, y)
+    }
+
+    /// drop the z coordinate
+    #[inline(always)]
+    fn from_xyz(x: f32, y: f32, _: f32) -> Self {
+        Vec2::new(x, y)
+    }
 }
 
 impl Vector2D for Vec2 {
     type S = f32;
 
     #[inline(always)]
-    fn from_xy(x: f32, y: f32) -> Self {
+    fn new(x: f32, y: f32) -> Self {
         Vec2::new(x, y)
     }
 
