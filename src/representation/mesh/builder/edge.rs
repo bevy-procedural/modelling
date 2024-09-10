@@ -79,14 +79,4 @@ impl<T: MeshType> Mesh<T> {
         return (e1, e2);
     }
 
-    /// Removes the provided face.
-    pub fn remove_face(&mut self, f: T::F) {
-        let face = self.face(f);
-
-        let edge_ids: Vec<_> = face.edges(self).map(|e| e.id()).collect();
-        for e in edge_ids {
-            self.edge_mut(e).delete_face();
-        }
-        self.faces.delete_internal(f);
-    }
 }

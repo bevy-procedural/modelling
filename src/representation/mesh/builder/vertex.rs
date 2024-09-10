@@ -1,9 +1,9 @@
 use crate::representation::{IndexType, Mesh, MeshType, Vertex};
 
 impl<T: MeshType> Mesh<T> {
-    /// Creates a new vertex based on p and connects it to vertex v
+    /// Creates a new vertex based on `vp` and connects it to vertex `v` with a pair of halfedges 
     /// TODO: Docs
-    pub fn add_vertex_auto(
+    pub fn add_vertex_via_vertex(
         &mut self,
         v: T::V,
         vp: T::VP,
@@ -30,11 +30,11 @@ impl<T: MeshType> Mesh<T> {
         assert!(self.edge(input).is_boundary_self());
         assert!(self.edge(output).is_boundary_self());
 
-        return self.add_vertex(input, output, vp, ep1, ep2);
+        return self.add_vertex_via_edge(input, output, vp, ep1, ep2);
     }
 
     /// Adds a vertex with the given payload via a new edge starting in input and ending in output
-    pub fn add_vertex(
+    pub fn add_vertex_via_edge(
         &mut self,
         input: T::E,
         output: T::E,

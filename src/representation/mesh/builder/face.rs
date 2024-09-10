@@ -58,6 +58,7 @@ impl<T: MeshType> Mesh<T> {
 
         let f = self.faces.push(Face::new(inside, curved, fp));
 
+        // TODO: The clone is weird
         self.edge(inside)
             .clone()
             .edges_face_mut(self)
@@ -100,5 +101,16 @@ impl<T: MeshType> Mesh<T> {
             .id();
 
         return self.close_face(inside, ep1, outside, ep2, fp, curved);
+    }
+
+    /// Removes the provided face.
+    pub fn remove_face(&mut self, f: T::F) {
+        let face = self.face(f);
+
+        let edge_ids: Vec<_> = face.edges(self).map(|e| e.id()).collect();
+        for e in edge_ids {
+            self.edge_mut(e).delete_face();
+        }
+        self.faces.delete_internal(f);
     }
 }

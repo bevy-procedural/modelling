@@ -29,7 +29,7 @@ where
         for i in 2..v.len() {
             last = current;
             current = mesh
-                .add_vertex_auto(
+                .add_vertex_via_vertex(
                     current,
                     T::VP::from_vec(v[i]),
                     Default::default(),
@@ -79,7 +79,7 @@ where
             let angle = pi2n * (i as f32);
             prev = current;
             current = mesh
-                .add_vertex_auto(
+                .add_vertex_via_vertex(
                     current,
                     T::VP::from_vec(T::Vec::from_xy(
                         r * T::S::from(angle.sin()),
