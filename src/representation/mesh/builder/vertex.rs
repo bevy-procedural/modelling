@@ -1,26 +1,15 @@
 use crate::representation::{IndexType, Mesh, MeshType, Vertex};
 
-// TODO: Don't use a trait for this!
-/// Trait for adding a vertex to a mesh and connecting it to the graph
-pub trait AddVertex<Input> {
-    /// The type of the edge indices
-    type E: IndexType;
-
-    /// The type of the vertex indices
-    type V: IndexType;
-
-    /// Adds a vertex and connects it to the given graph with a single edge.
-    /// The new vertex and the HalfEdges are returned.
-    fn add_vertex(&mut self, input: Input) -> (Self::V, Self::E, Self::E);
-}
-
-impl<T: MeshType> AddVertex<(T::V, T::VP, T::EP, T::EP)> for Mesh<T> {
-    type E = T::E;
-    type V = T::V;
-
+impl<T: MeshType> Mesh<T> {
     /// Creates a new vertex based on p and connects it to vertex v
     /// TODO: Docs
-    fn add_vertex(&mut self, (v, vp, ep1, ep2): (T::V, T::VP, T::EP, T::EP)) -> (T::V, T::E, T::E) {
+    pub fn add_vertex_auto(
+        &mut self,
+        v: T::V,
+        vp: T::VP,
+        ep1: T::EP,
+        ep2: T::EP,
+    ) -> (T::V, T::E, T::E) {
         let (input, output) = if self.vertex(v).has_only_one_edge(self) {
             let e = self.vertex(v).edge(self);
             (e.twin_id(), e.id())
@@ -41,18 +30,17 @@ impl<T: MeshType> AddVertex<(T::V, T::VP, T::EP, T::EP)> for Mesh<T> {
         assert!(self.edge(input).is_boundary_self());
         assert!(self.edge(output).is_boundary_self());
 
-        return self.add_vertex((input, output, vp, ep1, ep2));
+        return self.add_vertex(input, output, vp, ep1, ep2);
     }
-}
-
-impl<T: MeshType> AddVertex<(T::E, T::E, T::VP, T::EP, T::EP)> for Mesh<T> {
-    type E = T::E;
-    type V = T::V;
 
     /// Adds a vertex with the given payload via a new edge starting in input and ending in output
-    fn add_vertex(
+    pub fn add_vertex(
         &mut self,
-        (input, output, vp, ep1, ep2): (T::E, T::E, T::VP, T::EP, T::EP),
+        input: T::E,
+        output: T::E,
+        vp: T::VP,
+        ep1: T::EP,
+        ep2: T::EP,
     ) -> (T::V, T::E, T::E) {
         let v = self.edge(input).target(self).id();
         assert!(self.edge(output).origin(self).id() == v);

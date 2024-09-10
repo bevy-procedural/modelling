@@ -1,9 +1,7 @@
 use crate::{
     math::Vector,
     representation::{
-        builder::{AddVertex, CloseFace},
-        payload::VertexPayload,
-        DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
+        payload::VertexPayload, DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
     },
 };
 
@@ -31,15 +29,15 @@ where
         for i in 2..v.len() {
             last = current;
             current = mesh
-                .add_vertex((
+                .add_vertex_auto(
                     current,
                     T::VP::from_vec(v[i]),
                     Default::default(),
                     Default::default(),
-                ))
+                )
                 .0;
         }
-        mesh.close_face((
+        mesh.close_face_vertices(
             last,
             Default::default(),
             current,
@@ -47,7 +45,7 @@ where
             v0,
             Default::default(),
             false,
-        ));
+        );
         mesh
     }
 
@@ -81,7 +79,7 @@ where
             let angle = pi2n * (i as f32);
             prev = current;
             current = mesh
-                .add_vertex((
+                .add_vertex_auto(
                     current,
                     T::VP::from_vec(T::Vec::from_xy(
                         r * T::S::from(angle.sin()),
@@ -89,11 +87,11 @@ where
                     )),
                     Default::default(),
                     Default::default(),
-                ))
+                )
                 .0;
         }
 
-        mesh.close_face((
+        mesh.close_face_vertices(
             prev,
             Default::default(),
             current,
@@ -101,7 +99,7 @@ where
             v0,
             Default::default(),
             false,
-        ));
+        );
 
         mesh
     }

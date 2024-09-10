@@ -3,21 +3,9 @@ use crate::{
     util::iter::contains_exactly_one,
 };
 
-// TODO: Don't use a trait for this!
-/// Close a face given some description. Might insert additional edges and vertices.
-pub trait CloseFace<Input> {
-    /// The type of the face indices
-    type F: IndexType;
-
-    /// Close the face and return the index of the new face
-    fn close_face(&mut self, input: Input) -> Self::F;
-}
-
-impl<T: MeshType> CloseFace<(T::E, T::FP, bool)> for Mesh<T> {
-    type F = T::F;
-
-    /// Close the open boundary with a single face
-    fn close_face(&mut self, (e, fp, curved): (T::E, T::FP, bool)) -> T::F {
+impl<T: MeshType> Mesh<T> {
+    /// Close the open boundary with a single face. Doesn't create new edges or vertices.
+    pub fn close_hole(&mut self, e: T::E, fp: T::FP, curved: bool) -> T::F {
         let f = self.faces.push(Face::new(e, curved, fp));
         self.edge(e)
             .clone()
@@ -25,15 +13,18 @@ impl<T: MeshType> CloseFace<(T::E, T::FP, bool)> for Mesh<T> {
             .for_each(|e| e.set_face(f));
         return f;
     }
-}
 
-impl<T: MeshType> CloseFace<(T::E, T::EP, T::E, T::EP, T::FP, bool)> for Mesh<T> {
-    type F = T::F;
-
-    /// Close the face by connecting `inside` with the next edge to close the face and `outside` with the next edge to complete the outside
-    fn close_face(
+    /// Close the face by inserting a pair of halfedges, i.e.,
+    /// connecting `inside` with the next halfedge to close the face and `outside`
+    /// with the next halfedge to complete the outside.
+    pub fn close_face(
         &mut self,
-        (inside, ep1, outside, ep2, fp, curved): (T::E, T::EP, T::E, T::EP, T::FP, bool),
+        inside: T::E,
+        ep1: T::EP,
+        outside: T::E,
+        ep2: T::EP,
+        fp: T::FP,
+        curved: bool,
     ) -> T::F {
         let e_inside = self.edge(inside);
         let e_outside = self.edge(outside);
@@ -74,16 +65,18 @@ impl<T: MeshType> CloseFace<(T::E, T::EP, T::E, T::EP, T::FP, bool)> for Mesh<T>
 
         return f;
     }
-}
 
-impl<T: MeshType> CloseFace<(T::V, T::EP, T::V, T::EP, T::V, T::FP, bool)> for Mesh<T> {
-    type F = T::F;
-
-    /// Close the face by connecting the edge from v1 to v2 with vertex w.
-    /// TODO: Docs
-    fn close_face(
+    /// Close the face by connecting vertex `from` (coming from `prev`) with vertex `to`.
+    /// Inserts a pair of halfedges between these two vertices.
+    pub fn close_face_vertices(
         &mut self,
-        (prev, ep1, from, ep2, to, fp, curved): (T::V, T::EP, T::V, T::EP, T::V, T::FP, bool),
+        prev: T::V,
+        ep1: T::EP,
+        from: T::V,
+        ep2: T::EP,
+        to: T::V,
+        fp: T::FP,
+        curved: bool,
     ) -> T::F {
         let inside = self.edge_between(prev, from).unwrap().id();
 
@@ -106,6 +99,6 @@ impl<T: MeshType> CloseFace<(T::V, T::EP, T::V, T::EP, T::V, T::FP, bool)> for M
             .unwrap()
             .id();
 
-        return self.close_face((inside, ep1, outside, ep2, fp, curved));
+        return self.close_face(inside, ep1, outside, ep2, fp, curved);
     }
 }
