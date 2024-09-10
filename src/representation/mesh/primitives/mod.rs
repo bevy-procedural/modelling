@@ -2,8 +2,7 @@
 
 
 mod cuboid;
-// TODO
-//mod frustum;
+mod frustum;
 mod misc;
 mod regular_polygon;
 

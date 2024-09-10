@@ -1,9 +1,13 @@
 use crate::{
-    math::{HasZero, Scalar, Transform},
-    representation::{payload::VertexPayload, Mesh, MeshType},
+    math::{HasZero, IndexType, Transform, Vector},
+    representation::{DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType},
 };
 
-impl<T: MeshType> Mesh<T> {
+impl<T: MeshType> Mesh<T>
+where
+    T::EP: DefaultEdgePayload,
+    T::FP: DefaultFacePayload,
+{
     // Waiting for https://github.com/rust-lang/rust/issues/8995
     // type S = T::S;
 
