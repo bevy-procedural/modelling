@@ -41,7 +41,7 @@ where
 
         if close {
             return self.close_hole(
-                self.edge_id_between(second, last),
+                self.shared_edge_id(second, last).unwrap(),
                 Default::default(),
                 curved,
             );
@@ -63,7 +63,11 @@ where
             last = curr;
             curr = edges[i].origin_id();
         }
-        self.close_hole(self.edge_id_between(point, curr), Default::default(), false);
+        self.close_hole(
+            self.shared_edge_id(point, curr).unwrap(),
+            Default::default(),
+            false,
+        );
         point
     }
 

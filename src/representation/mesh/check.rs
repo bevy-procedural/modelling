@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use super::{Mesh, MeshType};
 use crate::representation::IndexType;
 
+/// A pseudo-winged edge representation of an edge for debugging purposes
 #[derive(Clone)]
 struct PseudoWingedEdge<E, V, F>
 where
@@ -54,7 +55,7 @@ impl<T: MeshType> Mesh<T> {
     /// Checks whether the twin of the twin is always the edge itself,
     /// the precursor to the next edge is the same, and the successor of the previous.
     fn check_edge_invariants(&self) -> Result<(), String> {
-        if let Some(unmatched_twin) = self.edges().find(|e| e.twin(self).twin_id() != e.id()) {
+        if let Some(unmatched_twin) = self.halfedges().find(|e| e.twin(self).twin_id() != e.id()) {
             return Err(format!(
                 "HalfEdge {} has a twin {} with twin {}",
                 unmatched_twin.id(),
@@ -64,7 +65,7 @@ impl<T: MeshType> Mesh<T> {
         }
 
         if let Some(prev_next) = self
-            .edges()
+            .halfedges()
             .find(|e| e.next(self).prev(self).id() != e.id() || e.prev(self).next_id() != e.id())
         {
             return Err(format!(
@@ -75,7 +76,7 @@ impl<T: MeshType> Mesh<T> {
             ));
         }
 
-        if let Some(face_next) = self.edges().find(|e| {
+        if let Some(face_next) = self.halfedges().find(|e| {
             let f1 = e.face(self);
             let f2 = e.next(self).face(self);
             (f1.is_none() ^ f2.is_none())
@@ -89,7 +90,7 @@ impl<T: MeshType> Mesh<T> {
             ));
         }
 
-        if let Some(bad_edge) = self.edges().find(|e| {
+        if let Some(bad_edge) = self.halfedges().find(|e| {
             e.next(self).origin_id() != e.twin(self).origin_id()
                 || e.target_id(self) != e.twin(self).origin_id()
         }) {
@@ -120,8 +121,8 @@ impl<T: MeshType> Mesh<T> {
 
     fn check_edges_are_loops(&self) -> Result<(), String> {
         if let Some(bad_edge) = self
-            .edges()
-            .find(|e| !e.next(self).can_reach(self, e.origin_id()))
+            .halfedges()
+            .find(|e| !e.next(self).same_face(self, e.origin_id()))
         {
             return Err(format!(
                 "Successor of edge {} cannot reach it's origin {} during forward search",
@@ -131,8 +132,8 @@ impl<T: MeshType> Mesh<T> {
         }
 
         if let Some(bad_edge) = self
-            .edges()
-            .find(|e| !e.prev(self).can_reach_back(self, e.target_id(self)))
+            .halfedges()
+            .find(|e| !e.prev(self).same_face_back(self, e.target_id(self)))
         {
             return Err(format!(
                 "Precursor of edge {} cannot reach it's target {} during backward search",
@@ -159,7 +160,7 @@ impl<T: MeshType> Mesh<T> {
     /// This is somewhat optional; the algorithms shouldn't break when using this, but there isn't really a reason for it existing in a wellformed mesh
     fn check_edges_have_face(&self) -> Result<(), String> {
         if let Some(bad_edge) = self
-            .edges()
+            .halfedges()
             .find(|e| e.is_boundary_self() && e.twin(self).is_boundary_self())
         {
             return Err(format!("HalfEdge {} has no face!", bad_edge.id()));
@@ -182,7 +183,7 @@ impl<T: MeshType> Mesh<T> {
     /// Returns all edges as pseudo-winged edges
     fn pair_edges(&self) -> Vec<PseudoWingedEdge<T::E, T::V, T::F>> {
         let mut edges: HashMap<T::E, PseudoWingedEdge<T::E, T::V, T::F>> = HashMap::new();
-        self.edges().for_each(|edge| {
+        self.halfedges().for_each(|edge| {
             let twin = edge.twin(self);
             if edges.contains_key(&twin.id()) {
                 return;

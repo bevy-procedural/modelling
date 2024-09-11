@@ -10,11 +10,11 @@ pub trait Vector<S: Scalar>:
     + std::ops::AddAssign
     + std::ops::Sub<Output = Self>
     + std::ops::SubAssign
-    + std::ops::Mul<Output = Self>
-    + std::ops::MulAssign
+    + std::ops::Mul<Self, Output = Self>
     + std::ops::Mul<S, Output = Self>
-    + std::ops::Div<Output = Self>
-    + std::ops::Sub<Output = Self>
+    + std::ops::MulAssign
+    + std::ops::Div<Self, Output = Self>
+    + std::ops::Div<S, Output = Self>
     + std::ops::Neg<Output = Self>
     + HasZero
     + 'static
@@ -39,6 +39,12 @@ pub trait Vector<S: Scalar>:
 
     /// Returns the squared distance between two points.
     fn distance_squared(&self, other: &Self) -> S;
+
+    /// Length of the vector
+    fn length(&self) -> S;
+
+    /// Squared length of the vector
+    fn length_squared(&self) -> S;
 
     /// Returns the dot product of two vectors.
     fn dot(&self, other: &Self) -> S;

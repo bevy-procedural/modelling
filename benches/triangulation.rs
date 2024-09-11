@@ -60,7 +60,7 @@ fn bench_triangulation(c: &mut Criterion) {
                 |b, para: &BevyMesh3d| {
                     b.iter(|| {
                         let mut meta = Default::default();
-                        para.tesselate(algo, GenerateNormals::None, &mut meta);
+                        para.triangulate(algo, GenerateNormals::None, &mut meta);
                     })
                 },
             );

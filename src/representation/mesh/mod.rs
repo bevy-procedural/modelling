@@ -1,15 +1,17 @@
 pub mod builder;
 mod check;
+mod iterator;
 mod mesh_type;
 pub mod primitives;
 mod tesselate;
+mod topology;
+mod transform;
 
 #[cfg(feature = "bevy")]
 pub mod bevy;
 
 use super::{Deletable, DeletableVector, Face, HalfEdge, Vertex};
 pub use mesh_type::MeshType;
-use std::collections::HashSet;
 
 /// A mesh data structure for (open) manifold meshes.
 ///
@@ -26,7 +28,7 @@ use std::collections::HashSet;
 #[derive(Debug, Clone)]
 pub struct Mesh<T: MeshType> {
     vertices: DeletableVector<Vertex<T::E, T::V, T::VP>, T::V>,
-    edges: DeletableVector<HalfEdge<T::E, T::V, T::F, T::EP>, T::E>,
+    halfedges: DeletableVector<HalfEdge<T::E, T::V, T::F, T::EP>, T::E>,
     faces: DeletableVector<Face<T::E, T::F, T::FP>, T::F>,
 }
 
@@ -35,9 +37,14 @@ impl<T: MeshType> Mesh<T> {
     pub fn new() -> Self {
         Self {
             vertices: DeletableVector::new(),
-            edges: DeletableVector::new(),
+            halfedges: DeletableVector::new(),
             faces: DeletableVector::new(),
         }
+    }
+
+    /// Returns whether the vertex exists and is not deleted
+    pub fn has_vertex(&self, index: T::V) -> bool {
+        self.vertices.has(index)
     }
 
     /// Returns a reference to the requested vertex
@@ -47,26 +54,7 @@ impl<T: MeshType> Mesh<T> {
 
     /// Returns a reference to the requested edge
     pub fn edge(&self, index: T::E) -> &HalfEdge<T::E, T::V, T::F, T::EP> {
-        &self.edges.get(index)
-    }
-
-    /// Returns the half edge from v to w
-    pub fn edge_between(&self, v: T::V, w: T::V) -> Option<HalfEdge<T::E, T::V, T::F, T::EP>> {
-        let v = self.vertex(v).edges(self).find(|e| e.target_id(self) == w);
-        if let Some(vv) = v {
-            if vv.is_deleted() {
-                None
-            } else {
-                Some(vv)
-            }
-        } else {
-            None
-        }
-    }
-
-    /// Returns the half edge id from v to w. Panics if the edge does not exist.
-    pub fn edge_id_between(&self, v: T::V, w: T::V) -> T::E {
-        self.edge_between(v, w).unwrap().id()
+        &self.halfedges.get(index)
     }
 
     /// Returns a reference to the requested face
@@ -83,7 +71,7 @@ impl<T: MeshType> Mesh<T> {
 
     /// Returns a mutable reference to the requested edge
     pub fn edge_mut<'a>(&'a mut self, index: T::E) -> &'a mut HalfEdge<T::E, T::V, T::F, T::EP> {
-        self.edges.get_mut(index)
+        self.halfedges.get_mut(index)
     }
 
     /// Returns a mutable reference to the requested face
@@ -93,22 +81,7 @@ impl<T: MeshType> Mesh<T> {
 
     /// Whether the mesh is open, i.e., has boundary edges
     pub fn is_open(&self) -> bool {
-        self.edges.iter().any(|e| e.is_boundary_self())
-    }
-
-    /// Whether the mesh has non-manifold vertices
-    pub fn has_nonmanifold_vertices(&self) -> bool {
-        self.vertices.iter().any(|v| !v.is_manifold())
-    }
-
-    /// Whether the mesh is manifold, i.e., has no boundary edges and no non-manifold vertices
-    pub fn is_manifold(&self) -> bool {
-        !self.is_open() && !self.has_nonmanifold_vertices()
-    }
-
-    /// Returns the number of vertices in the mesh
-    pub fn num_vertices(&self) -> usize {
-        self.vertices.len()
+        self.halfedges.iter().any(|e| e.is_boundary_self())
     }
 
     /// Returns the maximum vertex index in the mesh
@@ -116,9 +89,14 @@ impl<T: MeshType> Mesh<T> {
         self.vertices.max_ind()
     }
 
+    /// Returns the number of vertices in the mesh
+    pub fn num_vertices(&self) -> usize {
+        self.vertices.len()
+    }
+
     /// Returns the number of edges in the mesh
     pub fn num_edges(&self) -> usize {
-        self.edges.len()
+        self.halfedges.len()
     }
 
     /// Returns the number of faces in the mesh
@@ -126,70 +104,11 @@ impl<T: MeshType> Mesh<T> {
         self.faces.len()
     }
 
-    /// Returns an iterator over all non-deleted vertices
-    pub fn vertices(&self) -> impl Iterator<Item = &Vertex<T::E, T::V, T::VP>> {
-        self.vertices.iter()
-    }
-
-    /// Returns an mutable iterator over all non-deleted vertices
-    pub fn vertices_mut(&mut self) -> impl Iterator<Item = &mut Vertex<T::E, T::V, T::VP>> {
-        self.vertices.iter_mut()
-    }
-
-    /// Returns an iterator over all non-deleted edges
-    pub fn edges(&self) -> impl Iterator<Item = &HalfEdge<T::E, T::V, T::F, T::EP>> {
-        self.edges.iter()
-    }
-
-    /// Returns an iterator over all non-deleted faces
-    pub fn faces(&self) -> impl Iterator<Item = &Face<T::E, T::F, T::FP>> {
-        self.faces.iter()
-    }
-
-    /// Transforms all vertices in the mesh
-    pub fn transform(&mut self, t: &T::Trans) -> &mut Self {
-        for v in self.vertices.iter_mut() {
-            v.transform(t);
-        }
-        self
-    }
-
-    /// Translates all vertices in the mesh
-    pub fn translate(&mut self, t: &T::Vec) -> &mut Self {
-        for v in self.vertices.iter_mut() {
-            v.translate(t);
-        }
-        self
-    }
-
-    /// Rotates all vertices in the mesh
-    pub fn rotate(&mut self, rotation: &T::Quat) -> &mut Self {
-        for v in self.vertices.iter_mut() {
-            v.rotate(rotation);
-        }
-        self
-    }
-
     /// Clears the mesh (deletes all vertices, edges, and faces)
     pub fn clear(&mut self) -> &mut Self {
         self.vertices.clear();
-        self.edges.clear();
+        self.halfedges.clear();
         self.faces.clear();
-        self
-    }
-
-    /// Flip all edges (and faces) turning the mesh inside out.
-    pub fn flip(&mut self) -> &mut Self {
-        // TODO: Not very efficient, but easy to implement
-        let edges: Vec<_> = self.edges().map(|e| e.id()).collect();
-        let mut flipped = HashSet::new();
-        for i in 0..edges.len() {
-            if flipped.contains(&edges[i]) {
-                continue;
-            }
-            HalfEdge::flip(edges[i], self);
-            flipped.insert(self.edge(edges[i]).twin_id());
-        }
         self
     }
 }

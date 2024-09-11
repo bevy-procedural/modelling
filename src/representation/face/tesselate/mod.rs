@@ -58,11 +58,8 @@ pub enum GenerateNormals {
     #[default]
     Flat,
 
-    /// Generate smooth normals for smooth surfaces. (partial vertex duplication)
-    Smooth,
-
     /// Generate only smooth normals. (no vertex duplication)
-    AllSmooth,
+    Smooth,
 }
 
 /// Meta information for debugging the tesselation algorithm
@@ -73,7 +70,7 @@ pub struct TesselationMeta<V: IndexType> {
 }
 
 impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
-    fn tesselate_inner<T: MeshType<E = E, F = F, FP = FP>>(
+    fn triangulate_inner<T: MeshType<E = E, F = F, FP = FP>>(
         &self,
         mesh: &Mesh<T>,
         tri: &mut Triangulation<T::V>,
@@ -127,7 +124,7 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
     /// Converts the face into a triangle list.
     /// Might duplicate vertices when generating normals.
     /// When vertices is empty, use the original vertex indices without duplication.
-    pub fn tesselate<T: MeshType<E = E, F = F, FP = FP>>(
+    pub fn triangulate<T: MeshType<E = E, F = F, FP = FP>>(
         &self,
         mesh: &Mesh<T>,
         vertices: &mut Vec<T::VP>,
@@ -142,42 +139,49 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
 
         match generate_normals {
             GenerateNormals::None => {
-                self.tesselate_inner(mesh, &mut tri, algorithm, meta);
+                self.triangulate_inner(mesh, &mut tri, algorithm, meta);
             }
             GenerateNormals::Flat => {
-                let normal = self.normal(mesh);
+                let face_normal = self.normal(mesh).normalize();
                 let mut id_map = HashMap::new();
                 // generate a new list of vertices (full duplication)
                 self.vertices(mesh).for_each(|v| {
                     let mut p = v.payload().clone();
                     id_map.insert(v.id(), T::V::new(vertices.len()));
-                    p.set_normal(normal);
+                    p.set_normal(face_normal);
                     vertices.push(p)
                 });
-                self.tesselate_inner(mesh, &mut tri, algorithm, meta);
+                self.triangulate_inner(mesh, &mut tri, algorithm, meta);
                 tri.map_indices(&id_map);
             }
-            GenerateNormals::Smooth => {
-                // TODO: What's happening here? This doesn't look right at all.
-                let normal = self.normal(mesh);
+            /*GenerateNormals::Smooth => {
+                // this will fully duplicate vertices and calculate the normals for each vertex based on its neighbors
+                // unless the surface is curved, this is perfectly flat
+                // when curved, the results can be quite bad since based on the neighbors the normals can be quite different
+                let face_normal = self.normal(mesh).normalize();
                 let mut id_map = HashMap::new();
                 self.vertices(mesh)
                     .circular_tuple_windows::<(_, _, _)>()
                     .for_each(|(prev, v, next)| {
                         let mut p = v.payload().clone();
-                        let mut no = v.vertex().normal(*prev.vertex(), *next.vertex());
-                        if no.dot(&normal) < 0.0.into() {
-                            no = -no;
+                        let mut vertex_normal = v
+                            .vertex()
+                            .normal(*prev.vertex(), *next.vertex())
+                            .normalize();
+                        println!("{:?} {:?}", vertex_normal, face_normal);
+                        if vertex_normal.dot(&face_normal) < 0.0.into() {
+                            vertex_normal = -vertex_normal;
                         }
-                        p.set_normal(no);
+                        p.set_normal(vertex_normal);
                         id_map.insert(v.id(), T::V::new(vertices.len()));
                         vertices.push(p)
                     });
-                self.tesselate_inner(mesh, &mut tri, algorithm, meta);
+                self.triangulate_inner(mesh, &mut tri, algorithm, meta);
                 tri.map_indices(&id_map);
-            }
-            GenerateNormals::AllSmooth => {
-                todo!("GenerateNormals::AllSmooth")
+            }*/
+            GenerateNormals::Smooth => {
+                // only triangulate the face and calculate the normals for the full mesh afterwards
+                self.triangulate_inner(mesh, &mut tri, algorithm, meta);
             }
         }
 

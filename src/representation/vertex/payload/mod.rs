@@ -38,6 +38,9 @@ pub trait VertexPayload: Clone + Default + PartialEq + std::fmt::Debug + std::fm
     /// Returns the rotated clone of the payload.
     fn rotate(&self, r: &Self::Quat) -> Self;
 
+    /// Returns the scaled clone of the payload.
+    fn scale(&self, s: &Self::Vec) -> Self;
+
     /// returns the coordinates of the payload as an array
     fn pos(&self) -> &Self::Vec;
 
@@ -46,6 +49,9 @@ pub trait VertexPayload: Clone + Default + PartialEq + std::fmt::Debug + std::fm
 
     /// Sets the normals.
     fn set_normal(&mut self, normal: Self::Vec);
+    
+    /// Whether the normal is set
+    fn has_normal(&self) -> bool;
 
     /// Creates a payload from a vector.
     fn from_pos(v: Self::Vec) -> Self;

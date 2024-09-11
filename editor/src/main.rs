@@ -94,7 +94,7 @@ fn _make_spiral(settings: &MeshSettings) -> BevyMesh3d {
         .translate(&Vec3::new(0.0, -0.99, 0.0));
     let trans =
         Transform::from_rotation(Quat::from_rotation_y(settings.rot)).with_translation(settings.d1);
-    let mut f = mesh.extrude_ex(mesh.edge_between(1, 0).unwrap().id(), trans, true, true);
+    let mut f = mesh.extrude_ex(mesh.shared_edge(1, 0).unwrap().id(), trans, true, true);
     for _ in 0..settings.segs {
         f = mesh.extrude_face_ex(f, trans, true, true);
     }
@@ -174,7 +174,9 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     //_make_2d_zigzag()
     //BevyMesh3d::octahedron(1.0)
 
-    BevyMesh3d::cone(1.0, 1.0, 16)
+    //BevyMesh3d::cone(1.0, 1.0, 16)
+
+    BevyMesh3d::uv_sphere(1.0, 3)
 }
 
 pub fn main() {
@@ -192,7 +194,7 @@ pub fn main() {
         }))
         .add_plugins(WireframePlugin)
         .insert_resource(WireframeConfig {
-            global: false,
+            global: true,
             default_color: Color::WHITE,
         })
         .register_type::<GlobalSettings>()
@@ -255,7 +257,7 @@ fn update_meshes(
         mesh.bevy_set_ex(
             assets.get_mut(handle).unwrap(),
             TriangulationAlgorithm::Delaunay,
-            GenerateNormals::Flat,
+            GenerateNormals::None,
             &mut meta,
         );
 
@@ -286,13 +288,13 @@ fn setup_meshes(
         Name::new("Generated Shape"),
     ));
 
-    if false {
+    if true {
         show_vertex_indices(&mut texts, &mesh);
         show_edges(&mut texts, &mesh, 0.1);
         show_faces(&mut texts, &mesh);
     }
 
-    commands.spawn((
+    /*commands.spawn((
         PbrBundle {
             mesh: meshes.add(Mesh::from(Plane3d::new(Vec3::Y, Vec2::new(1.0, 1.0)))),
             material: materials.add(StandardMaterial::default()),
@@ -301,7 +303,7 @@ fn setup_meshes(
             ..default()
         },
         Name::new("Floor"),
-    ));
+    ));*/
 
     commands.insert_resource(AmbientLight::default());
 

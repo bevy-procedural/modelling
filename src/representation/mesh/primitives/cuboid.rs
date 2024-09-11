@@ -29,7 +29,7 @@ where
         mesh.close_face_vertices_default(v2, v5, v7, false);
         mesh.close_face_vertices_default(v0, v6, v4, false);
         mesh.close_hole(
-            mesh.edge_between(v6, v7).unwrap().id(),
+            mesh.shared_edge(v6, v7).unwrap().id(),
             Default::default(),
             false,
         );

@@ -92,20 +92,20 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
         v1: T::V,
         v2: T::V,
     ) -> Option<bool> {
-        if let Some(e) = mesh.edge_between(v0, v1) {
+        if let Some(e) = mesh.shared_edge(v0, v1) {
             // it has a common halfedge with another face. That means, it cannot be part of *this* face.
             if e.face_id() != self.id() {
                 return Some(false);
             }
             return Some(!e.is_boundary_self());
         }
-        if let Some(e) = mesh.edge_between(v1, v2) {
+        if let Some(e) = mesh.shared_edge(v1, v2) {
             if e.face_id() != self.id() {
                 return Some(false);
             }
             return Some(!e.is_boundary_self());
         }
-        if let Some(e) = mesh.edge_between(v2, v0) {
+        if let Some(e) = mesh.shared_edge(v2, v0) {
             if e.face_id() != self.id() {
                 return Some(false);
             }
@@ -118,7 +118,8 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
 
 impl<E: IndexType, F: IndexType, FP: FacePayload> std::fmt::Display for Face<E, F, FP> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}) {}", self.id().index(), self.edge.index(),)
+        write!(f, "{: >w$}) {}", self.id().index(), self.edge.index(),
+        w = 2,)
     }
 }
 

@@ -14,10 +14,12 @@ pub struct Vertex<E: IndexType, V: IndexType, VP: VertexPayload> {
     /// An outgoing half-edge incident to the vertex.
     edge: E,
 
+    /*
     /// Since we support non-manifold vertices, there can be a "wheel" of vertices,
     /// each connected to its own "wheel" of manifold edges.
     /// Will be IndexType::max() if the vertex is manifold.
     next: V,
+    */
 
     /// the payload of the vertex
     payload: VP,
@@ -30,7 +32,7 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> Vertex<E, V, VP> {
         Self {
             id: IndexType::max(),
             edge,
-            next: IndexType::max(),
+            //next: IndexType::max(),
             payload,
         }
     }
@@ -76,14 +78,15 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> Vertex<E, V, VP> {
     /// Returns whether the vertex is a boundary vertex
     #[inline(always)]
     pub fn is_boundary<T: MeshType<E = E, V = V, VP = VP>>(&self, mesh: &Mesh<T>) -> bool {
-        self.edges(mesh).any(|e| e.is_boundary(mesh))
+        self.edges_out(mesh).any(|e| e.is_boundary(mesh))
     }
 
+    /*
     /// Returns whether the vertex is manifold
     #[inline(always)]
     pub fn is_manifold(&self) -> bool {
         self.next == IndexType::max()
-    }
+    }*/
 
     /// Returns whether the vertex has only one edge incident to it
     #[inline(always)]
@@ -110,16 +113,52 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> Vertex<E, V, VP> {
     pub fn rotate(&mut self, transform: &VP::Quat) {
         self.payload = self.payload.rotate(transform);
     }
+
+    /// Scales the payload.
+    #[inline(always)]
+    pub fn scale(&mut self, transform: &VP::Vec) {
+        self.payload = self.payload.scale(transform);
+    }
+
+    /// Returns an outgoing boundary edge incident to the vertex
+    pub fn outgoing_boundary_edge<T: MeshType<E = E, V = V, VP = VP>>(
+        &self,
+        mesh: &Mesh<T>,
+    ) -> Option<E> {
+        // TODO: Assumes a manifold mesh. Otherwise, there can be multiple boundary edges!
+        self.edges_out(mesh).find_map(|e| {
+            if e.is_boundary_self() {
+                Some(e.id())
+            } else {
+                None
+            }
+        })
+    }
+
+    /// Returns an ingoing boundary edge incident to the vertex
+    pub fn ingoing_boundary_edge<T: MeshType<E = E, V = V, VP = VP>>(
+        &self,
+        mesh: &Mesh<T>,
+    ) -> Option<E> {
+        self.edges_in(mesh).find_map(|e| {
+            if e.is_boundary_self() {
+                Some(e.id())
+            } else {
+                None
+            }
+        })
+    }
 }
 
 impl<E: IndexType, V: IndexType, VP: VertexPayload> std::fmt::Display for Vertex<E, V, VP> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "{}) --{}-->; payload: {}",
+            "{: >w$}) -{:-^w$}->; payload: {}",
             self.id().index(),
             self.edge.index(),
-            self.payload
+            self.payload,
+            w=3
         )
     }
 }
@@ -151,7 +190,7 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> Default for Vertex<E, V, VP>
         Self {
             id: IndexType::max(),
             edge: IndexType::max(),
-            next: IndexType::max(),
+            //next: IndexType::max(),
             payload: VP::default(),
         }
     }

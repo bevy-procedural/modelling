@@ -7,7 +7,7 @@ use crate::representation::MeshType;
 impl<E: IndexType, V: IndexType, VP: VertexPayload> Vertex<E, V, VP> {
     /// Iterates all outgoing half-edges incident to this vertex in the same manifold edge wheel (clockwise)
     #[inline(always)]
-    pub fn edges<'a, T: MeshType<E = E, V = V, VP = VP>>(
+    pub fn edges_out<'a, T: MeshType<E = E, V = V, VP = VP>>(
         &'a self,
         mesh: &'a Mesh<T>,
     ) -> impl Iterator<Item = HalfEdge<E, V, T::F, T::EP>> + 'a {
@@ -30,7 +30,7 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> Vertex<E, V, VP> {
         mesh: &'a Mesh<T>,
     ) -> impl Iterator<Item = Vertex<E, V, T::VP>> + 'a {
         // TODO: slightly inefficient because of the clone and target being indirect
-        self.edges(mesh).map(|e| e.target(mesh))
+        self.edges_out(mesh).map(|e| e.target(mesh))
     }
 
     /// Iterates all faces adjacent to this vertex in the same manifold edge wheel (clockwise)
@@ -40,9 +40,11 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> Vertex<E, V, VP> {
         mesh: &'a Mesh<T>,
     ) -> impl Iterator<Item = Face<E, T::F, T::FP>> + 'a {
         // TODO: slightly inefficient because of the clone
-        self.edges(mesh).filter_map(|e| e.face(mesh).clone())
+        self.edges_out(mesh)
+            .filter_map(|e| e.face(mesh).clone())
     }
 
+    /*
     /// Iterates the wheel of vertices (will have length one if the vertex is manifold)
     #[inline(always)]
     pub fn wheel<'a, T: MeshType<E = E, V = V, VP = VP>>(
@@ -50,7 +52,7 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> Vertex<E, V, VP> {
         mesh: &'a Mesh<T>,
     ) -> impl Iterator<Item = Vertex<E, V, VP>> + 'a {
         NonmanifoldVertexIterator::new(self.clone(), mesh)
-    }
+    }*/
 }
 
 /// Iterator over all half-edges incident to the same vertex (clockwise)
@@ -91,6 +93,8 @@ impl<'a, T: MeshType> Iterator for IncidentToVertexIterator<'a, T> {
     }
 }
 
+
+/*
 /// Iterator over all vertices in the same non-manifold vertex wheel
 pub struct NonmanifoldVertexIterator<'a, T: MeshType> {
     is_first: bool,
@@ -128,3 +132,4 @@ impl<'a, T: MeshType> Iterator for NonmanifoldVertexIterator<'a, T> {
         }
     }
 }
+*/

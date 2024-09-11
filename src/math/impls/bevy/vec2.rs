@@ -27,6 +27,16 @@ impl Vector<f32> for Vec2 {
     }
 
     #[inline(always)]
+    fn length(&self) -> f32 {
+        Vec2::length(*self)
+    }
+
+    #[inline(always)]
+    fn length_squared(&self) -> f32 {
+        Vec2::length_squared(*self)
+    }
+
+    #[inline(always)]
     fn dot(&self, other: &Self) -> f32 {
         Vec2::dot(*self, *other)
     }

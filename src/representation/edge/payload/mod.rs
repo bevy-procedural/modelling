@@ -2,6 +2,9 @@
 pub trait EdgePayload: Clone + Copy + std::fmt::Debug + PartialEq {
     /// Returns a new default instance without any meaningful data.
     fn allocate() -> Self;
+
+    /// Returns true if the payload is empty.
+    fn is_empty(&self) -> bool;
 }
 
 /// The default edge payload can be safely constructed with a default constructor.
@@ -15,6 +18,9 @@ pub struct EmptyEdgePayload;
 impl EdgePayload for EmptyEdgePayload {
     fn allocate() -> Self {
         Self
+    }
+    fn is_empty(&self) -> bool {
+        true
     }
 }
 

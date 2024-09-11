@@ -17,6 +17,7 @@ impl<T: MeshType> Mesh<T> {
     /// Close the face by inserting a pair of halfedges, i.e.,
     /// connecting `inside` with the next halfedge to close the face and `outside`
     /// with the next halfedge to complete the outside.
+    /// This only works for manifold vertices!
     pub fn close_face(
         &mut self,
         inside: T::E,
@@ -31,8 +32,25 @@ impl<T: MeshType> Mesh<T> {
         let v = e_inside.target(self).id();
         let w = e_outside.target(self).id();
 
-        debug_assert!(e_inside.can_reach_back(self, w));
-        debug_assert!(e_outside.can_reach_back(self, v));
+        println!(
+            "inside: {}, outside: {}, v: {}, w: {}",
+            inside, outside, v, w
+        );
+        debug_assert!(e_inside.same_face_back(self, w));
+        debug_assert!(e_outside.same_face_back(self, v));
+
+        debug_assert!(
+            contains_exactly_one(self.edge(inside).edges_face_back(self), |e| e.origin_id()
+                == v),
+            "Vertex v {} is not manifold",
+            v
+        );
+        debug_assert!(
+            contains_exactly_one(self.edge(inside).edges_face_back(self), |e| e.origin_id()
+                == w),
+            "Vertex w {} is not manifold",
+            w
+        );
 
         let other_inside = self
             .edge(inside)
@@ -46,7 +64,7 @@ impl<T: MeshType> Mesh<T> {
             .find(|e| e.origin_id() == v)
             .unwrap();
 
-        let (e1, e2) = self.insert_full_edge(
+        let (e1, e2) = self.insert_edge(
             (other_inside.id(), inside, v, IndexType::max(), ep1),
             (other_outside.id(), outside, w, IndexType::max(), ep2),
         );
@@ -56,6 +74,7 @@ impl<T: MeshType> Mesh<T> {
         self.edge_mut(inside).set_next(e1);
         self.edge_mut(outside).set_next(e2);
 
+        // Insert the face
         let f = self.faces.push(Face::new(inside, curved, fp));
 
         // TODO: The clone is weird
@@ -69,6 +88,8 @@ impl<T: MeshType> Mesh<T> {
 
     /// Close the face by connecting vertex `from` (coming from `prev`) with vertex `to`.
     /// Inserts a pair of halfedges between these two vertices.
+    /// This will only work if the insertion is unambiguous without having to look at the vertex positions, i.e., this must be a manifold vertex!
+    /// If `to` has more than one ingoing edge that can reach `from`, use `close_face` instead and provide the edges.
     pub fn close_face_vertices(
         &mut self,
         prev: T::V,
@@ -79,24 +100,25 @@ impl<T: MeshType> Mesh<T> {
         fp: T::FP,
         curved: bool,
     ) -> T::F {
-        let inside = self.edge_between(prev, from).unwrap().id();
+        let inside = self.shared_edge(prev, from).unwrap().id();
 
+        // TODO: is it enough to assert this vertex is manifold? Also, add code to check for manifold vertices!
         debug_assert!(
             contains_exactly_one(self.vertex(to).edges_in(self), |e| {
-                e.is_boundary_self() && e.can_reach(self, self.edge(inside).origin_id())
+                e.is_boundary_self() && e.same_face(self, self.edge(inside).origin_id())
             }),
-            "There mus be exactly one ingoing edge to {} that can reach edge {} but there were {:?}",
+            "There mus be exactly one ingoing edge to {} that can reach edge {} but there were the following ones: {:?}",
             to,
             inside,
             self.vertex(to).edges_in(self).filter(|e| {
-                e.is_boundary_self() && e.can_reach(self, self.edge(inside).origin_id())
+                e.is_boundary_self() && e.same_face(self, self.edge(inside).origin_id())
             }).collect::<Vec<_>>()
         );
 
         let outside = self
             .vertex(to)
             .edges_in(self)
-            .find(|e| e.is_boundary_self() && e.can_reach(self, self.edge(inside).origin_id()))
+            .find(|e| e.is_boundary_self() && e.same_face(self, self.edge(inside).origin_id()))
             .unwrap()
             .id();
 
@@ -134,6 +156,18 @@ where
             from,
             Default::default(),
             to,
+            Default::default(),
+            curved,
+        )
+    }
+
+    /// Same as `close_face` but with default edge and face payloads
+    pub fn close_face_default(&mut self, inside: T::E, outside: T::E, curved: bool) -> T::F {
+        self.close_face(
+            inside,
+            Default::default(),
+            outside,
+            Default::default(),
             Default::default(),
             curved,
         )

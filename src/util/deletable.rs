@@ -60,6 +60,12 @@ impl<T: Deletable<I>, I: IndexType> DeletableVector<T, I> {
         v
     }
 
+    /// Returns whether the element exists and is not deleted.
+    pub fn has(&self, index: I) -> bool {
+        let i = index.index();
+        i < self.data.len() && !self.data[i].is_deleted()
+    }
+
     /// Returns the requested element mutably. Panics if it doesn't exist or is deleted.
     pub fn get_mut(&mut self, index: I) -> &mut T {
         let v = &mut self.data[index.index()];

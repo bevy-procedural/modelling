@@ -14,12 +14,12 @@ impl<T: MeshType> Mesh<T> {
             let e = self.vertex(v).edge(self);
             (e.twin_id(), e.id())
         } else {
-            let Some(boundary) = self.vertex(v).edges(self).find(|e| e.is_boundary_self()) else {
+            let Some(boundary) = self.vertex(v).edges_out(self).find(|e| e.is_boundary_self()) else {
                 panic!("Vertex is not a boundary vertex");
             };
             debug_assert!(
                 self.vertex(v)
-                    .edges(self)
+                    .edges_out(self)
                     .filter(|e| e.is_boundary_self())
                     .count()
                     == 1
@@ -47,7 +47,7 @@ impl<T: MeshType> Mesh<T> {
 
         let new = self.vertices.allocate();
 
-        let (e1, e2) = self.insert_full_edge(
+        let (e1, e2) = self.insert_edge_unsafe(
             (IndexType::max(), input, v, IndexType::max(), ep1),
             (output, IndexType::max(), new, IndexType::max(), ep2),
         );

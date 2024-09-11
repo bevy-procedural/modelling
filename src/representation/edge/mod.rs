@@ -9,7 +9,7 @@ pub use payload::*;
 // TODO: include a way to explicitly access faces around vertex/face? https://en.wikipedia.org/wiki/Polygon_mesh
 
 /// Half-edge inspired data structure
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct HalfEdge<E: IndexType, V: IndexType, F: IndexType, EP: EdgePayload> {
     /// the index of the half-edge
     id: E,
@@ -109,6 +109,7 @@ impl<E: IndexType, V: IndexType, F: IndexType, EP: EdgePayload> HalfEdge<E, V, F
         &self,
         mesh: &Mesh<T>,
     ) -> HalfEdge<E, V, F, EP> {
+        // TODO: Make this return a reference?
         *mesh.edge(self.twin)
     }
 
@@ -204,8 +205,8 @@ impl<E: IndexType, V: IndexType, F: IndexType, EP: EdgePayload> HalfEdge<E, V, F
         self.face == IndexType::max()
     }
 
-    /// Returns whether the edge can reach the vertex (searching counter-clockwise)
-    pub fn can_reach<T: MeshType<E = E, V = V, F = F, EP = EP>>(
+    /// Returns whether the edge can reach the vertex when searching counter-clockwise along the face
+    pub fn same_face<T: MeshType<E = E, V = V, F = F, EP = EP>>(
         &self,
         mesh: &Mesh<T>,
         v: V,
@@ -213,14 +214,17 @@ impl<E: IndexType, V: IndexType, F: IndexType, EP: EdgePayload> HalfEdge<E, V, F
         self.edges_face(mesh).find(|e| e.origin_id() == v).is_some()
     }
 
-    /// Returns whether the edge can reach the vertex (searching clockwise)
-    pub fn can_reach_back<T: MeshType<E = E, V = V, F = F, EP = EP>>(
+    /// Like `same_face` but searches clockwise
+    pub fn same_face_back<T: MeshType<E = E, V = V, F = F, EP = EP>>(
         &self,
         mesh: &Mesh<T>,
         v: V,
     ) -> bool {
         self.edges_face_back(mesh)
-            .find(|e| e.origin_id() == v)
+            .find(|e| {
+                println!("e: {}, v: {}", e.origin_id(), v);
+                e.origin_id() == v
+    })
             .is_some()
     }
 
@@ -258,7 +262,7 @@ impl<E: IndexType, V: IndexType, F: IndexType, EP: EdgePayload> HalfEdge<E, V, F
     }
 }
 
-impl<E: IndexType, V: IndexType, F: IndexType, EP: EdgePayload> std::fmt::Display
+impl<E: IndexType, V: IndexType, F: IndexType, EP: EdgePayload> std::fmt::Debug
     for HalfEdge<E, V, F, EP>
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -275,7 +279,11 @@ impl<E: IndexType, V: IndexType, F: IndexType, EP: EdgePayload> std::fmt::Displa
                 self.face.index().to_string()
             },
             self.next.index(),
-        )
+        )?;
+        if !self.payload.is_empty() {
+            write!(f, ", payload: {:?}", self.payload)?;
+        }
+        Ok(())
     }
 }
 

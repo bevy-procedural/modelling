@@ -5,5 +5,6 @@ mod cuboid;
 mod frustum;
 mod misc;
 mod regular_polygon;
+mod sphere;
 
 pub use misc::*;

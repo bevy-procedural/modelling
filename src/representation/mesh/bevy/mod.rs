@@ -97,7 +97,7 @@ impl<T: MeshType<VP = BevyVertexPayload, Vec: Vector3D<S = T::S>>> Mesh<T> {
 
         // use https://crates.io/crates/stats_alloc to measure memory usage
         let now = Instant::now();
-        let (is, mut vs) = self.tesselate(algo, normals, meta);
+        let (is, mut vs) = self.triangulate(algo, normals, meta);
         let elapsed = now.elapsed();
         println!("///////////////////\nTriangulation took {:.2?}", elapsed);
 

@@ -54,6 +54,15 @@ impl VertexPayload for BevyVertexPayload {
     }
 
     #[inline(always)]
+    fn scale(&self, s: &Self::Vec) -> Self {
+        Self {
+            position: self.position * *s,
+            normal: self.normal,
+            uv: self.uv,
+        }
+    }
+
+    #[inline(always)]
     fn pos(&self) -> &Self::Vec {
         &self.position
     }
@@ -66,6 +75,11 @@ impl VertexPayload for BevyVertexPayload {
     #[inline(always)]
     fn set_normal(&mut self, normal: Self::Vec) {
         self.normal = normal;
+    }
+
+    #[inline(always)]
+    fn has_normal(&self) -> bool {
+        self.normal != Vec3::ZERO
     }
 
     #[inline(always)]
