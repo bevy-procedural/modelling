@@ -176,7 +176,7 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
 
     //BevyMesh3d::cone(1.0, 1.0, 16)
 
-    BevyMesh3d::uv_sphere(2.0, 16)
+    BevyMesh3d::uv_sphere(2.0, 600, 3)
 }
 
 pub fn main() {
@@ -194,7 +194,7 @@ pub fn main() {
         }))
         .add_plugins(WireframePlugin)
         .insert_resource(WireframeConfig {
-            global: true,
+            global: false,
             default_color: Color::WHITE,
         })
         .register_type::<GlobalSettings>()
@@ -257,7 +257,7 @@ fn update_meshes(
         mesh.bevy_set_ex(
             assets.get_mut(handle).unwrap(),
             TriangulationAlgorithm::Delaunay,
-            GenerateNormals::Smooth,
+            GenerateNormals::Flat,
             &mut meta,
         );
 
