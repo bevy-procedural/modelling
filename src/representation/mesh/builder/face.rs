@@ -19,6 +19,8 @@ impl<T: MeshType> Mesh<T> {
     /// next halfedge to close the face and `outside` (targeting the other vertex)
     /// with the next halfedge to complete the outside.
     /// This works even with non-manifold vertices!
+    /// 
+    /// Returns the new face and (first) the inside edge and (second) the outside edge.
     pub fn close_face(
         &mut self,
         inside: T::E,
@@ -27,7 +29,7 @@ impl<T: MeshType> Mesh<T> {
         ep2: T::EP,
         fp: T::FP,
         curved: bool,
-    ) -> T::F {
+    ) -> (T::F, T::E, T::E) {
         let e_inside = self.edge(inside);
         let e_outside = self.edge(outside);
         let v = e_inside.target(self).id();
@@ -58,7 +60,7 @@ impl<T: MeshType> Mesh<T> {
             .edges_face_mut(self)
             .for_each(|e| e.set_face(f));
 
-        return f;
+        return (f, e1, e2);
     }
 
     /// Close the face by connecting vertex `from` (coming from `prev`) with vertex `to`.
@@ -74,7 +76,7 @@ impl<T: MeshType> Mesh<T> {
         to: T::V,
         fp: T::FP,
         curved: bool,
-    ) -> T::F {
+    ) -> (T::F, T::E, T::E) {
         let inside = self.shared_edge(prev, from).unwrap().id();
 
         // TODO: is it enough to assert this vertex is manifold? Also, add code to check for manifold vertices!
@@ -124,7 +126,7 @@ where
         from: T::V,
         to: T::V,
         curved: bool,
-    ) -> T::F {
+    ) -> (T::F, T::E, T::E) {
         self.close_face_vertices(
             prev,
             Default::default(),
@@ -137,7 +139,12 @@ where
     }
 
     /// Same as `close_face` but with default edge and face payloads
-    pub fn close_face_default(&mut self, inside: T::E, outside: T::E, curved: bool) -> T::F {
+    pub fn close_face_default(
+        &mut self,
+        inside: T::E,
+        outside: T::E,
+        curved: bool,
+    ) -> (T::F, T::E, T::E) {
         self.close_face(
             inside,
             Default::default(),

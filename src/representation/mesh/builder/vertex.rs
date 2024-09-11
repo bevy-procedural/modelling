@@ -14,7 +14,11 @@ impl<T: MeshType> Mesh<T> {
             let e = self.vertex(v).edge(self);
             (e.twin_id(), e.id())
         } else {
-            let Some(boundary) = self.vertex(v).edges_out(self).find(|e| e.is_boundary_self()) else {
+            let Some(boundary) = self
+                .vertex(v)
+                .edges_out(self)
+                .find(|e| e.is_boundary_self())
+            else {
                 panic!("Vertex is not a boundary vertex");
             };
             debug_assert!(
@@ -68,5 +72,15 @@ where
     /// Same as `add_vertex_via_vertex` but with default edge payloads
     pub fn add_vertex_via_vertex_default(&mut self, v: T::V, vp: T::VP) -> (T::V, T::E, T::E) {
         self.add_vertex_via_vertex(v, vp, T::EP::default(), T::EP::default())
+    }
+
+    /// Same as `add_vertex_via_edge` but with default edge payloads
+    pub fn add_vertex_via_edge_default(
+        &mut self,
+        input: T::E,
+        output: T::E,
+        vp: T::VP,
+    ) -> (T::V, T::E, T::E) {
+        self.add_vertex_via_edge(input, output, vp, T::EP::default(), T::EP::default())
     }
 }

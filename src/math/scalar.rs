@@ -56,6 +56,12 @@ pub trait Scalar:
     /// Returns the arcus cosine of the scalar.
     fn acos(self) -> Self;
 
+    /// Returns the sine of the scalar.
+    fn sin(&self) -> Self;
+
+    /// Returns the cosine of the scalar.
+    fn cos(&self) -> Self;
+
     /// Returns the maximum of two scalars.
     fn max(self: &Self, b: Self) -> Self;
 

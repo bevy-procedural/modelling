@@ -176,7 +176,7 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
 
     //BevyMesh3d::cone(1.0, 1.0, 16)
 
-    BevyMesh3d::uv_sphere(5.0, 8)
+    BevyMesh3d::uv_sphere(2.0, 16)
 }
 
 pub fn main() {
@@ -257,7 +257,7 @@ fn update_meshes(
         mesh.bevy_set_ex(
             assets.get_mut(handle).unwrap(),
             TriangulationAlgorithm::Delaunay,
-            GenerateNormals::None,
+            GenerateNormals::Smooth,
             &mut meta,
         );
 
@@ -276,7 +276,7 @@ fn setup_meshes(
         PbrBundle {
             mesh: meshes.add(mesh.to_bevy(RenderAssetUsages::all())),
             material: materials.add(StandardMaterial {
-                base_color: Color::srgba(1.0, 1.0, 1.0, 1.0),
+                base_color: Color::srgba(0.9, 0.9, 0.9, 1.0),
                 //alpha_mode: AlphaMode::Blend,
                 double_sided: false,
                 cull_mode: None,
@@ -288,7 +288,7 @@ fn setup_meshes(
         Name::new("Generated Shape"),
     ));
 
-    if true {
+    if false {
         show_vertex_indices(&mut texts, &mesh);
         show_edges(&mut texts, &mesh, 0.1);
         show_faces(&mut texts, &mesh);

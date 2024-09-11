@@ -27,6 +27,16 @@ impl Scalar for f32 {
     }
 
     #[inline(always)]
+    fn sin(&self) -> Self {
+        f32::sin(*self)
+    }
+
+    #[inline(always)]
+    fn cos(&self) -> Self {
+        f32::cos(*self)
+    }
+
+    #[inline(always)]
     fn to_f64(self) -> f64 {
         self as f64
     }

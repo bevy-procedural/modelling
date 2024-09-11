@@ -267,7 +267,7 @@ impl<E: IndexType, V: IndexType, F: IndexType, EP: EdgePayload> std::fmt::Debug
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "{} --{}-->; twin: {}, face: {} [{}] {}",
+            "{} --{}--> ; twin: {}, face: {} [{}] {}",
             self.origin.index(),
             self.id().index(),
             self.twin.index(),
