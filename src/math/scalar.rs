@@ -63,10 +63,10 @@ pub trait Scalar:
     fn cos(&self) -> Self;
 
     /// Returns the maximum of two scalars.
-    fn max(self: &Self, b: Self) -> Self;
+    fn max(&self, b: Self) -> Self;
 
     /// Returns the minimum of two scalars.
-    fn min(self: &Self, b: Self) -> Self;
+    fn min(&self, b: Self) -> Self;
 
     /// Returns the square root of the scalar.
     fn sqrt(self) -> Self;

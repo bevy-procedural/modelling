@@ -116,14 +116,14 @@ impl<'a, V: IndexType> Triangulation<'a, V> {
     }
 
     /// Get the number of triangles inserted into the index buffer since the triangulation was created
-    pub fn len(self: &Self) -> usize {
+    pub fn len(&self) -> usize {
         let n = self.indices.len() - self.start;
         assert!(n % 3 == 0, "Invalid number of indices in triangulation");
         n / 3
     }
 
     /// Check for non-degenerate triangles (no zero-area triangles)
-    pub fn verify_non_degenerate_triangle<Vec2: Vector2D>(self: &Self, vec_hm: &HashMap<V, Vec2>) {
+    pub fn verify_non_degenerate_triangle<Vec2: Vector2D>(&self, vec_hm: &HashMap<V, Vec2>) {
         for i in self.start..self.len() {
             let area = self.get_triangle_area(i, vec_hm);
             assert!(
@@ -134,7 +134,7 @@ impl<'a, V: IndexType> Triangulation<'a, V> {
     }
 
     /// Check for valid indices (i.e., they should be within the bounds of the vertices)
-    pub fn verify_indices<Vec2: Vector2D>(self: &Self, vec_hm: &HashMap<V, Vec2>) {
+    pub fn verify_indices<Vec2: Vector2D>(&self, vec_hm: &HashMap<V, Vec2>) {
         // Check that the triangulation returns the correct number of triangles
         let num_vertices = vec_hm.len();
         let num_triangles = self.len();
@@ -154,7 +154,7 @@ impl<'a, V: IndexType> Triangulation<'a, V> {
     }
 
     /// Check that no two triangles have intersecting edges
-    pub fn verify_no_intersections<Vec2: Vector2D>(self: &Self, vec_hm: &HashMap<V, Vec2>) {
+    pub fn verify_no_intersections<Vec2: Vector2D>(&self, vec_hm: &HashMap<V, Vec2>) {
         let num_vertices = vec_hm.len();
         for i in (0..num_vertices).step_by(3) {
             for j in (0..num_vertices).step_by(3) {
@@ -207,7 +207,7 @@ impl<'a, V: IndexType> Triangulation<'a, V> {
     }
 
     /// Sum the area of all triangles added to the index buffer since the triangulation was created
-    pub fn get_area<Vec2: Vector2D>(self: &Self, vec_hm: &HashMap<V, Vec2>) -> Vec2::S {
+    pub fn get_area<Vec2: Vector2D>(&self, vec_hm: &HashMap<V, Vec2>) -> Vec2::S {
         Vec2::S::from(0.5)
             * Vec2::S::sum(
                 (0..self.len())
@@ -218,7 +218,7 @@ impl<'a, V: IndexType> Triangulation<'a, V> {
 
     /// Calculate the area of the polygon and check if it is the same as the sum of the areas of the triangles
     pub fn verify_area<Vec2: Vector2D, Poly: Polygon<Vec2, S = Vec2::S>>(
-        self: &Self,
+        &self,
         vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
         vec_hm: &HashMap<V, Vec2>,
     ) {
@@ -237,7 +237,7 @@ impl<'a, V: IndexType> Triangulation<'a, V> {
 
     /// Check that the set of used indices exactly matches the set of indices in the triangulation
     pub fn verify_all_indices_used<Vec2: Vector2D>(
-        self: &Self,
+        &self,
         vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
     ) {
         let mut seen = HashSet::new();
@@ -262,7 +262,7 @@ impl<'a, V: IndexType> Triangulation<'a, V> {
 
     /// Runs a large number of tests on the triangulation to verify that it is well-formed
     pub fn verify_full<Vec2: Vector2D, Poly: Polygon<Vec2, S = Vec2::S>>(
-        self: &Self,
+        &self,
         vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
     ) {
         let vec_hm: HashMap<V, Vec2> = vec2s.iter().map(|v| (v.index, v.vec)).collect();

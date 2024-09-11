@@ -106,47 +106,34 @@ where
         mesh
     }
 
+
     /// Generate a subdivided plane made of triangles with given width and height and n and m subdivisions
     pub fn triangle_plane(width: T::S, height: T::S, n: usize, m: usize) -> Self {
         let mut mesh = Self::new();
         let vertical_step = height / T::S::from_usize(m - 1);
         let half_horizontal_step = width / T::S::from_usize(n - 1) / T::S::from_usize(2);
-        let mut vs = mesh.insert_line(T::Vec::ZERO, T::Vec::from_xy(width, T::S::ZERO), n);
-        let mut top_end = vs[n - 2];
-        for j in 1..n {
-            let js = T::S::from_usize(j);
-            let y = vertical_step * js;
-            // TODO: simplify this by not generating a line here
-            let vs_new = mesh.insert_line(
-                T::Vec::from_xy(half_horizontal_step * js, y),
-                T::Vec::from_xy(width + half_horizontal_step * js, y),
-                n,
+
+        let (mut first, _) = mesh.insert_path((0..n).into_iter().map(|i| {
+            T::VP::from_pos(T::Vec::from_xy(
+                half_horizontal_step * T::S::from_usize(i * 2),
+                T::S::ZERO,
+            ))
+        }));
+
+        for j in 1..m {
+            let e = mesh.triangle_hem(
+                first,
+                j % 2 == 0,
+                (0..n).map(|i| {
+                    T::VP::from_pos(T::Vec::from_xy(
+                        half_horizontal_step * T::S::from_usize(i * 2 + (j % 2)),
+                        vertical_step * T::S::from_usize(j),
+                    ))
+                }),
             );
-            mesh.insert_edge_between(vs[0], Default::default(), vs_new[0], Default::default());
-
-            for i in (0..(n - 1)).step_by(2) {
-                let start = if i == 0 { vs[0] } else { vs_new[i - 1] };
-                let outside = if i == n - 2 {
-                    mesh.shared_edge_id(top_end, vs[i + 1])
-                } else {
-                    mesh.shared_edge_id(vs[i + 2], vs[i + 1])
-                }
-                .unwrap();
-
-                mesh.close_face_default(
-                    mesh.shared_edge_id(start, vs_new[i]).unwrap(),
-                    outside,
-                    false,
-                );
-                mesh.close_face_default(
-                    mesh.shared_edge_id(vs_new[i], vs_new[i + 1]).unwrap(),
-                    outside,
-                    false,
-                );
-            }
-            top_end = vs[n - 1];
-            vs = vs_new;
+            first = mesh.edge(e).prev_id();
         }
+
         mesh
     }
 }

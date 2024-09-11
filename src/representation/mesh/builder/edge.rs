@@ -1,9 +1,4 @@
-use crate::{
-    math::{HasZero, Scalar, Vector},
-    representation::{
-        payload::VertexPayload, DefaultEdgePayload, HalfEdge, IndexType, Mesh, MeshType, Vertex,
-    },
-};
+use crate::representation::{DefaultEdgePayload, HalfEdge, IndexType, Mesh, MeshType, Vertex};
 
 // The simplest non-empty mesh: a single edge with two vertices
 impl<T: MeshType> From<(T::VP, T::EP, T::VP, T::EP)> for Mesh<T>
@@ -203,48 +198,27 @@ impl<T: MeshType> Mesh<T>
 where
     T::EP: DefaultEdgePayload,
 {
-    /// Generate a straight line from `from` to `to` with `n` vertices and return the vertices.
-    pub fn insert_line(self: &mut Self, from: T::Vec, to: T::Vec, n: usize) -> Vec<T::V> {
-        assert!(n >= 2);
-        let step = (to - from) / T::S::from_usize(n - 1);
-        debug_assert!(step.length_squared() > T::S::ZERO);
-        let nth_payload = |i: usize| from + step * T::S::from_usize(i);
-        let mut vs: Vec<<T as MeshType>::V> = Vec::with_capacity(n);
-        let (v0, mut v) =
-            self.add_isolated_edge_default(T::VP::from_pos(from), T::VP::from_pos(nth_payload(1)));
-        vs.push(v0);
-        vs.push(v);
-        for i in 2..n {
-            v = self
-                .add_vertex_via_vertex_default(v, T::VP::from_pos(nth_payload(i)))
-                .0;
-            vs.push(v);
-        }
-        vs
-    }
-
-    /// Generate a straight line from `from` to `to` with `n` additional vertices and return the added vertices. Assumes `from` already exists.
-    pub fn append_line(self: &mut Self, from: T::V, to: T::Vec, n: usize) -> Vec<T::V> {
-        // TODO: Modify this to be based on a iterator of payloads
-        // TODO: insert_line should be based on that
-        assert!(n >= 1);
-        let p = *self.vertex(from).payload().pos();
-        let step = (to - p) / T::S::from_usize(n);
-        debug_assert!(step.length_squared() > T::S::ZERO);
-        let nth_payload = |i: usize| p + step * T::S::from_usize(i);
-        let mut vs: Vec<<T as MeshType>::V> = Vec::with_capacity(n);
-        let mut v = from;
-        for i in 1..=n {
-            v = self
-                .add_vertex_via_vertex_default(v, T::VP::from_pos(nth_payload(i)))
-                .0;
-            vs.push(v);
-        }
-        vs
-    }
-
     /// Same as `add_isolated_edge` but with default edge payloads
     pub fn add_isolated_edge_default(&mut self, a: T::VP, b: T::VP) -> (T::V, T::V) {
         self.add_isolated_edge(a, T::EP::default(), b, T::EP::default())
+    }
+
+    /// Generate a path from the finite iterator of positions and return the halfedges pointing to the first and last vertex.
+    pub fn insert_path(&mut self, vp: impl IntoIterator<Item = T::VP>) -> (T::E, T::E) {
+        let mut iter = vp.into_iter();
+        let p0 = iter.next().expect("Path must have at least one vertex");
+        let p1 = iter.next().expect("Path must have at least two vertices");
+        let (v0, v) = self.add_isolated_edge_default(p0, p1);
+        let first = self.shared_edge(v0, v).unwrap();
+        let mut input = first.id();
+        let mut output = first.twin_id();
+        for pos in iter {
+            self.add_vertex_via_edge_default(input, output, pos);
+            let n = self.edge(input).next(self);
+            input = n.id();
+            output = n.twin_id();
+        }
+
+        (first.twin_id(), output)
     }
 }

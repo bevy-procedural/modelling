@@ -101,7 +101,7 @@ impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
     }
 
     /// Start a new sweep line at the given event
-    fn start(self: &mut Self, event: &EventPoint<Vec2>) {
+    fn start(&mut self, event: &EventPoint<Vec2>) {
         // Both reflex
         self.sls.insert(
             SweepLineInterval {
@@ -116,7 +116,7 @@ impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
     }
 
     /// Split the sweep line at the given event
-    fn try_split(self: &mut Self, event: &EventPoint<Vec2>) -> bool {
+    fn try_split(&mut self, event: &EventPoint<Vec2>) -> bool {
         let Some(i) = self
             .sls
             .find_by_position(&self.vec2s[event.here].vec, &self.vec2s)
@@ -178,7 +178,7 @@ impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
     }
 
     /// Detects and handles either a start or split vertex in the situation where it's difficult to distinguish
-    fn start_or_split(self: &mut Self, event: &EventPoint<Vec2>, _meta: &mut SweepMeta<V>) -> bool {
+    fn start_or_split(&mut self, event: &EventPoint<Vec2>, _meta: &mut SweepMeta<V>) -> bool {
         /*
         let Some(next) = queue.get(event_i + 1) else {
             panic!("Regular vertex not found in sweep line status");
@@ -217,7 +217,7 @@ impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
 
     /// End a sweep line at the given event
     #[inline]
-    fn end(self: &mut Self, event: &EventPoint<Vec2>) {
+    fn end(&mut self, event: &EventPoint<Vec2>) {
         let mut line = self.sls.remove_left(event.here, &self.vec2s).unwrap();
         assert!(line.is_end());
 
@@ -234,7 +234,7 @@ impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
     }
 
     /// Merge two parts of the sweep line at the given event
-    fn merge(self: &mut Self, event: &EventPoint<Vec2>) {
+    fn merge(&mut self, event: &EventPoint<Vec2>) {
         // left and right are swapped because "remove_right" will get the left one _from_ the right (and vice versa)
         let left = self.sls.remove_right(event.here, &self.vec2s).unwrap();
         let mut right: SweepLineInterval<V, Vec2> =
@@ -286,7 +286,7 @@ impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
 
     /// Handle a regular vertex
     fn regular(
-        self: &mut Self,
+        &mut self,
         event: &EventPoint<Vec2>,
         meta: &mut SweepMeta<V>,
         undecisive: bool,

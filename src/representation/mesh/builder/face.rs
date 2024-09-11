@@ -19,7 +19,7 @@ impl<T: MeshType> Mesh<T> {
     /// next halfedge to close the face and `outside` (targeting the other vertex)
     /// with the next halfedge to complete the outside.
     /// This works even with non-manifold vertices!
-    /// 
+    ///
     /// Returns the new face and (first) the inside edge and (second) the outside edge.
     pub fn close_face(
         &mut self,
@@ -153,5 +153,61 @@ where
             Default::default(),
             curved,
         )
+    }
+
+    /// This will walk along the given boundary and add a "hem" made from triangles.
+    /// The payloads are given using the iterator.
+    ///
+    /// Returns the edge pointing from the first inserted vertex to the target of `start`.
+    /// If the iterator is empty, return `start` instead.
+    ///
+    /// If `shift` is true, the first inserted triangle will be with the tip pointing to the target of `start`.
+    /// Otherwise, the first triangle will include the edge `start`.
+    /// This doesn't affect the number of triangles but shifts the hem by one.
+    pub fn triangle_hem(
+        &mut self,
+        start: T::E,
+        shift: bool,
+        vp: impl IntoIterator<Item = T::VP>,
+    ) -> T::E {
+        let mut input = start;
+        let mut first = true;
+        let mut iter = vp.into_iter();
+        let mut pos = iter.next();
+        let mut ret = start;
+
+        if shift && pos.is_some() {
+            let output = self.edge(input).next_id();
+            self.add_vertex_via_edge_default(input, output, pos.unwrap());
+            first = false;
+            ret = self.edge(output).prev_id();
+            pos = iter.next();
+        }
+
+        while pos.is_some() {
+            let output = self.edge(input).next_id();
+            self.add_vertex_via_edge_default(input, output, pos.unwrap());
+
+            let ip = self.edge(input);
+            input = ip.prev_id();
+            let ip_next = ip.next_id();
+
+            // the first one shouldn't connect to the previous
+            if !first {
+                self.close_face_default(output, ip_next, false);
+            } else {
+                ret = self.edge(output).prev_id();
+            }
+
+            pos = iter.next();
+            // the last one also shouldn't connect to the next
+            if pos.is_some() || shift {
+                self.close_face_default(ip_next, input, false);
+            }
+
+            first = false;
+        }
+
+        ret
     }
 }

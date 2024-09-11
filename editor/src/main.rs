@@ -176,7 +176,12 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
 
     //BevyMesh3d::cone(1.0, 1.0, 16)
 
-    BevyMesh3d::uv_sphere(2.0, 600, 3)
+    //BevyMesh3d::uv_sphere(2.0, 600, 3)
+
+    let mut mesh = BevyMesh3d::triangle_plane(5.0, 5.0, 8,8);
+    mesh.flip_yz();
+    println!("{}", mesh);
+    mesh
 }
 
 pub fn main() {
@@ -194,7 +199,7 @@ pub fn main() {
         }))
         .add_plugins(WireframePlugin)
         .insert_resource(WireframeConfig {
-            global: false,
+            global: true,
             default_color: Color::WHITE,
         })
         .register_type::<GlobalSettings>()
@@ -288,7 +293,7 @@ fn setup_meshes(
         Name::new("Generated Shape"),
     ));
 
-    if false {
+    if true {
         show_vertex_indices(&mut texts, &mesh);
         show_edges(&mut texts, &mesh, 0.1);
         show_faces(&mut texts, &mesh);
