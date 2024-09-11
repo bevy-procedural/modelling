@@ -13,7 +13,6 @@ use bevy::render::{
     mesh::{PrimitiveTopology, VertexAttributeValues},
     render_asset::RenderAssetUsages,
 };
-use std::time::Instant;
 
 /// A mesh type for bevy with 3D vertices, 32 bit indices, 32 bit floats, and no face or edge payload (no normals etc.)
 #[derive(Clone, Copy)]
@@ -96,10 +95,10 @@ impl<T: MeshType<VP = BevyVertexPayload, Vec: Vector3D<S = T::S>>> Mesh<T> {
         Self::bevy_remove_attributes(mesh);
 
         // use https://crates.io/crates/stats_alloc to measure memory usage
-        let now = Instant::now();
+        //let now = Instant::now();
         let (is, mut vs) = self.triangulate(algo, normals, meta);
-        let elapsed = now.elapsed();
-        println!("///////////////////\nTriangulation took {:.2?}", elapsed);
+        //let elapsed = now.elapsed();
+        // println!("///////////////////\nTriangulation took {:.2?}", elapsed);
 
         if vs.len() == 0 {
             vs = self.vertices().map(|v| v.payload()).cloned().collect();

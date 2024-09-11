@@ -222,7 +222,6 @@ impl<E: IndexType, V: IndexType, F: IndexType, EP: EdgePayload> HalfEdge<E, V, F
     ) -> bool {
         self.edges_face_back(mesh)
             .find(|e| {
-                println!("e: {}, v: {}", e.origin_id(), v);
                 e.origin_id() == v
     })
             .is_some()

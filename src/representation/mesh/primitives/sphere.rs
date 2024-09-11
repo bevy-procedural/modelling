@@ -30,7 +30,7 @@ where
             false,
         );
 
-        println!("{}",mesh);
+        // println!("{}",mesh);
 
         mesh.close_face_default(
             mesh.shared_edge_id(vs1[0], vs1[1]).unwrap(),

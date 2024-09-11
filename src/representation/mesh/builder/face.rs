@@ -15,9 +15,10 @@ impl<T: MeshType> Mesh<T> {
     }
 
     /// Close the face by inserting a pair of halfedges, i.e.,
-    /// connecting `inside` with the next halfedge to close the face and `outside`
+    /// connecting `inside` (targeting a vertex of the to-be-inserted edge) with the
+    /// next halfedge to close the face and `outside` (targeting the other vertex)
     /// with the next halfedge to complete the outside.
-    /// This only works for manifold vertices!
+    /// This works even with non-manifold vertices!
     pub fn close_face(
         &mut self,
         inside: T::E,
@@ -32,37 +33,11 @@ impl<T: MeshType> Mesh<T> {
         let v = e_inside.target(self).id();
         let w = e_outside.target(self).id();
 
-        println!(
-            "inside: {}, outside: {}, v: {}, w: {}",
-            inside, outside, v, w
-        );
         debug_assert!(e_inside.same_face_back(self, w));
         debug_assert!(e_outside.same_face_back(self, v));
 
-        debug_assert!(
-            contains_exactly_one(self.edge(inside).edges_face_back(self), |e| e.origin_id()
-                == v),
-            "Vertex v {} is not manifold",
-            v
-        );
-        debug_assert!(
-            contains_exactly_one(self.edge(inside).edges_face_back(self), |e| e.origin_id()
-                == w),
-            "Vertex w {} is not manifold",
-            w
-        );
-
-        let other_inside = self
-            .edge(inside)
-            .edges_face_back(self)
-            .find(|e| e.origin_id() == w)
-            .unwrap();
-
-        let other_outside = self
-            .edge(inside)
-            .edges_face_back(self)
-            .find(|e| e.origin_id() == v)
-            .unwrap();
+        let other_inside = e_outside.next(self);
+        let other_outside = e_inside.next(self);
 
         let (e1, e2) = self.insert_edge(
             (other_inside.id(), inside, v, IndexType::max(), ep1),

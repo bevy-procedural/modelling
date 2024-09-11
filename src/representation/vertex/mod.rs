@@ -2,6 +2,8 @@ mod iterator;
 pub use iterator::*;
 pub mod payload;
 
+use crate::util::iter::contains_exactly_one;
+
 use super::{Deletable, HalfEdge, IndexType, Mesh, MeshType};
 use payload::VertexPayload;
 
@@ -18,9 +20,10 @@ pub struct Vertex<E: IndexType, V: IndexType, VP: VertexPayload> {
     /// Since we support non-manifold vertices, there can be a "wheel" of vertices,
     /// each connected to its own "wheel" of manifold edges.
     /// Will be IndexType::max() if the vertex is manifold.
+    /// TODO: This is only necessary for non-manifold vertices where there are multiple next-prev wheels. But even with one wheel, this can be non-manifold if the vertex is singular.
     next: V,
     */
-
+    
     /// the payload of the vertex
     payload: VP,
 }
@@ -125,7 +128,13 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> Vertex<E, V, VP> {
         &self,
         mesh: &Mesh<T>,
     ) -> Option<E> {
-        // TODO: Assumes a manifold mesh. Otherwise, there can be multiple boundary edges!
+        // TODO: Assumes a manifold vertex. Otherwise, there can be multiple boundary edges!
+        debug_assert!(
+            contains_exactly_one(self.edges_out(mesh), |e| e.is_boundary_self()),
+            "Vertex {} is not manifold",
+            self.id()
+        );
+
         self.edges_out(mesh).find_map(|e| {
             if e.is_boundary_self() {
                 Some(e.id())
@@ -140,6 +149,12 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> Vertex<E, V, VP> {
         &self,
         mesh: &Mesh<T>,
     ) -> Option<E> {
+        debug_assert!(
+            contains_exactly_one(self.edges_in(mesh), |e| e.is_boundary_self()),
+            "Vertex {} is not manifold",
+            self.id()
+        );
+
         self.edges_in(mesh).find_map(|e| {
             if e.is_boundary_self() {
                 Some(e.id())
@@ -158,7 +173,7 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> std::fmt::Display for Vertex
             self.id().index(),
             self.edge.index(),
             self.payload,
-            w=3
+            w = 3
         )
     }
 }
