@@ -17,6 +17,8 @@ where
 
     /// Draw a polygon from the given vertices
     pub fn polygon(v: &[T::Vec]) -> Mesh<T> {
+        // TODO: create this directly without the builder functions
+        // TODO: assertions
         let mut mesh = Mesh::<T>::new();
         assert!(v.len() >= 3);
         let (v0, mut current) = mesh.add_isolated_edge(

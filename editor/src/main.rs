@@ -176,7 +176,7 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
 
     //BevyMesh3d::cone(1.0, 1.0, 16)
 
-    BevyMesh3d::uv_sphere(1.0, 3)
+    BevyMesh3d::uv_sphere(5.0, 8)
 }
 
 pub fn main() {
