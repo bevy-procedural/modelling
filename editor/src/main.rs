@@ -170,9 +170,11 @@ fn _make_2d_zigzag() -> BevyMesh3d {
 fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     //_make_hell_8()
     //BevyMesh3d::regular_polygon(1.0, 1000)
-    _make_spiral(_settings)
+    //_make_spiral(_settings)
     //_make_2d_zigzag()
     //BevyMesh3d::octahedron(1.0)
+
+    BevyMesh3d::cone(1.0, 1.0, 16)
 }
 
 pub fn main() {
@@ -190,7 +192,7 @@ pub fn main() {
         }))
         .add_plugins(WireframePlugin)
         .insert_resource(WireframeConfig {
-            global: true,
+            global: false,
             default_color: Color::WHITE,
         })
         .register_type::<GlobalSettings>()
@@ -306,7 +308,7 @@ fn setup_meshes(
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             color: Color::WHITE,
-            shadows_enabled: true,
+            shadows_enabled: false,
             ..default()
         },
         transform: Transform {

@@ -1,5 +1,5 @@
 use crate::{
-    math::{HasZero, IndexType, Transform, Vector},
+    math::{HasZero, IndexType, Transform, Vector, Vector3D},
     representation::{DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType},
 };
 
@@ -7,6 +7,7 @@ impl<T: MeshType> Mesh<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
+    T::Vec: Vector3D<S = T::S>,
 {
     // Waiting for https://github.com/rust-lang/rust/issues/8995
     // type S = T::S;
@@ -24,27 +25,30 @@ where
             // TODO: use approximate comparison
             assert!(r2 > z, "r2 must be positive");
             let mut mesh = Mesh::<T>::regular_polygon(r2, n);
-            mesh.translate(&T::Vec::from_xyz(z, h2, z));
-            mesh.extrude_to_center_point(T::E::new(1), T::Vec::from_xyz(z, -h, z));
+            mesh.flip_yz()
+                .translate(&T::Vec::from_xyz(z, h2, z))
+                .extrude_to_center_point(T::E::new(1), T::Vec::from_xyz(z, -h, z));
             mesh
         } else if r2 == z {
             // TODO: use approximate comparison
             assert!(r1 > z, "r1 must be positive");
             let mut mesh = Mesh::<T>::regular_polygon(r1, n);
-            mesh.flip();
-            mesh.translate(&T::Vec::from_xyz(z, -h2, z));
-            mesh.extrude_to_center_point(T::E::new(1), T::Vec::from_xyz(z, h, z));
+            mesh.flip_yz()
+                .flip()
+                .translate(&T::Vec::from_xyz(z, -h2, z))
+                .extrude_to_center_point(T::E::new(1), T::Vec::from_xyz(z, h, z));
             mesh
         } else {
             let mut mesh = Mesh::<T>::regular_polygon(r2, n);
-            mesh.translate(&T::Vec::from_xyz(z, h2, z));
-            mesh.extrude_ex(
-                T::E::new(1),
-                T::Trans::from_translation(T::Vec::from_xyz(z, -h, z))
-                    .with_scale(T::Vec::from_xyz(r1 / r2, 1.0.into(), r1 / r2)),
-                true,
-                false,
-            );
+            mesh.flip_yz()
+                .translate(&T::Vec::from_xyz(z, h2, z))
+                 .extrude_ex(
+                    T::E::new(1),
+                    T::Trans::from_translation(T::Vec::from_xyz(z, -h, z))
+                        .with_scale(T::Vec::from_xyz(r1 / r2, 1.0.into(), r1 / r2)),
+                    true,
+                    false,
+                );
             mesh
         }
     }

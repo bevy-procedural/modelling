@@ -171,14 +171,15 @@ impl<T: MeshType> Mesh<T> {
     }
 
     /// Clears the mesh (deletes all vertices, edges, and faces)
-    pub fn clear(&mut self) {
+    pub fn clear(&mut self) -> &mut Self {
         self.vertices.clear();
         self.edges.clear();
         self.faces.clear();
+        self
     }
 
     /// Flip all edges (and faces) turning the mesh inside out.
-    pub fn flip(&mut self) {
+    pub fn flip(&mut self) -> &mut Self {
         // TODO: Not very efficient, but easy to implement
         let edges: Vec<_> = self.edges().map(|e| e.id()).collect();
         let mut flipped = HashSet::new();
@@ -189,5 +190,6 @@ impl<T: MeshType> Mesh<T> {
             HalfEdge::flip(edges[i], self);
             flipped.insert(self.edge(edges[i]).twin_id());
         }
+        self
     }
 }
