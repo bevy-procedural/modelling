@@ -77,4 +77,19 @@ pub trait Vector2D: Vector<Self::S> {
         );
         d >= eps
     }
+
+    /// Returns the coordinate values as a tuple.
+    fn tuple(&self) -> (Self::S, Self::S) {
+        (self.x(), self.y())
+    }
+
+    /// Swizzle
+    fn xy(&self) -> Self {
+        Self::new(self.x(), self.y())
+    }
+
+    /// Swizzle
+    fn yx(&self) -> Self {
+        Self::new(self.y(), self.x())
+    }
 }

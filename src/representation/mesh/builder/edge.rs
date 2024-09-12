@@ -294,4 +294,12 @@ where
 
         (first.twin_id(), input)
     }
+
+    /// Same as `insert_path` but closes the path by connecting the last vertex with the first one.
+    /// Also, returns only the first edge (outside the loop when constructed ccw).
+    pub fn insert_loop(&mut self, vp: impl IntoIterator<Item = T::VP>) -> T::E {
+        let (first, last) = self.insert_path(vp);
+        self.insert_edge(first, Default::default(), last, Default::default());
+        return first;
+    }
 }

@@ -23,6 +23,11 @@ pub trait Vector3D: Vector<Self::S> {
     /// Returns the cross product of two vectors.
     fn cross(&self, other: &Self) -> Self;
 
+    /// Returns the coordinate values as a tuple.
+    fn tuple(&self) -> (Self::S, Self::S, Self::S) {
+        (self.x(), self.y(), self.z())
+    }
+
     /// Swizzle
     fn xyz(&self) -> Self {
         Self::new(self.x(), self.y(), self.z())

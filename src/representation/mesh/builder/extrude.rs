@@ -21,8 +21,8 @@ where
     pub fn extrude_ex(&mut self, e: T::E, transform: T::Trans, close: bool, curved: bool) -> T::F {
         assert!(self.edge(e).is_boundary_self());
 
-        // TODO: use the hem function! 
-        // TODO: Also, make an intermediate version that makes closed hems and version that maps the vertices instead of taking an iterator
+        // TODO: use the loft function!
+        // TODO: Also, make an intermediate version that makes closed lofts and version that maps the vertices instead of taking an iterator
 
         let first = self.edge(e).origin_id();
         let mut last = first;
@@ -118,8 +118,8 @@ where
     ///
     /// If `shift` is true, the first inserted triangle will be with the tip pointing to the target of `start`.
     /// Otherwise, the first triangle will include the edge `start`.
-    /// This doesn't affect the number of triangles but shifts the hem by one.
-    pub fn triangle_hem(
+    /// This doesn't affect the number of triangles but shifts the "hem" by one.
+    pub fn loft_tri(
         &mut self,
         start: T::E,
         shift: bool,
@@ -169,8 +169,17 @@ where
         ret
     }
 
-    /// Like `triangle_hem` but for quad faces.
-    pub fn quad_hem(&mut self, start: T::E, vp: impl IntoIterator<Item = T::VP>) -> T::E {
+    /// Like `loft_tri` but closes the "hem" with a face.
+    pub fn loft_tri_closed(
+        &mut self,
+        _start: T::E,
+        _vp: impl IntoIterator<Item = T::VP>,
+    ) -> T::E {
+        todo!("loft_tri_closed")
+    }
+
+    /// Like `hem_tri` but for quad faces.
+    pub fn loft_quads(&mut self, start: T::E, vp: impl IntoIterator<Item = T::VP>) -> T::E {
         // TODO: assertions
         // TODO: Can be written faster without the "smart" edge functions but by bulk inserting into the mesh
 
@@ -194,6 +203,13 @@ where
         }
 
         ret
+    }
+
+    /// Like `hem_quads` but closes the "hem" with a face.
+    pub fn loft_quads_closed(&mut self, start: T::E, vp: impl IntoIterator<Item = T::VP>) -> T::E {
+        let e = self.loft_quads(start, vp);
+        self.close_face_default(self.edge(e).next(self).next(self).next_id(), e, false);
+        e
     }
 
     /// Assumes `start` is on the boundary of the edge.

@@ -13,6 +13,11 @@ pub trait Vector4D: Vector<Self::S> {
         [self.x(), self.y(), self.z(), self.w()]
     }
 
+    /// Returns the coordinate values as a tuple.
+    fn tuple(&self) -> (Self::S, Self::S, Self::S, Self::S) {
+        (self.x(), self.y(), self.z(), self.w())
+    }
+
     /// Swizzle
     fn xyzw(&self) -> Self {
         Self::new(self.x(), self.y(), self.z(), self.w())

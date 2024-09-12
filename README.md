@@ -55,62 +55,106 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
 ## Feature Progress
 
 -   Attributes
+
     -   [x] Positions
-    -   [x] Normals
-    -   [ ] Crease Weights
-    -   [ ] Smooth Surface Groups
+    -   [x] Normals (flat, smooth, ~~crease weights~~, ~~surface groups~~)
     -   [ ] Tangents
     -   [ ] UV Coordinates
-    -   [ ] Custom Attributes
+    -   [x] Custom Attributes
+
+-   Mesh Types
+
+    -   [x] 2d Surface
+    -   [x] 3d Open Manifold
+    -   [ ] 4d Open Manifold
+    -   [ ] Pseudomanifold (with singularities)
+    -   [ ] Non-Manifold (with branching surfaces)
+    -   [ ] Non-Euclidean
+    -   [ ] Combinatorial (purely topological)
+
 -   Triangulation
+
+    -   [x] Fan
+    -   [x] Ear Clipping
     -   [x] Montone Sweep-Line
     -   [x] Constrained Delaunay (using [Spade](https://github.com/Stoeoef/spade))
     -   [ ] Steiner Points
+
 -   Primitives
+
     -   [x] Polygon, Star
-    -   [x] Cuboid
-    -   [x] Cylinder, Cone, Frustum, Tetrahedron, Octahedron
+    -   [x] Cuboid, Cube
+    -   [x] Cylinder, Cone, Frustum, Tetrahedron, Octahedron, Dodecahedron, Iscosahedron
     -   [ ] Dodecahedron, Icosahedron
-    -   [ ] UV Sphere
+    -   [x] UV Sphere
     -   [ ] Cube Sphere
     -   [ ] Icosphere
     -   [ ] Torus
+
 -   Builder Primitives
+
     -   [x] Lines
     -   [ ] Quadratic Bezier Curves
     -   [ ] Cubic Bezier Curves
     -   [ ] Curved Surfaces (Bezier Surfaces / Parametric Surfaces / NURBS / Spline Networks...?)
+
 -   Operations
-    -   [x] Extrude
-    -   [ ] Loft
-    -   [ ] Inset
-    -   [ ] Plane Intersection
-    -   [ ] Union
-    -   [ ] Intersection
-    -   [ ] Difference
-    -   [ ] Symmetric Difference
+
+    -   [x] Extrude & Linear Loft (Quad, Triangle)
+    -   [x] Transform (Translate, Rotate, Scale, [] Shear)
+    -   [ ] Taper
+    -   [ ] Chamfer / Cantellate / Bevel / Truncate / Bitruncate / Omnitruncate
+    -   [ ] Boolean Operations (Union, Intersection, Difference, Symmetric Difference)
     -   [ ] (Anisotropic) Simplification / LODs
-    -   [ ] Stitching
-    -   [ ] Subdivision
-    -   [ ] Morphing
-    -   [ ] Voxelization
+    -   [ ] Stitch
+    -   [ ] Subdivide
+    -   [ ] Snub
+    -   [ ] Inset
+    -   [ ] Dualize
+    -   [ ] Stellate
+    -   [ ] Plane Intersection
+    -   [ ] Morph
+    -   [ ] Voxelate
+    -   [ ] Smooth
+    -   [ ] [Nonlinear Loft](https://www.youtube.com/watch?v=X37ZlHu8Q2I)
+    -   [ ] Bridge
+    -   [ ] Reflect
+    -   [ ] Weld
+    -   [ ] Twist
+    -   [ ] Offset
+    -   [ ] Inflate / Deflate
+    -   [ ] Convex Hull
+    -   [ ] Collapse
+    -   [ ] Split
+    -   [ ] Lattice
+    -   [ ] Refine
+    -   [ ] Crease
+    -   [ ] Simplify
+    -   [ ] Fractalize
+    -   [ ] Project
+
 -   Tools
+
     -   [ ] Geodesic Pathfinding
     -   [ ] Raycasting
     -   [ ] Topology Analysis
     -   [ ] Spatial Data Structures
+
 -   Debug Visualizations
+
     -   [x] Indices
     -   [ ] Normals
     -   [ ] Tangents
     -   [ ] Topology
+
 -   Backends
+
     -   [x] Bevy
     -   [ ] wgpu
 
 ## Features
 
-The following features are available:
+The following cargo features are available:
 
 -   `meshopt` -- Use [Meshopt](https://github.com/gwihlidal/meshopt-rs) to optimize the performance of generated meshes.
 -   `bevy` -- Compiles with support for bevy. Necessary for the examples and the editor.
@@ -151,7 +195,7 @@ The package supports different triangulation algorithms. The robustness and rend
 
 ## Supported Bevy Versions
 
-The following table shows the compatibility of `procedural_modelling` with certain versions of Bevy:
+The following table shows the compatibility of `procedural_modelling` (when using the `bevy` feature) with certain versions of Bevy:
 
 | bevy | bevy_procedural_meshes |
 | ---- | ---------------------- |

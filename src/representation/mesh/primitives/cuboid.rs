@@ -1,5 +1,5 @@
 use crate::{
-    math::Vector,
+    math::{Vector, Vector3D},
     representation::{
         payload::VertexPayload, DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
     },
@@ -10,9 +10,13 @@ where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
 {
-    /// create a (rectangular) cuboid
-    pub fn cuboid(x: T::S, y: T::S, z: T::S) -> Mesh<T> {
+    /// create a (rectangular) cuboid with side lengths `x`, `y`, and `z`
+    pub fn cuboid(size: T::Vec3) -> Mesh<T> {
         //assert!(P::dimensions() == 3, "cuboids exist only in 3d space");
+
+        let (x, y, z) = size.tuple();
+
+        // TODO: use the loft function!
 
         let mut mesh = Mesh::<T>::new();
         let make = |x: T::S, y: T::S, z: T::S| T::VP::from_pos(T::Vec::from_xyz(x, y, z));
@@ -34,5 +38,10 @@ where
             false,
         );
         mesh
+    }
+
+    /// create a cube with side length `x`
+    pub fn cube(x: T::S) -> Mesh<T> {
+        Self::cuboid(T::Vec3::splat(x))
     }
 }

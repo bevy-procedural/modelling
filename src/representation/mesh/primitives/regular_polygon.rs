@@ -122,7 +122,7 @@ where
 
         let (mut first, _) = mesh.insert_path(iter(0));
         for j in 1..m {
-            let e = mesh.triangle_hem(first, j % 2 == 0, iter(j));
+            let e = mesh.loft_tri(first, j % 2 == 0, iter(j));
             first = mesh.edge(e).prev_id();
         }
 
@@ -145,7 +145,7 @@ where
 
         let (mut first, _) = mesh.insert_path(iter(0));
         for j in 1..m {
-            first = mesh.quad_hem(first, iter(j));
+            first = mesh.loft_quads(first, iter(j));
         }
 
         mesh
