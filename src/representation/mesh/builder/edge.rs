@@ -23,7 +23,7 @@ impl<T: MeshType> Mesh<T> {
     ) -> (T::V, T::V) {
         let v0 = self.vertices.allocate();
         let v1 = self.vertices.allocate();
-        let (e0, e1) = self.insert_edge_unsafe(
+        let (e0, e1) = self.insert_edge_no_update_no_check(
             (
                 IndexType::max(),
                 IndexType::max(),
@@ -107,7 +107,7 @@ impl<T: MeshType> Mesh<T> {
             .ingoing_boundary_edge(self)
             .expect("There must be an ingoing boundary edge at vertex v0");
 
-        let (e0, e1) = self.insert_edge_unsafe(
+        let (e0, e1) = self.insert_edge_no_update_no_check(
             (next0, prev0, origin0, IndexType::max(), ep0),
             (next1, prev1, origin1, IndexType::max(), ep1),
         );
@@ -121,7 +121,9 @@ impl<T: MeshType> Mesh<T> {
     }
 
     // TODO: simplify other places using this function. And find a better name.
-    pub fn insert_edge_update(
+    /// Provided two edges that point to the start and end vertex of the new edge, insert that new edge.
+    /// This will also update the neighbors of the new edge so the halfedge mesh is consistent.
+    pub fn insert_edge(
         &mut self,
         inside: T::E,
         ep1: T::EP,
@@ -139,7 +141,7 @@ impl<T: MeshType> Mesh<T> {
         let other_inside = e_outside.next(self);
         let other_outside = e_inside.next(self);
 
-        let (e1, e2) = self.insert_edge(
+        let (e1, e2) = self.insert_edge_no_update(
             (other_inside.id(), inside, v, IndexType::max(), ep1),
             (other_outside.id(), outside, w, IndexType::max(), ep2),
         );
@@ -154,7 +156,8 @@ impl<T: MeshType> Mesh<T> {
 
     /// Will allocate two edges and return them as a tuple.
     /// You can set next and prev to IndexType::max() to insert the id of the twin edge there.
-    pub fn insert_edge(
+    /// This will not update the neighbors! After this operation, the mesh is in an inconsistent state.
+    pub fn insert_edge_no_update(
         &mut self,
         (next1, prev1, origin1, face1, ep1): (T::E, T::E, T::V, T::F, T::EP),
         (next2, prev2, origin2, face2, ep2): (T::E, T::E, T::V, T::F, T::EP),
@@ -169,8 +172,8 @@ impl<T: MeshType> Mesh<T> {
             "Second Vertex {} does not exist",
             origin2
         );
-        /* debug_assert!(
-            self.edge(next1).origin_id() == origin1 && origin1 == self.edge(prev2).target_id(self),
+        debug_assert!(
+            self.edge(next2).origin_id() == origin1 && origin1 == self.edge(prev1).target_id(self),
             "Next edge of first edge {} must start at the target {} != {} != {} of the previous edge {}",
             next1,
             self.edge(next1).origin_id(),
@@ -179,14 +182,14 @@ impl<T: MeshType> Mesh<T> {
             prev1
         );
         debug_assert!(
-            self.edge(next2).origin_id() == origin2 && origin2 == self.edge(prev1).target_id(self),
+            self.edge(next1).origin_id() == origin2 && origin2 == self.edge(prev2).target_id(self),
             "Next edge of second edge {} must start at the target {} != {} != {} of the previous edge {}",
             next2,
             self.edge(next2).origin_id(),
             origin2,
             self.edge(prev2).target_id(self),
             prev2
-        );*/
+        );
         debug_assert!(
             self.shared_edge(origin1, origin2).is_none(),
             "There is already an edge between first vertex {} and second vertex {}",
@@ -202,29 +205,18 @@ impl<T: MeshType> Mesh<T> {
 
         // TODO: validate that the setting of IndexType::Max() is valid!
 
-        let res = self.insert_edge_unsafe(
+        let res = self.insert_edge_no_update_no_check(
             (next1, prev1, origin1, face1, ep1),
             (next2, prev2, origin2, face2, ep2),
         );
-
-        /*debug_assert!(
-            self.edge(prev1).next_id() == prev1,
-            "The next edge of the previous edge {} must be itself",
-            prev1
-        );
-
-        debug_assert!(
-            self.edge(prev2).next_id() == prev2,
-            "The next edge of the previous edge {} must be itself",
-            prev2
-        );*/
 
         return res;
     }
 
     /// like insert_edge, but without assertions.
     /// You have to make sure that the vertices will not be deleted afterwards and that there is no halfedge between them yet.
-    pub fn insert_edge_unsafe(
+    /// Also, you have to update the neighbors yourself. After this operation, the mesh is in an inconsistent state.
+    pub fn insert_edge_no_update_no_check(
         &mut self,
         (next1, prev1, origin1, face1, ep1): (T::E, T::E, T::V, T::F, T::EP),
         (next2, prev2, origin2, face2, ep2): (T::E, T::E, T::V, T::F, T::EP),

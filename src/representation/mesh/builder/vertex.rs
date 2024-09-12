@@ -51,7 +51,7 @@ impl<T: MeshType> Mesh<T> {
 
         let new = self.vertices.allocate();
 
-        let (e1, e2) = self.insert_edge_unsafe(
+        let (e1, e2) = self.insert_edge_no_update_no_check(
             (IndexType::max(), input, v, IndexType::max(), ep1),
             (output, IndexType::max(), new, IndexType::max(), ep2),
         );

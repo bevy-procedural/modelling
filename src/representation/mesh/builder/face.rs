@@ -1,5 +1,5 @@
 use crate::{
-    representation::{DefaultEdgePayload, DefaultFacePayload, Face, IndexType, Mesh, MeshType},
+    representation::{DefaultEdgePayload, DefaultFacePayload, Face, Mesh, MeshType},
     util::iter::contains_exactly_one,
 };
 
@@ -30,7 +30,7 @@ impl<T: MeshType> Mesh<T> {
         fp: T::FP,
         curved: bool,
     ) -> (T::F, T::E, T::E) {
-        let (e1, e2) = self.insert_edge_update(inside, ep1, outside, ep2);
+        let (e1, e2) = self.insert_edge(inside, ep1, outside, ep2);
 
         // Insert the face
         let f = self.faces.push(Face::new(inside, curved, fp));

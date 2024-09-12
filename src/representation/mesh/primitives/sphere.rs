@@ -1,7 +1,5 @@
-use bevy::a11y::accesskit::DefaultActionVerb;
-
 use crate::{
-    math::{IndexType, Scalar, Vector, Vector3D},
+    math::{Scalar, Vector, Vector3D},
     representation::{
         payload::VertexPayload, DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
     },
@@ -39,28 +37,28 @@ where
             ))
         };
 
-        // the edge in the previous layer pointing towards the left appended edge
-        let mut last_layer_output = T::E::default();
+        // an edge on the boundary of the previous layer
+        let mut prev = T::E::default();
 
         for i in 0..n {
             if i == 0 {
                 // top pole
                 let (first, last) = mesh.insert_path((0..m).map(|j| make_vp(i + 1, j)));
-                mesh.insert_edge_update(first, Default::default(), last, Default::default());
+                mesh.insert_edge(first, Default::default(), last, Default::default());
                 mesh.fill_hole_with_vertex(last, make_vp(i, 0));
-                last_layer_output = first;
+                prev = first;
             } else if i == n - 1 {
                 // bottom pole
-                mesh.fill_hole_with_vertex(last_layer_output, make_vp(i + 1, 0));
+                mesh.fill_hole_with_vertex(prev, make_vp(i + 1, 0));
             } else {
                 // normal squares
-                let new_edge = mesh.quad_hem(last_layer_output, (0..m).map(|j| make_vp(i + 1, j)));
+                let new_edge = mesh.quad_hem(prev, (0..m).map(|j| make_vp(i + 1, j)));
                 mesh.close_face_default(
                     mesh.edge(new_edge).next(&mesh).next(&mesh).next_id(),
                     new_edge,
                     false,
                 );
-                last_layer_output = new_edge;
+                prev = new_edge;
             }
         }
 
