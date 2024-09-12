@@ -146,7 +146,6 @@ where
         let (mut first, _) = mesh.insert_path(iter(0));
         for j in 1..m {
             first = mesh.quad_hem(first, iter(j));
-            println!("first: {:?}", first);
         }
 
         mesh

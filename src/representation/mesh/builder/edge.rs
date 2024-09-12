@@ -151,6 +151,11 @@ impl<T: MeshType> Mesh<T> {
         self.edge_mut(inside).set_next(e1);
         self.edge_mut(outside).set_next(e2);
 
+        debug_assert!(self.edge(e1).prev(self).next_id() == e1);
+        debug_assert!(self.edge(e1).next(self).prev_id() == e1);
+        debug_assert!(self.edge(e2).prev(self).next_id() == e2);
+        debug_assert!(self.edge(e2).next(self).prev_id() == e2);
+
         (e1, e2)
     }
 
@@ -171,6 +176,18 @@ impl<T: MeshType> Mesh<T> {
             self.has_vertex(origin2),
             "Second Vertex {} does not exist",
             origin2
+        );
+        debug_assert!(
+            self.edge(prev1).next_id() == next2,
+            "Previous edge of first edge {} must point to the next edge {}",
+            prev1,
+            next1
+        );
+        debug_assert!(
+            self.edge(prev2).next_id() == next1,
+            "Previous edge of second edge {} must point to the next edge {}",
+            prev2,
+            next2
         );
         debug_assert!(
             self.edge(next2).origin_id() == origin1 && origin1 == self.edge(prev1).target_id(self),
