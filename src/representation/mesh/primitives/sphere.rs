@@ -1,5 +1,7 @@
+use bevy::a11y::accesskit::DefaultActionVerb;
+
 use crate::{
-    math::{Scalar, Vector, Vector3D},
+    math::{IndexType, Scalar, Vector, Vector3D},
     representation::{
         payload::VertexPayload, DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
     },
@@ -43,64 +45,21 @@ where
         for i in 0..n {
             if i == 0 {
                 // top pole
-
-                // the tip for the top pole
-                let (tip, first) = mesh.add_isolated_edge_default(make_vp(i, 0), make_vp(i + 1, 0));
-
-                let input = mesh.shared_edge_id(first, tip).unwrap();
-                let tip2first = mesh.shared_edge_id(tip, first).unwrap();
-
-                // the edge coming from the tip to the last inserted vertex
-                let mut output = tip2first;
-
-                for j in 1..m {
-                    let (_, outside, _) =
-                        mesh.add_vertex_via_edge_default(input, output, make_vp(i + 1, j));
-                    let inside = output;
-                    mesh.close_face_default(inside, outside, false);
-                    output = outside;
-                }
-                let (_, _, new_edge) = mesh.close_face_default(
-                    output,
-                    mesh.edge(tip2first).next(&mesh).twin_id(),
-                    false,
-                );
-                last_layer_output = new_edge;
+                let (first, last) = mesh.insert_path((0..m).map(|j| make_vp(i + 1, j)));
+                mesh.insert_edge_update(first, Default::default(), last, Default::default());
+                mesh.fill_hole_with_vertex(last, make_vp(i, 0));
+                last_layer_output = first;
             } else if i == n - 1 {
                 // bottom pole
-
-                let mut base_input = mesh.edge(last_layer_output).prev_id();
-                mesh.add_vertex_via_edge_default(base_input, last_layer_output, make_vp(i + 1, 0));
-                for _ in 1..m {
-                    base_input = mesh.edge(base_input).prev_id();
-                    mesh.close_face_default(
-                        mesh.edge(base_input).next(&mesh).next_id(),
-                        base_input,
-                        false,
-                    );
-                }
-                mesh.close_hole(base_input, Default::default(), false);
+                mesh.fill_hole_with_vertex(last_layer_output, make_vp(i + 1, 0));
             } else {
                 // normal squares
-
-                let mut base_input = mesh.edge(last_layer_output).prev_id();
-
-                mesh.add_vertex_via_edge_default(base_input, last_layer_output, make_vp(i + 1, 0));
-
-                for j in 1..m {
-                    base_input = mesh.edge(base_input).prev_id();
-                    let output = mesh.edge(base_input).next(&mesh);
-                    mesh.add_vertex_via_edge_default(base_input, output.id(), make_vp(i + 1, j));
-                    mesh.close_face_default(
-                        output.next_id(),
-                        mesh.edge(base_input).next_id(),
-                        false,
-                    );
-                }
-
-                let bi = mesh.edge(base_input);
-                let (_, _, new_edge) =
-                    mesh.close_face_default(bi.next_id(), bi.prev(&mesh).prev_id(), false);
+                let new_edge = mesh.quad_hem(last_layer_output, (0..m).map(|j| make_vp(i + 1, j)));
+                mesh.close_face_default(
+                    mesh.edge(new_edge).next(&mesh).next(&mesh).next_id(),
+                    new_edge,
+                    false,
+                );
                 last_layer_output = new_edge;
             }
         }

@@ -120,6 +120,38 @@ impl<T: MeshType> Mesh<T> {
         (e0, e1)
     }
 
+    // TODO: simplify other places using this function. And find a better name.
+    pub fn insert_edge_update(
+        &mut self,
+        inside: T::E,
+        ep1: T::EP,
+        outside: T::E,
+        ep2: T::EP,
+    ) -> (T::E, T::E) {
+        let e_inside = self.edge(inside);
+        let e_outside = self.edge(outside);
+        let v = e_inside.target(self).id();
+        let w = e_outside.target(self).id();
+
+        debug_assert!(e_inside.same_face_back(self, w));
+        debug_assert!(e_outside.same_face_back(self, v));
+
+        let other_inside = e_outside.next(self);
+        let other_outside = e_inside.next(self);
+
+        let (e1, e2) = self.insert_edge(
+            (other_inside.id(), inside, v, IndexType::max(), ep1),
+            (other_outside.id(), outside, w, IndexType::max(), ep2),
+        );
+
+        self.edge_mut(other_inside.id()).set_prev(e1);
+        self.edge_mut(other_outside.id()).set_prev(e2);
+        self.edge_mut(inside).set_next(e1);
+        self.edge_mut(outside).set_next(e2);
+
+        (e1, e2)
+    }
+
     /// Will allocate two edges and return them as a tuple.
     /// You can set next and prev to IndexType::max() to insert the id of the twin edge there.
     pub fn insert_edge(
@@ -137,6 +169,24 @@ impl<T: MeshType> Mesh<T> {
             "Second Vertex {} does not exist",
             origin2
         );
+        /* debug_assert!(
+            self.edge(next1).origin_id() == origin1 && origin1 == self.edge(prev2).target_id(self),
+            "Next edge of first edge {} must start at the target {} != {} != {} of the previous edge {}",
+            next1,
+            self.edge(next1).origin_id(),
+            origin1,
+            self.edge(prev1).target_id(self),
+            prev1
+        );
+        debug_assert!(
+            self.edge(next2).origin_id() == origin2 && origin2 == self.edge(prev1).target_id(self),
+            "Next edge of second edge {} must start at the target {} != {} != {} of the previous edge {}",
+            next2,
+            self.edge(next2).origin_id(),
+            origin2,
+            self.edge(prev2).target_id(self),
+            prev2
+        );*/
         debug_assert!(
             self.shared_edge(origin1, origin2).is_none(),
             "There is already an edge between first vertex {} and second vertex {}",
@@ -152,10 +202,24 @@ impl<T: MeshType> Mesh<T> {
 
         // TODO: validate that the setting of IndexType::Max() is valid!
 
-        self.insert_edge_unsafe(
+        let res = self.insert_edge_unsafe(
             (next1, prev1, origin1, face1, ep1),
             (next2, prev2, origin2, face2, ep2),
-        )
+        );
+
+        /*debug_assert!(
+            self.edge(prev1).next_id() == prev1,
+            "The next edge of the previous edge {} must be itself",
+            prev1
+        );
+
+        debug_assert!(
+            self.edge(prev2).next_id() == prev2,
+            "The next edge of the previous edge {} must be itself",
+            prev2
+        );*/
+
+        return res;
     }
 
     /// like insert_edge, but without assertions.
@@ -219,6 +283,6 @@ where
             output = n.twin_id();
         }
 
-        (first.twin_id(), output)
+        (first.twin_id(), input)
     }
 }
