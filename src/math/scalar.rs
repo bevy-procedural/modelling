@@ -32,6 +32,9 @@ pub trait Scalar:
     /// A value of one.
     const ONE: Self;
 
+    /// The golden ratio.
+    const PHI: Self;
+
     /// Returns whether the scalar is strictly positive.
     fn is_positive(self) -> bool;
 

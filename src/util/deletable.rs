@@ -133,7 +133,9 @@ impl<T: Deletable<I>, I: IndexType> DeletableVector<T, I> {
         if let Some(index) = self.deleted.pop() {
             index
         } else {
-            self.data.push(T::allocate());
+            let t = T::allocate();
+            debug_assert!(t.is_deleted());
+            self.data.push(t);
             I::new(self.data.len() - 1)
         }
     }

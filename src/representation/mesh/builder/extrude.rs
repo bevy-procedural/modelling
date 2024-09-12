@@ -170,11 +170,7 @@ where
     }
 
     /// Like `loft_tri` but closes the "hem" with a face.
-    pub fn loft_tri_closed(
-        &mut self,
-        _start: T::E,
-        _vp: impl IntoIterator<Item = T::VP>,
-    ) -> T::E {
+    pub fn loft_tri_closed(&mut self, _start: T::E, _vp: impl IntoIterator<Item = T::VP>) -> T::E {
         todo!("loft_tri_closed")
     }
 
@@ -210,6 +206,71 @@ where
         let e = self.loft_quads(start, vp);
         self.close_face_default(self.edge(e).next(self).next(self).next_id(), e, false);
         e
+    }
+
+    /// Like `loft_quad`, but each face consists of `n` vertices from the iterator
+    /// and `m` vertices from the boundary of the existing mesh.
+    /// Hence, it will create polygon faces with `n+m+2` vertices each.
+    /// If the iterator is exactly the right length to go once around the mesh, the "hem" will be closed.
+    pub fn loft_polygon(
+        &mut self,
+        start: T::E,
+        n: usize,
+        m: usize,
+        vp: impl IntoIterator<Item = T::VP>,
+    ) -> T::E {
+        assert!(n >= 2);
+        assert!(m >= 2);
+        // TODO: implement the special cases of n=1 (insert one vertex only and generate tip) and m=1 (use only one vertex of the boundary and create a fan around it), and even n=0 (without iterator; bridge every second edge with a face) and m=0 (without start; generate a line strip)
+        // TODO: replace all loft methods with this one. Quad is just n=2, m=2, triangle is two lofts: n=2, m=1 and n=0, m=2
+
+        let mut iter = vp.into_iter();
+        let mut input = start;
+        let start_vertex = self.edge(start).target_id(self);
+        if let Some(vp) = iter.next() {
+            self.add_vertex_via_edge_default(input, self.edge(start).next_id(), vp);
+        }
+
+        let mut ret = start;
+        loop {
+            input = self.edge(input).prev_id();
+
+            let mut inside = self.edge(input).next(self).next_id();
+            for _ in 2..n {
+                let Some(vp) = iter.next() else {
+                    return ret;
+                };
+                let (_, e1, _) =
+                    self.add_vertex_via_edge_default(inside, self.edge(inside).next_id(), vp);
+                inside = e1;
+
+                // the edge pointing to the first generated vertex
+                if ret == start {
+                    ret = self.edge(e1).twin_id();
+                }
+            }
+
+            for _ in 2..m {
+                input = self.edge(input).prev_id();
+            }
+
+            let Some(vp) = iter.next() else {
+                if start_vertex == self.edge(input).target_id(self) {
+                    // reached the start again - close the last vertex!
+                    self.close_face_default(inside, self.edge(input).prev_id(), false);
+                }
+                return ret;
+            };
+
+            let output = self.edge(input).next_id();
+            self.add_vertex_via_edge_default(input, output, vp);
+            self.close_face_default(inside, self.edge(input).next_id(), false);
+
+            // when n==2, we cannot set the `ret` until now
+            if ret == start {
+                ret = self.edge(inside).next(self).twin_id();
+            }
+        }
     }
 
     /// Assumes `start` is on the boundary of the edge.

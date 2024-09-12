@@ -10,6 +10,7 @@ impl Scalar for f64 {
     const PI: Self = std::f64::consts::PI;
     const EPS: Self = std::f64::EPSILON;
     const ONE: Self = 1.0;
+    const PHI: Self = 1.61803398874989484820;
 
     #[inline(always)]
     fn is_positive(self) -> bool {

@@ -69,7 +69,7 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
     -   [ ] 4d Open Manifold
     -   [ ] Pseudomanifold (with singularities)
     -   [ ] Non-Manifold (with branching surfaces)
-    -   [ ] Non-Euclidean
+    -   [ ] Non-Euclidean Open Manifold
     -   [ ] Combinatorial (purely topological)
 
 -   Triangulation
@@ -84,8 +84,9 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
 
     -   [x] Polygon, Star
     -   [x] Cuboid, Cube
-    -   [x] Cylinder, Cone, Frustum, Tetrahedron, Octahedron, Dodecahedron, Iscosahedron
-    -   [ ] Dodecahedron, Icosahedron
+    -   [x] Cylinder, Cone, Pyramid, Frustum, Tetrahedron, Octahedron, Dodecahedron
+    -   [ ] Icosahedron
+    -   [ ] Prism
     -   [x] UV Sphere
     -   [ ] Cube Sphere
     -   [ ] Icosphere
