@@ -176,9 +176,9 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
 
     //BevyMesh3d::cone(1.0, 1.0, 16)
 
-    //BevyMesh3d::uv_sphere(2.0, 8, 8)
+    BevyMesh3d::uv_sphere(2.0, 8, 8)
 
-    BevyMesh3d::dodecahedron(1.0)
+    //BevyMesh3d::dodecahedron(1.0)
     
     /*let mut mesh = BevyMesh3d::triangle_plane(5.0, 5.0, 8,8);
     //let mut mesh = BevyMesh3d::quad_plane(5.0, 5.0, 8, 8);

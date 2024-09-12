@@ -4,6 +4,7 @@ mod edge;
 mod extrude;
 mod face;
 mod vertex;
+mod loft;
 
 use super::{Mesh, MeshType};
 use crate::{math::Vector3D, representation::payload::VertexPayload};
