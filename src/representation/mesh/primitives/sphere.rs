@@ -37,30 +37,27 @@ where
             ))
         };
 
+        // top pole
+        let (first, last) = mesh.insert_path((0..m).map(|j| make_vp(1, j)));
+        mesh.insert_edge(first, Default::default(), last, Default::default());
+        mesh.fill_hole_with_vertex(last, make_vp(0, 0));
+        
         // an edge on the boundary of the previous layer
-        let mut prev = T::E::default();
+        let mut prev = first;
 
-        for i in 0..n {
-            if i == 0 {
-                // top pole
-                let (first, last) = mesh.insert_path((0..m).map(|j| make_vp(i + 1, j)));
-                mesh.insert_edge(first, Default::default(), last, Default::default());
-                mesh.fill_hole_with_vertex(last, make_vp(i, 0));
-                prev = first;
-            } else if i == n - 1 {
-                // bottom pole
-                mesh.fill_hole_with_vertex(prev, make_vp(i + 1, 0));
-            } else {
-                // normal squares
-                let new_edge = mesh.quad_hem(prev, (0..m).map(|j| make_vp(i + 1, j)));
-                mesh.close_face_default(
-                    mesh.edge(new_edge).next(&mesh).next(&mesh).next_id(),
-                    new_edge,
-                    false,
-                );
-                prev = new_edge;
-            }
+        // normal squares
+        for i in 1..(n - 1) {
+            let new_edge = mesh.quad_hem(prev, (0..m).map(|j| make_vp(i + 1, j)));
+            mesh.close_face_default(
+                mesh.edge(new_edge).next(&mesh).next(&mesh).next_id(),
+                new_edge,
+                false,
+            );
+            prev = new_edge;
         }
+
+        // bottom pole
+        mesh.fill_hole_with_vertex(prev, make_vp(n, 0));
 
         mesh
     }
