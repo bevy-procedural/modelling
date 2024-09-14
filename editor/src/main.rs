@@ -174,7 +174,8 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     //BevyMesh3d::octahedron(1.0)
 
     //BevyMesh3d::cone(1.0, 1.0, 16)
-    BevyMesh3d::prism(
+
+    /*BevyMesh3d::prism(
         (0..10).map(|i| {
             BevyVertexPayload::from_pos(Vec3::new(
                 (i as f32 / 5.0 * PI).sin(),
@@ -183,16 +184,15 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
             ))
         }),
         Vec3::new(0.0, 1.0, 0.0),
-    )
+    )*/
 
-    //BevyMesh3d::uv_sphere(2.0, 32, 32)
+    //bBevyMesh3d::uv_sphere(2.0, 32, 32)
 
     //BevyMesh3d::dodecahedron(1.0)
 
-    /*let mut mesh = BevyMesh3d::triangle_plane(5.0, 5.0, 8,8);
-    //let mut mesh = BevyMesh3d::quad_plane(5.0, 5.0, 8, 8);
+    let mut mesh = BevyMesh3d::hex_plane(10, 8);
     mesh.flip_yz();
-    mesh*/
+    mesh
 }
 
 pub fn main() {
@@ -210,7 +210,7 @@ pub fn main() {
         }))
         .add_plugins(WireframePlugin)
         .insert_resource(WireframeConfig {
-            global: false,
+            global: true,
             default_color: Color::WHITE,
         })
         .register_type::<GlobalSettings>()

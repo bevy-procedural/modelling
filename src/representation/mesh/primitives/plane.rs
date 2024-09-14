@@ -11,7 +11,9 @@ where
     T::FP: DefaultFacePayload,
     T::VP: HasPosition<T::Vec, S = T::S>,
 {
-    /// Generate a subdivided plane made of triangles with given width and height and n and m subdivisions
+    /// Generate a subdivided plane made of triangles with given `width` and `height` and
+    /// `n` and `m` vertices used for the subdivisions, i.e., to subdivide the plane into
+    /// four columns, use `n = 5`.
     pub fn triangle_plane(width: T::S, height: T::S, n: usize, m: usize) -> Self {
         let mut mesh = Self::new();
         let vertical_step = height / T::S::from_usize(m - 1);
@@ -34,7 +36,9 @@ where
         mesh
     }
 
-    /// Generate a subdivided plane made of quads with given width and height and n and m subdivisions
+    /// Generate a subdivided plane made of quads with given `width` and `height` and
+    /// `n` and `m` vertices used for the subdivisions, i.e., to subdivide the plane into
+    /// four columns, use `n = 5`.
     pub fn quad_plane(width: T::S, height: T::S, n: usize, m: usize) -> Self {
         let mut mesh = Self::new();
         let vertical_step = height / T::S::from_usize(m - 1);
@@ -50,11 +54,39 @@ where
 
         let (mut first, _) = mesh.insert_path(iter(0));
         for j in 1..m {
-            first = mesh.loft_quads(first, iter(j));
+            first = mesh.loft_polygon(first, 2, 2, iter(j));
         }
 
         mesh
     }
 
-    // TODO: Hexa plane and other common plane tilings!
+    /// Generate a subdivided plane made of hexagons with `n` and `m` vertices used for the subdivisions.
+    /// TODO: Make this more quadratic and less parallelogram.
+    pub fn hex_plane(n: usize, m: usize) -> Self {
+        assert!(n % 2 == 0);
+        assert!(m >= 2);
+        let mut mesh = Self::new();
+        let row_height = T::S::from_usize(3) / T::S::from_usize(3).sqrt();
+        let width = T::S::ONE;
+        let hex_offset = row_height - T::S::from_usize(2) / T::S::from_usize(3).sqrt();
+        let iter = |offset: usize, j: usize| {
+            (0..n).map(move |i| {
+                T::VP::from_pos(T::Vec::from_xy(
+                    width * T::S::from_usize(i + offset),
+                    row_height * T::S::from_usize(j)
+                        + T::S::from_usize((i + j + 1 + offset) % 2) * hex_offset,
+                ))
+            })
+        };
+
+        let (mut first, _) = mesh.insert_path(iter(0, 0));
+        for j in 1..m {
+            if j >= 2 {
+                first = mesh.edge(first).prev_id();
+            }
+            first = mesh.loft_polygon(first, 3, 3, iter(j - 1, j));
+        }
+
+        mesh
+    }
 }

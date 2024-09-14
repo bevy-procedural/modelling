@@ -71,44 +71,18 @@ where
         todo!("loft_tri_closed")
     }
 
-    /// Like `hem_tri` but for quad faces.
-    pub fn loft_quads(&mut self, start: T::E, vp: impl IntoIterator<Item = T::VP>) -> T::E {
-        // TODO: assertions
-        // TODO: Can be written faster without the "smart" edge functions but by bulk inserting into the mesh
-
-        let mut iter = vp.into_iter();
-
-        let mut input = start;
-
-        if let Some(vp) = iter.next() {
-            self.add_vertex_via_edge_default(input, self.edge(start).next_id(), vp);
-        }
-
-        let mut ret = start;
-        for vp in iter {
-            input = self.edge(input).prev_id();
-            let output = self.edge(input).next(self);
-            self.add_vertex_via_edge_default(input, output.id(), vp);
-            self.close_face_default(output.next_id(), self.edge(input).next_id(), false);
-            if ret == start {
-                ret = self.edge(input).next(self).next_id();
-            }
-        }
-
-        ret
-    }
-
-    /// Like `hem_quads` but closes the "hem" with a face.
-    pub fn loft_quads_closed(&mut self, start: T::E, vp: impl IntoIterator<Item = T::VP>) -> T::E {
-        let e = self.loft_quads(start, vp);
-        self.close_face_default(self.edge(e).next(self).next(self).next_id(), e, false);
-        e
-    }
-
-    /// Like `loft_quad`, but each face consists of `n` vertices from the iterator
+    /// Walks along the boundary given by `start` and adds a "hem" made from polygon faces.
+    /// Each face consists of `n` vertices from the iterator
     /// and `m` vertices from the boundary of the existing mesh.
     /// Hence, it will create polygon faces with `n+m+2` vertices each.
+    /// 
     /// If the iterator is exactly the right length to go once around the mesh, the "hem" will be closed.
+    /// 
+    /// Returns the edge pointing from the second inserted vertex to the first inserted vertex.
+    /// 
+    /// For example, to create a quad loft, use `loft_polygon(start, 2, 2, vp)`. 
+    /// Pentagons with the tip pointing to the boundary can be created with `loft_polygon(start, 3, 2, vp)` 
+    /// while pentagons with the tip pointing away from the boundary can be created with `loft_polygon(start, 2, 3, vp)`.
     pub fn loft_polygon(
         &mut self,
         start: T::E,

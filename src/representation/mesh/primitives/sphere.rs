@@ -44,7 +44,7 @@ where
 
         // normal squares
         for i in 1..(n - 1) {
-            prev = mesh.loft_quads_closed(prev, (0..m).map(|j| make_vp(i + 1, j)));
+            prev = mesh.loft_polygon(prev, 2, 2, (0..m).map(|j| make_vp(i + 1, j)));
         }
 
         // bottom pole

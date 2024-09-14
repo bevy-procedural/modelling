@@ -23,7 +23,7 @@ where
         mesh
     }
 
-    pub fn antiprism(vp: impl IntoIterator<Item = T::VP>, height: T::Vec) -> Mesh<T> {
+    /*pub fn antiprism(vp: impl IntoIterator<Item = T::VP>, height: T::Vec) -> Mesh<T> {
         todo!("antiprism")
     }
 
@@ -39,7 +39,7 @@ where
         smooth: bool,
     ) -> Mesh<T> {
         todo!("frustum")
-    }
+    }*/
 }
 
 impl<T: MeshType> Mesh<T>
@@ -92,7 +92,7 @@ where
         }
     }
 
-    pub fn uniform_antiprism(r: T::S, h: T::S, n: usize) -> Mesh<T> {
+    /*pub fn uniform_antiprism(r: T::S, h: T::S, n: usize) -> Mesh<T> {
         todo!("uniform_antiprism")
     }
 
@@ -132,5 +132,5 @@ where
         mesh.translate(&T::Vec::from_xyz(zero, h * 0.5.into(), zero));
         mesh.extrude_to_center_point(T::E::new(0), T::Vec::from_xyz(zero, -h, zero));
         mesh
-    }
+    }*/
 }
