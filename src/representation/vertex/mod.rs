@@ -1,9 +1,10 @@
 mod iterator;
 pub use iterator::*;
+use itertools::Itertools;
 pub mod payload;
 
 use super::{Deletable, HalfEdge, IndexType, Mesh, MeshType};
-use crate::{math::Vector, util::iter::contains_exactly_one};
+use crate::math::Vector;
 use payload::{DefaultVertexPayload, HasPosition, Transformable, VertexPayload};
 
 /// A vertex in a mesh.
@@ -107,7 +108,10 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> Vertex<E, V, VP> {
     ) -> Option<E> {
         // TODO: Assumes a manifold vertex. Otherwise, there can be multiple boundary edges!
         debug_assert!(
-            contains_exactly_one(self.edges_out(mesh), |e| e.is_boundary_self()),
+            self.edges_out(mesh)
+                .filter(|e| e.is_boundary_self())
+                .exactly_one()
+                .is_ok(),
             "Vertex {} is not manifold",
             self.id()
         );
@@ -127,7 +131,10 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> Vertex<E, V, VP> {
         mesh: &Mesh<T>,
     ) -> Option<E> {
         debug_assert!(
-            contains_exactly_one(self.edges_in(mesh), |e| e.is_boundary_self()),
+            self.edges_in(mesh)
+                .filter(|e| e.is_boundary_self())
+                .exactly_one()
+                .is_ok(),
             "Vertex {} is not manifold",
             self.id()
         );

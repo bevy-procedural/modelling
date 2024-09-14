@@ -1,6 +1,6 @@
 use super::{Mesh, MeshType};
 use crate::{
-    math::{IndexType, Vector, Vector3D},
+    math::{IndexType, Vector, Vector3D, VectorIteratorExt},
     representation::{
         payload::{HasNormal, HasPosition},
         tesselate::{TesselationMeta, Triangulation, TriangulationAlgorithm},
@@ -76,12 +76,19 @@ where
         // Smooth normals are calculated without vertex duplication.
         // Hence, we have to set the normals of the whole mesh.
         // we copy the vertices still to both compact the indices and set the normals without mutating the mesh
-        let face_normals: HashMap<T::F, T::Vec> =
-            self.faces().map(|f| (f.id(), f.normal(self))).collect();
+        let face_normals: HashMap<T::F, T::Vec> = self
+            .faces()
+            .map(|f| (f.id(), f.normal(self).normalize()))
+            .collect();
 
         let normals = self
             .vertices()
-            .map(|v| T::Vec::mean(v.faces(self).map(|f| face_normals[&f.id()])).normalize())
+            .map(|v| {
+                v.faces(self)
+                    .map(|f| face_normals[&f.id()])
+                    .stable_mean()
+                    .normalize()
+            })
             .collect::<Vec<_>>();
 
         self.vertices_mut().enumerate().for_each(|(i, v)| {

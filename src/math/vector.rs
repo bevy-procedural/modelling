@@ -86,14 +86,35 @@ pub trait Vector<S: Scalar>:
     /// Creates a vector with all the same coordinates.
     fn splat(value: S) -> Self;
 
-    /// Sum of vectors, ideally numerically stable.
-    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+    /// Calculate the sum of an iterator of vectors using some numerically stable algorithm.
+    fn stable_sum<I: Iterator<Item = Self>>(iter: I) -> Self {
         kahan_summation(iter).0
     }
 
-    /// Mean of vectors, ideally numerically stable.
-    fn mean<I: Iterator<Item = Self>>(iter: I) -> Self {
+    /// Calculate the mean of an iterator of vectors using some numerically stable algorithm.
+    fn stable_mean<I: Iterator<Item = Self>>(iter: I) -> Self {
         let (sum, count) = kahan_summation(iter);
         sum / Self::splat(S::from_usize(count))
     }
 }
+
+/// Additional methods for vector iterators.
+pub trait VectorIteratorExt<S: Scalar, V: Vector<S>>: Iterator<Item = V> {
+    /// Calculate the sum of an iterator of vectors using some numerically stable algorithm.
+    fn stable_sum(self) -> Self::Item
+    where
+        Self: Sized,
+    {
+        V::stable_sum(self)
+    }
+
+    /// Calculate the mean of an iterator of vectors using some numerically stable algorithm.
+    fn stable_mean(self) -> Self::Item
+    where
+        Self: Sized,
+    {
+        V::stable_mean(self)
+    }
+}
+
+impl<I: Iterator<Item = V>, S: Scalar, V: Vector<S>> VectorIteratorExt<S, V> for I {}

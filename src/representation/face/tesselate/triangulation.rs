@@ -1,4 +1,6 @@
-use crate::math::{HasZero, IndexType, LineSegment2D, Polygon, Scalar, Vector2D};
+use crate::math::{
+    HasZero, IndexType, LineSegment2D, Polygon, Scalar, ScalarIteratorExt, Vector2D,
+};
 use std::collections::{HashMap, HashSet};
 
 /// A vertex with its index in the global structure
@@ -209,11 +211,10 @@ impl<'a, V: IndexType> Triangulation<'a, V> {
     /// Sum the area of all triangles added to the index buffer since the triangulation was created
     pub fn get_area<Vec2: Vector2D>(&self, vec_hm: &HashMap<V, Vec2>) -> Vec2::S {
         Vec2::S::from(0.5)
-            * Vec2::S::sum(
-                (0..self.len())
-                    .into_iter()
-                    .map(|i| self.get_triangle_area(i, vec_hm).abs()),
-            )
+            * (0..self.len())
+                .into_iter()
+                .map(|i| self.get_triangle_area(i, vec_hm).abs())
+                .stable_sum()
     }
 
     /// Calculate the area of the polygon and check if it is the same as the sum of the areas of the triangles
@@ -236,10 +237,7 @@ impl<'a, V: IndexType> Triangulation<'a, V> {
     }
 
     /// Check that the set of used indices exactly matches the set of indices in the triangulation
-    pub fn verify_all_indices_used<Vec2: Vector2D>(
-        &self,
-        vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
-    ) {
+    pub fn verify_all_indices_used<Vec2: Vector2D>(&self, vec2s: &Vec<IndexedVertex2D<V, Vec2>>) {
         let mut seen = HashSet::new();
         for i in self.start..self.indices.len() {
             seen.insert(self.indices[i]);

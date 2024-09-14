@@ -1,11 +1,26 @@
 //! Iterator utility
 
-/// Returns whether there is exactly one element in the iterator that satisfies the predicate
-pub fn contains_exactly_one<I, P>(iter: I, predicate: P) -> bool
-where
-    I: Iterator,
-    P: FnMut(&I::Item) -> bool,
-{
-    let mut filtered = iter.filter(predicate);
-    filtered.by_ref().take(2).count() == 1
+/*
+pub trait IteratorExt: Iterator {
+    /// Returns whether all elements in the iterator are unique.
+    fn is_unique(self) -> bool
+    where
+        Self: Sized,
+        Self::Item: Eq + std::hash::Hash,
+    {
+        let mut seen = HashSet::new();
+        self.all(move |item| seen.insert(item))
+    }
+
+
+    /// Returns whether there is exactly one element in the iterator.
+    fn exactly_one(self) -> bool
+    where
+        Self: Sized,
+    {
+        self.take(2).count() == 1
+    }
 }
+
+impl<I: Iterator> IteratorExt for I {}
+*/

@@ -1,7 +1,5 @@
-use crate::{
-    representation::{DefaultEdgePayload, DefaultFacePayload, Face, Mesh, MeshType},
-    util::iter::contains_exactly_one,
-};
+use crate::representation::{DefaultEdgePayload, DefaultFacePayload, Face, Mesh, MeshType};
+use itertools::Itertools;
 
 impl<T: MeshType> Mesh<T> {
     /// Close the open boundary with a single face. Doesn't create new edges or vertices.
@@ -62,9 +60,9 @@ impl<T: MeshType> Mesh<T> {
 
         // TODO: is it enough to assert this vertex is manifold? Also, add code to check for manifold vertices!
         debug_assert!(
-            contains_exactly_one(self.vertex(to).edges_in(self), |e| {
+            self.vertex(to).edges_in(self).filter( |e| {
                 e.is_boundary_self() && e.same_face(self, self.edge(inside).origin_id())
-            }),
+            }).exactly_one().is_ok(),
             "There mus be exactly one ingoing edge to {} that can reach edge {} but there were the following ones: {:?}",
             to,
             inside,

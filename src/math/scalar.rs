@@ -95,17 +95,40 @@ pub trait Scalar:
         a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g)
     }
 
-    /// Calculate the sum of a list of scalars. Should try to achieve good numerical stability.
-    fn sum<I: Iterator<Item = Self>>(values: I) -> Self {
+    /// Calculate the sum of an iterator of scalars using some numerically stable algorithm.
+    fn stable_sum<I: Iterator<Item = Self>>(values: I) -> Self {
         neumaier_summation(values).0
     }
 
-    /// Calculate the mean of a list of scalars. Should try to achieve good numerical stability.
-    fn mean<I: Iterator<Item = Self>>(values: I) -> Self {
+    /// Calculate the mean of an iterator of scalars using some numerically stable algorithm.
+    fn stable_mean<I: Iterator<Item = Self>>(values: I) -> Self {
         let (sum, n) = neumaier_summation(values);
         sum / Self::from_usize(n)
     }
 }
+
+/// Additional methods for scalar iterators.
+pub trait ScalarIteratorExt<S: Scalar>: Iterator<Item = S> {
+    /// Calculate the sum of an iterator of scalars using some numerically stable algorithm.
+    fn stable_sum(self) -> Self::Item
+    where
+        Self: Sized,
+        Self::Item: std::ops::Add<Output = Self::Item> + HasZero,
+    {
+        Scalar::stable_sum(self)
+    }
+
+    /// Calculate the mean of an iterator of scalars using some numerically stable algorithm.
+    fn stable_mean(self) -> Self::Item
+    where
+        Self: Sized,
+        Self::Item: std::ops::Add<Output = Self::Item> + HasZero,
+    {
+        Scalar::stable_mean(self)
+    }
+}
+
+impl<I: Iterator<Item = S>, S: Scalar> ScalarIteratorExt<S> for I {}
 
 /// A scalar that is ordered.
 #[derive(Debug, Clone, PartialEq, PartialOrd)]

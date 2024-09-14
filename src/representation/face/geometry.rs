@@ -4,7 +4,7 @@ use super::{
     Face, FacePayload,
 };
 use crate::{
-    math::{LineSegment2D, Scalar, Transform, Vector, Vector3D},
+    math::{LineSegment2D, Scalar, Transform, Vector, Vector3D, VectorIteratorExt},
     representation::{payload::HasPosition, MeshType},
 };
 use itertools::Itertools;
@@ -66,7 +66,7 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
     }
 
     /// Whether the face has holes.
-    /// The data structure cannot represent holes, so this is always false.
+    /// The data structure (currently!) cannot represent holes, so this is always false.
     pub fn has_holes(&self) -> bool {
         return false;
     }
@@ -125,18 +125,18 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
         // TODO: allows only for slight curvature...
         debug_assert!(self.may_be_curved() || self.is_planar2(mesh));
 
-        let normal = T::Vec::sum(
-            self.vertices(mesh)
-                .map(|v| *v.pos())
-                .circular_tuple_windows::<(_, _)>()
-                .map(|(a, b)| {
-                    T::Vec::new(
-                        (a.z() + b.z()) * (b.y() - a.y()),
-                        (a.x() + b.x()) * (b.z() - a.z()),
-                        (a.y() + b.y()) * (b.x() - a.x()),
-                    )
-                }),
-        );
+        let normal = self
+            .vertices(mesh)
+            .map(|v| *v.pos())
+            .circular_tuple_windows::<(_, _)>()
+            .map(|(a, b)| {
+                T::Vec::new(
+                    (a.z() + b.z()) * (b.y() - a.y()),
+                    (a.x() + b.x()) * (b.z() - a.z()),
+                    (a.y() + b.y()) * (b.x() - a.x()),
+                )
+            })
+            .stable_sum();
         normal * T::Vec::splat(T::S::from(-0.5))
     }
 
@@ -194,6 +194,6 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
     where
         T::VP: HasPosition<T::Vec, S = T::S>,
     {
-        T::Vec::mean(self.vertices(mesh).map(|v| *v.pos()))
+        self.vertices(mesh).map(|v| *v.pos()).stable_mean()
     }
 }
