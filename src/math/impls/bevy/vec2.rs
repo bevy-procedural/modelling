@@ -110,7 +110,7 @@ impl Vector2D for Vec2 {
 impl Transform for Affine2 {
     type S = f32;
     type Vec = Vec2;
-    type Rotator = f32;
+    type Rot = f32;
 
     #[inline(always)]
     fn identity() -> Self {

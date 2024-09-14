@@ -2,10 +2,9 @@ mod iterator;
 pub use iterator::*;
 pub mod payload;
 
-use crate::util::iter::contains_exactly_one;
-
 use super::{Deletable, HalfEdge, IndexType, Mesh, MeshType};
-use payload::VertexPayload;
+use crate::{math::Vector, util::iter::contains_exactly_one};
+use payload::{DefaultVertexPayload, HasPosition, Transformable, VertexPayload};
 
 /// A vertex in a mesh.
 #[derive(Debug, Clone, PartialEq)]
@@ -23,7 +22,6 @@ pub struct Vertex<E: IndexType, V: IndexType, VP: VertexPayload> {
     /// TODO: This is only necessary for non-manifold vertices where there are multiple next-prev wheels. But even with one wheel, this can be non-manifold if the vertex is singular.
     next: V,
     */
-    
     /// the payload of the vertex
     payload: VP,
 }
@@ -59,7 +57,10 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> Vertex<E, V, VP> {
 
     /// Returns the vertex coordinates of the payload
     #[inline(always)]
-    pub fn vertex(&self) -> &VP::Vec {
+    pub fn pos<Vec: Vector<VP::S>>(&self) -> &Vec
+    where
+        VP: HasPosition<Vec>,
+    {
         self.payload.pos()
     }
 
@@ -97,30 +98,6 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> Vertex<E, V, VP> {
         // self.edges(mesh).count() == 1
         let e = self.edge(mesh);
         e.prev_id() == e.twin_id()
-    }
-
-    /// Transforms the payload.
-    #[inline(always)]
-    pub fn transform(&mut self, transform: &VP::Trans) {
-        self.payload = self.payload.transform(transform);
-    }
-
-    /// Translates the payload.
-    #[inline(always)]
-    pub fn translate(&mut self, transform: &VP::Vec) {
-        self.payload = self.payload.translate(transform);
-    }
-
-    /// Rotates the payload.
-    #[inline(always)]
-    pub fn rotate(&mut self, transform: &VP::Quat) {
-        self.payload = self.payload.rotate(transform);
-    }
-
-    /// Scales the payload.
-    #[inline(always)]
-    pub fn scale(&mut self, transform: &VP::Vec) {
-        self.payload = self.payload.scale(transform);
     }
 
     /// Returns an outgoing boundary edge incident to the vertex
@@ -165,11 +142,37 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> Vertex<E, V, VP> {
     }
 }
 
+impl<E: IndexType, V: IndexType, VP: VertexPayload + Transformable> Vertex<E, V, VP> {
+    /// Transforms the payload.
+    #[inline(always)]
+    pub fn transform(&mut self, transform: &VP::Trans) {
+        self.payload = self.payload.transform(transform);
+    }
+
+    /// Translates the payload.
+    #[inline(always)]
+    pub fn translate(&mut self, transform: &VP::Vec) {
+        self.payload = self.payload.translate(transform);
+    }
+
+    /// Rotates the payload.
+    #[inline(always)]
+    pub fn rotate(&mut self, transform: &VP::Rot) {
+        self.payload = self.payload.rotate(transform);
+    }
+
+    /// Scales the payload.
+    #[inline(always)]
+    pub fn scale(&mut self, transform: &VP::Vec) {
+        self.payload = self.payload.scale(transform);
+    }
+}
+
 impl<E: IndexType, V: IndexType, VP: VertexPayload> std::fmt::Display for Vertex<E, V, VP> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "{: >w$}) -{:-^w$}->; payload: {}",
+            "{: >w$}) -{:-^w$}->; payload: {:?}",
             self.id().index(),
             self.edge.index(),
             self.payload,
@@ -195,11 +198,17 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> Deletable<V> for Vertex<E, V
     }
 
     fn allocate() -> Self {
-        Self::default()
+        Self {
+            id: IndexType::max(),
+            edge: IndexType::max(),
+            payload: VP::allocate(),
+        }
     }
 }
 
-impl<E: IndexType, V: IndexType, VP: VertexPayload> Default for Vertex<E, V, VP> {
+impl<E: IndexType, V: IndexType, VP: VertexPayload + DefaultVertexPayload> Default
+    for Vertex<E, V, VP>
+{
     /// Creates a deleted vertex
     fn default() -> Self {
         Self {

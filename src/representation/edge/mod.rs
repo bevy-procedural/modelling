@@ -1,7 +1,7 @@
 mod iterator;
 mod payload;
 
-use super::{Deletable, Face, IndexType, Mesh, MeshType, Vertex};
+use super::{payload::HasPosition, Deletable, Face, IndexType, Mesh, MeshType, Vertex};
 pub use iterator::*;
 pub use payload::*;
 
@@ -221,17 +221,8 @@ impl<E: IndexType, V: IndexType, F: IndexType, EP: EdgePayload> HalfEdge<E, V, F
         v: V,
     ) -> bool {
         self.edges_face_back(mesh)
-            .find(|e| {
-                e.origin_id() == v
-    })
+            .find(|e| e.origin_id() == v)
             .is_some()
-    }
-
-    /// Returns the center of the edge
-    pub fn center<T: MeshType<E = E, V = V, F = F, EP = EP>>(&self, mesh: &Mesh<T>) -> T::Vec {
-        let v1 = self.origin(mesh).vertex().clone();
-        let v2 = self.target(mesh).vertex().clone();
-        (v1 + v2) * T::S::from(0.5)
     }
 
     /// Flips the direction of the edge and its twin
@@ -258,6 +249,18 @@ impl<E: IndexType, V: IndexType, F: IndexType, EP: EdgePayload> HalfEdge<E, V, F
         o.set_edge(twin_id);
         let t = mesh.vertex_mut(target);
         t.set_edge(e);
+    }
+}
+
+impl<E: IndexType, V: IndexType, F: IndexType, EP: EdgePayload> HalfEdge<E, V, F, EP> {
+    /// Returns the center of the edge
+    pub fn center<T: MeshType<E = E, V = V, F = F, EP = EP>>(&self, mesh: &Mesh<T>) -> T::Vec
+    where
+        T::VP: HasPosition<T::Vec, S = T::S>,
+    {
+        let v1 = self.origin(mesh).pos().clone();
+        let v2 = self.target(mesh).pos().clone();
+        (v1 + v2) * T::S::from(0.5)
     }
 }
 

@@ -5,7 +5,7 @@ use super::{
 };
 use crate::{
     math::{LineSegment2D, Scalar, Transform, Vector, Vector3D},
-    representation::MeshType,
+    representation::{payload::HasPosition, MeshType},
 };
 use itertools::Itertools;
 
@@ -16,16 +16,18 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
     ) -> impl Iterator<Item = T::Vec> + 'a + Clone + ExactSizeIterator
     where
         T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
     {
         self.vertices(mesh)
             .circular_tuple_windows::<(_, _, _)>()
-            .map(|(a, b, c)| (*b.vertex() - *a.vertex()).cross(&(*c.vertex() - *a.vertex())))
+            .map(|(a, b, c)| (*b.pos() - *a.pos()).cross(&(*c.pos() - *a.pos())))
     }
 
     /// Whether the face is convex. Ignores order.
     pub fn is_convex<T: MeshType<E = E, F = F, FP = FP>>(&self, mesh: &Mesh<T>) -> bool
     where
         T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
     {
         // TODO: is this correct?
         // TODO: collinear points cause problems
@@ -39,15 +41,16 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
     pub fn is_planar<T: MeshType<E = E, F = F, FP = FP>>(&self, mesh: &Mesh<T>, eps: T::S) -> bool
     where
         T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
     {
         // TODO: is this correct?
         // TODO: collinear points cause problems
 
-        let three: Vec<_> = self.vertices(mesh).take(3).map(|v| *v.vertex()).collect();
+        let three: Vec<_> = self.vertices(mesh).take(3).map(|v| *v.pos()).collect();
         let n = (three[1] - three[0]).cross(&(three[2] - three[0]));
 
         self.vertices(mesh).skip(2).all(|v| {
-            let v = *v.vertex();
+            let v = *v.pos();
             (v - three[0]).dot(&n).abs() < eps
         })
     }
@@ -56,6 +59,7 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
     pub fn is_planar2<T: MeshType<E = E, F = F, FP = FP>>(&self, mesh: &Mesh<T>) -> bool
     where
         T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
     {
         // TODO: eps?
         self.is_planar(mesh, T::S::EPS * 10.0.into())
@@ -72,6 +76,7 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
     pub fn has_self_intersections<T: MeshType<E = E, F = F, FP = FP>>(&self, mesh: &Mesh<T>) -> bool
     where
         T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
     {
         // TODO: Test this
         self.vertices_2d(mesh)
@@ -90,6 +95,7 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
     pub fn is_simple<T: MeshType<E = E, F = F, FP = FP>>(&self, mesh: &Mesh<T>) -> bool
     where
         T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
     {
         !self.has_holes() && !self.has_self_intersections(mesh)
     }
@@ -98,11 +104,12 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
     pub fn normal_naive<T: MeshType<E = E, F = F, FP = FP>>(&self, mesh: &Mesh<T>) -> T::Vec
     where
         T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
     {
         debug_assert!(self.is_planar2(mesh));
         debug_assert!(self.is_convex(mesh));
 
-        let three: Vec<_> = self.vertices(mesh).take(3).map(|v| *v.vertex()).collect();
+        let three: Vec<_> = self.vertices(mesh).take(3).map(|v| *v.pos()).collect();
         three[1].normal(three[0], three[2])
     }
 
@@ -112,6 +119,7 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
     pub fn normal<T: MeshType<E = E, F = F, FP = FP>>(&self, mesh: &Mesh<T>) -> T::Vec
     where
         T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
     {
         // TODO: overload this in a way that allows different dimensions
         // TODO: allows only for slight curvature...
@@ -119,7 +127,7 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
 
         let normal = T::Vec::sum(
             self.vertices(mesh)
-                .map(|v| *v.vertex())
+                .map(|v| *v.pos())
                 .circular_tuple_windows::<(_, _)>()
                 .map(|(a, b)| {
                     T::Vec::new(
@@ -153,6 +161,7 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
     ) -> impl Iterator<Item = (T::Vec2, T::V)> + Clone + ExactSizeIterator + 'a
     where
         T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
     {
         // TODO: overload this in a way that allows different dimensions
         assert!(T::Vec::dimensions() == 3);
@@ -163,7 +172,7 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
             z_axis.normalize(),
         );
         self.vertices(mesh)
-            .map(move |v| (rotation.apply(*v.vertex()).vec2(), v.id()))
+            .map(move |v| (rotation.apply(*v.pos()).vec2(), v.id()))
     }
 
     /// Get a vector of 2d vertices of the face rotated to the XY plane.
@@ -173,6 +182,7 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
     ) -> Vec<IndexedVertex2D<T::V, T::Vec2>>
     where
         T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
     {
         self.vertices_2d::<T>(mesh)
             .map(|(p, i)| IndexedVertex2D::<T::V, T::Vec2>::new(p, i))
@@ -180,7 +190,10 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
     }
 
     /// Naive method to get the center of the face by averaging the vertices.
-    pub fn center<T: MeshType<E = E, F = F, FP = FP>>(&self, mesh: &Mesh<T>) -> T::Vec {
-        T::Vec::mean(self.vertices(mesh).map(|v| *v.vertex()))
+    pub fn center<T: MeshType<E = E, F = F, FP = FP>>(&self, mesh: &Mesh<T>) -> T::Vec
+    where
+        T::VP: HasPosition<T::Vec, S = T::S>,
+    {
+        T::Vec::mean(self.vertices(mesh).map(|v| *v.pos()))
     }
 }

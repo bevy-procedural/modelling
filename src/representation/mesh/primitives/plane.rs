@@ -1,7 +1,7 @@
 use crate::{
     math::{Scalar, Vector},
     representation::{
-        payload::VertexPayload, DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
+        payload::HasPosition, DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
     },
 };
 
@@ -9,6 +9,7 @@ impl<T: MeshType> Mesh<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
+    T::VP: HasPosition<T::Vec, S = T::S>,
 {
     /// Generate a subdivided plane made of triangles with given width and height and n and m subdivisions
     pub fn triangle_plane(width: T::S, height: T::S, n: usize, m: usize) -> Self {

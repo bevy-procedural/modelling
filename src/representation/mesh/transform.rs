@@ -1,8 +1,10 @@
-use crate::representation::HalfEdge;
-
 use super::{Mesh, MeshType};
+use crate::representation::{payload::Transformable, HalfEdge};
 
-impl<T: MeshType> Mesh<T> {
+impl<T: MeshType> Mesh<T>
+where
+    T::VP: Transformable<Rot = T::Rot, Vec = T::Vec, Trans = T::Trans>,
+{
     /// Transforms all vertices in the mesh
     pub fn transform(&mut self, t: &T::Trans) -> &mut Self {
         for v in self.vertices.iter_mut() {
@@ -20,7 +22,7 @@ impl<T: MeshType> Mesh<T> {
     }
 
     /// Rotates all vertices in the mesh
-    pub fn rotate(&mut self, rotation: &T::Quat) -> &mut Self {
+    pub fn rotate(&mut self, rotation: &T::Rot) -> &mut Self {
         for v in self.vertices.iter_mut() {
             v.rotate(rotation);
         }
@@ -34,7 +36,9 @@ impl<T: MeshType> Mesh<T> {
         }
         self
     }
+}
 
+impl<T: MeshType> Mesh<T> {
     /// Flips the edge, i.e., swaps the origin and target vertices.
     pub fn flip_edge(&mut self, e: T::E) -> &mut Self {
         HalfEdge::flip(e, self);

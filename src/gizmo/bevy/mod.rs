@@ -16,7 +16,7 @@ use crate::representation::payload::VertexPayload;
 pub fn show_vertex_indices(texts: &mut ResMut<Text3dGizmos>, mesh: &BevyMesh3d) {
     mesh.vertices().for_each(|v| {
         texts.write(
-            Text3dGizmo::new(v.id().to_string(), v.vertex().clone())
+            Text3dGizmo::new(v.id().to_string(), v.pos().clone())
                 .with_color(Color::srgb(0.0, 0.0, 1.0)),
         );
     });

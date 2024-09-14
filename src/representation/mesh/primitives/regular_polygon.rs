@@ -1,7 +1,7 @@
 use crate::{
     math::Vector,
     representation::{
-        payload::VertexPayload, DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
+        payload::HasPosition, DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
     },
 };
 
@@ -9,6 +9,7 @@ impl<T: MeshType> Mesh<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
+    T::VP: HasPosition<T::Vec, S = T::S>,
 {
     /// create a regular polygon
     pub fn regular_polygon(radius: T::S, n: usize) -> Mesh<T> {

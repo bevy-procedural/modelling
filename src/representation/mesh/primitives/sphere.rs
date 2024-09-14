@@ -1,7 +1,7 @@
 use crate::{
     math::{HasZero, IndexType, Scalar, Vector, Vector3D},
     representation::{
-        payload::VertexPayload, DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
+        payload::HasPosition, DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
     },
 };
 
@@ -10,6 +10,7 @@ where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
     T::Vec: Vector3D<S = T::S>,
+    T::VP: HasPosition<T::Vec, S = T::S>,
 {
     /// Create a uv sphere with a given `radius`.
     /// `n` is the number of rings (including the two made of triangular faces).

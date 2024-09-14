@@ -28,7 +28,7 @@ pub trait Vector<S: Scalar>:
     /// The associated 4d vector type
     type Vec4: Vector4D<S = S>;
 
-    /// The rotation type used in the vector.
+    /// The data structure used for linear transformations of this vector.
     type Trans: Transform<S = S, Vec = Self>;
 
     /// Returns the number of dimensions.
@@ -63,12 +63,12 @@ pub trait Vector<S: Scalar>:
 
     /// Returns the coordinates as a tuple.
     fn vec2(&self) -> Self::Vec2 {
-        Self::Vec2::new(self.x(), self.y())
+        <Self::Vec2 as Vector2D>::new(self.x(), self.y())
     }
 
     /// Returns the coordinates as a tuple.
     fn vec3(&self) -> Self::Vec3 {
-        Self::Vec3::new(self.x(), self.y(), self.z())
+        <Self::Vec3 as Vector3D>::new(self.x(), self.y(), self.z())
     }
 
     /// Create a vector from one coordinate

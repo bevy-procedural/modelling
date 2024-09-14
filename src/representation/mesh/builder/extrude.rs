@@ -1,7 +1,8 @@
 use crate::{
     math::Transform,
     representation::{
-        payload::VertexPayload, DefaultEdgePayload, DefaultFacePayload, IndexType, Mesh, MeshType,
+        payload::{HasPosition, Transformable},
+        DefaultEdgePayload, DefaultFacePayload, IndexType, Mesh, MeshType,
     },
 };
 
@@ -9,6 +10,7 @@ impl<T: MeshType> Mesh<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
+    T::VP: Transformable<Trans = T::Trans>,
 {
     /// Extrudes the given edge in the given direction.
     /// Returns the closing face if it was created.
@@ -49,10 +51,35 @@ where
                 curved,
             );
         }
-
         return IndexType::max();
     }
 
+    /// Extrudes the given face in the given direction.
+    pub fn extrude_face(&mut self, f: T::F, direction: T::Vec, close: bool) -> T::F {
+        let e = self.face(f).edge_id();
+        self.remove_face(f);
+        return self.extrude(e, direction, close);
+    }
+
+    /// Extrudes the given face in the given direction.
+    pub fn extrude_face_ex(
+        &mut self,
+        f: T::F,
+        transform: T::Trans,
+        close: bool,
+        curved: bool,
+    ) -> T::F {
+        let e = self.face(f).edge_id();
+        self.remove_face(f);
+        return self.extrude_ex(e, transform, close, curved);
+    }
+}
+
+impl<T: MeshType> Mesh<T>
+where
+    T::EP: DefaultEdgePayload,
+    T::FP: DefaultFacePayload,
+{
     /// Create a vertex at the given position and connect the given face to that vertex.
     pub fn extrude_to_point(&mut self, e: T::E, p: T::VP) -> T::V {
         // TODO: implement this with loft n=1
@@ -75,7 +102,14 @@ where
         );
         point
     }
+}
 
+impl<T: MeshType> Mesh<T>
+where
+    T::EP: DefaultEdgePayload,
+    T::FP: DefaultFacePayload,
+    T::VP: HasPosition<T::Vec, S = T::S>,
+{
     /// Create a vertex by translating the center of the given face and connect the given face to that vertex.
     pub fn extrude_to_center_point(&mut self, e: T::E, translation: T::Vec) -> T::V {
         let f = if self.edge(e).is_boundary_self() {
@@ -86,26 +120,6 @@ where
         let p = T::VP::from_pos(self.face(f).center(self) + translation);
         self.remove_face(f);
         self.extrude_to_point(e, p)
-    }
-
-    /// Extrudes the given face in the given direction.
-    pub fn extrude_face(&mut self, f: T::F, direction: T::Vec, close: bool) -> T::F {
-        let e = self.face(f).edge_id();
-        self.remove_face(f);
-        return self.extrude(e, direction, close);
-    }
-
-    /// Extrudes the given face in the given direction.
-    pub fn extrude_face_ex(
-        &mut self,
-        f: T::F,
-        transform: T::Trans,
-        close: bool,
-        curved: bool,
-    ) -> T::F {
-        let e = self.face(f).edge_id();
-        self.remove_face(f);
-        return self.extrude_ex(e, transform, close, curved);
     }
 
     /// Assumes `start` is on the boundary of the edge.

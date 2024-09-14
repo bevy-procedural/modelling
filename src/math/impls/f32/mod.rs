@@ -1,6 +1,6 @@
 //! Plain f32 implementation of the mathematical traits.
 
-use crate::math::{HasZero, Scalar};
+use crate::math::{HasZero, Rotator, Scalar, Vector2D};
 
 impl HasZero for f32 {
     const ZERO: Self = 0.0;
@@ -11,7 +11,7 @@ impl Scalar for f32 {
     const EPS: Self = std::f32::EPSILON;
     const ONE: Self = 1.0;
     const PHI: Self = 1.61803398874989484820;
-    
+
     #[inline(always)]
     fn is_positive(self) -> bool {
         self.is_sign_positive()
@@ -72,3 +72,5 @@ impl Scalar for f32 {
         f32::is_nan(self)
     }
 }
+
+impl<V: Vector2D<S = f32>> Rotator<V> for f32 {}

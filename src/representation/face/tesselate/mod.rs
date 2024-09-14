@@ -2,11 +2,10 @@
 
 use super::{Face, FacePayload, Mesh};
 use crate::{
-    math::{Vector, Vector3D},
-    representation::{payload::VertexPayload, IndexType, MeshType},
+    math::Vector3D,
+    representation::{payload::HasPosition, IndexType, MeshType},
 };
 use itertools::Itertools;
-use std::collections::HashMap;
 
 mod convex;
 mod delaunay;
@@ -48,20 +47,6 @@ pub enum TriangulationAlgorithm {
     Auto,
 }
 
-/// The algorithm to use for generating normals.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum GenerateNormals {
-    /// Do not generate normals. (no vertex duplication)
-    None,
-
-    /// Generate flat normals per face. (full vertex duplication)
-    #[default]
-    Flat,
-
-    /// Generate only smooth normals. (no vertex duplication)
-    Smooth,
-}
-
 /// Meta information for debugging the tesselation algorithm
 #[derive(Debug, Clone, Default)]
 pub struct TesselationMeta<V: IndexType> {
@@ -70,7 +55,8 @@ pub struct TesselationMeta<V: IndexType> {
 }
 
 impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
-    fn triangulate_inner<T: MeshType<E = E, F = F, FP = FP>>(
+    /// Converts the face into a triangle list.
+    pub fn triangulate<T: MeshType<E = E, F = F, FP = FP>>(
         &self,
         mesh: &Mesh<T>,
         tri: &mut Triangulation<T::V>,
@@ -78,6 +64,7 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
         meta: &mut TesselationMeta<T::V>,
     ) where
         T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
     {
         let n = self.num_vertices(mesh);
         if n < 3 {
@@ -118,78 +105,6 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
             TriangulationAlgorithm::Heuristic => {
                 todo!("TriangulationAlgorithm::Heuristic is not implemented yet");
             }
-        }
-    }
-
-    /// Converts the face into a triangle list.
-    /// Might duplicate vertices when generating normals.
-    /// When vertices is empty, use the original vertex indices without duplication.
-    pub fn triangulate<T: MeshType<E = E, F = F, FP = FP>>(
-        &self,
-        mesh: &Mesh<T>,
-        vertices: &mut Vec<T::VP>,
-        indices: &mut Vec<T::V>,
-        algorithm: TriangulationAlgorithm,
-        generate_normals: GenerateNormals,
-        meta: &mut TesselationMeta<T::V>,
-    ) where
-        T::Vec: Vector3D<S = T::S>,
-    {
-        let mut tri = Triangulation::new(indices);
-
-        match generate_normals {
-            GenerateNormals::None => {
-                self.triangulate_inner(mesh, &mut tri, algorithm, meta);
-            }
-            GenerateNormals::Flat => {
-                let face_normal = self.normal(mesh).normalize();
-                let mut id_map = HashMap::new();
-                // generate a new list of vertices (full duplication)
-                self.vertices(mesh).for_each(|v| {
-                    let mut p = v.payload().clone();
-                    id_map.insert(v.id(), T::V::new(vertices.len()));
-                    p.set_normal(face_normal);
-                    vertices.push(p)
-                });
-                self.triangulate_inner(mesh, &mut tri, algorithm, meta);
-                tri.map_indices(&id_map);
-            }
-            /*GenerateNormals::Smooth => {
-                // this will fully duplicate vertices and calculate the normals for each vertex based on its neighbors
-                // unless the surface is curved, this is perfectly flat
-                // when curved, the results can be quite bad since based on the neighbors the normals can be quite different
-                let face_normal = self.normal(mesh).normalize();
-                let mut id_map = HashMap::new();
-                self.vertices(mesh)
-                    .circular_tuple_windows::<(_, _, _)>()
-                    .for_each(|(prev, v, next)| {
-                        let mut p = v.payload().clone();
-                        let mut vertex_normal = v
-                            .vertex()
-                            .normal(*prev.vertex(), *next.vertex())
-                            .normalize();
-                        println!("{:?} {:?}", vertex_normal, face_normal);
-                        if vertex_normal.dot(&face_normal) < 0.0.into() {
-                            vertex_normal = -vertex_normal;
-                        }
-                        p.set_normal(vertex_normal);
-                        id_map.insert(v.id(), T::V::new(vertices.len()));
-                        vertices.push(p)
-                    });
-                self.triangulate_inner(mesh, &mut tri, algorithm, meta);
-                tri.map_indices(&id_map);
-            }*/
-            GenerateNormals::Smooth => {
-                // only triangulate the face and calculate the normals for the full mesh afterwards
-                self.triangulate_inner(mesh, &mut tri, algorithm, meta);
-            }
-        }
-
-        assert!(indices.len() % 3 == 0, "{:?}", indices.len());
-        if vertices.is_empty() {
-            debug_assert!(indices.iter().all(|i| i.index() < mesh.max_vertex_index()));
-        } else {
-            debug_assert!(indices.iter().all(|i| i.index() < vertices.len()));
         }
     }
 }

@@ -1,7 +1,7 @@
 use super::Triangulation;
 use crate::{
     math::{Scalar, Vector, Vector3D},
-    representation::{Face, FacePayload, IndexType, Mesh, MeshType},
+    representation::{payload::HasPosition, Face, FacePayload, IndexType, Mesh, MeshType},
 };
 use spade::{ConstrainedDelaunayTriangulation, Point2, Triangulation as _};
 use std::collections::HashMap;
@@ -14,6 +14,7 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
         tri: &mut Triangulation<T::V>,
     ) where
         T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
     {
         debug_assert!(self.may_be_curved() || self.is_planar2(mesh));
         debug_assert!(!self.has_self_intersections(mesh));

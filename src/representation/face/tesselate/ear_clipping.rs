@@ -1,7 +1,7 @@
 use super::{Face, Mesh, Triangulation};
 use crate::{
     math::{Scalar, Vector2D, Vector3D},
-    representation::{FacePayload, IndexType, MeshType},
+    representation::{payload::HasPosition, FacePayload, IndexType, MeshType},
 };
 
 impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
@@ -17,6 +17,7 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
         randomize: bool,
     ) where
         T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
     {
         let eps = <T::S as Scalar>::EPS * 2.0.into();
         let mut success_since_fail = 0;

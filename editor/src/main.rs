@@ -19,7 +19,7 @@ use procedural_modelling::{
     representation::{
         bevy::BevyMesh3d,
         primitives::{generate_zigzag, random_star},
-        tesselate::{GenerateNormals, TesselationMeta, TriangulationAlgorithm},
+        tesselate::{TesselationMeta, TriangulationAlgorithm},
     },
 };
 use std::{env, f32::consts::PI};
@@ -176,15 +176,14 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
 
     //BevyMesh3d::cone(1.0, 1.0, 16)
 
-    BevyMesh3d::uv_sphere(2.0, 8, 8)
+    BevyMesh3d::uv_sphere(2.0, 32, 32)
 
     //BevyMesh3d::dodecahedron(1.0)
-    
+
     /*let mut mesh = BevyMesh3d::triangle_plane(5.0, 5.0, 8,8);
     //let mut mesh = BevyMesh3d::quad_plane(5.0, 5.0, 8, 8);
     mesh.flip_yz();
     mesh*/
-    
 }
 
 pub fn main() {
@@ -202,7 +201,7 @@ pub fn main() {
         }))
         .add_plugins(WireframePlugin)
         .insert_resource(WireframeConfig {
-            global: true,
+            global: false,
             default_color: Color::WHITE,
         })
         .register_type::<GlobalSettings>()
@@ -260,12 +259,13 @@ fn update_meshes(
     }
 
     for (handle, settings) in query.iter() {
-        let mesh = make_mesh(settings);
+        let mut mesh = make_mesh(settings);
         let mut meta = TesselationMeta::default();
+        mesh.generate_smooth_normals();
         mesh.bevy_set_ex(
             assets.get_mut(handle).unwrap(),
             TriangulationAlgorithm::Delaunay,
-            GenerateNormals::Flat,
+            true,
             &mut meta,
         );
 
@@ -296,7 +296,7 @@ fn setup_meshes(
         Name::new("Generated Shape"),
     ));
 
-    if true {
+    if false {
         show_vertex_indices(&mut texts, &mesh);
         show_edges(&mut texts, &mesh, 0.1);
         show_faces(&mut texts, &mesh);

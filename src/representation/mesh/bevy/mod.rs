@@ -2,16 +2,19 @@
 
 use super::{Mesh, MeshType};
 use crate::{
-    math::{IndexType, Vector3D},
+    math::IndexType,
     representation::{
-        payload::{bevy::BevyVertexPayload, VertexPayload},
-        tesselate::{GenerateNormals, TesselationMeta, TriangulationAlgorithm},
+        payload::{bevy::BevyVertexPayload, HasNormal, HasPosition},
+        tesselate::{TesselationMeta, TriangulationAlgorithm},
         EmptyEdgePayload, EmptyFacePayload,
     },
 };
-use bevy::render::{
-    mesh::{PrimitiveTopology, VertexAttributeValues},
-    render_asset::RenderAssetUsages,
+use bevy::{
+    math::{Quat, Vec2, Vec3, Vec4},
+    render::{
+        mesh::{PrimitiveTopology, VertexAttributeValues},
+        render_asset::RenderAssetUsages,
+    },
 };
 
 /// A mesh type for bevy with 3D vertices, 32 bit indices, 32 bit floats, and no face or edge payload (no normals etc.)
@@ -25,25 +28,19 @@ impl MeshType for BevyMeshType3d32 {
     type EP = EmptyEdgePayload;
     type VP = BevyVertexPayload;
     type FP = EmptyFacePayload;
-    type S = <BevyVertexPayload as VertexPayload>::S;
-    type Vec = <BevyVertexPayload as VertexPayload>::Vec;
-    type Vec2 = <BevyVertexPayload as VertexPayload>::Vec2;
-    type Vec3 = <BevyVertexPayload as VertexPayload>::Vec3;
-    type Vec4 = <BevyVertexPayload as VertexPayload>::Vec4;
-    type Trans = <BevyVertexPayload as VertexPayload>::Trans;
-    type Quat = <BevyVertexPayload as VertexPayload>::Quat;
+    type S = f32;
+    type Vec = Vec3;
+    type Vec2 = Vec2;
+    type Vec3 = Vec3;
+    type Vec4 = Vec4;
+    type Trans = bevy::transform::components::Transform;
+    type Rot = Quat;
 }
 
 /// A mesh with bevy 3D vertices
 pub type BevyMesh3d = Mesh<BevyMeshType3d32>;
 
-impl<T: MeshType<VP = BevyVertexPayload, Vec: Vector3D<S = T::S>>> Mesh<T> {
-    fn raw_vertices(&self) -> Vec<[f32; 3]> {
-        self.vertices()
-            .map(|v| v.payload().pos().to_array())
-            .collect()
-    }
-
+impl<T: MeshType<VP = BevyVertexPayload, Vec = Vec3, S = f32>> Mesh<T> {
     fn bevy_indices(&self, indices: &Vec<T::V>) -> bevy::render::mesh::Indices {
         if std::mem::size_of::<T::V>() == std::mem::size_of::<u32>() {
             bevy::render::mesh::Indices::U32(
@@ -77,7 +74,7 @@ impl<T: MeshType<VP = BevyVertexPayload, Vec: Vector3D<S = T::S>>> Mesh<T> {
         self.bevy_set_ex(
             mesh,
             TriangulationAlgorithm::Auto,
-            GenerateNormals::Flat,
+            false,
             &mut TesselationMeta::default(),
         );
     }
@@ -87,7 +84,7 @@ impl<T: MeshType<VP = BevyVertexPayload, Vec: Vector3D<S = T::S>>> Mesh<T> {
         &self,
         mesh: &mut bevy::render::mesh::Mesh,
         algo: TriangulationAlgorithm,
-        normals: GenerateNormals,
+        generate_flat_normals: bool,
         meta: &mut TesselationMeta<T::V>,
     ) {
         assert!(mesh.primitive_topology() == PrimitiveTopology::TriangleList);
@@ -96,16 +93,15 @@ impl<T: MeshType<VP = BevyVertexPayload, Vec: Vector3D<S = T::S>>> Mesh<T> {
 
         // use https://crates.io/crates/stats_alloc to measure memory usage
         //let now = Instant::now();
-        let (is, mut vs) = self.triangulate(algo, normals, meta);
+        let (is, vs) = if generate_flat_normals {
+            self.triangulate_and_generate_flat_normals_post(algo, meta)
+        } else {
+            self.triangulate(algo, meta)
+        };
         //let elapsed = now.elapsed();
         // println!("///////////////////\nTriangulation took {:.2?}", elapsed);
 
-        if vs.len() == 0 {
-            vs = self.vertices().map(|v| v.payload()).cloned().collect();
-        }
-
         mesh.insert_indices(self.bevy_indices(&is));
-
         mesh.insert_attribute(
             bevy::render::mesh::Mesh::ATTRIBUTE_POSITION,
             VertexAttributeValues::Float32x3(vs.iter().map(|vp| vp.pos().to_array()).collect()),
@@ -118,9 +114,6 @@ impl<T: MeshType<VP = BevyVertexPayload, Vec: Vector3D<S = T::S>>> Mesh<T> {
                     .collect(),
             ),
         );
-
-        // mesh.duplicate_vertices();
-        // mesh.compute_flat_normals();
     }
 
     /// Convert the mesh to a bevy mesh
@@ -135,10 +128,15 @@ impl<T: MeshType<VP = BevyVertexPayload, Vec: Vector3D<S = T::S>>> Mesh<T> {
         &self,
         usage: RenderAssetUsages,
         algo: TriangulationAlgorithm,
-        normals: GenerateNormals,
+        generate_flat_normals: bool,
     ) -> bevy::render::mesh::Mesh {
         let mut mesh = bevy::render::mesh::Mesh::new(PrimitiveTopology::TriangleList, usage);
-        self.bevy_set_ex(&mut mesh, algo, normals, &mut TesselationMeta::default());
+        self.bevy_set_ex(
+            &mut mesh,
+            algo,
+            generate_flat_normals,
+            &mut TesselationMeta::default(),
+        );
         mesh
     }
 }

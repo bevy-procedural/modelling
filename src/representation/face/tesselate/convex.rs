@@ -1,7 +1,7 @@
 use super::{Face, Mesh, Triangulation};
 use crate::{
     math::{Vector2D, Vector3D},
-    representation::{FacePayload, IndexType, MeshType},
+    representation::{payload::HasPosition, FacePayload, IndexType, MeshType},
 };
 use itertools::Itertools;
 
@@ -13,6 +13,7 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
         indices: &mut Triangulation<T::V>,
     ) where
         T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
     {
         debug_assert!(self.may_be_curved() || self.is_planar2(mesh));
         debug_assert!(self.is_convex(mesh));
@@ -32,6 +33,7 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
         indices: &mut Triangulation<T::V>,
     ) where
         T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
     {
         let vs: Vec<(T::Vec2, T::V)> = self.vertices_2d::<T>(mesh).collect();
         let vs1_convex = vs[1].0.convex(vs[0].0, vs[2].0);

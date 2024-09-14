@@ -27,7 +27,7 @@ fn setup_meshes(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let mesh = BevyMesh3d::cuboid(1.0, 1.0, 2.0);
+    let mesh = BevyMesh3d::cuboid(Vec3::new(1.0, 1.0, 2.0));
     println!("{}", mesh);
 
     commands.spawn((

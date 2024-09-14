@@ -108,7 +108,7 @@ impl Vector3D for Vec3 {
 impl Transform for TransformBevy {
     type S = f32;
     type Vec = Vec3;
-    type Rotator = Quat;
+    type Rot = Quat;
 
     #[inline(always)]
     fn identity() -> Self {

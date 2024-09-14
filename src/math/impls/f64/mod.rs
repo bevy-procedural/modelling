@@ -1,6 +1,6 @@
 //! Plain f64 implementation of the mathematical traits.
 
-use crate::math::{HasZero, Scalar};
+use crate::math::{HasZero, Rotator, Scalar, Vector2D};
 
 impl HasZero for f64 {
     const ZERO: Self = 0.0;
@@ -72,3 +72,5 @@ impl Scalar for f64 {
         f64::is_nan(self)
     }
 }
+
+impl<V: Vector2D<S = f64>> Rotator<V> for f64 {}

@@ -4,6 +4,7 @@ mod iterator;
 mod mesh_type;
 pub mod primitives;
 mod tesselate;
+mod normals;
 mod topology;
 mod transform;
 

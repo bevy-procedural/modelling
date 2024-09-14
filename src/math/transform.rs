@@ -1,5 +1,8 @@
 use super::{Scalar, Vector};
 
+/// Trait for the data structure needed to rotate the value of type V.
+pub trait Rotator<V> {}
+
 /// Trait for tansformations in 3d space.
 
 pub trait Transform: Clone + Copy + Default + std::fmt::Debug + 'static {
@@ -10,13 +13,13 @@ pub trait Transform: Clone + Copy + Default + std::fmt::Debug + 'static {
     type Vec: Vector<Self::S>;
 
     /// The rotation type used in the transformation.
-    type Rotator;
+    type Rot: Rotator<Self::Vec>;
 
     /// Returns the identity transformation.
     fn identity() -> Self;
 
     /// Constructs a transform from a rotation.
-    fn from_rotation(r: Self::Rotator) -> Self;
+    fn from_rotation(r: Self::Rot) -> Self;
 
     /// Constructs a transform from a rotation arc.
     fn from_rotation_arc(from: Self::Vec, to: Self::Vec) -> Self;

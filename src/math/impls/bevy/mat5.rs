@@ -1,6 +1,6 @@
 use bevy::math::Vec4;
 
-use crate::math::{HasZero, Scalar, Transform, Vector4D};
+use crate::math::{HasZero, Rotator, Scalar, Transform, Vector4D};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Mat5<S: Scalar> {
@@ -94,16 +94,21 @@ impl<S: Scalar> Default for Mat5<S> {
     }
 }
 
+// TODO: Implement Rotator for Mat5<f32>
+pub struct Vec4Rotator {}
+
+impl Rotator<Vec4> for Vec4Rotator {}
+
 impl Transform for Mat5<f32> {
     type Vec = Vec4;
     type S = f32;
-    type Rotator = (); // TODO
+    type Rot = Vec4Rotator;
 
     fn identity() -> Self {
         Mat5::IDENTITY
     }
 
-    fn from_rotation(_: Self::Rotator) -> Self {
+    fn from_rotation(_: Self::Rot) -> Self {
         todo!("Not implemented");
     }
 

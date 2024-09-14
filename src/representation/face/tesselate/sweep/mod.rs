@@ -1,7 +1,9 @@
 use super::{Face, Mesh, TesselationMeta, Triangulation};
 use crate::{
     math::Vector3D,
-    representation::{tesselate::IndexedVertex2D, FacePayload, IndexType, MeshType},
+    representation::{
+        payload::HasPosition, tesselate::IndexedVertex2D, FacePayload, IndexType, MeshType,
+    },
 };
 mod chain;
 mod interval;
@@ -54,6 +56,7 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
         meta: &mut TesselationMeta<T::V>,
     ) where
         T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
     {
         debug_assert!(self.may_be_curved() || self.is_planar2(mesh));
 

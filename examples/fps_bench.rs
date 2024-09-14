@@ -6,9 +6,7 @@ use bevy::{
     window::{PresentMode, WindowResolution},
 };
 use procedural_modelling::representation::{
-    bevy::BevyMesh3d,
-    primitives::generate_zigzag,
-    tesselate::{GenerateNormals, TriangulationAlgorithm},
+    bevy::BevyMesh3d, primitives::generate_zigzag, tesselate::TriangulationAlgorithm,
 };
 use std::time::Duration;
 
@@ -92,7 +90,7 @@ fn setup(
             }
             mesh_list.0.push((
                 name.to_string() + format!("_{:?}", algo).as_str(),
-                meshes.add(mesh.to_bevy_ex(RenderAssetUsages::all(), algo, GenerateNormals::Flat)),
+                meshes.add(mesh.to_bevy_ex(RenderAssetUsages::all(), algo, true)),
                 num_vertices,
             ));
         }

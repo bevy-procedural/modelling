@@ -1,8 +1,8 @@
 //! Bevy specific implementations for the vertex payload and 3d rotation.
 
-use super::VertexPayload;
+use super::{HasNormal, HasPosition, Transformable, VertexPayload};
 use crate::math::Transform;
-use bevy::math::{Quat, Vec2, Vec3, Vec4};
+use bevy::math::{Quat, Vec2, Vec3};
 
 /// Vertex Payload for Bevy with 3d position, normal, and uv.
 #[derive(Debug, Clone, PartialEq, Default, Copy)]
@@ -18,13 +18,21 @@ pub struct BevyVertexPayload {
 }
 
 impl VertexPayload for BevyVertexPayload {
+    fn allocate() -> Self {
+        Self {
+            position: Vec3::ZERO,
+            normal: Vec3::ZERO,
+            // TODO: Zero doesn't indicate invalid uv coordinates.
+            uv: Vec2::ZERO,
+        }
+    }
+}
+
+impl Transformable for BevyVertexPayload {
     type S = f32;
     type Vec = Vec3;
-    type Vec2 = Vec2;
-    type Vec3 = Vec3;
-    type Vec4 = Vec4;
     type Trans = bevy::transform::components::Transform;
-    type Quat = Quat;
+    type Rot = Quat;
 
     #[inline(always)]
     fn translate(&self, v: &Self::Vec) -> Self {
@@ -45,7 +53,7 @@ impl VertexPayload for BevyVertexPayload {
     }
 
     #[inline(always)]
-    fn rotate(&self, r: &Self::Quat) -> Self {
+    fn rotate(&self, r: &Self::Rot) -> Self {
         Self {
             position: r.mul_vec3(self.position),
             normal: r.mul_vec3(self.normal),
@@ -61,39 +69,42 @@ impl VertexPayload for BevyVertexPayload {
             uv: self.uv,
         }
     }
+}
+
+impl HasPosition<Vec3> for BevyVertexPayload {
+    type S = f32;
 
     #[inline(always)]
-    fn pos(&self) -> &Self::Vec {
-        &self.position
-    }
-
-    #[inline(always)]
-    fn normal(&self) -> &Self::Vec {
-        &self.normal
-    }
-
-    #[inline(always)]
-    fn set_normal(&mut self, normal: Self::Vec) {
-        self.normal = normal;
-    }
-
-    #[inline(always)]
-    fn has_normal(&self) -> bool {
-        self.normal != Vec3::ZERO
-    }
-
-    #[inline(always)]
-    fn from_pos(v: Self::Vec) -> Self {
+    fn from_pos(v: Vec3) -> Self {
         Self {
             position: v,
             normal: Vec3::ZERO,
             uv: Vec2::ZERO,
         }
     }
+    
+    #[inline(always)]
+    fn pos(&self) -> &Vec3 {
+        &self.position
+    }
 
     #[inline(always)]
-    fn set_pos(&mut self, v: Self::Vec) {
+    fn set_pos(&mut self, v: Vec3) {
         self.position = v;
+    }
+}
+
+impl HasNormal<Vec3> for BevyVertexPayload {
+    type S = f32;
+
+    #[inline(always)]
+    fn normal(&self) -> &Vec3 {
+        &self.normal
+    }
+
+    #[inline(always)]
+    fn set_normal(&mut self, normal: Vec3) {
+        self.normal = normal;
     }
 }
 

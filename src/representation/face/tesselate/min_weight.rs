@@ -1,7 +1,7 @@
 use super::{Face, Mesh, Triangulation};
 use crate::{
     math::{Vector, Vector3D},
-    representation::{FacePayload, IndexType, MeshType},
+    representation::{payload::HasPosition, FacePayload, IndexType, MeshType},
 };
 use std::collections::HashMap;
 
@@ -9,6 +9,7 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
     fn shorten<T: MeshType<E = E, F = F, FP = FP>>(&self, mesh: &Mesh<T>, indices: &mut Vec<T::V>)
     where
         T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
     {
         // TODO: This shortens edges producing invalid meshes!
         let vs: Vec<(T::Vec2, T::V)> = self.vertices_2d::<T>(mesh).collect();
@@ -66,6 +67,7 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
         indices: &mut Vec<T::V>,
     ) where
         T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
     {
         // TODO: O(n^3) algorithm http://www.ist.tugraz.at/_attach/Publish/Eaa19/Chapter_04_MWT_handout.pdf
         let mut best_indices = Vec::new();
@@ -80,9 +82,9 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
             let mut dist = 0.0.into();
 
             for i in (0..tmp_indices.len()).step_by(3) {
-                let a = mesh.vertex(tmp_indices[i]).vertex();
-                let b = mesh.vertex(tmp_indices[i + 1]).vertex();
-                let c = mesh.vertex(tmp_indices[i + 2]).vertex();
+                let a = mesh.vertex(tmp_indices[i]).pos();
+                let b = mesh.vertex(tmp_indices[i + 1]).pos();
+                let c = mesh.vertex(tmp_indices[i + 2]).pos();
                 dist += a.distance(b) + b.distance(c) + c.distance(a);
             }
 

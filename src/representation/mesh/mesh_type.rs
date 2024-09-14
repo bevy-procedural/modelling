@@ -1,5 +1,5 @@
 use crate::{
-    math::{IndexType, Quarternion, Scalar, Transform, Vector, Vector2D, Vector3D, Vector4D},
+    math::{IndexType, Scalar, Transform, Vector, Vector2D, Vector3D, Vector4D},
     representation::{payload::VertexPayload, EdgePayload, FacePayload},
 };
 
@@ -18,14 +18,7 @@ pub trait MeshType: Copy {
     type EP: EdgePayload;
 
     /// The type of the vertex payload.
-    type VP: VertexPayload<
-        S = Self::S,
-        Vec = Self::Vec,
-        Vec2 = Self::Vec2,
-        Vec3 = Self::Vec3,
-        Trans = Self::Trans,
-        Quat = Self::Quat,
-    >;
+    type VP: VertexPayload;
 
     /// The type of the face payload.
     type FP: FacePayload;
@@ -54,8 +47,8 @@ pub trait MeshType: Copy {
     /// The type of the transformation used for vertices.
     type Trans: Transform<S = Self::S, Vec = Self::Vec>;
 
-    /// The type of the quarternion used for vertices.
-    type Quat: Quarternion<S = Self::S, Vec3 = Self::Vec3>;
+    /// The type of the rotation data used for vertices.
+    type Rot;
 
     // TODO: Also provide shorthands for other derived types like HalfEdge, Vertex, Face
     // We could use https://crates.io/crates/supertrait

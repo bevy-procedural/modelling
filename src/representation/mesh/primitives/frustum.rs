@@ -1,6 +1,9 @@
 use crate::{
     math::{HasZero, IndexType, Transform, Vector, Vector3D},
-    representation::{DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType},
+    representation::{
+        payload::{HasPosition, Transformable},
+        DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
+    },
 };
 
 impl<T: MeshType> Mesh<T>
@@ -8,6 +11,8 @@ where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
     T::Vec: Vector3D<S = T::S>,
+    T::VP:
+        HasPosition<T::Vec, S = T::S> + Transformable<Vec = T::Vec, Rot = T::Rot, Trans = T::Trans>,
 {
     // Waiting for https://github.com/rust-lang/rust/issues/8995
     // type S = T::S;
@@ -42,7 +47,7 @@ where
             let mut mesh = Mesh::<T>::regular_polygon(r2, n);
             mesh.flip_yz()
                 .translate(&T::Vec::from_xyz(z, h2, z))
-                 .extrude_ex(
+                .extrude_ex(
                     T::E::new(1),
                     T::Trans::from_translation(T::Vec::from_xyz(z, -h, z))
                         .with_scale(T::Vec::from_xyz(r1 / r2, 1.0.into(), r1 / r2)),

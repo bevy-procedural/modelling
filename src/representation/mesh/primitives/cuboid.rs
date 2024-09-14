@@ -1,7 +1,7 @@
 use crate::{
     math::{Vector, Vector3D},
     representation::{
-        payload::VertexPayload, DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
+        payload::HasPosition, DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
     },
 };
 
@@ -9,6 +9,7 @@ impl<T: MeshType> Mesh<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
+    T::VP: HasPosition<T::Vec, S = T::S>,
 {
     /// create a (rectangular) cuboid with side lengths `x`, `y`, and `z`
     pub fn cuboid(size: T::Vec3) -> Mesh<T> {
