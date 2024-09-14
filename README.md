@@ -182,10 +182,10 @@ The package supports different triangulation algorithms. The robustness and rend
 
 | Algorithm   | Requirements | Worst Case | Circle 10        | Circle 100         | Circle 1000       | Circle 10000      | ZigZag 1000       | ZigZag 10000      |
 | ----------- | ------------ | ---------- | ---------------- | ------------------ | ----------------- | ----------------- | ----------------- | ----------------- |
-| Fan         | Convex       | n          | 0.258µs (151fps) | 1.781µs¹ (118fps)² | 17.19µs (52.4fps) | 172.4µs (12.5fps) | -                 | -                 |
-| EarClipping | Simple       | n^2        | 0.792µs (150fps) | 35.32µs (118fps)   | 3.164ms (52.1fps) | 3.402s (11.4fps)  | 48.05ms (35.6fps) | 46.03s (9.51fps)  |
-| Sweep       | None         | n log n    | 1.582µs (151fps) | 13.22µs (118fps)   | 139.0µs (44.2fps) | 1.552ms (9.87fps) | 403.1µs (42.8fps) | 4.292ms (9.87fps) |
-| Delaunay    | Simple       | n log n    | 3.037µs (151fps) | 34.00µs (134fps)   | 339.5µs (132fps)  | 3.725ms (129fps)  | 1.796ms (42.1fps) | 166.0ms (9.33fps) |
+| Fan         | Convex       | n          | 0.258µs (151fps) | 2.419µs¹ (118fps)² | 15.41µs (52.4fps) | 161.8µs (12.5fps) | -                 | -                 |
+| EarClipping | Simple       | n^2        | 0.746µs (150fps) | 21.75µs (118fps)   | 1.746ms (52.1fps) | 3.276s (11.4fps)  | 49.10ms (35.6fps) | 46.03s (9.51fps)  |
+| Sweep       | None         | n log n    | 1.584µs (151fps) | 13.58µs (118fps)   | 142.4µs (44.2fps) | 1.556ms (9.87fps) | 402.3µs (42.8fps) | 4.334ms (9.87fps) |
+| Delaunay    | Simple       | n log n    | 2.778µs (151fps) | 29.89µs (134fps)   | 308.5µs (132fps)  | 3.296ms (129fps)  | 3.002ms (42.1fps) | 158.7ms (9.33fps) |
 | EdgeFlip    | Simple       | n^3        |                  |                    |                   |                   |                   |
 | MinWeight   | Simple       | 2^n        |                  |                    |                   |                   |                   |
 | Heuristic   | Simple       | n log n    |                  |                    |                   |                   |                   |

@@ -87,7 +87,7 @@ impl<T: MeshType> Mesh<T> {
 
     /// Returns the maximum vertex index in the mesh
     pub fn max_vertex_index(&self) -> usize {
-        self.vertices.max_ind()
+        self.vertices.capacity()
     }
 
     /// Returns the number of vertices in the mesh

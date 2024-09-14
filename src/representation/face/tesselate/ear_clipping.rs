@@ -100,7 +100,10 @@ mod tests {
     use super::*;
     use crate::{
         math::{impls::bevy::Bevy2DPolygon, Polygon, Scalar},
-        representation::{bevy::BevyMesh3d, primitives::random_star, tesselate::IndexedVertex2D},
+        representation::{
+            bevy::BevyMesh3d, payload::bevy::BevyVertexPayload, primitives::random_star,
+            tesselate::IndexedVertex2D,
+        },
     };
     use bevy::math::{Vec2, Vec3};
 
@@ -112,10 +115,9 @@ mod tests {
         let mut indices = Vec::new();
         let mut tri = Triangulation::new(&mut indices);
         let m = BevyMesh3d::polygon(
-            &vec2s
+            vec2s
                 .iter()
-                .map(|v| Vec3::new(v.vec.x, 0.0, v.vec.y))
-                .collect::<Vec<_>>(),
+                .map(|v| BevyVertexPayload::from_pos(Vec3::new(v.vec.x, 0.0, v.vec.y))),
         );
         m.face(0).ear_clipping(&m, &mut tri, false);
         tri.verify_full::<Vec2, Bevy2DPolygon>(vec2s);
@@ -164,7 +166,8 @@ mod tests {
     #[test]
     fn earcut_fuzz() {
         for _ in 1..10 {
-            let vec2s = IndexedVertex2D::from_vector(random_star::<Vec2>(5, 20, f32::EPS, 0.01));
+            let vec2s =
+                IndexedVertex2D::from_vector(random_star::<Vec2>(5, 20, f32::EPS, 0.01).collect());
 
             println!(
                 "vec2s: {:?}",

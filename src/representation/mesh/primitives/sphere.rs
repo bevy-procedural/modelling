@@ -61,19 +61,18 @@ where
         let iphi = radius / T::S::PHI;
         let one = radius;
         let zero = T::S::ZERO;
+        let make_vp = |x, y, z| T::VP::from_pos(T::Vec::from_xyz(x, y, z));
 
-        let mut mesh = Self::polygon(&[
-            T::Vec::from_xyz(one, one, one),    // orange
-            T::Vec::from_xyz(zero, phi, iphi),  // green
-            T::Vec::from_xyz(-one, one, one),   // orange
-            T::Vec::from_xyz(-iphi, zero, phi), // blue
-            T::Vec::from_xyz(iphi, zero, phi),  // blue
+        let mut mesh = Self::polygon([
+            make_vp(one, one, one),    // orange
+            make_vp(zero, phi, iphi),  // green
+            make_vp(-one, one, one),   // orange
+            make_vp(-iphi, zero, phi), // blue
+            make_vp(iphi, zero, phi),  // blue
         ]);
 
         // TODO: polygon should return something more helpful
         let start = mesh.shared_edge_id(T::V::new(1), T::V::new(0)).unwrap();
-
-        let make_vp = |x, y, z| T::VP::from_pos(T::Vec::from_xyz(x, y, z));
         let start_middle = mesh.loft_polygon(
             start,
             3,

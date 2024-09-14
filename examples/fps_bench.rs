@@ -6,7 +6,8 @@ use bevy::{
     window::{PresentMode, WindowResolution},
 };
 use procedural_modelling::representation::{
-    bevy::BevyMesh3d, primitives::generate_zigzag, tesselate::TriangulationAlgorithm,
+    bevy::BevyMesh3d, payload::bevy::BevyVertexPayload, primitives::generate_zigzag,
+    tesselate::TriangulationAlgorithm,
 };
 use std::time::Duration;
 
@@ -55,10 +56,7 @@ fn main() {
 
 fn zigzag(n: usize) -> BevyMesh3d {
     BevyMesh3d::polygon(
-        &generate_zigzag::<Vec2>(n)
-            .iter()
-            .map(|v| Vec3::new(v.x, v.y, 0.0))
-            .collect::<Vec<_>>(),
+        generate_zigzag::<Vec2>(n).map(|v| BevyVertexPayload::from_pos(Vec3::new(v.x, v.y, 0.0))),
     )
 }
 

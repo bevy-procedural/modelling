@@ -18,6 +18,7 @@ use procedural_modelling::{
     },
     representation::{
         bevy::BevyMesh3d,
+        payload::{bevy::BevyVertexPayload, HasPosition},
         primitives::{generate_zigzag, random_star},
         tesselate::{TesselationMeta, TriangulationAlgorithm},
     },
@@ -102,37 +103,40 @@ fn _make_spiral(settings: &MeshSettings) -> BevyMesh3d {
 }
 
 fn _make_2d_merge_join() -> BevyMesh3d {
-    let mut mesh = BevyMesh3d::polygon(&[
-        // Front edge
-        Vec3::new(1.0, 0.0, -1.0),
-        Vec3::new(0.5, 0.0, 0.9),
-        Vec3::new(0.0, 0.0, -0.8),
-        Vec3::new(-0.6, 0.0, -1.0),
-        Vec3::new(-0.8, 0.0, -0.8),
-        Vec3::new(-1.0, 0.0, -1.0),
-        // Back edge
-        Vec3::new(-1.0, 0.0, 1.0),
-        Vec3::new(0.0, 0.0, 0.8),
-        Vec3::new(0.6, 0.0, 1.0),
-        Vec3::new(0.8, 0.0, 0.8),
-        Vec3::new(1.0, 0.0, 1.0),
-    ]);
+    let mut mesh = BevyMesh3d::polygon(
+        [
+            // Front edge
+            (1.0, -1.0),
+            (0.5, 0.9),
+            (0.0, -0.8),
+            (-0.6, -1.0),
+            (-0.8, -0.8),
+            (-1.0, -1.0),
+            // Back edge
+            (-1.0, 1.0),
+            (0.0, 0.8),
+            (0.6, 1.0),
+            (0.8, 0.8),
+            (1.0, 1.0),
+        ]
+        .iter()
+        .map(|(x, z)| BevyVertexPayload::from_pos(Vec3::new(*x, 0.0, *z))),
+    );
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh
 }
 
 fn _make_hell_8() -> BevyMesh3d {
     let mut mesh = BevyMesh3d::polygon(
-        &[
-            [4.5899906, 0.0],
-            [0.7912103, 0.7912103],
-            [-4.2923173e-8, 0.9819677],
-            [-1.2092295, 1.2092295],
-            [-0.835097, -7.30065e-8],
+        [
+            (4.5899906, 0.0),
+            (0.7912103, 0.7912103),
+            (-4.2923173e-8, 0.9819677),
+            (-1.2092295, 1.2092295),
+            (-0.835097, -7.30065e-8),
         ]
         .iter()
-        .map(|v| Vec3::new(v[0], 0.0, v[1]))
-        .collect::<Vec<_>>(),
+        .map(|(x, z)| BevyVertexPayload::from_pos(Vec3::new(*x, 0.0, *z))),
     );
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh
@@ -146,10 +150,8 @@ fn _make_2d_star(_settings: &MeshSettings) -> BevyMesh3d {
 
 fn _make_2d_random_star() -> BevyMesh3d {
     let mut mesh = BevyMesh3d::polygon(
-        &random_star::<Vec2>(5, 6, 0.1, 1.0)
-            .iter()
-            .map(|v| Vec3::new(v[0], 0.0, v[1]))
-            .collect::<Vec<_>>(),
+        random_star::<Vec2>(5, 6, 0.1, 1.0)
+            .map(|v| BevyVertexPayload::from_pos(Vec3::new(v.x, 0.0, v.y))),
     );
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh
@@ -158,10 +160,7 @@ fn _make_2d_random_star() -> BevyMesh3d {
 fn _make_2d_zigzag() -> BevyMesh3d {
     let n = 50;
     let mut mesh = BevyMesh3d::polygon(
-        &generate_zigzag::<Vec2>(n)
-            .iter()
-            .map(|v| Vec3::new(v[0], 0.0, -v[1]))
-            .collect::<Vec<_>>(),
+        generate_zigzag::<Vec2>(n).map(|v| BevyVertexPayload::from_pos(Vec3::new(v.x, 0.0, -v.y))),
     );
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh
@@ -169,14 +168,24 @@ fn _make_2d_zigzag() -> BevyMesh3d {
 
 fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     //_make_hell_8()
-    //BevyMesh3d::regular_polygon(1.0, 1000)
+    //BevyMesh3d::regular_polygon(1.0, 10)
     //_make_spiral(_settings)
     //_make_2d_zigzag()
     //BevyMesh3d::octahedron(1.0)
 
     //BevyMesh3d::cone(1.0, 1.0, 16)
+    BevyMesh3d::prism(
+        (0..10).map(|i| {
+            BevyVertexPayload::from_pos(Vec3::new(
+                (i as f32 / 5.0 * PI).sin(),
+                0.0,
+                (i as f32 / 5.0 * PI).cos(),
+            ))
+        }),
+        Vec3::new(0.0, 1.0, 0.0),
+    )
 
-    BevyMesh3d::uv_sphere(2.0, 32, 32)
+    //BevyMesh3d::uv_sphere(2.0, 32, 32)
 
     //BevyMesh3d::dodecahedron(1.0)
 

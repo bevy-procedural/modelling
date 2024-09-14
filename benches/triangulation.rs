@@ -7,8 +7,9 @@ use bevy::{
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use procedural_modelling::representation::{
     bevy::BevyMesh3d,
+    payload::{bevy::BevyVertexPayload, HasPosition},
     primitives::generate_zigzag,
-    tesselate::{GenerateNormals, TriangulationAlgorithm},
+    tesselate::TriangulationAlgorithm,
 };
 use std::{f32::consts::PI, time::Duration};
 
@@ -30,10 +31,7 @@ fn _make_spiral() -> BevyMesh3d {
 
 fn zigzag(n: usize) -> BevyMesh3d {
     BevyMesh3d::polygon(
-        &generate_zigzag::<Vec2>(n)
-            .iter()
-            .map(|v| Vec3::new(v.x, v.y, 0.0))
-            .collect::<Vec<_>>(),
+        generate_zigzag::<Vec2>(n).map(|v| BevyVertexPayload::from_pos(Vec3::new(v.x, v.y, 0.0))),
     )
 }
 
@@ -45,13 +43,13 @@ fn bench_triangulation(c: &mut Criterion) {
 
     for (name, mesh) in [
         //("Spiral", _make_spiral()),
-        //("Star", MeshVec3::regular_star(2.0, 0.9, 1000)),
+        //("Star", BevyMesh3d::regular_star(2.0, 0.9, 1000)),
         ("Circle10", BevyMesh3d::regular_star(1.0, 1.0, 10)),
         ("Circle100", BevyMesh3d::regular_star(1.0, 1.0, 100)),
         ("Circle1000", BevyMesh3d::regular_star(1.0, 1.0, 1000)),
-        //("Circle10000", MeshVec3::regular_star(1.0, 1.0, 10000)),
+        ("Circle10000", BevyMesh3d::regular_star(1.0, 1.0, 10000)),
         ("Zigzag1001", zigzag(1000)),
-        //("Zigzag10001", zigzag(10000)),
+        ("Zigzag10001", zigzag(10000)),
     ] {
         let mut create_bench = |f_name: &str, algo: TriangulationAlgorithm| {
             group.bench_with_input(
@@ -60,7 +58,7 @@ fn bench_triangulation(c: &mut Criterion) {
                 |b, para: &BevyMesh3d| {
                     b.iter(|| {
                         let mut meta = Default::default();
-                        para.triangulate(algo, GenerateNormals::None, &mut meta);
+                        para.triangulate(algo, &mut meta);
                     })
                 },
             );
@@ -68,8 +66,8 @@ fn bench_triangulation(c: &mut Criterion) {
 
         create_bench("Sweep", TriangulationAlgorithm::Sweep);
         create_bench("Delaunay", TriangulationAlgorithm::Delaunay);
-        //create_bench("Ears", TriangulationAlgorithm::EarClipping);
-        //create_bench("Fan", TriangulationAlgorithm::Fan);
+        create_bench("Ears", TriangulationAlgorithm::EarClipping);
+        create_bench("Fan", TriangulationAlgorithm::Fan);
     }
 
     group.finish();

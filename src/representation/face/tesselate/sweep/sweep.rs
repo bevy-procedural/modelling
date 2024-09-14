@@ -285,12 +285,7 @@ impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
     }
 
     /// Handle a regular vertex
-    fn regular(
-        &mut self,
-        event: &EventPoint<Vec2>,
-        meta: &mut SweepMeta<V>,
-        undecisive: bool,
-    ) {
+    fn regular(&mut self, event: &EventPoint<Vec2>, meta: &mut SweepMeta<V>, undecisive: bool) {
         // PERF: find whether to expect the left or right side beforehand. The lookup is expensive.
 
         if let Some(mut interval) = self.sls.remove_left(event.here, &self.vec2s) {
@@ -463,10 +458,9 @@ mod tests {
     #[test]
     fn sweep_zigzag() {
         verify_triangulation(
-            &generate_zigzag(100)
-                .iter()
+            &generate_zigzag::<Vec2>(100)
                 .enumerate()
-                .map(|(i, v)| IndexedVertex2D::new(*v, i))
+                .map(|(i, v)| IndexedVertex2D::new(v, i))
                 .collect(),
         );
     }
@@ -582,7 +576,8 @@ mod tests {
     #[test]
     fn sweep_fuzz() {
         for _ in 1..10 {
-            let vec2s = IndexedVertex2D::from_vector(random_star::<Vec2>(5, 20, f32::EPS, 0.01));
+            let vec2s =
+                IndexedVertex2D::from_vector(random_star::<Vec2>(5, 20, f32::EPS, 0.01).collect());
 
             println!(
                 "vec2s: {:?}",

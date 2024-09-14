@@ -15,9 +15,10 @@ where
     pub fn cuboid(size: T::Vec3) -> Mesh<T> {
         //assert!(P::dimensions() == 3, "cuboids exist only in 3d space");
 
-        let (x, y, z) = size.tuple();
+        let (x, y, z) = (size * T::S::from(0.5)).tuple();
 
         // TODO: use the loft function!
+        // Move this to the box example; demonstrate different builder techniques. This is just a prismatoid.
 
         let mut mesh = Mesh::<T>::new();
         let make = |x: T::S, y: T::S, z: T::S| T::VP::from_pos(T::Vec::from_xyz(x, y, z));

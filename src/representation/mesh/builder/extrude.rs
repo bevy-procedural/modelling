@@ -14,6 +14,7 @@ where
 {
     /// Extrudes the given edge in the given direction.
     /// Returns the closing face if it was created.
+    /// TODO: remove close, since closing always makes since. This is basically loft + close.
     pub fn extrude(&mut self, e: T::E, direction: T::Vec, close: bool) -> T::F {
         self.extrude_ex(e, T::Trans::from_translation(direction), close, false)
     }

@@ -83,7 +83,7 @@ impl<T: Deletable<I>, I: IndexType> DeletableVector<T, I> {
     }
 
     /// Returns the maximum index of the non-deleted elements.
-    pub fn max_ind(&self) -> usize {
+    pub fn capacity(&self) -> usize {
         self.data.len()
     }
 

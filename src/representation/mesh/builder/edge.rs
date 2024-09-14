@@ -278,6 +278,8 @@ where
 
     /// Generate a path from the finite iterator of positions and return the halfedges pointing to the first and last vertex.
     pub fn insert_path(&mut self, vp: impl IntoIterator<Item = T::VP>) -> (T::E, T::E) {
+        // TODO: create this directly without the builder functions
+
         let mut iter = vp.into_iter();
         let p0 = iter.next().expect("Path must have at least one vertex");
         let p1 = iter.next().expect("Path must have at least two vertices");
