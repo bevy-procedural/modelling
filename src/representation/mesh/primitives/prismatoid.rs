@@ -10,17 +10,31 @@ impl<T: MeshType> Mesh<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
-    T::VP: Transformable<Vec = T::Vec, Rot = T::Rot, Trans = T::Trans>,
+    T::VP:
+        Transformable<Vec = T::Vec, Rot = T::Rot, Trans = T::Trans> + HasPosition<T::Vec, S = T::S>,
+    T::Vec: Vector3D<S = T::S>,
 {
     // Waiting for https://github.com/rust-lang/rust/issues/8995
     // type S = T::S;
 
-    /// TODO: Instead, generate a prism or antirprism
-    pub fn prism(vp: impl IntoIterator<Item = T::VP>, height: T::Vec) -> Mesh<T> {
-        let mut mesh = Mesh::new();
-        let first = mesh.insert_polygon(vp);
-        mesh.extrude(mesh.edge(first).twin_id(), height, true);
+    pub fn prism(vp: impl IntoIterator<Item = T::VP>, height: T::S) -> Mesh<T> {
+        let mut mesh = Mesh::<T>::new();
+        mesh.insert_prism(vp, height);
         mesh
+    }
+
+    pub fn insert_prism(&mut self, vp: impl IntoIterator<Item = T::VP>, height: T::S) -> &mut Self {
+        let first = self.insert_polygon(vp);
+        let f = self
+            .edge(first)
+            .face(self)
+            .expect("The polygon must have a face");
+        let normal = f.normal(self);
+        self.extrude(
+            self.edge(first).twin_id(),
+            T::Trans::from_translation(-normal * height),
+        );
+        self
     }
 
     /*pub fn antiprism(vp: impl IntoIterator<Item = T::VP>, height: T::Vec) -> Mesh<T> {
@@ -51,7 +65,9 @@ where
         HasPosition<T::Vec, S = T::S> + Transformable<Vec = T::Vec, Rot = T::Rot, Trans = T::Trans>,
 {
     pub fn regular_prism(r1: T::S, r2: T::S, h: T::S, n: usize) -> Mesh<T> {
-        let z = T::S::ZERO;
+        todo!("regular_prism")
+
+        /*let z = T::S::ZERO;
 
         assert!(r1 >= z && r2 >= z && h > z && n >= 3);
         assert!(r2 > z || r1 > z, "Must have positive volume");
@@ -89,7 +105,7 @@ where
                     false,
                 );
             mesh
-        }
+        }*/
     }
 
     /*pub fn uniform_antiprism(r: T::S, h: T::S, n: usize) -> Mesh<T> {

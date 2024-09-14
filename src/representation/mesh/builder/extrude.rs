@@ -12,67 +12,25 @@ where
     T::FP: DefaultFacePayload,
     T::VP: Transformable<Trans = T::Trans>,
 {
-    /// Extrudes the given edge in the given direction.
-    /// Returns the closing face if it was created.
-    /// TODO: remove close, since closing always makes since. This is basically loft + close.
-    pub fn extrude(&mut self, e: T::E, direction: T::Vec, close: bool) -> T::F {
-        self.extrude_ex(e, T::Trans::from_translation(direction), close, false)
-    }
-
     /// Extrudes the given edge using the given transformation.
-    /// Returns the closing face if it was created.
-    pub fn extrude_ex(&mut self, e: T::E, transform: T::Trans, close: bool, curved: bool) -> T::F {
+    /// Returns an edge on the boundary of the extrusion.
+    pub fn extrude(&mut self, e: T::E, transform: T::Trans) -> T::E {
         assert!(self.edge(e).is_boundary_self());
-
-        // TODO: use the loft function!
-        // TODO: Also, make an intermediate version that makes closed lofts and version that maps the vertices instead of taking an iterator
-
-        let first = self.edge(e).origin_id();
-        let mut last = first;
-        let mut second = first;
-        let edges = self.edge(e).edges_face_back(self).collect::<Vec<_>>();
-        for i in 0..edges.len() {
-            let p = edges[i].origin(self).payload().transform(&transform);
-            let curr = self.add_vertex_via_vertex_default(last, p).0;
-            if i > 0 {
-                self.close_face_vertices_default(last, curr, edges[i].origin_id(), curved);
-            } else {
-                second = curr;
-            }
-            if i == edges.len() - 1 {
-                self.close_face_vertices_default(edges[i].origin_id(), curr, second, curved);
-            }
-            last = curr;
-        }
-
-        if close {
-            return self.close_hole(
-                self.shared_edge_id(second, last).unwrap(),
-                Default::default(),
-                curved,
-            );
-        }
-        return IndexType::max();
+        // TODO: avoid collecting
+        let vps: Vec<_> = self
+            .edges_back_from(self.edge(e).next_id())
+            .map(|v| v.origin(self).payload().transform(&transform))
+            .collect();
+        let start = self.loft_polygon(e, 2, 2, vps);
+        self.close_hole(start, Default::default(), false);
+        start
     }
 
-    /// Extrudes the given face in the given direction.
-    pub fn extrude_face(&mut self, f: T::F, direction: T::Vec, close: bool) -> T::F {
+    /// Extrudes the given face using the given transformation.
+    pub fn extrude_face(&mut self, f: T::F, transform: T::Trans) -> T::E {
         let e = self.face(f).edge_id();
         self.remove_face(f);
-        return self.extrude(e, direction, close);
-    }
-
-    /// Extrudes the given face in the given direction.
-    pub fn extrude_face_ex(
-        &mut self,
-        f: T::F,
-        transform: T::Trans,
-        close: bool,
-        curved: bool,
-    ) -> T::F {
-        let e = self.face(f).edge_id();
-        self.remove_face(f);
-        return self.extrude_ex(e, transform, close, curved);
+        return self.extrude(e, transform);
     }
 }
 

@@ -1,5 +1,5 @@
 use super::{Mesh, MeshType};
-use crate::representation::{Deletable, Face, HalfEdge, Vertex};
+use crate::representation::{Deletable, Face, HalfEdge, IncidentToFaceBackIterator, IncidentToFaceIterator, Vertex};
 
 impl<T: MeshType> Mesh<T> {
     /// Returns an iterator over all non-deleted vertices
@@ -40,5 +40,13 @@ impl<T: MeshType> Mesh<T> {
     /// Returns an iterator over all non-deleted faces
     pub fn faces(&self) -> impl Iterator<Item = &Face<T::E, T::F, T::FP>> {
         self.faces.iter()
+    }
+
+    pub fn edges_from<'a>(&'a self, e: T::E) -> IncidentToFaceIterator<'a, T> {
+        IncidentToFaceIterator::<'a, T>::new(*self.edge(e), self)
+    }
+
+    pub fn edges_back_from<'a>(&'a self, e: T::E) -> IncidentToFaceBackIterator<'a, T> {
+        IncidentToFaceBackIterator::<'a, T>::new(*self.edge(e), self)
     }
 }

@@ -95,9 +95,9 @@ fn _make_spiral(settings: &MeshSettings) -> BevyMesh3d {
         .translate(&Vec3::new(0.0, -0.99, 0.0));
     let trans =
         Transform::from_rotation(Quat::from_rotation_y(settings.rot)).with_translation(settings.d1);
-    let mut f = mesh.extrude_ex(mesh.shared_edge(1, 0).unwrap().id(), trans, true, true);
+    let mut f = mesh.extrude(mesh.shared_edge(1, 0).unwrap().id(), trans);
     for _ in 0..settings.segs {
-        f = mesh.extrude_face_ex(f, trans, true, true);
+        f = mesh.extrude_face(f, trans);
     }
     mesh
 }
@@ -175,7 +175,7 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
 
     //BevyMesh3d::cone(1.0, 1.0, 16)
 
-    /*BevyMesh3d::prism(
+    BevyMesh3d::prism(
         (0..10).map(|i| {
             BevyVertexPayload::from_pos(Vec3::new(
                 (i as f32 / 5.0 * PI).sin(),
@@ -183,16 +183,16 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
                 (i as f32 / 5.0 * PI).cos(),
             ))
         }),
-        Vec3::new(0.0, 1.0, 0.0),
-    )*/
+        0.4,
+    )
 
     //bBevyMesh3d::uv_sphere(2.0, 32, 32)
 
     //BevyMesh3d::dodecahedron(1.0)
 
-    let mut mesh = BevyMesh3d::hex_plane(10, 8);
+    /*let mut mesh = BevyMesh3d::hex_plane(10, 8);
     mesh.flip_yz();
-    mesh
+    mesh*/
 }
 
 pub fn main() {
