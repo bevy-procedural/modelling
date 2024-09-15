@@ -41,6 +41,9 @@ pub trait Transformable {
 
     /// Returns the rotated clone of the payload.
     fn rotate(&self, r: &Self::Rot) -> Self;
+
+    /// Interpolates between two payloads.
+    fn lerp(&self, other: &Self, t: Self::S) -> Self;
 }
 
 /// Indicates that the vertex payload has a position vector.

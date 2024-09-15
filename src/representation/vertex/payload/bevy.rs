@@ -69,6 +69,16 @@ impl Transformable for BevyVertexPayload {
             uv: self.uv,
         }
     }
+
+    #[inline(always)]
+    fn lerp(&self, other: &Self, t: Self::S) -> Self {
+        Self {
+            position: self.position.lerp(other.position, t),
+            // TODO: or reset to zero?
+            normal: self.normal.lerp(other.normal, t),
+            uv: self.uv.lerp(other.uv, t),
+        }
+    }
 }
 
 impl HasPosition<Vec3> for BevyVertexPayload {

@@ -21,7 +21,7 @@ This crate is still in a _very_ early stage of development. Expect frequent API 
 
 <img src="assets/demo.png" alt="drawing" width="300"/>
 
-Install using `cargo add procedural_modelling`.
+Install using `cargo add procedural_modelling`. Generate the above mesh using the following code:
 
 ```rs
 let mut mesh = BevyMesh3d::regular_star(1.0, 0.8, 30);
@@ -40,11 +40,9 @@ mesh.to_bevy(RenderAssetUsages::default())
 
 ## Examples
 
-<!--
 Try the live examples!
- * [2d](https://bevy-procedural.org/examples/modelling/2d)
- * [3d](https://bevy-procedural.org/examples/modelling/3d)
--->
+ * [box](https://bevy-procedural.org/examples/modelling/box) demonstrates different methods to build a cube from scratch. This is a good place to get started with this crate!
+ * [fps_bench](https://bevy-procedural.org/examples/modelling/fps_bench) benchmarks the rendering performance of the different triangulation algorithms.
 
 Or run the [examples](https://github.com/bevy-procedural/modelling/tree/main/examples) on your computer like, e.g., `cargo run --features="bevy bevy/bevy_pbr bevy/bevy_winit bevy/tonemapping_luts" --profile fast-dev --example box`.
 
@@ -57,10 +55,11 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
 -   Attributes
 
     -   [x] Positions
-    -   [x] Normals (flat, smooth, ~~crease weights~~, ~~surface groups~~)
+    -   [x] Normals (flat, smooth)
+    -   [x] Custom Attributes
+    -   [ ] crease weights, surface groups
     -   [ ] Tangents
     -   [ ] UV Coordinates
-    -   [x] Custom Attributes
 
 -   Mesh Types
 
@@ -70,7 +69,7 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
     -   [ ] Pseudomanifold (with singularities)
     -   [ ] Non-Manifold (with branching surfaces)
     -   [ ] Non-Euclidean Open Manifold
-    -   [ ] Combinatorial (purely topological)
+    -   [ ] Combinatorial (purely topo\logical)
 
 -   Triangulation
 
@@ -82,11 +81,12 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
 
 -   Primitives
 
-    -   [x] Polygon, Star
+    -   [x] Polygon, Star, Loop
     -   [x] Cuboid, Cube
-    -   [x] Cylinder, Cone, Pyramid, Frustum, Tetrahedron, Octahedron, Dodecahedron
+    -   [x] Cylinder, Cone
+    -   [x] Prism, Antiprism
+    -   [x] Pyramid, Frustum, Tetrahedron, Octahedron, Dodecahedron
     -   [ ] Icosahedron
-    -   [ ] Prism
     -   [x] UV Sphere
     -   [ ] Cube Sphere
     -   [ ] Icosphere
@@ -102,7 +102,7 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
 -   Operations
 
     -   [x] Extrude & Linear Loft (Quad, Triangle)
-    -   [x] Transform (Translate, Rotate, Scale, [] Shear)
+    -   [x] Transform (Translate, Rotate, Scale, [ ] Shear)
     -   [ ] Taper
     -   [ ] Chamfer / Cantellate / Bevel / Truncate / Bitruncate / Omnitruncate
     -   [ ] Boolean Operations (Union, Intersection, Difference, Symmetric Difference)
@@ -117,7 +117,7 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
     -   [ ] Morph
     -   [ ] Voxelate
     -   [ ] Smooth
-    -   [ ] [Nonlinear Loft](https://www.youtube.com/watch?v=X37ZlHu8Q2I)
+    -   [ ] Nonlinear Loft
     -   [ ] Bridge
     -   [ ] Reflect
     -   [ ] Weld
@@ -138,7 +138,7 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
 
     -   [ ] Geodesic Pathfinding
     -   [ ] Raycasting
-    -   [ ] Topology Analysis
+    -   [ ] Topo\logy Analysis
     -   [ ] Spatial Data Structures
 
 -   Debug Visualizations
@@ -146,12 +146,14 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
     -   [x] Indices
     -   [ ] Normals
     -   [ ] Tangents
-    -   [ ] Topology
+    -   [ ] Topo\logy
 
 -   Backends
 
     -   [x] Bevy
     -   [ ] wgpu
+    -   [ ] STL export/import
+    -   [ ] OBJ export/import
 
 ## Features
 
@@ -170,26 +172,26 @@ For development only:
 
 The package supports different triangulation algorithms. The robustness and rendering speed of the produced triangulations varies significantly. These performance differences usually only matter for meshes with extremely large flat surfaces. In the table below, we compare the performance of the different algorithms for a circle with 100, 1000, and 10000 vertices. The "ZigZag" mesh has 10000 vertices and is designed to demonstrate the worst-case for the Sweep algorithm.
 
--   **Fan** Extremely fast, but only works for convex polygons. And even then, results are usually numerically unstable. Runs in O(n) time.
--   **EarClipping** Simple but slow textbook-algorithm for reference. Runs in O(n^2) time. When the input provokes numerical instabilities, e.g., a very large circle, the algorithm switches to recovery mode running in up to O(n^3) time.
--   **Sweep** Very fast sweep-line algorithm that might produces triangulations with unnecessarily long edges. Works for arbitrary polygons (yes, they don't have to be simple). Runs in O(n log n) time. See [CMSC 754](https://www.cs.umd.edu/class/spring2020/cmsc754/Lects/lect05-triangulate.pdf).
--   **Delaunay** Slow, but large flat surfaces might render faster. Currently uses [Spade](https://github.com/Stoeoef/spade). Runs in O(n log n) time.
--   **EdgeFlip** Same output as Delaunay, but without external dependencies and using a very slow edge-flipping algorithm. Runs in O(n^3) time.
+-   **Fan** Extremely fast, but only works for convex polygons. And even then, results are usually numerically unstable. Runs in $\mathcal{O}(n)$ time.
+-   **EarClipping** Simple but slow textbook-algorithm for reference. Runs in $\mathcal{O}(n^2)$ time. When the input provokes numerical instabilities, e.g., a very large circle, the algorithm switches to recovery mode running in up to $\mathcal{O}(n^3)$ time.
+-   **Sweep** Very fast sweep-line algorithm that might produces triangulations with unnecessarily long edges. Works for arbitrary polygons (yes, they don't have to be simple). Runs in $\mathcal{O}(n \log n)$ time. See [CMSC 754](https://www.cs.umd.edu/class/spring2020/cmsc754/Lects/lect05-triangulate.pdf).
+-   **Delaunay** Slow, but large flat surfaces might render faster. Currently uses [Spade](https://github.com/Stoeoef/spade). Runs in $\mathcal{O}(n \log n)$ time.
+-   **EdgeFlip** Same output as Delaunay, but without external dependencies and using a very slow edge-flipping algorithm. Runs in $\mathcal{O}(n^3)$ time.
     EdgeFlip,
--   **MinWeight** Minimizes the overall edge length of the triangulation. Very slow, but produces the theoretically fastest rendering triangulations for large flat surfaces. Runs in O(2^n) time.
+-   **MinWeight** Minimizes the overall edge length of the triangulation. Very slow, but produces the theoretically fastest rendering triangulations for large flat surfaces. Runs in $\mathcal{O}(2^n)$ time.
 -   **Heuristic** Heuristic algorithm that tries to find a compromise between the speed of `Sweep` and the quality of `EdgeMin`.
 -   **Auto** (default) Automatically choose the "best" algorithm based on the input, i.e., with the given ratio of numerical stability and performance.
 
 | Algorithm   | Requirements | Worst Case | Circle 10        | Circle 100         | Circle 1000       | Circle 10000      | ZigZag 1000       | ZigZag 10000      |
 | ----------- | ------------ | ---------- | ---------------- | ------------------ | ----------------- | ----------------- | ----------------- | ----------------- |
-| Fan         | Convex       | n          | 0.258µs (151fps) | 2.419µs¹ (118fps)² | 15.41µs (52.4fps) | 161.8µs (12.5fps) | -                 | -                 |
-| EarClipping | Simple       | n^2        | 0.746µs (150fps) | 21.75µs (118fps)   | 1.746ms (52.1fps) | 3.276s (11.4fps)  | 49.10ms (35.6fps) | 46.03s (9.51fps)  |
-| Sweep       | None         | n log n    | 1.584µs (151fps) | 13.58µs (118fps)   | 142.4µs (44.2fps) | 1.556ms (9.87fps) | 402.3µs (42.8fps) | 4.334ms (9.87fps) |
-| Delaunay    | Simple       | n log n    | 2.778µs (151fps) | 29.89µs (134fps)   | 308.5µs (132fps)  | 3.296ms (129fps)  | 3.002ms (42.1fps) | 158.7ms (9.33fps) |
-| EdgeFlip    | Simple       | n^3        |                  |                    |                   |                   |                   |
-| MinWeight   | Simple       | 2^n        |                  |                    |                   |                   |                   |
-| Heuristic   | Simple       | n log n    |                  |                    |                   |                   |                   |
-| Auto        | Simple       | n log n    |                  |                    |                   |                   |                   |
+| Fan         | Convex       | $n$          | 0.258µs (151fps) | 2.419µs¹ (118fps)² | 15.41µs (52.4fps) | 161.8µs (12.5fps) | -                 | -                 |
+| EarClipping | Simple       | $n^2$        | 0.746µs (150fps) | 21.75µs (118fps)   | 1.746ms (52.1fps) | 3.276s (11.4fps)  | 49.10ms (35.6fps) | 46.03s (9.51fps)  |
+| Sweep       | None         | $n \log n$    | 1.584µs (151fps) | 13.58µs (118fps)   | 142.4µs (44.2fps) | 1.556ms (9.87fps) | 402.3µs (42.8fps) | 4.334ms (9.87fps) |
+| Delaunay    | Simple       | $n \log n$    | 2.778µs (151fps) | 29.89µs (134fps)   | 308.5µs (132fps)  | 3.296ms (129fps)  | 3.002ms (42.1fps) | 158.7ms (9.33fps) |
+| EdgeFlip    | Simple       | $n^3$        |                  |                    |                   |                   |                   |
+| MinWeight   | Simple       | $2^n$        |                  |                    |                   |                   |                   |
+| Heuristic   | Simple       | $n \log n$    |                  |                    |                   |                   |                   |
+| Auto        | Simple       | $n \log n$    |                  |                    |                   |                   |                   |
 
 -   ¹) Time for the triangulation on a Intel i7-12700K (single threaded). Run the benchmarks using `cargo bench --features benchmarks`.
 -   ²) FPS when rendering 100 large, transparent instances with the bevy 0.14.2 pbr shader on a Nvidia GeForce RTX 4060 Ti in Full HD. See `cargo run --example fps_bench --profile release --features="bevy bevy/bevy_pbr bevy/bevy_winit bevy/tonemapping_luts"`. For the non-Delaunay algorithms, the rendering time deteriorates for the larger circles since the edge length is not minimized causing significant overdraw.

@@ -31,8 +31,8 @@ impl<T: MeshType> Mesh<T> {
             (boundary.prev_id(), boundary.id())
         };
 
-        assert!(self.edge(input).is_boundary_self());
-        assert!(self.edge(output).is_boundary_self());
+        debug_assert!(self.edge(input).is_boundary_self());
+        debug_assert!(self.edge(output).is_boundary_self());
 
         return self.add_vertex_via_edge(input, output, vp, ep1, ep2);
     }
@@ -46,8 +46,8 @@ impl<T: MeshType> Mesh<T> {
         ep1: T::EP,
         ep2: T::EP,
     ) -> (T::V, T::E, T::E) {
-        let v = self.edge(input).target(self).id();
-        assert!(self.edge(output).origin(self).id() == v);
+        let v = self.edge(output).origin_id();
+        debug_assert!(self.edge(input).target_id(self) == v);
 
         let new = self.vertices.allocate();
 

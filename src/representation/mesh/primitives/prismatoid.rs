@@ -10,38 +10,93 @@ impl<T: MeshType> Mesh<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
-    T::VP:
-        Transformable<Vec = T::Vec, Rot = T::Rot, Trans = T::Trans> + HasPosition<T::Vec, S = T::S>,
+    T::VP: Transformable<Vec = T::Vec, Rot = T::Rot, Trans = T::Trans, S = T::S>
+        + HasPosition<T::Vec, S = T::S>,
     T::Vec: Vector3D<S = T::S>,
 {
     // Waiting for https://github.com/rust-lang/rust/issues/8995
     // type S = T::S;
 
-    pub fn prism(vp: impl IntoIterator<Item = T::VP>, height: T::S) -> Mesh<T> {
-        let mut mesh = Mesh::<T>::new();
-        mesh.insert_prism(vp, height);
-        mesh
-    }
-
-    pub fn insert_prism(&mut self, vp: impl IntoIterator<Item = T::VP>, height: T::S) -> &mut Self {
+    /// Creates a prism by inserting the flat polygon given by `vp` and inserting an
+    /// translated copy at `height` along the normal of the face.
+    /// Uses quads for the sides.
+    pub fn insert_prism(&mut self, vp: impl IntoIterator<Item = T::VP>, height: T::S) -> T::E {
         let first = self.insert_polygon(vp);
         let f = self
             .edge(first)
             .face(self)
             .expect("The polygon must have a face");
         let normal = f.normal(self);
-        self.extrude(
+        let e = self.extrude(
             self.edge(first).twin_id(),
             T::Trans::from_translation(-normal * height),
         );
-        self
+        e
     }
 
-    /*pub fn antiprism(vp: impl IntoIterator<Item = T::VP>, height: T::Vec) -> Mesh<T> {
-        todo!("antiprism")
+    /// calls `insert_prism` on a new mesh
+    pub fn prism(vp: impl IntoIterator<Item = T::VP>, height: T::S) -> Self {
+        let mut mesh = Mesh::<T>::new();
+        mesh.insert_prism(vp, height);
+        mesh
     }
 
-    pub fn pyramid(base: impl IntoIterator<Item = (T::VP, T::VP)>, apex: T::VP) -> Mesh<T> {
+    /// Creates an antiprism by placing the new vertices at the middle of the given
+    /// polygon edges translated by `height` along the normal of the face.
+    /// Uses triangles for the sides.
+    ///
+    /// WARNING: This doesn't produce a proper regular antiprism since the radius
+    /// of the top polygon will be slightly smaller!
+    pub fn insert_antiprism(&mut self, vp: impl IntoIterator<Item = T::VP>, height: T::S) -> T::E {
+        let first = self.insert_polygon(vp);
+        let f = self
+            .edge(first)
+            .face(self)
+            .expect("The polygon must have a face");
+        let normal = f.normal(self);
+        let e = self.extrude_tri(
+            self.edge(first).twin_id(),
+            T::Trans::from_translation(-normal * height),
+        );
+        e
+    }
+
+    /// calls `insert_antiprism` on a new mesh
+    pub fn antiprism(vp: impl IntoIterator<Item = T::VP>, height: T::S) -> Self {
+        let mut mesh = Mesh::<T>::new();
+        mesh.insert_antiprism(vp, height);
+        mesh
+    }
+}
+
+impl<T: MeshType> Mesh<T>
+where
+    T::EP: DefaultEdgePayload,
+    T::FP: DefaultFacePayload,
+{
+    /// Creates an antiprism by connecting the two polygons given by `vp` and `vp2` with triangles.
+    pub fn insert_antiprism_iter(
+        &mut self,
+        vp: impl IntoIterator<Item = T::VP>,
+        vp2: impl IntoIterator<Item = T::VP>,
+    ) -> T::E {
+        let first = self.insert_polygon(vp);
+        let e = self.loft_tri_closed(self.edge(first).twin_id(), vp2);
+        self.close_hole(e, Default::default(), false);
+        e
+    }
+
+    /// calls `insert_antiprism_iter` on a new mesh
+    pub fn antiprism_iter(
+        vp: impl IntoIterator<Item = T::VP>,
+        vp2: impl IntoIterator<Item = T::VP>,
+    ) -> Self {
+        let mut mesh = Mesh::<T>::new();
+        mesh.insert_antiprism_iter(vp, vp2);
+        mesh
+    }
+
+    /*pub fn pyramid(base: impl IntoIterator<Item = (T::VP, T::VP)>, apex: T::VP) -> Mesh<T> {
         todo!("pyramid")
     }
 

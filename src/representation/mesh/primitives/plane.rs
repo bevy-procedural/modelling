@@ -29,7 +29,7 @@ where
 
         let (mut first, _) = mesh.insert_path(iter(0));
         for j in 1..m {
-            let e = mesh.loft_tri(first, j % 2 == 0, iter(j));
+            let e = mesh.loft_tri_back(first, j % 2 == 0, iter(j));
             first = mesh.edge(e).prev_id();
         }
 
@@ -54,7 +54,7 @@ where
 
         let (mut first, _) = mesh.insert_path(iter(0));
         for j in 1..m {
-            first = mesh.loft_polygon(first, 2, 2, iter(j));
+            first = mesh.loft_polygon_back(first, 2, 2, iter(j));
         }
 
         mesh
@@ -84,7 +84,7 @@ where
             if j >= 2 {
                 first = mesh.edge(first).prev_id();
             }
-            first = mesh.loft_polygon(first, 3, 3, iter(j - 1, j));
+            first = mesh.loft_polygon_back(first, 3, 3, iter(j - 1, j));
         }
 
         mesh

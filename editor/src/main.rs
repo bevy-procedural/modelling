@@ -175,7 +175,34 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
 
     //BevyMesh3d::cone(1.0, 1.0, 16)
 
-    BevyMesh3d::prism(
+    /*BevyMesh3d::prism(
+        (0..10).map(|i| {
+            BevyVertexPayload::from_pos(Vec3::new(
+                (i as f32 / 5.0 * PI).sin(),
+                0.0,
+                (i as f32 / 5.0 * PI).cos(),
+            ))
+        }),
+        0.4,
+    )*/
+    /* BevyMesh3d::antiprism_iter(
+        (0..10).map(|i| {
+            BevyVertexPayload::from_pos(Vec3::new(
+                (i as f32 / 5.0 * PI).sin(),
+                0.0,
+                (i as f32 / 5.0 * PI).cos(),
+            ))
+        }),
+        (0..10).map(|i| {
+            BevyVertexPayload::from_pos(Vec3::new(
+                ((i as f32 + 0.5) / 5.0 * PI).sin(),
+                0.3,
+                ((i as f32 + 0.5) / 5.0 * PI).cos(),
+            ))
+        }),
+    )*/
+
+    BevyMesh3d::antiprism(
         (0..10).map(|i| {
             BevyVertexPayload::from_pos(Vec3::new(
                 (i as f32 / 5.0 * PI).sin(),
@@ -305,7 +332,7 @@ fn setup_meshes(
         Name::new("Generated Shape"),
     ));
 
-    if false {
+    if true {
         show_vertex_indices(&mut texts, &mesh);
         show_edges(&mut texts, &mesh, 0.1);
         show_faces(&mut texts, &mesh);
