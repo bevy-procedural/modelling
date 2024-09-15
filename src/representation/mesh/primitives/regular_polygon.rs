@@ -14,7 +14,7 @@ where
         // TODO: assertions
         let first = self.insert_loop(vp);
         self.close_hole(first, Default::default(), false);
-        first
+        self.edge(first).twin_id()
     }
 
     /// Construct a polygon from the given vertices.

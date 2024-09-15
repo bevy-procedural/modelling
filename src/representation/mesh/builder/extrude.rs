@@ -63,14 +63,14 @@ where
     T::FP: DefaultFacePayload,
 {
     /// Assumes `start` is on the boundary of the edge.
-    /// Will insert a vertex `center` with the given vp and fill the hole along the boundary with triangles connected to the center vertex.
-    /// Returns the vertex.
-    pub fn fill_hole_with_vertex(&mut self, start: T::E, center: T::VP) -> T::V {
+    /// Will insert a vertex `apex` with the given vp and fill the hole along the boundary with triangles connected to the apex vertex.
+    /// Returns the id of the apex vertex.
+    pub fn fill_hole_apex(&mut self, start: T::E, apex: T::VP) -> T::V {
         // TODO: replace with loft n=1
         let e0 = self.edge(start);
         let origin = e0.origin_id();
         let mut input = self.edge(start).prev_id();
-        let (v, _, _) = self.add_vertex_via_edge_default(input, start, center);
+        let (v, _, _) = self.add_vertex_via_edge_default(input, start, apex);
         loop {
             let e = self.edge(input);
             if e.origin_id() == origin {
@@ -99,6 +99,6 @@ where
         };
         let p = T::VP::from_pos(self.face(f).center(self) + translation);
         self.remove_face(f);
-        self.fill_hole_with_vertex(e, p)
+        self.fill_hole_apex(e, p)
     }
 }

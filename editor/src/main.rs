@@ -202,7 +202,7 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
         }),
     )*/
 
-    BevyMesh3d::antiprism(
+    /*BevyMesh3d::antiprism(
         (0..10).map(|i| {
             BevyVertexPayload::from_pos(Vec3::new(
                 (i as f32 / 5.0 * PI).sin(),
@@ -211,6 +211,17 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
             ))
         }),
         0.4,
+    )*/
+
+    BevyMesh3d::pyramid(
+        (0..10).map(|i| {
+            BevyVertexPayload::from_pos(Vec3::new(
+                (i as f32 / 5.0 * PI).sin(),
+                0.0,
+                (i as f32 / 5.0 * PI).cos(),
+            ))
+        }),
+        BevyVertexPayload::from_pos(Vec3::new(0.0, 1.0, 0.0)),
     )
 
     //bBevyMesh3d::uv_sphere(2.0, 32, 32)

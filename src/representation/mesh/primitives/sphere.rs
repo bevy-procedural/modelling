@@ -40,7 +40,7 @@ where
 
         // top pole
         let mut prev = mesh.insert_loop((0..m).map(|j| make_vp(1, j)));
-        mesh.fill_hole_with_vertex(mesh.edge(prev).twin_id(), make_vp(0, 0));
+        mesh.fill_hole_apex(mesh.edge(prev).twin_id(), make_vp(0, 0));
 
         // normal squares
         for i in 1..(n - 1) {
@@ -48,7 +48,7 @@ where
         }
 
         // bottom pole
-        mesh.fill_hole_with_vertex(prev, make_vp(n, 0));
+        mesh.fill_hole_apex(prev, make_vp(n, 0));
 
         mesh
     }

@@ -96,10 +96,22 @@ where
         mesh
     }
 
-    /*pub fn pyramid(base: impl IntoIterator<Item = (T::VP, T::VP)>, apex: T::VP) -> Mesh<T> {
-        todo!("pyramid")
+    /// Creates a pyramid by connecting the polygon given by `vp` with the point `apex`.
+    pub fn insert_pyramid(&mut self, base: impl IntoIterator<Item = T::VP>, apex: T::VP) -> T::E {
+        let first = self.insert_polygon(base);
+        self.fill_hole_apex(first, apex);
+        first        
     }
 
+    /// calls `insert_pyramid` on a new mesh
+    pub fn pyramid(base: impl IntoIterator<Item = T::VP>, apex: T::VP) -> Self {
+        let mut mesh = Mesh::<T>::new();
+        mesh.insert_pyramid(base, apex);
+        mesh
+    }
+
+
+    /*
     /// Creates a (conical) frustum
     /// TODO: smooth!
     pub fn frustum(
