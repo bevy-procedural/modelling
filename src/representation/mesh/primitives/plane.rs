@@ -17,7 +17,7 @@ where
     pub fn triangle_plane(width: T::S, height: T::S, n: usize, m: usize) -> Self {
         let mut mesh = Self::new();
         let vertical_step = height / T::S::from_usize(m - 1);
-        let half_horizontal_step = width / T::S::from_usize(n - 1) / T::S::from_usize(2);
+        let half_horizontal_step = width / T::S::from_usize(n - 1) * T::S::HALF;
         let iter = |j: usize| {
             (0..n).map(move |i| {
                 T::VP::from_pos(T::Vec::from_xy(
@@ -66,9 +66,9 @@ where
         assert!(n % 2 == 0);
         assert!(m >= 2);
         let mut mesh = Self::new();
-        let row_height = T::S::from_usize(3) / T::S::from_usize(3).sqrt();
+        let row_height = T::S::THREE / T::S::THREE.sqrt();
         let width = T::S::ONE;
-        let hex_offset = row_height - T::S::from_usize(2) / T::S::from_usize(3).sqrt();
+        let hex_offset = row_height - T::S::TWO / T::S::THREE.sqrt();
         let iter = |offset: usize, j: usize| {
             (0..n).map(move |i| {
                 T::VP::from_pos(T::Vec::from_xy(

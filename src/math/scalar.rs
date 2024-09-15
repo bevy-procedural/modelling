@@ -32,6 +32,21 @@ pub trait Scalar:
     /// A value of one.
     const ONE: Self;
 
+    /// A value of two.
+    const TWO: Self;
+
+    /// A value of three.
+    const THREE: Self;
+
+    /// A value of four.
+    const FOUR: Self;
+
+    /// A value of five.
+    const FIVE: Self;
+    
+    /// A value of one half.
+    const HALF: Self;
+
     /// The golden ratio.
     const PHI: Self;
 

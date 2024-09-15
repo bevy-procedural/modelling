@@ -1,6 +1,8 @@
 mod iterator;
 mod payload;
 
+use crate::math::Scalar;
+
 use super::{payload::HasPosition, Deletable, Face, IndexType, Mesh, MeshType, Vertex};
 pub use iterator::*;
 pub use payload::*;
@@ -260,7 +262,7 @@ impl<E: IndexType, V: IndexType, F: IndexType, EP: EdgePayload> HalfEdge<E, V, F
     {
         let v1 = self.origin(mesh).pos().clone();
         let v2 = self.target(mesh).pos().clone();
-        (v1 + v2) * T::S::from(0.5)
+        (v1 + v2) * T::S::HALF
     }
 }
 

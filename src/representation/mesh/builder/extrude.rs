@@ -3,7 +3,7 @@ use itertools::Itertools;
 use crate::{
     math::Scalar,
     representation::{
-        payload::{HasPosition, Transformable},
+        payload::Transformable,
         DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
     },
 };
@@ -48,7 +48,7 @@ where
             .edges_from(self.edge(e).next_id())
             .map(|v| v.origin(self).payload().transform(&transform))
             .circular_tuple_windows()
-            .map(|(a, b)| a.lerp(&b, T::S::from(0.5)))
+            .map(|(a, b)| a.lerp(&b, T::S::HALF))
             .collect();
         vps.rotate_right(1);
         let start = self.loft_tri_closed(e, vps);
@@ -81,24 +81,5 @@ where
         }
         self.close_hole(input, Default::default(), false);
         v
-    }
-}
-
-impl<T: MeshType> Mesh<T>
-where
-    T::EP: DefaultEdgePayload,
-    T::FP: DefaultFacePayload,
-    T::VP: HasPosition<T::Vec, S = T::S>,
-{
-    /// Create a vertex by translating the center of the given face and connect the given face to that vertex.
-    pub fn extrude_to_center_point(&mut self, e: T::E, translation: T::Vec) -> T::V {
-        let f = if self.edge(e).is_boundary_self() {
-            self.close_hole(e, Default::default(), true)
-        } else {
-            self.edge(e).face_id()
-        };
-        let p = T::VP::from_pos(self.face(f).center(self) + translation);
-        self.remove_face(f);
-        self.fill_hole_apex(e, p)
     }
 }

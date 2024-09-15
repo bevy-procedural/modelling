@@ -210,7 +210,7 @@ impl<'a, V: IndexType> Triangulation<'a, V> {
 
     /// Sum the area of all triangles added to the index buffer since the triangulation was created
     pub fn get_area<Vec2: Vector2D>(&self, vec_hm: &HashMap<V, Vec2>) -> Vec2::S {
-        Vec2::S::from(0.5)
+        Vec2::S::HALF
             * (0..self.len())
                 .into_iter()
                 .map(|i| self.get_triangle_area(i, vec_hm).abs())

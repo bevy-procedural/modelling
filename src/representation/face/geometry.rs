@@ -123,7 +123,11 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
     {
         // TODO: overload this in a way that allows different dimensions
         // TODO: allows only for slight curvature...
-        debug_assert!(self.may_be_curved() || self.is_planar2(mesh));
+        debug_assert!(
+            self.may_be_curved() || self.is_planar2(mesh),
+            "Face is not planar {:?}",
+            self
+        );
 
         let normal = self
             .vertices(mesh)
@@ -137,6 +141,14 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
                 )
             })
             .stable_sum();
+
+        assert!(
+            normal.length_squared() >= T::S::EPS,
+            "Degenerated face {} {:?}",
+            self.id(),
+            self.vertices(mesh).map(|v| *v.pos()).collect::<Vec<_>>()
+        );
+
         normal * T::Vec::splat(T::S::from(-0.5))
     }
 

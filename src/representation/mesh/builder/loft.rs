@@ -159,7 +159,7 @@ where
         self.edge(outside).next(self).next_id()
     }
 
-    /// Walks along the boundary given by `start` and adds a "hem" made from polygon faces.
+    /// Walks clockwise along the boundary given by `start` and adds a "hem" made from polygon faces.
     /// Each face consists of `n` vertices from the iterator
     /// and `m` vertices from the boundary of the existing mesh.
     /// Hence, it will create polygon faces with `n+m+2` vertices each.
@@ -221,8 +221,7 @@ where
                 return ret;
             };
 
-            let output = self.edge(input).next_id();
-            self.add_vertex_via_edge_default(input, output, vp);
+            self.add_vertex_via_edge_default(input, self.edge(input).next_id(), vp);
             self.close_face_default(inside, self.edge(input).next_id(), false);
 
             // when n==2, we cannot set the `ret` until now
@@ -232,8 +231,93 @@ where
         }
     }
 
-    // TODO: forward polygon loft!
-}
+    /// Walks counter-clockwise along the given boundary and adds a "hem" made from polygon faces.
+    /// Each face consists of `n` vertices from the iterator
+    /// and `m` vertices from the boundary of the existing mesh.
+    /// Hence, it will create polygon faces with `n+m+2` vertices each.
+    ///
+    /// If the iterator is exactly the right length to go once around the mesh, the "hem" will be closed.
+    ///
+    /// Returns the edge pointing from the second inserted vertex to the first inserted vertex.
+    ///
+    /// For example, to create a quad loft, use `loft_polygon(start, 2, 2, vp)`.
+    /// Pentagons with the tip pointing to the boundary can be created with `loft_polygon(start, 3, 2, vp)`
+    /// while pentagons with the tip pointing away from the boundary can be created with `loft_polygon(start, 2, 3, vp)`.
+    pub fn loft_polygon(
+        &mut self,
+        start: T::E,
+        n: usize,
+        m: usize,
+        vp: impl IntoIterator<Item = T::VP>,
+    ) -> T::E {
+        assert!(n >= 2);
+        assert!(m >= 2);
+        // TODO: implement the special cases of n=1 (insert one vertex only and generate tip) and m=1 (use only one vertex of the boundary and create a fan around it), and even n=0 (without iterator; bridge every second edge with a face) and m=0 (without start; generate a line strip)
+        // TODO: replace all loft methods with this one. Quad is just n=2, m=2, triangle is two lofts: n=2, m=1 and n=0, m=2
 
+        let mut iter = vp.into_iter();
+        let mut input = start;
+        let start_vertex = self.edge(start).origin_id();
+        if let Some(vp) = iter.next() {
+            self.add_vertex_via_edge_default(self.edge(start).prev_id(), input, vp);
+        }
+
+        let mut ret = start;
+        loop {
+            // Move `input` forward along the boundary
+            input = self.edge(input).next_id();
+
+            // TODO: only provisory impl!
+            assert!(n == 2);
+
+            // Initialize `inside` edge
+            let mut inside = self.edge(input).prev(self).prev_id();
+            for _ in 2..n {
+                let Some(vp) = iter.next() else {
+                    return ret;
+                };
+                // Insert vertex between `inside`'s previous edge and `inside`
+                let prev_edge = self.edge(inside).prev_id();
+                let (_, e1, _) = self.add_vertex_via_edge_default(prev_edge, inside, vp);
+                inside = e1;
+
+                // Set `ret` to the edge pointing to the first generated vertex
+                if ret == start {
+                    ret = self.edge(e1).twin_id();
+                }
+            }
+
+            // TODO: only provisory impl!
+            assert!(m == 2);
+
+            // Move `input` forward along the boundary for `m - 2` steps
+            for _ in 2..m {
+                input = self.edge(input).next_id();
+            }
+
+            let Some(vp) = iter.next() else {
+                if start_vertex == self.edge(input).origin_id() {
+                    // Reached the start again - close the last face
+                    self.close_face_default(input, self.edge(inside).prev_id(), false);
+                }
+                return ret;
+            };
+            // Insert a new vertex between the previous edge of `input` and `input`
+            self.add_vertex_via_edge_default(self.edge(input).prev_id(), input, vp);
+
+            // Close the face between `inside` and the new vertex
+            self.close_face_default(
+                self.edge(input).prev(self).twin_id(),
+                self.edge(inside).prev_id(),
+                false,
+            );
+
+            // When `n == 2`, we cannot set `ret` until now
+            if ret == start {
+                ret = self.edge(inside).prev(self).twin_id();
+            }
+        }
+    }
+}
 
 // TODO: tests!

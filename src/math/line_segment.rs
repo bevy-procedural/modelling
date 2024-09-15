@@ -43,7 +43,7 @@ impl<Vec2: Vector2D> LineSegment2D<Vec2> {
     /// Returns the midpoint of the line segment.
     #[inline(always)]
     pub fn midpoint(&self) -> Vec2 {
-        self.start() + (self.end() - self.start()) * Vec2::S::from(0.5)
+        self.start() + (self.end() - self.start()) * Vec2::S::HALF
     }
 
     /// Returns the direction of the line segment.

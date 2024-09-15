@@ -1,15 +1,20 @@
 use crate::{
-    math::Vector,
+    math::{Scalar, Vector},
     representation::{
         payload::HasPosition, DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
     },
 };
+
+pub fn regular_polygon_sidelength<S: Scalar>(radius: S, n: usize) -> S {
+    S::TWO * radius * (S::PI / S::from_usize(n)).sin()
+}
 
 impl<T: MeshType> Mesh<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
 {
+    /// Construct a polygon from the given vertices and return the first edge on the outside boundary.
     pub fn insert_polygon(&mut self, vp: impl IntoIterator<Item = T::VP>) -> T::E {
         // TODO: assertions
         let first = self.insert_loop(vp);
@@ -17,20 +22,21 @@ where
         self.edge(first).twin_id()
     }
 
-    /// Construct a polygon from the given vertices.
+    /// Calls `insert_polygon` on a new mesh.
     pub fn polygon(vp: impl IntoIterator<Item = T::VP>) -> Mesh<T> {
         let mut mesh = Mesh::<T>::new();
         mesh.insert_polygon(vp);
         mesh
     }
 
+    /// Construct a dihedron (flat degenerate polygon with two faces) from the given vertices.
     pub fn insert_dihedron(&mut self, vp: impl IntoIterator<Item = T::VP>) -> T::E {
         let first = self.insert_polygon(vp);
         self.close_hole(self.edge(first).twin_id(), Default::default(), false);
         first
     }
 
-    /// Construct a dihedron (flat degenerate polygon with two faces) from the given vertices.
+    /// Calls `insert_dihedron` on a new mesh.
     pub fn dihedron(vp: impl IntoIterator<Item = T::VP>) -> Mesh<T> {
         let mut mesh = Mesh::<T>::new();
         mesh.insert_dihedron(vp);

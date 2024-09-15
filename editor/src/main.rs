@@ -213,7 +213,7 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
         0.4,
     )*/
 
-    BevyMesh3d::pyramid(
+    /*BevyMesh3d::pyramid(
         (0..10).map(|i| {
             BevyVertexPayload::from_pos(Vec3::new(
                 (i as f32 / 5.0 * PI).sin(),
@@ -222,7 +222,34 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
             ))
         }),
         BevyVertexPayload::from_pos(Vec3::new(0.0, 1.0, 0.0)),
-    )
+    )*/
+
+    /*BevyMesh3d::frustum(
+        (0..10).map(|i| {
+            BevyVertexPayload::from_pos(Vec3::new(
+                (i as f32 / 5.0 * PI).sin(),
+                0.0,
+                (i as f32 / 5.0 * PI).cos(),
+            ))
+        }),
+        (0..10).map(|i| {
+            BevyVertexPayload::from_pos(Vec3::new(
+                ((i as f32) / 5.0 * PI).sin() * 0.5,
+                0.8,
+                ((i as f32) / 5.0 * PI).cos() * 0.5,
+            ))
+        }),
+        false,
+    )*/
+
+    //BevyMesh3d::regular_antiprism(1.0, 1.0, 8)
+    //BevyMesh3d::uniform_antiprism(1.0, 16)
+    //BevyMesh3d::regular_prism(1.0, 1.0, 8)
+    //BevyMesh3d::uniform_prism(1.0, 8)
+    //BevyMesh3d::regular_frustum(1.0, 0.5, 1.0, 8, false)
+    //BevyMesh3d::regular_pyramid(1.0, 1.0, 8)
+    //BevyMesh3d::tetrahedron(1.0)
+    BevyMesh3d::octahedron(1.0)
 
     //bBevyMesh3d::uv_sphere(2.0, 32, 32)
 

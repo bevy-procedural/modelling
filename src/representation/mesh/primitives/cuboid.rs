@@ -1,5 +1,5 @@
 use crate::{
-    math::{Vector, Vector3D},
+    math::{Vector, Vector3D, Scalar},
     representation::{
         payload::HasPosition, DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
     },
@@ -15,7 +15,7 @@ where
     pub fn cuboid(size: T::Vec3) -> Mesh<T> {
         //assert!(P::dimensions() == 3, "cuboids exist only in 3d space");
 
-        let (x, y, z) = (size * T::S::from(0.5)).tuple();
+        let (x, y, z) = (size * T::S::HALF).tuple();
 
         // TODO: use the loft function!
         // Move this to the box example; demonstrate different builder techniques. This is just a prismatoid.
