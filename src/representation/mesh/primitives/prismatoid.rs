@@ -138,6 +138,46 @@ where
     }
 }
 
+impl<T: MeshType> Mesh<T>
+where
+    T::EP: DefaultEdgePayload,
+    T::FP: DefaultFacePayload,
+    T::Vec: Vector3D<S = T::S>,
+    T::VP: HasPosition<T::Vec, S = T::S>,
+{
+    /// create a rectangular cuboid with side lengths `x`, `y`, and `z`
+    pub fn cuboid(size: T::Vec) -> Mesh<T> {
+        let p = size * T::S::HALF;
+        let mut mesh = Mesh::new();
+        let vp = |x, y, z| T::VP::from_pos(T::Vec::from_xyz(x, y, z));
+
+        let bottom_edge = mesh.insert_polygon([
+            vp(-p.x(), -p.y(), -p.z()),
+            vp(p.x(), -p.y(), -p.z()),
+            vp(p.x(), p.y(), -p.z()),
+            vp(-p.x(), p.y(), -p.z()),
+        ]);
+        let top_edge = mesh.loft_polygon(
+            bottom_edge,
+            2,
+            2,
+            [
+                vp(-p.x(), -p.y(), p.z()),
+                vp(p.x(), -p.y(), p.z()),
+                vp(p.x(), p.y(), p.z()),
+                vp(-p.x(), p.y(), p.z()),
+            ],
+        );
+        mesh.close_hole_default(top_edge);
+        mesh
+    }
+
+    /// create a cube with side length `x`
+    pub fn cube(x: T::S) -> Mesh<T> {
+        Self::cuboid(T::Vec::splat(x))
+    }
+}
+
 fn circle_iter<S: Scalar, Vec: Vector<S>, VP: VertexPayload + HasPosition<Vec, S = S>>(
     r: S,
     n: usize,

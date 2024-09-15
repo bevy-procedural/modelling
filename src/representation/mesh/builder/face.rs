@@ -12,6 +12,14 @@ impl<T: MeshType> Mesh<T> {
         return f;
     }
 
+    /// Close the open boundary with a single face. Doesn't create new edges or vertices.
+    pub fn close_hole_default(&mut self, e: T::E) -> T::F
+    where
+        T::FP: DefaultFacePayload,
+    {
+        self.close_hole(e, Default::default(), false)
+    }
+
     /// Close the face by inserting a pair of halfedges, i.e.,
     /// connecting `inside` (targeting a vertex of the to-be-inserted edge) with the
     /// next halfedge to close the face and `outside` (targeting the other vertex)

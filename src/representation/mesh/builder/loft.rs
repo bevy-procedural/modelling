@@ -162,7 +162,7 @@ where
     /// Walks clockwise along the boundary given by `start` and adds a "hem" made from polygon faces.
     /// Each face consists of `n` vertices from the iterator
     /// and `m` vertices from the boundary of the existing mesh.
-    /// Hence, it will create polygon faces with `n+m+2` vertices each.
+    /// Hence, it will create polygon faces with `n+m` vertices each.
     ///
     /// If the iterator is exactly the right length to go once around the mesh, the "hem" will be closed.
     ///
@@ -234,7 +234,7 @@ where
     /// Walks counter-clockwise along the given boundary and adds a "hem" made from polygon faces.
     /// Each face consists of `n` vertices from the iterator
     /// and `m` vertices from the boundary of the existing mesh.
-    /// Hence, it will create polygon faces with `n+m+2` vertices each.
+    /// Hence, it will create polygon faces with `n+m` vertices each.
     ///
     /// If the iterator is exactly the right length to go once around the mesh, the "hem" will be closed.
     ///

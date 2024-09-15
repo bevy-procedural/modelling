@@ -1,6 +1,9 @@
 use crate::{
     math::{IndexType, Scalar, Transform, Vector, Vector2D, Vector3D, Vector4D},
-    representation::{payload::VertexPayload, EdgePayload, FacePayload},
+    representation::{
+        payload::{Transformable, VertexPayload},
+        EdgePayload, FacePayload,
+    },
 };
 
 /// This trait defines all the associated types used in a mesh and puts them into relation.
