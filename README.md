@@ -67,7 +67,7 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
     -   [ ] Pseudomanifold (with singularities)
     -   [ ] Non-Manifold (with branching surfaces)
     -   [ ] Non-Euclidean Open Manifold
-    -   [ ] Combinatorial (purely topo\logical)
+    -   [ ] Combinatorial (purely topological)
 
 -   Triangulation
 
@@ -83,8 +83,7 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
     -   [x] Cuboid, Cube
     -   [x] Cylinder, Cone
     -   [x] Prism, Antiprism
-    -   [x] Pyramid, Frustum, Tetrahedron, Octahedron, Dodecahedron
-    -   [ ] Icosahedron
+    -   [x] Pyramid, Frustum, Tetrahedron, Octahedron, Dodecahedron, Icosahedron
     -   [x] UV Sphere
     -   [ ] Cube Sphere
     -   [ ] Icosphere
@@ -99,8 +98,10 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
 
 -   Operations
 
-    -   [x] Extrude & Linear Loft (Quad, Triangle)
+    -   [x] Extrude 
+    -   [x] Linear Loft (Triangle, Polygon)
     -   [x] Transform (Translate, Rotate, Scale, [ ] Shear)
+    -   [ ] Frequency Subdivision
     -   [ ] Taper
     -   [ ] Chamfer / Cantellate / Bevel / Truncate / Bitruncate / Omnitruncate
     -   [ ] Boolean Operations (Union, Intersection, Difference, Symmetric Difference)
@@ -136,7 +137,7 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
 
     -   [ ] Geodesic Pathfinding
     -   [ ] Raycasting
-    -   [ ] Topo\logy Analysis
+    -   [ ] Topology Analysis
     -   [ ] Spatial Data Structures
 
 -   Debug Visualizations
@@ -144,7 +145,7 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
     -   [x] Indices
     -   [ ] Normals
     -   [ ] Tangents
-    -   [ ] Topo\logy
+    -   [ ] Topology
 
 -   Backends
 

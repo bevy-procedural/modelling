@@ -165,16 +165,8 @@ fn _make_2d_zigzag() -> BevyMesh3d {
     mesh
 }
 
-fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
-    //_make_hell_8()
-    //BevyMesh3d::regular_polygon(1.0, 10)
-    _make_spiral()
-    //_make_2d_zigzag()
-    //BevyMesh3d::octahedron(1.0)
-
-    //BevyMesh3d::cone(1.0, 1.0, 16)
-
-    /*BevyMesh3d::prism(
+fn _make_prism() -> BevyMesh3d {
+      /*BevyMesh3d::prism(
         (0..10).map(|i| {
             BevyVertexPayload::from_pos(Vec3::new(
                 (i as f32 / 5.0 * PI).sin(),
@@ -223,7 +215,7 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
         BevyVertexPayload::from_pos(Vec3::new(0.0, 1.0, 0.0)),
     )*/
 
-    /*BevyMesh3d::frustum(
+    BevyMesh3d::frustum(
         (0..10).map(|i| {
             BevyVertexPayload::from_pos(Vec3::new(
                 (i as f32 / 5.0 * PI).sin(),
@@ -239,8 +231,16 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
             ))
         }),
         false,
-    )*/
+    )
+}
 
+fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
+    //_make_hell_8()
+    //BevyMesh3d::regular_polygon(1.0, 10)
+    //_make_spiral()
+    //_make_2d_zigzag()
+    //BevyMesh3d::octahedron(1.0)
+    //BevyMesh3d::cone(1.0, 1.0, 16)
     //BevyMesh3d::regular_antiprism(1.0, 1.0, 8)
     //BevyMesh3d::uniform_antiprism(1.0, 16)
     //BevyMesh3d::regular_prism(1.0, 1.0, 8)
@@ -257,6 +257,8 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     /*let mut mesh = BevyMesh3d::hex_plane(10, 8);
     mesh.flip_yz();
     mesh*/
+
+    BevyMesh3d::icosahedron(1.0)
 }
 
 pub fn main() {

@@ -109,6 +109,41 @@ where
         mesh
     }
 
+    /// Create a icosahedron with a given edge length 'l'.
+    pub fn icosahedron(l: T::S) -> Self {
+        let long = l * T::S::PHI * T::S::HALF;
+        let short = l * T::S::HALF;
+        let zero = T::S::ZERO;
+        let make_vp = |x, y, z| T::VP::from_pos(T::Vec::from_xyz(x, y, z));
+
+        let mut mesh = Self::new();
+
+        let start = mesh.insert_loop([
+            make_vp(zero, long, -short),
+            make_vp(long, short, zero),
+            make_vp(short, zero, long),
+            make_vp(-short, zero, long),
+            make_vp(-long, short, zero),
+        ]);
+
+        mesh.fill_hole_apex(start, make_vp(zero, long, short));
+
+        let end = mesh.loft_tri_closed(
+            mesh.edge(start).twin_id(),
+            [
+                make_vp(short, zero, -long),
+                make_vp(long, -short, zero),
+                make_vp(zero, -long, short),
+                make_vp(-long, -short, zero),
+                make_vp(-short, zero, -long),
+            ],
+        );
+
+        mesh.fill_hole_apex(end, make_vp(zero, -long, -short));
+
+        mesh
+    }
+
     /*pub fn cubesphere(radius: T::S, n: usize) -> Self {
         todo!("cubesphere")
     }
