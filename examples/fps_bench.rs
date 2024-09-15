@@ -6,7 +6,9 @@ use bevy::{
     window::{PresentMode, WindowResolution},
 };
 use procedural_modelling::representation::{
-    bevy::BevyMesh3d, payload::bevy::BevyVertexPayload, primitives::generate_zigzag,
+    bevy::BevyMesh3d,
+    payload::{bevy::BevyVertexPayload, HasPosition},
+    primitives::generate_zigzag,
     tesselate::TriangulationAlgorithm,
 };
 use std::time::Duration;
@@ -114,10 +116,9 @@ fn setup(
 fn update_mesh(
     mut commands: Commands,
     mut state: ResMut<BenchmarkState>,
-    mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mesh_list: Res<MeshList>,
-    mut query: Query<Entity, With<Handle<Mesh>>>,
+    query: Query<Entity, With<Handle<Mesh>>>,
 ) {
     if state.accumulated_time < BENCHMARK_DURATION {
         return;

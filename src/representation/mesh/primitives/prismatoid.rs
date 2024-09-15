@@ -54,7 +54,7 @@ where
             .face(self)
             .expect("The polygon must have a face");
         let normal = f.normal(self).normalize();
-        let e = self.extrude_tri(
+        let e = self.extrude_tri2(
             self.edge(first).twin_id(),
             T::Trans::from_translation(-normal * height),
         );

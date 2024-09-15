@@ -1,7 +1,7 @@
 use crate::{
     math::{IndexType, Scalar, Transform, Vector, Vector2D, Vector3D, Vector4D},
     representation::{
-        payload::{Transformable, VertexPayload},
+        payload::VertexPayload,
         EdgePayload, FacePayload,
     },
 };

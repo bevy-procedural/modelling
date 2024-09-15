@@ -88,16 +88,15 @@ fn _make_hex_bridge(settings: &MeshSettings) -> BevyMesh3d {
     mesh
 }*/
 
-fn _make_spiral(settings: &MeshSettings) -> BevyMesh3d {
-    let mut mesh = BevyMesh3d::regular_star(settings.r, settings.r2, settings.n);
-    mesh.flip_yz()
-        .rotate(&Quat::from_rotation_z(PI))
-        .translate(&Vec3::new(0.0, -0.99, 0.0));
-    let trans =
-        Transform::from_rotation(Quat::from_rotation_y(settings.rot)).with_translation(settings.d1);
-    let mut f = mesh.extrude(mesh.shared_edge(1, 0).unwrap().id(), trans);
-    for _ in 0..settings.segs {
-        f = mesh.extrude_face(f, trans);
+fn _make_spiral() -> BevyMesh3d {
+    let mut mesh = BevyMesh3d::new();
+    let mut edge = mesh.insert_regular_star(1.0, 0.8, 30);
+    mesh.flip_yz().translate(&Vec3::new(0.0, -0.99, 0.0));
+    let trans = Transform::from_rotation(Quat::from_rotation_y(0.3))
+        .with_translation(Vec3::new(-0.2, 0.3, -0.3));
+    edge = mesh.extrude_tri(edge, trans);
+    for _ in 0..5 {
+        edge = mesh.extrude_tri_face(mesh.edge(edge).face_id(), trans);
     }
     mesh
 }
@@ -169,7 +168,7 @@ fn _make_2d_zigzag() -> BevyMesh3d {
 fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     //_make_hell_8()
     //BevyMesh3d::regular_polygon(1.0, 10)
-    //_make_spiral(_settings)
+    _make_spiral()
     //_make_2d_zigzag()
     //BevyMesh3d::octahedron(1.0)
 
@@ -249,7 +248,7 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     //BevyMesh3d::regular_frustum(1.0, 0.5, 1.0, 8, false)
     //BevyMesh3d::regular_pyramid(1.0, 1.0, 8)
     //BevyMesh3d::tetrahedron(1.0)
-    BevyMesh3d::octahedron(1.0)
+    //BevyMesh3d::octahedron(1.0)
 
     //bBevyMesh3d::uv_sphere(2.0, 32, 32)
 
@@ -370,7 +369,7 @@ fn setup_meshes(
         Name::new("Generated Shape"),
     ));
 
-    if true {
+    if false {
         show_vertex_indices(&mut texts, &mesh);
         show_edges(&mut texts, &mesh, 0.1);
         show_faces(&mut texts, &mesh);

@@ -3,8 +3,7 @@ use itertools::Itertools;
 use crate::{
     math::Scalar,
     representation::{
-        payload::Transformable,
-        DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
+        payload::Transformable, DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
     },
 };
 
@@ -37,11 +36,34 @@ where
         return self.extrude(e, transform);
     }
 
+    /// Remove the given face and extrude the boundary using the given transformation.
+    pub fn extrude_tri_face(&mut self, f: T::F, transform: T::Trans) -> T::E {
+        let e = self.face(f).edge_id();
+        self.remove_face(f);
+        return self.extrude_tri(e, transform);
+    }
+
     /// Extrudes the given boundary using the given transformation.
     /// Returns an edge on the boundary of the extrusion.
     ///
     /// Uses two rows of triangle faces.
     pub fn extrude_tri(&mut self, e: T::E, transform: T::Trans) -> T::E {
+        assert!(self.edge(e).is_boundary_self());
+        // TODO: avoid collecting
+        let vps: Vec<_> = self
+            .edges_from(self.edge(e).next_id())
+            .map(|v| v.origin(self).payload().transform(&transform))
+            .collect();
+        let start = self.loft_tri_closed(e, vps);
+        self.close_hole(start, Default::default(), false);
+        start
+    }
+
+    /// Extrudes the given boundary using the given transformation.
+    /// Returns an edge on the boundary of the extrusion.
+    ///
+    /// Uses two rows of triangle faces.
+    pub fn extrude_tri2(&mut self, e: T::E, transform: T::Trans) -> T::E {
         assert!(self.edge(e).is_boundary_self());
         // TODO: avoid collecting
         let mut vps: Vec<_> = self

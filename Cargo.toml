@@ -81,6 +81,12 @@ path = "examples/fps_bench.rs"
 doc-scrape-examples = true
 required-features = ["bevy", "bevy/bevy_pbr", "bevy/bevy_winit", "bevy/tonemapping_luts"]
 
+[[example]]
+name = "spiral"
+path = "examples/spiral.rs"
+doc-scrape-examples = true
+required-features = ["bevy", "bevy/bevy_pbr", "bevy/bevy_winit", "bevy/tonemapping_luts"]
+
 [[bench]]
 name = "triangulation"
 harness = false

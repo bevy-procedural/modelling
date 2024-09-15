@@ -56,9 +56,14 @@ where
     }
 
     /// create a regular star, i.e., a regular polygon with two radii
-    pub fn regular_star(inner_radius: T::S, outer_radius: T::S, n: usize) -> Mesh<T> {
+    pub fn insert_regular_star(
+        &mut self,
+        inner_radius: T::S,
+        outer_radius: T::S,
+        n: usize,
+    ) -> T::E {
         let pi2n = 2.0 * std::f32::consts::PI / (n as f32);
-        Mesh::polygon((0..n).into_iter().map(|i| {
+        self.insert_polygon((0..n).into_iter().map(|i| {
             let r = if i % 2 == 1 {
                 outer_radius
             } else {
@@ -70,5 +75,12 @@ where
                 r * T::S::from(angle.cos()),
             ))
         }))
+    }
+
+    /// Calls `insert_regular_star` on a new mesh.
+    pub fn regular_star(inner_radius: T::S, outer_radius: T::S, n: usize) -> Self {
+        let mut mesh = Mesh::<T>::new();
+        mesh.insert_regular_star(inner_radius, outer_radius, n);
+        mesh
     }
 }
