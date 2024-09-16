@@ -43,6 +43,16 @@ impl Scalar for f32 {
     }
 
     #[inline(always)]
+    fn tan(&self) -> Self {
+        f32::tan(*self)
+    }
+
+    #[inline(always)]
+    fn atan2(&self, other: Self) -> Self {
+        f32::atan2(*self, other)
+    }
+
+    #[inline(always)]
     fn to_f64(self) -> f64 {
         self as f64
     }

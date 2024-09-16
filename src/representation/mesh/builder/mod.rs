@@ -5,6 +5,7 @@ mod extrude;
 mod face;
 mod loft;
 mod vertex;
+mod subdivision;
 
 use super::{Mesh, MeshType};
 use crate::{math::Vector3D, representation::payload::HasPosition};

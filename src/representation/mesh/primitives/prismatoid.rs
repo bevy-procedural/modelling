@@ -176,6 +176,56 @@ where
     pub fn cube(x: T::S) -> Mesh<T> {
         Self::cuboid(T::Vec::splat(x))
     }
+
+    /// Creates a regular pyramid
+    pub fn regular_pyramid(radius: T::S, height: T::S, n: usize) -> Self {
+        Mesh::pyramid(
+            circle_iter(radius, n, T::S::ZERO, T::S::ZERO),
+            T::VP::from_pos(T::Vec::from_xyz(T::S::ZERO, height, T::S::ZERO)),
+        )
+    }
+
+    /// Creates a regular cone
+    pub fn cone(radius: T::S, height: T::S, n: usize) -> Mesh<T> {
+        Mesh::pyramid(
+            circle_iter(radius, n, T::S::ZERO, T::S::ZERO),
+            T::VP::from_pos(T::Vec::from_xyz(T::S::ZERO, height, T::S::ZERO)),
+        )
+        // TODO: make it smooth
+    }
+
+    /// Creates a regular tetrahedron
+    pub fn tetrahedron(radius: T::S) -> Mesh<T> {
+        Self::regular_pyramid(radius, radius * T::S::FOUR / T::S::THREE, 3)
+    }
+
+    /// Creates a regular octahedron centered at the origin
+    pub fn octahedron(radius: T::S) -> Mesh<T> {
+        let zero = T::S::ZERO;
+        let h = radius * T::S::FOUR / T::S::THREE / T::S::TWO.sqrt();
+        let mut mesh = Mesh::new();
+        let e = mesh.insert_pyramid(
+            circle_iter(radius, 4, T::S::ZERO, T::S::ZERO),
+            T::VP::from_pos(T::Vec::from_xyz(zero, h, zero)),
+        );
+        mesh.remove_face(mesh.edge(e).face_id());
+        mesh.fill_hole_apex(e, T::VP::from_pos(T::Vec::from_xyz(zero, -h, zero)));
+        mesh
+    }
+
+    /// Creates a (conical) frustum
+    pub fn regular_frustum(r1: T::S, r2: T::S, h: T::S, n: usize, smooth: bool) -> Self {
+        Mesh::frustum(
+            circle_iter(r1, n, T::S::ZERO, T::S::ZERO),
+            circle_iter(r2, n, T::S::ZERO, h),
+            smooth,
+        )
+    }
+
+    /// Creates a regular cylinder
+    pub fn cylinder(radius: T::S, height: T::S, n: usize) -> Mesh<T> {
+        Self::regular_frustum(radius, radius, height, n, true)
+    }
 }
 
 fn circle_iter<S: Scalar, Vec: Vector<S>, VP: VertexPayload + HasPosition<Vec, S = S>>(
@@ -223,57 +273,5 @@ where
             regular_polygon_sidelength(r, n) * T::S::THREE.sqrt() * T::S::HALF,
             n,
         )
-    }
-
-    /// Creates a (conical) frustum
-    pub fn regular_frustum(r1: T::S, r2: T::S, h: T::S, n: usize, smooth: bool) -> Self {
-        Mesh::frustum(
-            circle_iter(r1, n, T::S::ZERO, T::S::ZERO),
-            circle_iter(r2, n, T::S::ZERO, h),
-            smooth,
-        )
-    }
-
-    /// Creates a regular pyramid
-    pub fn regular_pyramid(radius: T::S, height: T::S, n: usize) -> Self {
-        Mesh::pyramid(
-            circle_iter(radius, n, T::S::ZERO, T::S::ZERO),
-            T::VP::from_pos(T::Vec::from_xyz(T::S::ZERO, height, T::S::ZERO)),
-        )
-    }
-
-    /// Creates a regular cone
-    pub fn cone(radius: T::S, height: T::S, n: usize) -> Mesh<T> {
-        Mesh::pyramid(
-            circle_iter(radius, n, T::S::ZERO, T::S::ZERO),
-            T::VP::from_pos(T::Vec::from_xyz(T::S::ZERO, height, T::S::ZERO)),
-        )
-        // TODO: make it smooth
-    }
-
-    /// Creates a regular cylinder
-    pub fn cylinder(radius: T::S, height: T::S, n: usize) -> Mesh<T> {
-        Self::regular_frustum(radius, radius, height, n, true)
-    }
-
-    /// Creates a regular tetrahedron centered at the origin
-    pub fn tetrahedron(radius: T::S) -> Mesh<T> {
-        let mut mesh = Self::regular_pyramid(radius, radius * T::S::FOUR / T::S::THREE, 3);
-        mesh.translate(&T::Vec::from_xyz(T::S::ZERO, T::S::from(0.25), T::S::ZERO));
-        mesh
-    }
-
-    /// Creates a regular octahedron centered at the origin
-    pub fn octahedron(radius: T::S) -> Mesh<T> {
-        let zero = T::S::ZERO;
-        let h = radius * T::S::FOUR / T::S::THREE / T::S::TWO.sqrt();
-        let mut mesh = Mesh::new();
-        let e = mesh.insert_pyramid(
-            circle_iter(radius, 4, T::S::ZERO, T::S::ZERO),
-            T::VP::from_pos(T::Vec::from_xyz(zero, h, zero)),
-        );
-        mesh.remove_face(mesh.edge(e).face_id());
-        mesh.fill_hole_apex(e, T::VP::from_pos(T::Vec::from_xyz(zero, -h, zero)));
-        mesh
     }
 }

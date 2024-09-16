@@ -120,7 +120,7 @@ impl<T: MeshType> Mesh<T> {
         (e0, e1)
     }
 
-    // TODO: simplify other places using this function. And find a better name.
+    // TODO: simplify other places using this function.
     /// Provided two edges that point to the start and end vertex of the new edge, insert that new edge.
     /// This will also update the neighbors of the new edge so the halfedge mesh is consistent.
     pub fn insert_edge(
@@ -159,10 +159,41 @@ impl<T: MeshType> Mesh<T> {
         (e1, e2)
     }
 
-    /// Will allocate two edges and return them as a tuple.
-    /// You can set next and prev to IndexType::max() to insert the id of the twin edge there.
-    /// This will not update the neighbors! After this operation, the mesh is in an inconsistent state.
-    pub fn insert_edge_no_update(
+    /// Provided two edges that point to the start and end vertex of the new edge, insert that new edge.
+    /// This will also update the neighbors of the new edge so the halfedge mesh is consistent.
+    ///
+    /// It will not run any checks to see if the insertion is valid!
+    /// This allows you to run this method on invalid meshes given that the `next` of the two edges is valid.
+    pub(crate) fn insert_edge_no_check(
+        &mut self,
+        inside: T::E,
+        ep1: T::EP,
+        outside: T::E,
+        ep2: T::EP,
+    ) -> (T::E, T::E) {
+        let e_inside = self.edge(inside);
+        let e_outside = self.edge(outside);
+        let v = e_inside.target(self).id();
+        let w = e_outside.target(self).id();
+
+        let other_inside = e_outside.next(self);
+        let other_outside = e_inside.next(self);
+
+        let (e1, e2) = self.insert_edge_no_update_no_check(
+            (other_inside.id(), inside, v, IndexType::max(), ep1),
+            (other_outside.id(), outside, w, IndexType::max(), ep2),
+        );
+
+        self.edge_mut(other_inside.id()).set_prev(e1);
+        self.edge_mut(other_outside.id()).set_prev(e2);
+        self.edge_mut(inside).set_next(e1);
+        self.edge_mut(outside).set_next(e2);
+
+        (e1, e2)
+    }
+
+    /// like `insert_edge_no_update_no_check` but with additional checks
+    pub(crate) fn insert_edge_no_update(
         &mut self,
         (next1, prev1, origin1, face1, ep1): (T::E, T::E, T::V, T::F, T::EP),
         (next2, prev2, origin2, face2, ep2): (T::E, T::E, T::V, T::F, T::EP),
@@ -230,40 +261,51 @@ impl<T: MeshType> Mesh<T> {
         return res;
     }
 
-    /// like insert_edge, but without assertions.
+    /// Will allocate two edges and return them as a tuple.
+    /// You can set next and prev to IndexType::max() to insert the id of the twin edge there.
+    /// This will not update the neighbors! After this operation, the mesh is in an inconsistent state.
+    ///
     /// You have to make sure that the vertices will not be deleted afterwards and that there is no halfedge between them yet.
     /// Also, you have to update the neighbors yourself. After this operation, the mesh is in an inconsistent state.
-    pub fn insert_edge_no_update_no_check(
+    #[inline(always)]
+    pub(crate) fn insert_edge_no_update_no_check(
         &mut self,
         (next1, prev1, origin1, face1, ep1): (T::E, T::E, T::V, T::F, T::EP),
         (next2, prev2, origin2, face2, ep2): (T::E, T::E, T::V, T::F, T::EP),
     ) -> (T::E, T::E) {
+        // TODO: remove the tuples!
+
         let e1 = self.halfedges.allocate();
         let e2 = self.halfedges.allocate();
-        self.halfedges.set(
-            e1,
-            HalfEdge::new(
-                if next1 == IndexType::max() { e2 } else { next1 },
-                e2,
-                if prev1 == IndexType::max() { e2 } else { prev1 },
-                origin1,
-                face1,
-                ep1,
-            ),
-        );
-        self.halfedges.set(
-            e2,
-            HalfEdge::new(
-                if next2 == IndexType::max() { e1 } else { next2 },
-                e1,
-                if prev2 == IndexType::max() { e1 } else { prev2 },
-                origin2,
-                face2,
-                ep2,
-            ),
-        );
-
+        self.insert_halfedge_no_update_no_check(e1, origin1, face1, prev1, e2, next1, ep1);
+        self.insert_halfedge_no_update_no_check(e2, origin2, face2, prev2, e1, next2, ep2);
         (e1, e2)
+    }
+
+    /// Inserts a single half edge with the given origin and target vertex.
+    /// You can set next and prev to IndexType::max() to insert the id of the twin edge there.
+    #[inline(always)]
+    fn insert_halfedge_no_update_no_check(
+        &mut self,
+        e: T::E,
+        origin: T::V,
+        face: T::F,
+        prev: T::E,
+        twin: T::E,
+        next: T::E,
+        payload: T::EP,
+    ) {
+        self.halfedges.set(
+            e,
+            HalfEdge::new(
+                if next == IndexType::max() { twin } else { next },
+                twin,
+                if prev == IndexType::max() { twin } else { prev },
+                origin,
+                face,
+                payload,
+            ),
+        );
     }
 }
 

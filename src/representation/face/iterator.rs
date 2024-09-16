@@ -15,6 +15,14 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
         IncidentToFaceIterator::new(self.edge(mesh), mesh)
     }
 
+    /// Iterates all half-edge ids incident to the face
+    pub fn edge_ids<'a, T: MeshType<E = E, F = F, FP = FP>>(
+        &'a self,
+        mesh: &'a Mesh<T>,
+    ) -> impl Iterator<Item = E> + 'a {
+        self.edges(mesh).map(|e| e.id())
+    }
+
     /// Iterates all vertices adjacent to the face
     #[inline(always)]
     pub fn vertices<'a, T: MeshType<E = E, F = F, FP = FP>>(

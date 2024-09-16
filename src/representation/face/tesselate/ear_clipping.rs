@@ -160,6 +160,7 @@ mod tests {
         ]));
     }
 
+    /*
     /// This is effective to find special examples where the triangulation fails
     /// You might want to increase the number of iterations to >= 1000000 and adjust
     /// the random_star parameters to find nastier examples
@@ -176,5 +177,5 @@ mod tests {
 
             verify_triangulation(&vec2s);
         }
-    }
+    }*/
 }

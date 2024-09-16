@@ -1,7 +1,8 @@
 use crate::{
     math::{HasZero, IndexType, Scalar, Vector, Vector3D},
     representation::{
-        payload::HasPosition, DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
+        payload::HasPosition,
+        DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
     },
 };
 
@@ -155,8 +156,26 @@ where
     }
     pub fn seamless_cubesphere(radius: T::S, n: usize) -> Self {
         todo!("seamless_cubesphere")
-    }
-    pub fn icosphere(radius: T::S, n: usize) -> Self {
-        todo!("icosphere")
     }*/
+
+    /// Create a geodesic icosahedron (aka icosphere) with a given `radius` and `n` subdivisions.
+    pub fn icosphere(radius: T::S, n: usize) -> Self {
+        let mut mesh = Mesh::icosahedron(radius);
+        mesh.subdivision_frequency(n, 0, Mesh::spherical_subdivision_builder(T::Vec::ZERO));
+        mesh
+    }
+    
+    /// Create a geodesic tetrahedron with a given `radius` and `n` subdivisions.
+    pub fn geodesic_tetrahedron(radius: T::S, n: usize) -> Self {
+        let mut mesh = Mesh::tetrahedron(radius);
+        mesh.subdivision_frequency(n, 0, Mesh::spherical_subdivision_builder(mesh.center()));
+        mesh
+    }
+
+    /// Create a geodesic octahedron with a given `radius` and `n` subdivisions.
+    pub fn geodesic_octahedron(radius: T::S, n: usize) -> Self {
+        let mut mesh = Mesh::octahedron(radius);
+        mesh.subdivision_frequency(n, 0, Mesh::spherical_subdivision_builder(mesh.center()));
+        mesh
+    }
 }

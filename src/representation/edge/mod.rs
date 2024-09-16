@@ -84,6 +84,11 @@ impl<E: IndexType, V: IndexType, F: IndexType, EP: EdgePayload> HalfEdge<E, V, F
         self.prev = prev;
     }
 
+    /// Sets the twin half-edge
+    pub fn set_twin(&mut self, twin: E) {
+        self.twin = twin;
+    }
+
     /// Returns the index of the half-edge
     #[inline(always)]
     pub fn id(&self) -> E {
@@ -151,20 +156,20 @@ impl<E: IndexType, V: IndexType, F: IndexType, EP: EdgePayload> HalfEdge<E, V, F
         self.origin
     }
 
-    /// Returns the target vertex of the half-edge
+    /// Returns the target vertex of the half-edge. Reached via the next half-edge, not the twin.
     #[inline(always)]
     pub fn target<T: MeshType<E = E, V = V, F = F, EP = EP>>(
         &self,
         mesh: &Mesh<T>,
     ) -> Vertex<E, V, T::VP> {
         // TODO: avoid this clone?
-        self.twin(mesh).origin(mesh).clone()
+        self.next(mesh).origin(mesh).clone()
     }
 
-    /// Returns the target vertex id of the half-edge
+    /// Returns the target vertex id of the half-edge. Reached via the next half-edge, not the twin. 
     #[inline(always)]
     pub fn target_id<T: MeshType<E = E, V = V, F = F, EP = EP>>(&self, mesh: &Mesh<T>) -> V {
-        self.twin(mesh).origin_id()
+        self.next(mesh).origin_id()
     }
 
     /// Returns the face the half-edge is incident to
@@ -252,6 +257,7 @@ impl<E: IndexType, V: IndexType, F: IndexType, EP: EdgePayload> HalfEdge<E, V, F
         let t = mesh.vertex_mut(target);
         t.set_edge(e);
     }
+
 }
 
 impl<E: IndexType, V: IndexType, F: IndexType, EP: EdgePayload> HalfEdge<E, V, F, EP> {

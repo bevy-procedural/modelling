@@ -40,8 +40,7 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> Vertex<E, V, VP> {
         mesh: &'a Mesh<T>,
     ) -> impl Iterator<Item = Face<E, T::F, T::FP>> + 'a {
         // TODO: slightly inefficient because of the clone
-        self.edges_out(mesh)
-            .filter_map(|e| e.face(mesh).clone())
+        self.edges_out(mesh).filter_map(|e| e.face(mesh).clone())
     }
 
     /*
@@ -84,6 +83,11 @@ impl<'a, T: MeshType> Iterator for IncidentToVertexIterator<'a, T> {
             return Some(self.current);
         }
         let next = self.current.twin(self.mesh).next(self.mesh);
+        debug_assert!(
+            next.origin_id() == self.mesh.edge(self.first).origin_id(),
+            "The edge wheel around vertex {} is not closed. The mesh is invalid.",
+            next.origin_id()
+        );
         if next.id() == self.first {
             return None;
         } else {
@@ -92,7 +96,6 @@ impl<'a, T: MeshType> Iterator for IncidentToVertexIterator<'a, T> {
         }
     }
 }
-
 
 /*
 /// Iterator over all vertices in the same non-manifold vertex wheel

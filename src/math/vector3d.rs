@@ -1,9 +1,51 @@
-use super::{Scalar, Vector};
+use super::{HasZero, Scalar, Vector};
+
+/// Trait for spherical coordinates in 3d space.
+pub trait Spherical3d: Vector<Self::S> {
+    /// The scalar type of the coordinates used in the vector
+    type S: Scalar;
+
+    /// Construct from scalar values.
+    fn new(r: Self::S, phi: Self::S, theta: Self::S) -> Self {
+        Self::from_xyz(r, phi, theta)
+    }
+
+    /// Returns the radial distance.
+    fn r(&self) -> Self::S {
+        self.x()
+    }
+
+    /// Returns the azimuthal angle.
+    fn phi(&self) -> Self::S {
+        self.y()
+    }
+
+    /// Returns the polar angle.
+    fn theta(&self) -> Self::S {
+        self.z()
+    }
+
+    /// Converts to cartesian coordinates.
+    fn cartesian(&self) -> Self::Vec3 {
+        let r = self.r();
+        let phi = self.phi();
+        let theta = self.theta();
+
+        let x = r * theta.sin() * phi.cos();
+        let y = r * theta.sin() * phi.sin();
+        let z = r * theta.cos();
+
+        Self::Vec3::new(x, y, z)
+    }
+}
 
 /// Trait for coordinates in 3d space.
 pub trait Vector3D: Vector<Self::S> {
     /// The scalar type of the coordinates used in the vector
     type S: Scalar;
+
+    /// The associated spherical 3d vector type
+    type Spherical: Spherical3d<S = Self::S, Vec3 = Self>;
 
     /// Construct from scalar values.
     fn new(x: Self::S, y: Self::S, z: Self::S) -> Self;
@@ -19,7 +61,7 @@ pub trait Vector3D: Vector<Self::S> {
         let b = next - prev;
         a.cross(&b)
     }
-    
+
     /// Returns the cross product of two vectors.
     fn cross(&self, other: &Self) -> Self;
 
@@ -56,5 +98,43 @@ pub trait Vector3D: Vector<Self::S> {
     /// Swizzle
     fn zyx(&self) -> Self {
         Self::new(self.z(), self.y(), self.x())
+    }
+
+    /// Convert to spherical coordinates.
+    fn spherical(&self) -> Self::Spherical {
+        let r = self.length();
+        let phi = self.y().atan2(self.x());
+        let theta = if r == Self::S::ZERO {
+            Self::S::ZERO
+        } else {
+            (self.z() / r).acos()
+        };
+
+        Self::Spherical::new(r, phi, theta)
+    }
+
+    /// Spherical Interpolation
+    fn slerp(&self, other: &Self, t: Self::S) -> Self {
+        let mut dot = self.dot(other);
+
+        // Clamp the dot product to stay within the valid range of acos
+        dot = dot.clamp(-Self::S::ONE, Self::S::ONE);
+
+        // Calculate the angle between the vectors
+        let theta = dot.acos();
+
+        // If the angle is very small, return linear interpolation to avoid numerical issues
+        if theta.abs() < Self::S::EPS.sqrt() {
+            return *self;
+        }
+
+        let sin_theta = theta.sin();
+
+        // Interpolate
+        let st1 = ((Self::S::ONE - t) * theta).sin() / sin_theta;
+        let st2 = (t * theta).sin() / sin_theta;
+
+        // Return the interpolated vector
+        *self * st1 + *other * st2
     }
 }

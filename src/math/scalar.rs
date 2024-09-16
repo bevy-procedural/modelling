@@ -80,6 +80,12 @@ pub trait Scalar:
     /// Returns the cosine of the scalar.
     fn cos(&self) -> Self;
 
+    /// Returns the tangent of the scalar.
+    fn tan(&self) -> Self;
+
+    /// Returns the atan2 of the scalar.
+    fn atan2(&self, x: Self) -> Self;
+
     /// Returns the maximum of two scalars.
     fn max(&self, b: Self) -> Self;
 
@@ -119,6 +125,17 @@ pub trait Scalar:
     fn stable_mean<I: Iterator<Item = Self>>(values: I) -> Self {
         let (sum, n) = neumaier_summation(values);
         sum / Self::from_usize(n)
+    }
+
+    /// Clamp the scalar to a given range.
+    fn clamp(self, min: Self, max: Self) -> Self {
+        if self < min {
+            min
+        } else if self > max {
+            max
+        } else {
+            self
+        }
     }
 }
 

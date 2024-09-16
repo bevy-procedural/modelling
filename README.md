@@ -84,9 +84,8 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
     -   [x] Cylinder, Cone
     -   [x] Prism, Antiprism
     -   [x] Pyramid, Frustum, Tetrahedron, Octahedron, Dodecahedron, Icosahedron
-    -   [x] UV Sphere
+    -   [x] UV Sphere, Icosphere, Geodesic Polyhedra
     -   [ ] Cube Sphere
-    -   [ ] Icosphere
     -   [ ] Torus
 
 -   Builder Primitives
@@ -101,7 +100,7 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
     -   [x] Extrude 
     -   [x] Linear Loft (Triangle, Polygon)
     -   [x] Transform (Translate, Rotate, Scale, [ ] Shear)
-    -   [ ] Frequency Subdivision
+    -   [x] Frequency Subdivision (partial)
     -   [ ] Taper
     -   [ ] Chamfer / Cantellate / Bevel / Truncate / Bitruncate / Omnitruncate
     -   [ ] Boolean Operations (Union, Intersection, Difference, Symmetric Difference)

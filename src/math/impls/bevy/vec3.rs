@@ -1,4 +1,4 @@
-use crate::math::{HasZero, Transform, Vector, Vector3D};
+use crate::math::{HasZero, Spherical3d, Transform, Vector, Vector3D};
 use bevy::{
     math::{Quat, Vec2, Vec3, Vec4},
     transform::components::Transform as TransformBevy,
@@ -92,6 +92,7 @@ impl Vector<f32> for Vec3 {
 
 impl Vector3D for Vec3 {
     type S = f32;
+    type Spherical = Vec3;
 
     #[inline(always)]
     fn new(x: f32, y: f32, z: f32) -> Self {
@@ -102,6 +103,10 @@ impl Vector3D for Vec3 {
     fn cross(&self, other: &Self) -> Self {
         Vec3::cross(*self, *other)
     }
+}
+
+impl Spherical3d for Vec3 {
+    type S = f32;
 }
 
 // TODO: Switch to Affine3

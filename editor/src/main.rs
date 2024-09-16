@@ -2,7 +2,6 @@ use bevy::{
     diagnostic::FrameTimeDiagnosticsPlugin,
     pbr::wireframe::{WireframeConfig, WireframePlugin},
     prelude::*,
-    render::render_asset::RenderAssetUsages,
     window::WindowResolution,
 };
 use bevy_inspector_egui::{
@@ -166,7 +165,7 @@ fn _make_2d_zigzag() -> BevyMesh3d {
 }
 
 fn _make_prism() -> BevyMesh3d {
-      /*BevyMesh3d::prism(
+    /*BevyMesh3d::prism(
         (0..10).map(|i| {
             BevyVertexPayload::from_pos(Vec3::new(
                 (i as f32 / 5.0 * PI).sin(),
@@ -258,11 +257,12 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     mesh.flip_yz();
     mesh*/
 
-    BevyMesh3d::icosahedron(1.0)
+    BevyMesh3d::icosphere(1.0, 8)
+    //BevyMesh3d::geodesic_tetrahedron(1.0, 2)
 }
 
 pub fn main() {
-    env::set_var("RUST_BACKTRACE", "1"); // or "full"
+    env::set_var("RUST_BACKTRACE", "1"); // or "full", "1", "0"
 
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
@@ -276,7 +276,7 @@ pub fn main() {
         }))
         .add_plugins(WireframePlugin)
         .insert_resource(WireframeConfig {
-            global: true,
+            global: false,
             default_color: Color::WHITE,
         })
         .register_type::<GlobalSettings>()
@@ -339,8 +339,8 @@ fn update_meshes(
         mesh.generate_smooth_normals();
         mesh.bevy_set_ex(
             assets.get_mut(handle).unwrap(),
-            TriangulationAlgorithm::Delaunay,
-            true,
+            TriangulationAlgorithm::Sweep,
+            false,
             &mut meta,
         );
 
@@ -354,10 +354,9 @@ fn setup_meshes(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut texts: ResMut<Text3dGizmos>,
 ) {
-    let mesh = make_mesh(&MeshSettings::default());
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(mesh.to_bevy(RenderAssetUsages::all())),
+            mesh: meshes.add(Mesh::from(Plane3d::new(Vec3::Y, Vec2::new(1.0, 1.0)))),
             material: materials.add(StandardMaterial {
                 base_color: Color::srgba(0.9, 0.9, 0.9, 1.0),
                 //alpha_mode: AlphaMode::Blend,
@@ -372,6 +371,7 @@ fn setup_meshes(
     ));
 
     if false {
+        let mesh = make_mesh(&MeshSettings::default());
         show_vertex_indices(&mut texts, &mesh);
         show_edges(&mut texts, &mesh, 0.1);
         show_faces(&mut texts, &mesh);

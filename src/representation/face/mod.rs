@@ -114,6 +114,11 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
 
         return None;
     }
+    
+    /// Returns the face payload.
+    pub fn payload(&self) -> &FP {
+        &self.payload
+    }
 }
 
 impl<E: IndexType, F: IndexType, FP: FacePayload> std::fmt::Display for Face<E, F, FP> {

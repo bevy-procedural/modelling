@@ -7,6 +7,7 @@ mod tesselate;
 mod normals;
 mod topology;
 mod transform;
+mod geometry;
 
 #[cfg(feature = "bevy")]
 pub mod bevy;
