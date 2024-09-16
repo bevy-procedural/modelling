@@ -6,7 +6,7 @@ where
     T::VP: HasPosition<T::Vec, S = T::S>,
 {
     /// Returns the mean of all vertex positions.
-    pub fn center(&self) -> T::Vec {
+    pub fn centroid(&self) -> T::Vec {
         self.vertices().map(|v| *v.pos()).stable_mean()
     }
 }

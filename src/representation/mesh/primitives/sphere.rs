@@ -168,14 +168,14 @@ where
     /// Create a geodesic tetrahedron with a given `radius` and `n` subdivisions.
     pub fn geodesic_tetrahedron(radius: T::S, n: usize) -> Self {
         let mut mesh = Mesh::tetrahedron(radius);
-        mesh.subdivision_frequency(n, 0, Mesh::spherical_subdivision_builder(mesh.center()));
+        mesh.subdivision_frequency(n, 0, Mesh::spherical_subdivision_builder(T::Vec::ZERO));
         mesh
     }
 
     /// Create a geodesic octahedron with a given `radius` and `n` subdivisions.
     pub fn geodesic_octahedron(radius: T::S, n: usize) -> Self {
         let mut mesh = Mesh::octahedron(radius);
-        mesh.subdivision_frequency(n, 0, Mesh::spherical_subdivision_builder(mesh.center()));
+        mesh.subdivision_frequency(n, 0, Mesh::spherical_subdivision_builder(mesh.centroid()));
         mesh
     }
 }

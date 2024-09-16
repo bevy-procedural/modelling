@@ -257,8 +257,8 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     mesh.flip_yz();
     mesh*/
 
-    BevyMesh3d::icosphere(1.0, 8)
-    //BevyMesh3d::geodesic_tetrahedron(1.0, 2)
+    //BevyMesh3d::icosphere(1.0, 8)
+    BevyMesh3d::geodesic_tetrahedron(1.0, 2)
 }
 
 pub fn main() {
@@ -276,7 +276,7 @@ pub fn main() {
         }))
         .add_plugins(WireframePlugin)
         .insert_resource(WireframeConfig {
-            global: false,
+            global: true,
             default_color: Color::WHITE,
         })
         .register_type::<GlobalSettings>()
@@ -339,8 +339,8 @@ fn update_meshes(
         mesh.generate_smooth_normals();
         mesh.bevy_set_ex(
             assets.get_mut(handle).unwrap(),
-            TriangulationAlgorithm::Sweep,
-            false,
+            TriangulationAlgorithm::Delaunay,
+            true,
             &mut meta,
         );
 

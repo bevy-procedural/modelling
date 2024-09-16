@@ -1,5 +1,5 @@
 use crate::{
-    math::{Scalar, Vector3D},
+    math::{Scalar, Vector, Vector3D},
     representation::{
         payload::HasPosition, DefaultEdgePayload, DefaultFacePayload, HalfEdge, Mesh, MeshType,
         Vertex,
@@ -44,9 +44,15 @@ where
         center: T::Vec,
     ) -> impl Fn(&Mesh<T>, usize, T::V, usize, T::V, usize, T::V) -> T::VP {
         move |mesh, i, vi, j, vj, k, vk| {
-            let pi = *mesh.vertex(vi).pos() - center;
-            let pj = *mesh.vertex(vj).pos() - center;
-            let pk = *mesh.vertex(vk).pos() - center;
+            let mut pi = *mesh.vertex(vi).pos() - center;
+            let scale = T::S::ONE / pi.length();
+            pi = pi * scale;
+            let pj = (*mesh.vertex(vj).pos() - center) * scale;
+            let pk = (*mesh.vertex(vk).pos() - center) * scale;
+
+            debug_assert!(pi.length() - T::S::ONE < T::S::EPS.sqrt());
+            debug_assert!(pj.length() - T::S::ONE < T::S::EPS.sqrt());
+            debug_assert!(pk.length() - T::S::ONE < T::S::EPS.sqrt());
 
             // slerp
             let pos = if i == 0 {
@@ -59,7 +65,7 @@ where
                 todo!("slerp 3")
             };
 
-            T::VP::from_pos(center + pos)
+            T::VP::from_pos(center + pos / scale)
         }
     }
 }
@@ -234,7 +240,7 @@ where
     ) -> &mut Self {
         // for now
         assert!(m == 0);
-        assert!(n == 1 || n == 2 || n == 4 || n == 8);
+        assert!(n & (n - 1) == 0, "todo: odd subdivision frequency");
 
         let mut o = n;
         while o > 0 {

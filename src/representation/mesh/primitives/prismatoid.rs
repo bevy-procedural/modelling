@@ -194,9 +194,19 @@ where
         // TODO: make it smooth
     }
 
-    /// Creates a regular tetrahedron
-    pub fn tetrahedron(radius: T::S) -> Mesh<T> {
-        Self::regular_pyramid(radius, radius * T::S::FOUR / T::S::THREE, 3)
+    /// Creates a regular tetrahedron with edge length `l` centered at the origin
+    pub fn tetrahedron(l: T::S) -> Mesh<T> {
+        let e = T::S::HALF * l;
+        let sq = e / T::S::TWO.sqrt();
+        let zero = T::S::ZERO;
+        Mesh::pyramid(
+            [
+                T::VP::from_pos(T::Vec::from_xyz(-e, zero, -sq)),
+                T::VP::from_pos(T::Vec::from_xyz(zero, -e, sq)),
+                T::VP::from_pos(T::Vec::from_xyz(e, zero, -sq)),
+            ],
+            T::VP::from_pos(T::Vec::from_xyz(zero, e, sq)),
+        )
     }
 
     /// Creates a regular octahedron centered at the origin
