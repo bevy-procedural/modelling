@@ -1,4 +1,4 @@
-use crate::math::{HasZero, Transform, Vector, Vector2D};
+use crate::math::{HasZero, Scalar, Transform, Vector, Vector2D};
 use bevy::math::{Affine2, Vec2, Vec3, Vec4};
 
 impl HasZero for Vec2 {
@@ -85,6 +85,11 @@ impl Vector<f32> for Vec2 {
     #[inline(always)]
     fn from_xyz(x: f32, y: f32, _: f32) -> Self {
         Vec2::new(x, y)
+    }
+
+    #[inline(always)]
+    fn is_about(&self, other: &Self, epsilon: f32) -> bool {
+        self.x.is_about(other.x, epsilon) && self.y.is_about(other.y, epsilon)
     }
 }
 

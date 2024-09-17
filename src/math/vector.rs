@@ -96,6 +96,9 @@ pub trait Vector<S: Scalar>:
         let (sum, count) = kahan_summation(iter);
         sum / Self::splat(S::from_usize(count))
     }
+
+    /// Check if two vectors are approximately equal.
+    fn is_about(&self, other: &Self, epsilon: S) -> bool;
 }
 
 /// Additional methods for vector iterators.

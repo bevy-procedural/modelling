@@ -14,6 +14,7 @@ impl Scalar for f32 {
     const THREE: Self = 3.0;
     const FOUR: Self = 4.0;
     const FIVE: Self = 5.0;
+    const TEN: Self = 10.0;
     const HALF: Self = 0.5;
     const PHI: Self = 1.61803398874989484820;
 

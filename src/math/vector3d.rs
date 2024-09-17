@@ -115,6 +115,15 @@ pub trait Vector3D: Vector<Self::S> {
 
     /// Spherical Interpolation
     fn slerp(&self, other: &Self, t: Self::S) -> Self {
+        debug_assert!(
+            self.length() - Self::S::ONE < Self::S::EPS.sqrt(),
+            "slerp requires normalized vectors"
+        );
+        debug_assert!(
+            other.length() - Self::S::ONE < Self::S::EPS.sqrt(),
+            "slerp requires normalized vectors"
+        );
+
         let mut dot = self.dot(other);
 
         // Clamp the dot product to stay within the valid range of acos

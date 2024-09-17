@@ -6,6 +6,41 @@ use crate::{
     },
 };
 
+/// Describes how to subdivide a mesh.
+#[derive(Debug, Clone, Copy)]
+pub struct SubdivisionDescription {
+    b: usize,
+    c: usize,
+}
+
+impl SubdivisionDescription {
+    /// Create a new subdivision description.
+    pub fn new(b: usize, c: usize) -> Self {
+        assert!(b >= 1);
+        Self { b, c }
+    }
+
+    /// Get the first number of subdivisions.
+    pub fn b(&self) -> usize {
+        self.b
+    }
+
+    /// Get the second number of subdivisions.
+    pub fn c(&self) -> usize {
+        self.c
+    }
+
+    /// Frequency $v = b + c$ of the subdivision.
+    pub fn frequency(&self) -> usize {
+        self.b + self.c
+    }
+
+    /// Triangulation number $T = b^2 + bc + c^2$ of the subdivision.
+    pub fn triangulation_number(&self) -> usize {
+        self.b * self.b + self.b * self.c + self.c * self.c
+    }
+}
+
 impl<T: MeshType> Mesh<T>
 where
     T::EP: DefaultEdgePayload,
@@ -42,17 +77,12 @@ where
     /// direction of the normal.
     pub fn spherical_subdivision_builder(
         center: T::Vec,
+        radius: T::S,
     ) -> impl Fn(&Mesh<T>, usize, T::V, usize, T::V, usize, T::V) -> T::VP {
         move |mesh, i, vi, j, vj, k, vk| {
-            let mut pi = *mesh.vertex(vi).pos() - center;
-            let scale = T::S::ONE / pi.length();
-            pi = pi * scale;
-            let pj = (*mesh.vertex(vj).pos() - center) * scale;
-            let pk = (*mesh.vertex(vk).pos() - center) * scale;
-
-            debug_assert!(pi.length() - T::S::ONE < T::S::EPS.sqrt());
-            debug_assert!(pj.length() - T::S::ONE < T::S::EPS.sqrt());
-            debug_assert!(pk.length() - T::S::ONE < T::S::EPS.sqrt());
+            let pi = (*mesh.vertex(vi).pos() - center).normalize();
+            let pj = (*mesh.vertex(vj).pos() - center).normalize();
+            let pk = (*mesh.vertex(vk).pos() - center).normalize();
 
             // slerp
             let pos = if i == 0 {
@@ -65,7 +95,7 @@ where
                 todo!("slerp 3")
             };
 
-            T::VP::from_pos(center + pos / scale)
+            T::VP::from_pos(center + pos.normalize() * radius)
         }
     }
 }
@@ -234,23 +264,28 @@ where
     /// Returns a new mesh.
     pub fn subdivision_frequency(
         &mut self,
-        n: usize,
-        m: usize,
+        des: SubdivisionDescription,
         vp_builder: impl Fn(&Self, usize, T::V, usize, T::V, usize, T::V) -> T::VP,
     ) -> &mut Self {
-        // for now
-        assert!(m == 0);
-        assert!(n & (n - 1) == 0, "todo: odd subdivision frequency");
+        // TODO: for c != 0 we have to shift the triangle. This means we have to build a completely new graph and things become much more complicated
+        assert!(des.c == 0);
 
-        let mut o = n;
-        while o > 0 {
+        // TODO: Apply this to meshes with non-triangular faces by triangulating them. Usually, you want to insert Center points / Steiner points to get nearly equilateral triangles.
+
+        assert!(des.b & (des.b - 1) == 0, "todo: odd subdivision frequency");
+        let num_faces = self.num_faces();
+
+        let mut b = des.b;
+        while b > 1 {
             self.subdivision_frequency_once(&vp_builder);
-            if o == 1 {
+            if b == 1 {
                 break;
             }
-            assert!(o % 2 == 0, "todo: odd subdivision frequency");
-            o = o / 2
+            assert!(b % 2 == 0, "todo: odd subdivision frequency");
+            b = b / 2
         }
+
+        debug_assert_eq!(self.num_faces(), num_faces * des.triangulation_number());
 
         self
     }

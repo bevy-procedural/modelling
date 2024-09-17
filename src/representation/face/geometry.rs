@@ -62,7 +62,7 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
         T::VP: HasPosition<T::Vec, S = T::S>,
     {
         // TODO: eps?
-        self.is_planar(mesh, T::S::EPS * 10.0.into())
+        self.is_planar(mesh, T::S::EPS.sqrt())
     }
 
     /// Whether the face has holes.

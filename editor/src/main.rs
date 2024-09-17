@@ -249,7 +249,6 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     //BevyMesh3d::tetrahedron(1.0)
     //BevyMesh3d::octahedron(1.0)
 
-    //bBevyMesh3d::uv_sphere(2.0, 32, 32)
 
     //BevyMesh3d::dodecahedron(1.0)
 
@@ -257,8 +256,10 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     mesh.flip_yz();
     mesh*/
 
-    //BevyMesh3d::icosphere(1.0, 8)
-    BevyMesh3d::geodesic_tetrahedron(1.0, 2)
+    //BevyMesh3d::uv_sphere(3.0, 64, 64)
+    BevyMesh3d::icosphere(3.0, 64)
+    //BevyMesh3d::geodesic_tetrahedron(3.0, 128)
+    //BevyMesh3d::geodesic_octahedron(3.0, 128)
 }
 
 pub fn main() {
@@ -340,7 +341,7 @@ fn update_meshes(
         mesh.bevy_set_ex(
             assets.get_mut(handle).unwrap(),
             TriangulationAlgorithm::Delaunay,
-            true,
+            false,
             &mut meta,
         );
 

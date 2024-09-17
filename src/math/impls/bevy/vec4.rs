@@ -1,5 +1,5 @@
 use super::mat5::Mat5;
-use crate::math::{HasZero, Vector, Vector4D};
+use crate::math::{HasZero, Scalar, Vector, Vector4D};
 use bevy::math::{Vec2, Vec3, Vec4};
 
 impl HasZero for Vec4 {
@@ -85,6 +85,14 @@ impl Vector<f32> for Vec4 {
     #[inline(always)]
     fn from_xyz(x: f32, y: f32, z: f32) -> Self {
         Vec4::new(x, y, z, 0.0)
+    }
+
+    #[inline(always)]
+    fn is_about(&self, other: &Self, epsilon: f32) -> bool {
+        self.x.is_about(other.x, epsilon)
+            && self.y.is_about(other.y, epsilon)
+            && self.z.is_about(other.z, epsilon)
+            && self.w.is_about(other.w, epsilon)
     }
 }
 

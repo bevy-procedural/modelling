@@ -43,7 +43,10 @@ pub trait Scalar:
 
     /// A value of five.
     const FIVE: Self;
-    
+
+    /// A value of ten.
+    const TEN: Self;
+
     /// A value of one half.
     const HALF: Self;
 
@@ -136,6 +139,11 @@ pub trait Scalar:
         } else {
             self
         }
+    }
+
+    /// Returns whether the scalar is about another scalar within a given epsilon.
+    fn is_about(&self, other: Self, epsilon: Self) -> bool {
+        (*self - other).abs() < epsilon
     }
 }
 

@@ -14,6 +14,7 @@ pub mod bevy;
 
 use super::{Deletable, DeletableVector, Face, HalfEdge, Vertex};
 pub use mesh_type::MeshType;
+pub use builder::*;
 
 /// A mesh data structure for (open) manifold meshes.
 ///

@@ -209,10 +209,10 @@ where
         )
     }
 
-    /// Creates a regular octahedron centered at the origin
+    /// Creates a regular octahedron with a given circumscribed `radius` centered at the origin
     pub fn octahedron(radius: T::S) -> Mesh<T> {
         let zero = T::S::ZERO;
-        let h = radius * T::S::FOUR / T::S::THREE / T::S::TWO.sqrt();
+        let h = radius;
         let mut mesh = Mesh::new();
         let e = mesh.insert_pyramid(
             circle_iter(radius, 4, T::S::ZERO, T::S::ZERO),
