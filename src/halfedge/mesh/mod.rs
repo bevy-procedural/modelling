@@ -1,9 +1,9 @@
 mod iterator;
 mod topology;
 
-use super::HalfEdgeMeshType;
+use super::{HalfEdge, HalfEdgeMeshType};
 use crate::{
-    mesh::Mesh,
+    mesh::{Edge, Mesh},
     util::{Deletable, DeletableVector},
 };
 
@@ -37,6 +37,22 @@ impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
             faces: DeletableVector::new(),
             payload: T::MP::default(),
         }
+    }
+
+    /// Flips the edge, i.e., swaps the origin and target vertices.
+    pub fn flip_edge(&mut self, e: T::E) -> &mut Self {
+        HalfEdge::flip(e, self);
+        self
+    }
+
+    /// Flip all edges (and faces) turning the mesh inside out.
+    pub fn flip(&mut self) -> &mut Self {
+        // TODO: this is an unnecessary clone
+        let ids: Vec<T::E> = self.edges().map(|e| e.id()).collect();
+        ids.iter().for_each(|&e| {
+            self.flip_edge(e);
+        });
+        self
     }
 }
 

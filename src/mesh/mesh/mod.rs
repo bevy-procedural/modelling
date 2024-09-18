@@ -1,16 +1,14 @@
 //mod check;
-//mod geometry;
 mod mesh_type;
 //mod normals;
 mod payload;
 //mod tesselate;
-//mod transform;
 
 pub use payload::*;
 
 pub use mesh_type::MeshType;
 
-use crate::math::Transformable;
+use crate::math::{HasPosition, Transformable, VectorIteratorExt};
 
 use super::Vertex;
 
@@ -90,5 +88,46 @@ pub trait Mesh<T: MeshType>: Default + std::fmt::Display + Clone {
             v.transform(t);
         }
         self
+    }
+
+    /// Translates all vertices in the mesh
+    fn translate(&mut self, t: &T::Vec) -> &mut Self
+    where
+        T::VP: Transformable<Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
+    {
+        for v in self.vertices_mut() {
+            v.translate(t);
+        }
+        self
+    }
+
+    /// Rotates all vertices in the mesh
+    fn rotate(&mut self, rotation: &T::Rot) -> &mut Self
+    where
+        T::VP: Transformable<Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
+    {
+        for v in self.vertices_mut() {
+            v.rotate(rotation);
+        }
+        self
+    }
+
+    /// Scales all vertices in the mesh
+    fn scale(&mut self, scale: &T::Vec) -> &mut Self
+    where
+        T::VP: Transformable<Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
+    {
+        for v in self.vertices_mut() {
+            v.scale(scale);
+        }
+        self
+    }
+
+    /// Returns the mean of all vertex positions.
+    fn centroid(&self) -> T::Vec
+    where
+        T::VP: HasPosition<T::Vec, S = T::S>,
+    {
+        self.vertices().map(|v| v.pos()).stable_mean()
     }
 }
