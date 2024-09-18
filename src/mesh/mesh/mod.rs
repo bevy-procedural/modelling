@@ -7,20 +7,9 @@ mod payload;
 //mod topology;
 //mod transform;
 
-pub use mesh_type::MeshType;
+pub use payload::*;
 
-/// A mesh data structure for (open) manifold meshes.
-///
-/// Since coordinates are a variable payload, you can use this mesh for any dimension >= 2.
-///
-/// Non-manifold edges (multiple faces per edge) are not supported
-/// -- use multiple meshes or a "tufted cover".
-/// Non-manifold vertices are supported!
-///
-/// Non-orientable surfaces have to be covered by multiple faces (so they become oriented).
-/// The geometry doesn't have to be Euclidean (TODO: But what do we require?).
-///
-/// TODO: to import non-manifold edges, we could use the "tufted cover" https://www.cs.cmu.edu/~kmcrane/Projects/NonmanifoldLaplace/index.html
+pub use mesh_type::MeshType;
 pub trait Mesh<T: MeshType>: Default + std::fmt::Display + Clone {
     /// Returns whether the vertex exists and is not deleted
     fn has_vertex(&self, index: T::V) -> bool;
@@ -67,6 +56,8 @@ pub trait Mesh<T: MeshType>: Default + std::fmt::Display + Clone {
     /// Get a mutable reference to the payload of the mesh
     fn payload_mut(&mut self) -> &mut T::MP;
 
+    // TODO
+    /*
     /// Returns an iterator over all non-deleted vertices
     fn vertices<'a>(&'a self) -> impl Iterator<Item = &'a T::Vertex>
     where
@@ -85,5 +76,5 @@ pub trait Mesh<T: MeshType>: Default + std::fmt::Display + Clone {
     /// Returns an iterator over all non-deleted faces
     fn faces<'a>(&'a self) -> impl Iterator<Item = &'a T::Face>
     where
-        T::Face: 'a;
+        T::Face: 'a;*/
 }

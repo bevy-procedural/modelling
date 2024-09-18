@@ -8,7 +8,7 @@
 //!
 
 //pub mod gizmo;
-//pub mod halfedge;
+pub mod halfedge;
 pub mod math;
 pub mod mesh;
 //pub mod operations;

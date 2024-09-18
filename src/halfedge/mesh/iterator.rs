@@ -1,33 +1,24 @@
-use super::{Mesh, MeshType};
-use crate::mesh::{
-    Deletable, Face, HalfEdge, IncidentToFaceBackIterator, IncidentToFaceIterator, Vertex,
-};
+use super::HalfEdgeMesh;
+use crate::{halfedge::{HalfEdgeMeshType, IncidentToFaceBackIterator, IncidentToFaceIterator}, mesh::{Edge, Mesh}, util::Deletable};
 
-impl<T: MeshType> Mesh<T> {
+impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
     /// Returns an iterator over all non-deleted vertices
-    pub fn vertices(&self) -> impl Iterator<Item = &Vertex<T::E, T::V, T::VP>> {
+    pub fn vertices(&self) -> impl Iterator<Item = &T::Vertex> {
         self.vertices.iter()
     }
 
     /// Returns an mutable iterator over all non-deleted vertices
-    pub fn vertices_mut(&mut self) -> impl Iterator<Item = &mut Vertex<T::E, T::V, T::VP>> {
+    pub fn vertices_mut(&mut self) -> impl Iterator<Item = &mut T::Vertex> {
         self.vertices.iter_mut()
     }
 
     /// Returns an iterator over all non-deleted halfedges
-    pub fn halfedges(&self) -> impl Iterator<Item = &HalfEdge<T::E, T::V, T::F, T::EP>> {
+    pub fn halfedges(&self) -> impl Iterator<Item = &T::Edge> {
         self.halfedges.iter()
     }
 
     /// Returns an iterator over all non-deleted halfedge pairs without duplicates
-    pub fn edges(
-        &self,
-    ) -> impl Iterator<
-        Item = (
-            &HalfEdge<T::E, T::V, T::F, T::EP>,
-            &HalfEdge<T::E, T::V, T::F, T::EP>,
-        ),
-    > {
+    pub fn edges(&self) -> impl Iterator<Item = (&T::Edge, &T::Edge)> {
         self.halfedges.iter().filter_map(move |e| {
             if e.is_deleted() {
                 None
@@ -40,7 +31,7 @@ impl<T: MeshType> Mesh<T> {
     }
 
     /// Returns an iterator over all non-deleted faces
-    pub fn faces(&self) -> impl Iterator<Item = &Face<T::E, T::F, T::FP>> {
+    pub fn faces(&self) -> impl Iterator<Item = &T::Face> {
         self.faces.iter()
     }
 

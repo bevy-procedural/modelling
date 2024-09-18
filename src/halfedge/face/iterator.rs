@@ -1,34 +1,27 @@
-use crate::mesh::MeshType;
-
-use super::{
-    super::{Face, IncidentToFaceIterator, IndexType, Mesh, Vertex},
-    FacePayload,
+use super::super::{HalfEdgeFace, IncidentToFaceIterator};
+use crate::{
+    halfedge::HalfEdgeMeshType,
+    mesh::{Edge, Face},
 };
 
-impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
+impl<T: HalfEdgeMeshType> HalfEdgeFace<T> {
     /// Iterates all half-edges incident to the face
     #[inline(always)]
-    pub fn edges<'a, T: MeshType<E = E, F = F, FP = FP>>(
-        &'a self,
-        mesh: &'a Mesh<T>,
-    ) -> IncidentToFaceIterator<'a, T> {
+    pub fn edges<'a>(&'a self, mesh: &'a T::Mesh) -> IncidentToFaceIterator<'a, T> {
         IncidentToFaceIterator::new(self.edge(mesh), mesh)
     }
 
     /// Iterates all half-edge ids incident to the face
-    pub fn edge_ids<'a, T: MeshType<E = E, F = F, FP = FP>>(
-        &'a self,
-        mesh: &'a Mesh<T>,
-    ) -> impl Iterator<Item = E> + 'a {
+    pub fn edge_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::E> + 'a {
         self.edges(mesh).map(|e| e.id())
     }
 
     /// Iterates all vertices adjacent to the face
     #[inline(always)]
-    pub fn vertices<'a, T: MeshType<E = E, F = F, FP = FP>>(
+    pub fn vertices<'a>(
         &'a self,
-        mesh: &'a Mesh<T>,
-    ) -> impl Iterator<Item = Vertex<E, T::V, T::VP>> + 'a + Clone + ExactSizeIterator {
+        mesh: &'a T::Mesh,
+    ) -> impl Iterator<Item = T::Vertex> + 'a + Clone + ExactSizeIterator {
         self.edges(mesh).map(|e| e.target(mesh))
     }
 }

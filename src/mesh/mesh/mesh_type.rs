@@ -5,7 +5,7 @@ use crate::{
 };
 
 /// This trait defines all the associated types used in a mesh and puts them into relation.
-pub trait MeshType: Copy {
+pub trait MeshType: Copy + Eq {
     /// The type of the index used for edge.
     type E: IndexType;
 
@@ -56,9 +56,9 @@ pub trait MeshType: Copy {
 
     type Mesh: Mesh<Self>;
 
-    type Edge: Edge<Self::E, Self::V, Self::F, Self::EP>;
+    type Edge: Edge<Self>;
 
-    type Vertex: Vertex<Self::E, Self::V, Self::VP>;
+    type Vertex: Vertex<Self>;
 
-    type Face: Face<Self::E, Self::F, Self::FP>;
+    type Face: Face<Self>;
 }

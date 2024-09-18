@@ -1,7 +1,13 @@
 mod iterator;
 
-use super::{Deletable, HalfEdge, IndexType, Mesh, MeshType};
-pub use payload::*;
+pub use iterator::*;
+
+use super::{HalfEdgeMesh, HalfEdgeMeshType};
+use crate::{
+    math::IndexType,
+    mesh::{DefaultFacePayload, Face, FacePayload, Mesh},
+    util::Deletable,
+};
 
 /// A face in a mesh.
 ///
@@ -9,44 +15,75 @@ pub use payload::*;
 ///
 /// Also, if you have inner components, you have to use multiple faces!
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Face<E: IndexType, F: IndexType, FP: FacePayload> {
+pub struct HalfEdgeFace<T: HalfEdgeMeshType> {
     /// the index of the face
-    id: F,
+    id: T::F,
 
     /// a half-edge incident to the face (outer component)
-    edge: E,
+    edge: T::E,
 
     /// whether the face is curved, i.e., not planar
     curved: bool,
 
     /// Some user-defined payload
-    payload: FP,
+    payload: T::FP,
 }
 
-impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
-    /// Returns the index of the face.
-    #[inline(always)]
-    pub fn id(&self) -> F {
-        self.id
-    }
-
+impl<T: HalfEdgeMeshType> Face<T> for HalfEdgeFace<T> {
     /// Returns a half-edge incident to the face.
     #[inline(always)]
-    pub fn edge<T: MeshType<E = E, F = F, FP = FP>>(
-        &self,
-        mesh: &Mesh<T>,
-    ) -> HalfEdge<E, T::V, F, T::EP> {
+    fn edge(&self, mesh: &T::Mesh) -> T::Edge {
         *mesh.edge(self.edge)
     }
 
+    /// Returns the index of the face.
+    #[inline(always)]
+    fn id(&self) -> T::F {
+        self.id
+    }
+
+    /// Whether the face is allowed to be curved.
+    fn may_be_curved(&self) -> bool {
+        self.curved
+    }
+
+    /// Get the number of edges of the face.
+    fn num_edges(&self, mesh: &T::Mesh) -> usize {
+        let (min, max) = self.edges(mesh).size_hint();
+        assert!(min == max.unwrap());
+        min
+    }
+
+    /// Get the number of vertices of the face.
+    fn num_vertices(&self, mesh: &T::Mesh) -> usize {
+        Face::num_edges(self, mesh)
+    }
+
+    /// Get the number of triangles of the face. (n-2)*3
+    fn num_triangles(&self, mesh: &T::Mesh) -> usize {
+        (Face::num_vertices(self, mesh) - 2) * 3
+    }
+
+    /// Returns the face payload.
+    fn payload(&self) -> &T::FP {
+        &self.payload
+    }
+
+    /// Returns a mutable reference to the face payload.
+    fn payload_mut(&mut self) -> &mut T::FP {
+        &mut self.payload
+    }
+}
+
+impl<T: HalfEdgeMeshType> HalfEdgeFace<T> {
     /// Returns the id of a half-edge incident to the face.
     #[inline(always)]
-    pub fn edge_id(&self) -> E {
+    pub fn edge_id(&self) -> T::E {
         self.edge
     }
 
     /// Creates a new face.
-    pub fn new(edge: E, curved: bool, payload: FP) -> Self {
+    pub fn new(edge: T::E, curved: bool, payload: T::FP) -> Self {
         assert!(edge != IndexType::max());
         Self {
             id: IndexType::max(),
@@ -56,35 +93,13 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
         }
     }
 
-    /// Whether the face is allowed to be curved.
-    pub fn may_be_curved(&self) -> bool {
-        self.curved
-    }
-
-    /// Get the number of edges of the face.
-    pub fn num_edges<T: MeshType<E = E, F = F, FP = FP>>(&self, mesh: &Mesh<T>) -> usize {
-        let (min, max) = self.edges(mesh).size_hint();
-        assert!(min == max.unwrap());
-        min
-    }
-
-    /// Get the number of vertices of the face.
-    pub fn num_vertices<T: MeshType<E = E, F = F, FP = FP>>(&self, mesh: &Mesh<T>) -> usize {
-        self.num_edges(mesh)
-    }
-
-    /// Get the number of triangles of the face. (n-2)*3
-    pub fn num_triangles<T: MeshType<E = E, F = F, FP = FP>>(&self, mesh: &Mesh<T>) -> usize {
-        (self.num_vertices(mesh) - 2) * 3
-    }
-
     /// Whether a triangle shares a halfedge with the face.
     ///
     /// If there is no evidence that the triangle is touching the face, return None.
     /// Given that all vertices are part of this face, this implies that the triangle is part of the face.
-    pub fn triangle_touches_boundary<T: MeshType<E = E, F = F, FP = FP>>(
+    pub fn triangle_touches_boundary(
         &self,
-        mesh: &Mesh<T>,
+        mesh: &T::Mesh,
         v0: T::V,
         v1: T::V,
         v2: T::V,
@@ -111,21 +126,21 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
 
         return None;
     }
-    
-    /// Returns the face payload.
-    pub fn payload(&self) -> &FP {
-        &self.payload
-    }
 }
 
-impl<E: IndexType, F: IndexType, FP: FacePayload> std::fmt::Display for Face<E, F, FP> {
+impl<T: HalfEdgeMeshType> std::fmt::Display for HalfEdgeFace<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{: >w$}) {}", self.id().index(), self.edge.index(),
-        w = 2,)
+        write!(
+            f,
+            "{: >w$}) {}",
+            self.id().index(),
+            self.edge.index(),
+            w = 2,
+        )
     }
 }
 
-impl<E: IndexType, F: IndexType, FP: FacePayload> Deletable<F> for Face<E, F, FP> {
+impl<T: HalfEdgeMeshType> Deletable<T::F> for HalfEdgeFace<T> {
     fn delete(&mut self) {
         assert!(self.id != IndexType::max(), "Face is already deleted");
         self.id = IndexType::max();
@@ -135,7 +150,7 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Deletable<F> for Face<E, F, FP
         self.id == IndexType::max()
     }
 
-    fn set_id(&mut self, id: F) {
+    fn set_id(&mut self, id: T::F) {
         assert!(self.id == IndexType::max());
         assert!(id != IndexType::max());
         self.id = id;
@@ -146,14 +161,14 @@ impl<E: IndexType, F: IndexType, FP: FacePayload> Deletable<F> for Face<E, F, FP
             id: IndexType::max(),
             edge: IndexType::max(),
             curved: false,
-            payload: FP::allocate(),
+            payload: T::FP::allocate(),
         }
     }
 }
 
-impl<E: IndexType, F: IndexType, FP: FacePayload> Default for Face<E, F, FP>
+impl<T: HalfEdgeMeshType> Default for HalfEdgeFace<T>
 where
-    FP: DefaultFacePayload,
+    T::FP: DefaultFacePayload,
 {
     /// Creates a deleted face
     fn default() -> Self {
@@ -161,7 +176,7 @@ where
             id: IndexType::max(),
             edge: IndexType::max(),
             curved: false,
-            payload: FP::default(),
+            payload: T::FP::default(),
         }
     }
 }

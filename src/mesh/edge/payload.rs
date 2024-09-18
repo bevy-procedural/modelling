@@ -1,5 +1,7 @@
+use std::hash::Hash;
+
 /// A trait that defines how the payload of an edge should behave.
-pub trait EdgePayload: Clone + Copy + std::fmt::Debug + PartialEq {
+pub trait EdgePayload: Clone + Copy + std::fmt::Debug + PartialEq + Hash {
     /// Returns a new default instance without any meaningful data.
     fn allocate() -> Self;
 
@@ -12,7 +14,7 @@ pub trait EdgePayload: Clone + Copy + std::fmt::Debug + PartialEq {
 pub trait DefaultEdgePayload: EdgePayload + Default {}
 
 /// An empty edge payload if you don't need any additional information.
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Default, Hash)]
 pub struct EmptyEdgePayload;
 
 impl EdgePayload for EmptyEdgePayload {

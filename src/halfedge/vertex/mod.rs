@@ -1,19 +1,25 @@
 mod iterator;
-pub use iterator::*;
-use itertools::Itertools;
 
-use super::{Deletable, HalfEdge, IndexType, Mesh, MeshType};
-use crate::math::Vector;
-use payload::{DefaultVertexPayload, HasPosition, Transformable, VertexPayload};
+pub use iterator::*;
+
+use super::HalfEdgeMeshType;
+use crate::{
+    math::{IndexType, Transformable},
+    mesh::{
+        payload::{DefaultVertexPayload, VertexPayload},
+        Mesh, MeshType, Vertex,
+    },
+    util::Deletable,
+};
 
 /// A vertex in a mesh.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Vertex<E: IndexType, V: IndexType, VP: VertexPayload> {
+pub struct HalfEdgeVertex<T: HalfEdgeMeshType> {
     /// the index of the vertex
-    id: V,
+    id: T::V,
 
     /// An outgoing half-edge incident to the vertex.
-    edge: E,
+    edge: T::E,
 
     /*
     /// Since we support non-manifold vertices, there can be a "wheel" of vertices,
@@ -23,12 +29,12 @@ pub struct Vertex<E: IndexType, V: IndexType, VP: VertexPayload> {
     next: V,
     */
     /// the payload of the vertex
-    payload: VP,
+    payload: T::VP,
 }
 
-impl<E: IndexType, V: IndexType, VP: VertexPayload> Vertex<E, V, VP> {
+impl<T: HalfEdgeMeshType> HalfEdgeVertex<T> {
     /// Creates a new vertex
-    pub fn new(edge: E, payload: VP) -> Self {
+    pub fn new(edge: T::E, payload: T::VP) -> Self {
         assert!(edge != IndexType::max());
         Self {
             id: IndexType::max(),
@@ -39,71 +45,16 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> Vertex<E, V, VP> {
     }
 
     /// Changes the representative of the outgoing edges
-    pub fn set_edge(&mut self, edge: E) {
+    pub fn set_edge(&mut self, edge: T::E) {
         self.edge = edge;
     }
 
-    /// Returns the index of the vertex
-    #[inline(always)]
-    pub fn id(&self) -> V {
-        self.id
-    }
-
-    /// Returns the payload of the vertex
-    #[inline(always)]
-    pub fn payload(&self) -> &VP {
-        &self.payload
-    }
-
-    /// Returns the vertex coordinates of the payload
-    #[inline(always)]
-    pub fn pos<Vec: Vector<VP::S>>(&self) -> &Vec
-    where
-        VP: HasPosition<Vec>,
-    {
-        self.payload.pos()
-    }
-
-    /// Returns a mutable reference to the payload of the vertex
-    #[inline(always)]
-    pub fn payload_mut(&mut self) -> &mut VP {
-        &mut self.payload
-    }
-
-    /// Returns an outgoing half-edge incident to the vertex
-    #[inline(always)]
-    pub fn edge<T: MeshType<E = E, V = V, VP = VP>>(
-        &self,
-        mesh: &Mesh<T>,
-    ) -> HalfEdge<E, V, T::F, T::EP> {
-        *mesh.edge(self.edge)
-    }
-
-    /// Returns whether the vertex is a boundary vertex
-    #[inline(always)]
-    pub fn is_boundary<T: MeshType<E = E, V = V, VP = VP>>(&self, mesh: &Mesh<T>) -> bool {
-        self.edges_out(mesh).any(|e| e.is_boundary(mesh))
-    }
-
+    // TODO
     /*
-    /// Returns whether the vertex is manifold
-    #[inline(always)]
-    pub fn is_manifold(&self) -> bool {
-        self.next == IndexType::max()
-    }*/
-
-    /// Returns whether the vertex has only one edge incident to it
-    #[inline(always)]
-    pub fn has_only_one_edge<T: MeshType<E = E, V = V, VP = VP>>(&self, mesh: &Mesh<T>) -> bool {
-        // self.edges(mesh).count() == 1
-        let e = self.edge(mesh);
-        e.prev_id() == e.twin_id()
-    }
-
     /// Returns an outgoing boundary edge incident to the vertex
-    pub fn outgoing_boundary_edge<T: MeshType<E = E, V = V, VP = VP>>(
+    pub fn outgoing_boundary_edge<T: MeshType<Vertex = Self>>(
         &self,
-        mesh: &Mesh<T>,
+        mesh: &HalfEdgeMesh<T>,
     ) -> Option<E> {
         // TODO: Assumes a manifold vertex. Otherwise, there can be multiple boundary edges!
         debug_assert!(
@@ -125,9 +76,9 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> Vertex<E, V, VP> {
     }
 
     /// Returns an ingoing boundary edge incident to the vertex
-    pub fn ingoing_boundary_edge<T: MeshType<E = E, V = V, VP = VP>>(
+    pub fn ingoing_boundary_edge<T: MeshType<Vertex = Self>>(
         &self,
-        mesh: &Mesh<T>,
+        mesh: &HalfEdgeMesh<T>,
     ) -> Option<E> {
         debug_assert!(
             self.edges_in(mesh)
@@ -145,36 +96,89 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> Vertex<E, V, VP> {
                 None
             }
         })
+    }*/
+}
+
+impl<T: HalfEdgeMeshType> Vertex<T> for HalfEdgeVertex<T>
+where
+    T: MeshType<Vertex = HalfEdgeVertex<T>>,
+{
+    /// Returns the index of the vertex
+    #[inline(always)]
+    fn id(&self) -> T::V {
+        self.id
+    }
+
+    /// Returns the payload of the vertex
+    #[inline(always)]
+    fn payload(&self) -> &T::VP {
+        &self.payload
+    }
+
+    /// Returns a mutable reference to the payload of the vertex
+    #[inline(always)]
+    fn payload_mut(&mut self) -> &mut T::VP {
+        &mut self.payload
+    }
+
+    /// Returns whether the vertex is a boundary vertex
+    /*#[inline(always)]
+    fn is_boundary<T: MeshType<Vertex = Self>>(&self, mesh: &T::Mesh) -> bool {
+        self.edges_out(mesh).any(|e| e.is_boundary(mesh))
+    }*/
+
+    /*
+    /// Returns whether the vertex is manifold
+    #[inline(always)]
+    fn is_manifold(&self) -> bool {
+        self.next == IndexType::max()
+    }*/
+
+    /// Returns whether the vertex has only one edge incident to it
+    #[inline(always)]
+    fn has_only_one_edge(&self, mesh: &T::Mesh) -> bool {
+        // self.edges(mesh).count() == 1
+        let e = self.edge(mesh);
+        e.prev_id() == e.twin_id()
+    }
+
+    /// Returns an outgoing half-edge incident to the vertex
+    #[inline(always)]
+    fn edge(&self, mesh: &T::Mesh) -> T::Edge {
+        *mesh.edge(self.edge)
     }
 }
 
-impl<E: IndexType, V: IndexType, VP: VertexPayload + Transformable> Vertex<E, V, VP> {
+impl<T: HalfEdgeMeshType> HalfEdgeVertex<T>
+where
+    T::VP: Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
+{
     /// Transforms the payload.
     #[inline(always)]
-    pub fn transform(&mut self, transform: &VP::Trans) {
+    pub fn transform(&mut self, transform: &T::Trans) {
         self.payload = self.payload.transform(transform);
     }
 
     /// Translates the payload.
     #[inline(always)]
-    pub fn translate(&mut self, transform: &VP::Vec) {
+    pub fn translate(&mut self, transform: &T::Vec) {
         self.payload = self.payload.translate(transform);
     }
 
     /// Rotates the payload.
     #[inline(always)]
-    pub fn rotate(&mut self, transform: &VP::Rot) {
+    pub fn rotate(&mut self, transform: &T::Rot) {
         self.payload = self.payload.rotate(transform);
     }
 
     /// Scales the payload.
     #[inline(always)]
-    pub fn scale(&mut self, transform: &VP::Vec) {
+    pub fn scale(&mut self, transform: &T::Vec) {
         self.payload = self.payload.scale(transform);
     }
 }
 
-impl<E: IndexType, V: IndexType, VP: VertexPayload> std::fmt::Display for Vertex<E, V, VP> {
+impl<T: HalfEdgeMeshType> std::fmt::Display for HalfEdgeVertex<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -187,7 +191,7 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> std::fmt::Display for Vertex
     }
 }
 
-impl<E: IndexType, V: IndexType, VP: VertexPayload> Deletable<V> for Vertex<E, V, VP> {
+impl<T: HalfEdgeMeshType> Deletable<T::V> for HalfEdgeVertex<T> {
     fn delete(&mut self) {
         assert!(self.id != IndexType::max());
         self.id = IndexType::max();
@@ -197,7 +201,7 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> Deletable<V> for Vertex<E, V
         self.id == IndexType::max()
     }
 
-    fn set_id(&mut self, id: V) {
+    fn set_id(&mut self, id: T::V) {
         assert!(self.id == IndexType::max());
         assert!(id != IndexType::max());
         self.id = id;
@@ -207,13 +211,14 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload> Deletable<V> for Vertex<E, V
         Self {
             id: IndexType::max(),
             edge: IndexType::max(),
-            payload: VP::allocate(),
+            payload: T::VP::allocate(),
         }
     }
 }
 
-impl<E: IndexType, V: IndexType, VP: VertexPayload + DefaultVertexPayload> Default
-    for Vertex<E, V, VP>
+impl<T: HalfEdgeMeshType> Default for HalfEdgeVertex<T>
+where
+    T::VP: DefaultVertexPayload,
 {
     /// Creates a deleted vertex
     fn default() -> Self {
@@ -221,7 +226,7 @@ impl<E: IndexType, V: IndexType, VP: VertexPayload + DefaultVertexPayload> Defau
             id: IndexType::max(),
             edge: IndexType::max(),
             //next: IndexType::max(),
-            payload: VP::default(),
+            payload: T::VP::default(),
         }
     }
 }
