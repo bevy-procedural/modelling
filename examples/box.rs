@@ -14,7 +14,7 @@ use procedural_modelling::{
         bevy::BevyMesh3d,
         payload::{vertex_payload::BevyVertexPayload, HasPosition, Transformable},
         tesselate::TriangulationAlgorithm,
-        DefaultEdgePayload, DefaultFacePayload, Mesh as TMesh, MeshType,
+        DefaultEdgePayload, DefaultFacePayload, MeshTrait as TMesh, MeshType,
     },
 };
 use std::f32::consts::PI;

@@ -1,6 +1,7 @@
-use super::{basics::MeshBasics, Face, Face3d, MeshType, Vertex};
+use super::{basics::MeshBasics, Face3d, MeshType, Vertex};
 use crate::{
     math::{HasNormal, HasPosition, IndexType, Vector, Vector3D, VectorIteratorExt},
+    mesh::FaceBasics,
     tesselate::{triangulate_face, TesselationMeta, Triangulation, TriangulationAlgorithm},
 };
 use std::collections::HashMap;

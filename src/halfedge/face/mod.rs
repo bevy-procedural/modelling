@@ -3,7 +3,7 @@ mod iterator;
 use super::HalfEdgeMeshType;
 use crate::{
     math::{HasPosition, IndexType, Vector3D},
-    mesh::{DefaultFacePayload, Edge, Face, Face3d, FacePayload, MeshBasics},
+    mesh::{DefaultFacePayload, Edge, Face, Face3d, FaceBasics, FacePayload, MeshBasics},
     util::Deletable,
 };
 
@@ -34,52 +34,43 @@ where
 {
 }
 
-impl<T: HalfEdgeMeshType> Face<T> for HalfEdgeFace<T> {
-    /// Returns a half-edge incident to the face.
+impl<T: HalfEdgeMeshType> FaceBasics<T> for HalfEdgeFace<T> {
     #[inline(always)]
     fn edge(&self, mesh: &T::Mesh) -> T::Edge {
         *mesh.edge(self.edge)
     }
 
-    /// Returns the index of the face.
     #[inline(always)]
     fn id(&self) -> T::F {
         self.id
     }
 
-    /// Whether the face is allowed to be curved.
     fn may_be_curved(&self) -> bool {
         self.curved
     }
 
-    /// Get the number of edges of the face.
     fn num_edges(&self, mesh: &T::Mesh) -> usize {
         let (min, max) = self.edges(mesh).size_hint();
         assert!(min == max.unwrap());
         min
     }
 
-    /// Get the number of vertices of the face.
     fn num_vertices(&self, mesh: &T::Mesh) -> usize {
-        Face::num_edges(self, mesh)
+        FaceBasics::num_edges(self, mesh)
     }
 
-    /// Get the number of triangles of the face. (n-2)*3
     fn num_triangles(&self, mesh: &T::Mesh) -> usize {
-        (Face::num_vertices(self, mesh) - 2) * 3
+        (FaceBasics::num_vertices(self, mesh) - 2) * 3
     }
 
-    /// Returns the face payload.
     fn payload(&self) -> &T::FP {
         &self.payload
     }
 
-    /// Returns a mutable reference to the face payload.
     fn payload_mut(&mut self) -> &mut T::FP {
         &mut self.payload
     }
 
-    /// Iterates all vertices adjacent to the face
     #[inline(always)]
     fn vertices<'a>(
         &'a self,
@@ -87,11 +78,9 @@ impl<T: HalfEdgeMeshType> Face<T> for HalfEdgeFace<T> {
     ) -> impl Iterator<Item = T::Vertex> + 'a + Clone + ExactSizeIterator {
         self.edges(mesh).map(|e| e.target(mesh).clone())
     }
+}
 
-    /// Whether a triangle shares a halfedge with the face.
-    ///
-    /// If there is no evidence that the triangle is touching the face, return None.
-    /// Given that all vertices are part of this face, this implies that the triangle is part of the face.
+impl<T: HalfEdgeMeshType> Face<T> for HalfEdgeFace<T> {
     fn triangle_touches_boundary(
         &self,
         mesh: &T::Mesh,

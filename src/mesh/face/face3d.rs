@@ -1,12 +1,14 @@
-use super::{Face, MeshType, Vertex};
+use super::{basics::FaceBasics, MeshType, Vertex};
 use crate::{
-    math::{HasPosition, LineSegment2D, Scalar, Transform, Vector, Vector3D, VectorIteratorExt},
+    math::{
+        HasPosition, LineSegment2D, Scalar, TransformTrait, Vector, Vector3D, VectorIteratorExt,
+    },
     tesselate::IndexedVertex2D,
 };
 use itertools::Itertools;
 
 /// A face with vertices that have 3d positions.
-pub trait Face3d<T: MeshType<Face = Self>>: Face<T>
+pub trait Face3d<T: MeshType<Face = Self>>: FaceBasics<T>
 where
     T::Vec: Vector3D<S = T::S>,
     T::VP: HasPosition<T::Vec, S = T::S>,
@@ -142,7 +144,7 @@ where
         assert!(T::Vec::dimensions() == 3);
 
         let z_axis = T::Vec::new(0.0.into(), 0.0.into(), 1.0.into());
-        let rotation = <T::Trans as Transform>::from_rotation_arc(
+        let rotation = <T::Trans as TransformTrait>::from_rotation_arc(
             Face3d::normal(self, mesh).normalize(),
             z_axis.normalize(),
         );

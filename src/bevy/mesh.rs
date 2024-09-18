@@ -4,7 +4,7 @@ use super::BevyVertexPayload;
 use crate::{
     halfedge::{HalfEdge, HalfEdgeFace, HalfEdgeMesh, HalfEdgeMeshType, HalfEdgeVertex},
     math::{HasNormal, HasPosition, IndexType},
-    mesh::{EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, Mesh, MeshNormals, MeshType},
+    mesh::{EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, MeshTrait, MeshNormals, MeshType},
     tesselate::{TesselationMeta, TriangulationAlgorithm},
 };
 use bevy::{

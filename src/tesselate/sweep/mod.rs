@@ -10,7 +10,7 @@ pub use vertex_type::VertexType;
 
 use crate::{
     math::{HasPosition, IndexType, Vector3D},
-    mesh::{Face, Face3d, MeshType},
+    mesh::{Face3d, FaceBasics, MeshType},
     tesselate::IndexedVertex2D,
 };
 

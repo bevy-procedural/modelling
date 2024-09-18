@@ -1,6 +1,6 @@
 use bevy::math::Vec4;
 
-use crate::math::{HasZero, Rotator, Scalar, Transform, Vector4D};
+use crate::math::{HasZero, Rotator, Scalar, TransformTrait, Vector4D};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Mat5<S: Scalar> {
@@ -99,7 +99,7 @@ pub struct Vec4Rotator {}
 
 impl Rotator<Vec4> for Vec4Rotator {}
 
-impl Transform for Mat5<f32> {
+impl TransformTrait for Mat5<f32> {
     type Vec = Vec4;
     type S = f32;
     type Rot = Vec4Rotator;

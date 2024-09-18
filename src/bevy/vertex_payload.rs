@@ -3,7 +3,7 @@
 use bevy::math::{Quat, Vec2, Vec3};
 
 use crate::{
-    math::{HasNormal, HasPosition, Transform, Transformable},
+    math::{HasNormal, HasPosition, TransformTrait, Transformable},
     mesh::payload::VertexPayload,
 };
 

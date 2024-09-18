@@ -1,4 +1,4 @@
-use crate::math::{HasZero, Scalar, Transform, Vector, Vector2D};
+use crate::math::{HasZero, Scalar, TransformTrait, Vector, Vector2D};
 use bevy::math::{Affine2, Vec2, Vec3, Vec4};
 
 impl HasZero for Vec2 {
@@ -112,7 +112,7 @@ impl Vector2D for Vec2 {
     }
 }
 
-impl Transform for Affine2 {
+impl TransformTrait for Affine2 {
     type S = f32;
     type Vec = Vec2;
     type Rot = f32;

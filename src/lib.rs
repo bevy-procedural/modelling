@@ -12,7 +12,19 @@ pub mod math;
 pub mod mesh;
 //pub mod operations;
 //pub mod primitives;
-pub mod tesselate;
-pub mod util;
 #[cfg(feature = "bevy")]
 pub mod bevy;
+pub mod tesselate;
+pub mod util;
+
+/// A prelude for easy importing of commonly used types and traits.
+pub mod prelude {
+    pub use crate::halfedge::*;
+    pub use crate::math::*;
+    pub use crate::mesh::*;
+    pub use crate::tesselate::*;
+    pub use crate::util::*;
+
+    #[cfg(feature = "bevy")]
+    pub use crate::bevy::*;
+}

@@ -3,9 +3,10 @@ use super::{Scalar, Vector};
 /// Trait for the data structure needed to rotate the value of type V.
 pub trait Rotator<V> {}
 
-/// Trait for tansformations in 3d space.
+/// Trait for tansformations in nd space. We call it `TransformTrait` to avoid
+/// collisions with the `Transform` struct in Bevy.
 
-pub trait Transform: Clone + Copy + Default + std::fmt::Debug + 'static {
+pub trait TransformTrait: Clone + Copy + Default + std::fmt::Debug + 'static {
     /// The scalar type of the coordinates and angles used in the rotation.
     type S: Scalar;
 

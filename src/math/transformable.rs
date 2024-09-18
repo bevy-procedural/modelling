@@ -1,9 +1,9 @@
-use super::{Rotator, Scalar, Transform, Vector};
+use super::{Rotator, Scalar, TransformTrait, Vector};
 
 /// A trait that defines how a vertex payload can be linearly transformed.
 pub trait Transformable {
     /// The transformation type used in the payload.
-    type Trans: Transform<S = Self::S, Vec = Self::Vec>;
+    type Trans: TransformTrait<S = Self::S, Vec = Self::Vec>;
 
     /// The rotation type used in the payload.
     type Rot: Rotator<Self::Vec>;

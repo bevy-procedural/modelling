@@ -10,19 +10,9 @@ use bevy_inspector_egui::{
     InspectorOptions,
 };
 use bevy_panorbit_camera::*;
-use procedural_modelling::{
-    gizmo::{
-        self,
-        bevy::{text::Text3dGizmos, *},
-    },
-    mesh::{
-        bevy::BevyMesh3d,
-        payload::{vertex_payload::BevyVertexPayload, HasPosition},
-        primitives::{generate_zigzag, random_star},
-        tesselate::{TesselationMeta, TriangulationAlgorithm},
-    },
-};
+use procedural_modelling::prelude::*;
 use std::{env, f32::consts::PI};
+use text::Text3dGizmos;
 
 #[derive(Reflect, Resource, InspectorOptions)]
 #[reflect(Resource, InspectorOptions)]
@@ -248,7 +238,6 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     //BevyMesh3d::regular_pyramid(1.0, 1.0, 8)
     //BevyMesh3d::tetrahedron(1.0)
     //BevyMesh3d::octahedron(1.0)
-
 
     //BevyMesh3d::dodecahedron(1.0)
 

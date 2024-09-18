@@ -1,4 +1,4 @@
-use super::{kahan_summation, HasZero, Scalar, Transform, Vector2D, Vector3D, Vector4D};
+use super::{kahan_summation, HasZero, Scalar, TransformTrait, Vector2D, Vector3D, Vector4D};
 
 /// Trait for coordinates in n-dimensional space.
 pub trait Vector<S: Scalar>:
@@ -29,7 +29,7 @@ pub trait Vector<S: Scalar>:
     type Vec4: Vector4D<S = S>;
 
     /// The data structure used for linear transformations of this vector.
-    type Trans: Transform<S = S, Vec = Self>;
+    type Trans: TransformTrait<S = S, Vec = Self>;
 
     /// Returns the number of dimensions.
     fn dimensions() -> usize;

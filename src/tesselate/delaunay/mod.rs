@@ -1,7 +1,7 @@
 use super::Triangulation;
 use crate::{
     math::{HasPosition, Scalar, Vector, Vector3D},
-    mesh::{Face, Face3d, MeshType},
+    mesh::{Face, Face3d, FaceBasics, MeshType},
 };
 use spade::{ConstrainedDelaunayTriangulation, Point2, Triangulation as _};
 use std::collections::HashMap;

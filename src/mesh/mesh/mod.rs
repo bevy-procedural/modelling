@@ -11,14 +11,15 @@ pub use normals::*;
 pub use payload::*;
 pub use transform::*;
 
-use super::{Face, Face3d, Vertex};
+use super::{Face3d, Vertex};
 use crate::{
     math::{HasPosition, Vector3D, VectorIteratorExt},
     tesselate::{triangulate_face, TesselationMeta, Triangulation, TriangulationAlgorithm},
 };
 
-/// The `Mesh` trait doesn't assume any specific data structure or topology.
-pub trait Mesh<T: MeshType<Mesh = Self>>:
+/// The `MeshTrait` doesn't assume any specific data structure or topology,
+/// i.e., could be a manifold half-edge mesh, a topological directed graph, etc.
+pub trait MeshTrait<T: MeshType<Mesh = Self>>:
     basics::MeshBasics<T> + MeshNormals<T> + MeshTransforms<T>
 {
     /// Returns the mean of all vertex positions.

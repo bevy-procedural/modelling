@@ -1,6 +1,6 @@
-use super::{payload::MeshPayload, Mesh};
+use super::{payload::MeshPayload, MeshTrait};
 use crate::{
-    math::{IndexType, Scalar, Transform, Vector, Vector2D, Vector3D, Vector4D},
+    math::{IndexType, Scalar, TransformTrait, Vector, Vector2D, Vector3D, Vector4D},
     mesh::{payload::VertexPayload, Edge, EdgePayload, Face, FacePayload, Vertex},
 };
 
@@ -49,13 +49,13 @@ pub trait MeshType: Copy + Eq {
     type S: Scalar;
 
     /// The type of the transformation used for vertices.
-    type Trans: Transform<S = Self::S, Vec = Self::Vec>;
+    type Trans: TransformTrait<S = Self::S, Vec = Self::Vec>;
 
     /// The type of the rotation data used for vertices.
     type Rot;
 
     /// The type of the mesh.
-    type Mesh: Mesh<Self>;
+    type Mesh: MeshTrait<Self>;
 
     /// The type of the (half-)edge or arc.
     type Edge: Edge<Self>;

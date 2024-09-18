@@ -1,7 +1,7 @@
 use super::super::{HalfEdgeFace, IncidentToFaceIterator};
 use crate::{
     halfedge::HalfEdgeMeshType,
-    mesh::{Edge, Face},
+    mesh::{Edge, FaceBasics},
 };
 
 impl<T: HalfEdgeMeshType> HalfEdgeFace<T> {
@@ -15,5 +15,4 @@ impl<T: HalfEdgeMeshType> HalfEdgeFace<T> {
     pub fn edge_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::E> + 'a {
         self.edges(mesh).map(|e| e.id())
     }
-
 }

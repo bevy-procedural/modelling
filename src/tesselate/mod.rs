@@ -17,7 +17,7 @@ pub use triangulation::*;
 
 use crate::{
     math::{HasPosition, IndexType, Vector3D},
-    mesh::{Face, Face3d, MeshType, Vertex},
+    mesh::{Face3d, FaceBasics, MeshType, Vertex},
 };
 
 /// The algorithm to use for triangulating a face.

@@ -1,7 +1,7 @@
 use super::Triangulation;
 use crate::{
     math::{HasPosition, Scalar, Vector2D, Vector3D},
-    mesh::{Face, Face3d, MeshType},
+    mesh::{Face3d, FaceBasics, MeshType},
 };
 
 /// Use ear-clipping to triangulate the face.

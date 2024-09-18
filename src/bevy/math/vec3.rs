@@ -1,4 +1,4 @@
-use crate::math::{HasZero, Scalar, Spherical3d, Transform, Vector, Vector3D};
+use crate::math::{HasZero, Scalar, Spherical3d, TransformTrait, Vector, Vector3D};
 use bevy::{
     math::{Quat, Vec2, Vec3, Vec4},
     transform::components::Transform as TransformBevy,
@@ -115,7 +115,7 @@ impl Spherical3d for Vec3 {
 }
 
 // TODO: Switch to Affine3
-impl Transform for TransformBevy {
+impl TransformTrait for TransformBevy {
     type S = f32;
     type Vec = Vec3;
     type Rot = Quat;
