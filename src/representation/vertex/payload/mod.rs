@@ -1,9 +1,12 @@
 //! Payloads for vertices in n-dimensional space.
 
-use crate::math::{Rotator, Scalar, Transform, Vector};
+mod interpolator;
 
 #[cfg(feature = "bevy")]
 pub mod bevy;
+
+use crate::math::{Rotator, Scalar, Transform, Vector};
+pub use interpolator::*;
 
 // TODO: remove the `Default` similar to the `DefaultEdgePayload`
 /// A trait that defines how the payload of a vertex should behave.

@@ -1,7 +1,7 @@
 use crate::{
     math::{HasZero, IndexType, Scalar, Vector, Vector3D},
     representation::{
-        payload::HasPosition, DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
+        payload::{HasPosition, SlerpVertexInterpolator}, DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
         SubdivisionDescription,
     },
 };
@@ -174,7 +174,7 @@ where
         debug_assert!(mesh.centroid().is_about(&T::Vec::ZERO, T::S::EPS));
         mesh.subdivision_frequency(
             SubdivisionDescription::new(n, 0),
-            Mesh::spherical_subdivision_builder(T::Vec::ZERO, radius),
+            SlerpVertexInterpolator::new(T::Vec::ZERO, radius),
         );
         mesh
     }
@@ -185,7 +185,7 @@ where
         debug_assert!(mesh.centroid().is_about(&T::Vec::ZERO, T::S::EPS));
         mesh.subdivision_frequency(
             SubdivisionDescription::new(n, 0),
-            Mesh::spherical_subdivision_builder(T::Vec::ZERO, radius),
+            SlerpVertexInterpolator::new(T::Vec::ZERO, radius),
         );
         mesh
     }
@@ -196,7 +196,7 @@ where
         debug_assert!(mesh.centroid().is_about(&T::Vec::ZERO, T::S::EPS));
         mesh.subdivision_frequency(
             SubdivisionDescription::new(n, 0),
-            Mesh::spherical_subdivision_builder(T::Vec::ZERO, radius),
+            SlerpVertexInterpolator::new(T::Vec::ZERO, radius),
         );
         mesh
     }

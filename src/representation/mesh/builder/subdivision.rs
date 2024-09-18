@@ -1,9 +1,5 @@
-use crate::{
-    math::{Scalar, Vector, Vector3D},
-    representation::{
-        payload::HasPosition, DefaultEdgePayload, DefaultFacePayload, HalfEdge, Mesh, MeshType,
-        Vertex,
-    },
+use crate::representation::{
+    payload::VertexInterpolator, DefaultEdgePayload, HalfEdge, Mesh, MeshType, Vertex,
 };
 
 /// Describes how to subdivide a mesh.
@@ -38,65 +34,6 @@ impl SubdivisionDescription {
     /// Triangulation number $T = b^2 + bc + c^2$ of the subdivision.
     pub fn triangulation_number(&self) -> usize {
         self.b * self.b + self.b * self.c + self.c * self.c
-    }
-}
-
-impl<T: MeshType> Mesh<T>
-where
-    T::EP: DefaultEdgePayload,
-    T::FP: DefaultFacePayload,
-    T::VP: HasPosition<T::Vec, S = T::S>,
-{
-    /// Subdivides by linear interpolation of the positions of the vertices.
-    pub fn linear_subdivision_builder(
-        n: usize,
-        m: usize,
-    ) -> impl Fn(&Mesh<T>, usize, T::V, usize, T::V, usize, T::V) -> T::VP {
-        assert!(n == 1 && m == 0);
-        move |mesh, i, vi, j, vj, k, vk| {
-            let pi = *mesh.vertex(vi).pos();
-            let pj = *mesh.vertex(vj).pos();
-            let pk = *mesh.vertex(vk).pos();
-            T::VP::from_pos(
-                (pi * T::S::from_usize(i) + pj * T::S::from_usize(j) + pk * T::S::from_usize(k))
-                    / T::S::from_usize(i + j + k),
-            )
-        }
-    }
-}
-
-impl<T: MeshType> Mesh<T>
-where
-    T::EP: DefaultEdgePayload,
-    T::FP: DefaultFacePayload,
-    T::VP: HasPosition<T::Vec, S = T::S>,
-    T::Vec: Vector3D<S = T::S>,
-{
-    /// Subdivides by interpolating the angles of the positions assuming the
-    /// center of the structure is `radius` away from the center in the opposite
-    /// direction of the normal.
-    pub fn spherical_subdivision_builder(
-        center: T::Vec,
-        radius: T::S,
-    ) -> impl Fn(&Mesh<T>, usize, T::V, usize, T::V, usize, T::V) -> T::VP {
-        move |mesh, i, vi, j, vj, k, vk| {
-            let pi = (*mesh.vertex(vi).pos() - center).normalize();
-            let pj = (*mesh.vertex(vj).pos() - center).normalize();
-            let pk = (*mesh.vertex(vk).pos() - center).normalize();
-
-            // slerp
-            let pos = if i == 0 {
-                pj.slerp(&pk, T::S::HALF)
-            } else if j == 0 {
-                pk.slerp(&pi, T::S::HALF)
-            } else if k == 0 {
-                pi.slerp(&pj, T::S::HALF)
-            } else {
-                todo!("slerp 3")
-            };
-
-            T::VP::from_pos(center + pos.normalize() * radius)
-        }
     }
 }
 
@@ -193,13 +130,12 @@ where
         Some(new_edge)
     }
 
-    /// Subdivides the mesh with frequency (n,m).
+    /// Subdivides the mesh with frequency (2,0).
     /// Uses the `vp_builder` to create the new vertex payloads.
     /// Returns a new mesh.
-    pub fn subdivision_frequency_once(
-        &mut self,
-        vp_builder: &impl Fn(&Self, usize, T::V, usize, T::V, usize, T::V) -> T::VP,
-    ) -> &mut Self {
+    ///
+    /// based on an algorithm developed by Charles Loop in 1987
+    pub fn loop_subdivision(&mut self, vp_builder: &impl VertexInterpolator<3, T>) -> &mut Self {
         let fs = self.faces().map(|f| f.id()).collect::<Vec<_>>();
         for face in &fs {
             // get the edge chain
@@ -213,26 +149,34 @@ where
                     // edge is already subdivided
                     continue;
                 }
-                let vp = vp_builder(
+                let vp = vp_builder.call(
                     self,
-                    if vs[0] == edges[i].origin_id() || vs[0] == edges[i].target_id(self) {
-                        1
-                    } else {
-                        0
-                    },
-                    vs[0],
-                    if vs[1] == edges[i].origin_id() || vs[1] == edges[i].target_id(self) {
-                        1
-                    } else {
-                        0
-                    },
-                    vs[1],
-                    if vs[2] == edges[i].origin_id() || vs[2] == edges[i].target_id(self) {
-                        1
-                    } else {
-                        0
-                    },
-                    vs[2],
+                    [
+                        (
+                            if vs[0] == edges[i].origin_id() || vs[0] == edges[i].target_id(self) {
+                                1
+                            } else {
+                                0
+                            },
+                            vs[0],
+                        ),
+                        (
+                            if vs[1] == edges[i].origin_id() || vs[1] == edges[i].target_id(self) {
+                                1
+                            } else {
+                                0
+                            },
+                            vs[1],
+                        ),
+                        (
+                            if vs[2] == edges[i].origin_id() || vs[2] == edges[i].target_id(self) {
+                                1
+                            } else {
+                                0
+                            },
+                            vs[2],
+                        ),
+                    ],
                 );
                 self.subdivide_unsafe(edges[i].id(), vp);
             }
@@ -265,7 +209,7 @@ where
     pub fn subdivision_frequency(
         &mut self,
         des: SubdivisionDescription,
-        vp_builder: impl Fn(&Self, usize, T::V, usize, T::V, usize, T::V) -> T::VP,
+        vp_builder: impl VertexInterpolator<3, T>,
     ) -> &mut Self {
         // TODO: for c != 0 we have to shift the triangle. This means we have to build a completely new graph and things become much more complicated
         assert!(des.c == 0);
@@ -277,7 +221,7 @@ where
 
         let mut b = des.b;
         while b > 1 {
-            self.subdivision_frequency_once(&vp_builder);
+            self.loop_subdivision(&vp_builder);
             if b == 1 {
                 break;
             }
@@ -294,7 +238,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::representation::{bevy::BevyMesh3d, payload::bevy::BevyVertexPayload};
+    use crate::representation::{bevy::BevyMesh3d, payload::{bevy::BevyVertexPayload, HasPosition}};
 
     #[test]
     fn subdivide_and_fixup() {

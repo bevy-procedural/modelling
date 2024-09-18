@@ -6,6 +6,7 @@ mod face;
 mod loft;
 mod vertex;
 mod subdivision;
+mod dual;
 
 use super::{Mesh, MeshType};
 use crate::{math::Vector3D, representation::payload::HasPosition};
