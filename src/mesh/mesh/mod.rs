@@ -2,18 +2,19 @@
 mod mesh_type;
 //mod normals;
 mod payload;
-//mod tesselate;
 
+pub use mesh_type::*;
 pub use payload::*;
 
-pub use mesh_type::MeshType;
+use crate::{
+    math::{HasPosition, Transformable, Vector3D, VectorIteratorExt},
+    tesselate::{triangulate_face, TesselationMeta, Triangulation, TriangulationAlgorithm},
+};
 
-use crate::math::{HasPosition, Transformable, VectorIteratorExt};
-
-use super::Vertex;
+use super::{Face3d, Vertex};
 
 /// The `Mesh` trait doesn't assume any specific data structure or topology.
-pub trait Mesh<T: MeshType>: Default + std::fmt::Display + Clone {
+pub trait Mesh<T: MeshType<Mesh = Self>>: Default + std::fmt::Display + Clone {
     /// Returns whether the vertex exists and is not deleted
     fn has_vertex(&self, index: T::V) -> bool;
 
@@ -129,5 +130,34 @@ pub trait Mesh<T: MeshType>: Default + std::fmt::Display + Clone {
         T::VP: HasPosition<T::Vec, S = T::S>,
     {
         self.vertices().map(|v| v.pos()).stable_mean()
+    }
+
+    /// Since the vertex payloads in the `Deletable` can be sparse,
+    /// we need to compact the vertices when converting them to a dense vector.
+    /// This function returns the cloned compact vertices and maps the indices to the new compact buffer.
+    fn get_compact_vertices(&self, indices: &mut Vec<T::V>) -> Vec<T::VP>;
+
+    /// convert the mesh to triangles and get all indices to do so.
+    /// Compact the vertices and return the indices
+    fn triangulate(
+        &self,
+        algorithm: TriangulationAlgorithm,
+        meta: &mut TesselationMeta<T::V>,
+    ) -> (Vec<T::V>, Vec<T::VP>)
+    where
+        T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
+        T::Face: Face3d<T>,
+    {
+        let mut indices = Vec::new();
+        for f in self.faces() {
+            let mut tri = Triangulation::new(&mut indices);
+            triangulate_face::<T>(f, self, &mut tri, algorithm, meta)
+
+            // TODO debug_assert!(tri.verify_full());
+        }
+
+        let vs = self.get_compact_vertices(&mut indices);
+        (indices, vs)
     }
 }

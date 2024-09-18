@@ -6,10 +6,7 @@ pub use face3d::*;
 pub use payload::*;
 
 use super::{MeshType, Vertex};
-use crate::{
-    math::{HasPosition, Vector3D, VectorIteratorExt},
-    tesselate::{triangulate_face, TesselationMeta, Triangulation, TriangulationAlgorithm},
-};
+use crate::math::{HasPosition, VectorIteratorExt};
 
 /// A face in a mesh.
 ///
@@ -40,21 +37,6 @@ pub trait Face<T: MeshType<Face = Self>>:
 
     /// Returns a mutable reference to the face payload.
     fn payload_mut(&mut self) -> &mut T::FP;
-
-    /// Converts the face into a triangle list.
-    fn triangulate(
-        &self,
-        mesh: &T::Mesh,
-        tri: &mut Triangulation<T::V>,
-        algorithm: TriangulationAlgorithm,
-        meta: &mut TesselationMeta<T::V>,
-    ) where
-        T::Vec: Vector3D<S = T::S>,
-        T::VP: HasPosition<T::Vec, S = T::S>,
-        T::Face: Face3d<T>,
-    {
-        triangulate_face::<T>(self, mesh, tri, algorithm, meta)
-    }
 
     /// Iterates all vertices adjacent to the face
     fn vertices<'a>(

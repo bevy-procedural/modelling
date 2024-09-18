@@ -1,9 +1,13 @@
 mod iterator;
 mod topology;
 
+use std::collections::HashMap;
+
 use super::{HalfEdge, HalfEdgeMeshType};
 use crate::{
-    mesh::{Edge, Mesh},
+    math::IndexType,
+    mesh::{payload::VertexPayload, Edge, Mesh, Vertex},
+    tesselate::Triangulation,
     util::{Deletable, DeletableVector},
 };
 
@@ -158,6 +162,35 @@ impl<T: HalfEdgeMeshType> Mesh<T> for HalfEdgeMesh<T> {
         T::Edge: 'a,
     {
         self.halfedges.iter()
+    }
+
+    /// Since the vertex payloads in the `Deletable` can be sparse,
+    /// we need to compact the vertices when converting them to a dense vector.
+    /// This function returns the cloned compact vertices and maps the indices to the new compact buffer.
+    fn get_compact_vertices(&self, indices: &mut Vec<T::V>) -> Vec<T::VP> {
+        let mut vertices = Vec::with_capacity(self.num_vertices());
+
+        if self.vertices.len() == self.vertices.capacity() {
+            // Vertex buffer is already compact.
+            // Since the index map creation is time consuming, we avoid this if possible.
+            for _ in 0..self.vertices.capacity() {
+                vertices.push(T::VP::allocate());
+            }
+            for v in self.vertices() {
+                vertices[v.id().index()] = v.payload().clone();
+            }
+        } else {
+            // Vertex buffer is sparse.
+            // We need to create a map from the old indices to the new compact indices.
+            let mut id_map = HashMap::new();
+            for v in self.vertices() {
+                id_map.insert(v.id(), T::V::new(vertices.len()));
+                vertices.push(v.payload().clone());
+            }
+            Triangulation::new(indices).map_indices(&id_map);
+        }
+
+        vertices
     }
 }
 
