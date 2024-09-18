@@ -9,7 +9,7 @@ pub fn regular_polygon_sidelength<S: Scalar>(radius: S, n: usize) -> S {
     S::TWO * radius * (S::PI / S::from_usize(n)).sin()
 }
 
-impl<T: MeshType> Mesh<T>
+impl<T: MeshType> T::Mesh
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
@@ -23,7 +23,7 @@ where
     }
 
     /// Calls `insert_polygon` on a new mesh.
-    pub fn polygon(vp: impl IntoIterator<Item = T::VP>) -> Mesh<T> {
+    pub fn polygon(vp: impl IntoIterator<Item = T::VP>) -> T::Mesh {
         let mut mesh = Mesh::<T>::new();
         mesh.insert_polygon(vp);
         mesh
@@ -37,21 +37,21 @@ where
     }
 
     /// Calls `insert_dihedron` on a new mesh.
-    pub fn dihedron(vp: impl IntoIterator<Item = T::VP>) -> Mesh<T> {
+    pub fn dihedron(vp: impl IntoIterator<Item = T::VP>) -> T::Mesh {
         let mut mesh = Mesh::<T>::new();
         mesh.insert_dihedron(vp);
         mesh
     }
 }
 
-impl<T: MeshType> Mesh<T>
+impl<T: MeshType> T::Mesh
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
     T::VP: HasPosition<T::Vec, S = T::S>,
 {
     /// create a regular polygon
-    pub fn regular_polygon(radius: T::S, n: usize) -> Mesh<T> {
+    pub fn regular_polygon(radius: T::S, n: usize) -> T::Mesh {
         Self::regular_star(radius, radius, n)
     }
 

@@ -1,110 +1,105 @@
-use super::{Face, Mesh, Triangulation};
+use super::Triangulation;
 use crate::{
-    math::{Scalar, Vector2D, Vector3D},
-    mesh::{payload::HasPosition, FacePayload, IndexType, MeshType},
+    math::{HasPosition, Scalar, Vector2D, Vector3D},
+    mesh::{Face, Face3d, MeshType},
 };
 
-impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
-    /// Use ear-clipping to triangulate the face.
-    /// This is relatively slow: O(n^2).
-    ///
-    /// Optionally randomize the start position to search the next ear.
-    /// This is slightly slower but can generate more versatile results.
-    pub fn ear_clipping<T: MeshType<E = E, F = F, FP = FP>>(
-        &self,
-        mesh: &Mesh<T>,
-        indices: &mut Triangulation<T::V>,
-        randomize: bool,
-    ) where
-        T::Vec: Vector3D<S = T::S>,
-        T::VP: HasPosition<T::Vec, S = T::S>,
-    {
-        let eps = <T::S as Scalar>::EPS * 2.0.into();
-        let mut success_since_fail = 0;
-        debug_assert!(self.may_be_curved() || self.is_planar2(mesh));
-        debug_assert!(self.is_simple(mesh));
+/// Use ear-clipping to triangulate the face.
+/// This is relatively slow: O(n^2).
+///
+/// Optionally randomize the start position to search the next ear.
+/// This is slightly slower but can generate more versatile results.
+pub fn ear_clipping<T: MeshType>(
+    face: &T::Face,
+    mesh: &T::Mesh,
+    indices: &mut Triangulation<T::V>,
+    randomize: bool,
+) where
+    T::Vec: Vector3D<S = T::S>,
+    T::VP: HasPosition<T::Vec, S = T::S>,
+    T::Face: Face3d<T>,
+{
+    let eps = <T::S as Scalar>::EPS * 2.0.into();
+    let mut success_since_fail = 0;
+    debug_assert!(face.may_be_curved() || face.is_planar2(mesh));
+    debug_assert!(face.is_simple(mesh));
 
-        let vs: Vec<(T::Vec2, T::V)> = self.vertices_2d::<T>(mesh).collect();
+    let vs: Vec<(T::Vec2, T::V)> = face.vertices_2d(mesh).collect();
 
-        let triangle_empty = |a: usize, b: usize, c: usize| {
-            let av = vs[a].0;
-            let bv = vs[b].0;
-            let cv = vs[c].0;
-            vs.iter()
-                .enumerate()
-                .all(|(i, v)| i == a || i == b || i == c || !v.0.is_inside_triangle(av, bv, cv))
-        };
+    let triangle_empty = |a: usize, b: usize, c: usize| {
+        let av = vs[a].0;
+        let bv = vs[b].0;
+        let cv = vs[c].0;
+        vs.iter()
+            .enumerate()
+            .all(|(i, v)| i == a || i == b || i == c || !v.0.is_inside_triangle(av, bv, cv))
+    };
 
-        let n0 = vs.len();
-        if n0 < 3 {
-            return;
+    let n0 = vs.len();
+    if n0 < 3 {
+        return;
+    }
+    let mut clipped = vec![false; n0];
+    let mut i_a = 0;
+    if randomize {
+        i_a = rand::random::<usize>() % n0;
+    }
+    let mut n = n0;
+    let mut fails_since_advance = 0;
+    while n > 2 {
+        let mut i_b = (i_a + 1) % n0;
+        while clipped[i_b] {
+            i_b = (i_b + 1) % n0;
         }
-        let mut clipped = vec![false; n0];
-        let mut i_a = 0;
-        if randomize {
-            i_a = rand::random::<usize>() % n0;
+        let mut i_c = (i_b + 1) % n0;
+        while clipped[i_c] {
+            i_c = (i_c + 1) % n0;
         }
-        let mut n = n0;
-        let mut fails_since_advance = 0;
-        while n > 2 {
-            let mut i_b = (i_a + 1) % n0;
-            while clipped[i_b] {
-                i_b = (i_b + 1) % n0;
-            }
-            let mut i_c = (i_b + 1) % n0;
-            while clipped[i_c] {
-                i_c = (i_c + 1) % n0;
-            }
 
-            debug_assert!(i_a != i_b);
-            debug_assert!(i_b != i_c);
-            debug_assert!(i_c != i_a);
+        debug_assert!(i_a != i_b);
+        debug_assert!(i_b != i_c);
+        debug_assert!(i_c != i_a);
 
-            // cut the ear off
-            if !vs[i_b].0.convex(vs[i_a].0, vs[i_c].0)
+        // cut the ear off
+        if !vs[i_b].0.convex(vs[i_a].0, vs[i_c].0)
                 || !triangle_empty(i_a, i_b, i_c)
                 // if there are nearly collinear points, we can't cut the ear, because triangle_empty could block any progress afterwards
                 || (success_since_fail >= 2 &&vs[i_b].0.collinear(vs[i_a].0, vs[i_c].0, eps))
-            {
-                fails_since_advance += 1;
-                if fails_since_advance > n {
-                    // If there are nearly collinear points, triangle_empty might not work correctly
-                    if success_since_fail < 2 {
-                        panic!("Ear-clipping failed to find a valid triangle due to nearly collinear points");
-                    }
-                    success_since_fail = 0;
-                } else {
-                    i_a = i_b;
-                    continue;
+        {
+            fails_since_advance += 1;
+            if fails_since_advance > n {
+                // If there are nearly collinear points, triangle_empty might not work correctly
+                if success_since_fail < 2 {
+                    panic!("Ear-clipping failed to find a valid triangle due to nearly collinear points");
                 }
+                success_since_fail = 0;
+            } else {
+                i_a = i_b;
+                continue;
             }
+        }
 
-            indices.insert_triangle(vs[i_a].1, vs[i_b].1, vs[i_c].1);
-            clipped[i_b] = true;
-            n -= 1;
-            fails_since_advance = 0;
-            success_since_fail += 1;
+        indices.insert_triangle(vs[i_a].1, vs[i_b].1, vs[i_c].1);
+        clipped[i_b] = true;
+        n -= 1;
+        fails_since_advance = 0;
+        success_since_fail += 1;
 
-            if randomize {
-                i_a = rand::random::<usize>() % n0;
-                while clipped[i_a] {
-                    i_a = (i_a + 1) % n0;
-                }
+        if randomize {
+            i_a = rand::random::<usize>() % n0;
+            while clipped[i_a] {
+                i_a = (i_a + 1) % n0;
             }
         }
     }
 }
 
+// TODO
+/*
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        math::{impls::bevy::Bevy2DPolygon, Polygon, Scalar},
-        mesh::{
-            bevy::BevyMesh3d, payload::vertex_payload::BevyVertexPayload, primitives::random_star,
-            tesselate::IndexedVertex2D,
-        },
-    };
+    use crate::{math::{impls::bevy::Bevy2DPolygon, Polygon, Scalar}, tesselate::{IndexedVertex2D, Triangulation}};
     use bevy::math::{Vec2, Vec3};
 
     fn verify_triangulation(vec2s: &Vec<IndexedVertex2D<u32, Vec2>>) {
@@ -179,3 +174,4 @@ mod tests {
         }
     }*/
 }
+*/

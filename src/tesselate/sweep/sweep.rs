@@ -6,11 +6,8 @@ use super::{
     SweepMeta, VertexType,
 };
 use crate::{
-    math::Vector2D,
-    mesh::{
-        tesselate::{IndexedVertex2D, Triangulation},
-        IndexType,
-    },
+    math::{IndexType, Vector2D},
+    tesselate::{IndexedVertex2D, Triangulation},
 };
 
 /// Perform the sweep line triangulation
@@ -383,6 +380,8 @@ impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
     }
 }
 
+// TODO
+/*
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -588,3 +587,4 @@ mod tests {
         }
     }
 }
+*/

@@ -1,18 +1,20 @@
-use super::{Face, Mesh, TesselationMeta, Triangulation};
-use crate::{
-    math::Vector3D,
-    mesh::{
-        payload::HasPosition, tesselate::IndexedVertex2D, FacePayload, IndexType, MeshType,
-    },
-};
 mod chain;
 mod interval;
 mod point;
 mod status;
 mod sweep;
 mod vertex_type;
+
 pub use sweep::sweep_line_triangulation;
 pub use vertex_type::VertexType;
+
+use crate::{
+    math::{HasPosition, IndexType, Vector3D},
+    mesh::{Face, Face3d, MeshType},
+    tesselate::IndexedVertex2D,
+};
+
+use super::{TesselationMeta, Triangulation};
 
 /// Meta information for debuggin the sweep algorithm
 #[derive(Debug, Clone, PartialEq)]
@@ -47,25 +49,24 @@ impl<V: IndexType> SweepMeta<V> {
     }
 }
 
-impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
-    /// Uses the sweep line triangulation
-    pub fn sweep_line<T: MeshType<E = E, F = F, FP = FP>>(
-        &self,
-        mesh: &Mesh<T>,
-        indices: &mut Triangulation<T::V>,
-        meta: &mut TesselationMeta<T::V>,
-    ) where
-        T::Vec: Vector3D<S = T::S>,
-        T::VP: HasPosition<T::Vec, S = T::S>,
-    {
-        debug_assert!(self.may_be_curved() || self.is_planar2(mesh));
+/// Uses the sweep line triangulation
+pub fn sweep_line<T: MeshType>(
+    face: &T::Face,
+    mesh: &T::Mesh,
+    indices: &mut Triangulation<T::V>,
+    meta: &mut TesselationMeta<T::V>,
+) where
+    T::Vec: Vector3D<S = T::S>,
+    T::VP: HasPosition<T::Vec, S = T::S>,
+    T::Face: Face3d<T>,
+{
+    debug_assert!(face.may_be_curved() || face.is_planar2(mesh));
 
-        // TODO: Improve performance by directly using the nd-vertices instead of converting to 2d
-        let vec2s: Vec<_> = self
-            .vertices_2d::<T>(mesh)
-            .map(|(p, i)| IndexedVertex2D::<T::V, T::Vec2>::new(p, i))
-            .collect();
+    // TODO: Improve performance by directly using the nd-vertices instead of converting to 2d
+    let vec2s: Vec<_> = face
+        .vertices_2d(mesh)
+        .map(|(p, i)| IndexedVertex2D::<T::V, T::Vec2>::new(p, i))
+        .collect();
 
-        sweep_line_triangulation::<T::V, T::Vec2>(indices, &vec2s, &mut meta.sweep);
-    }
+    sweep_line_triangulation::<T::V, T::Vec2>(indices, &vec2s, &mut meta.sweep);
 }

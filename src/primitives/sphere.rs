@@ -16,7 +16,7 @@ pub fn icosahedron_a2r<S: Scalar>(a: S) -> S {
     (S::TEN + S::TWO * S::FIVE.sqrt()).sqrt() * a / S::FOUR
 }
 
-impl<T: MeshType> Mesh<T>
+impl<T: MeshType> T::Mesh
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,

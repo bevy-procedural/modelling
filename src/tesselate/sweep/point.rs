@@ -1,7 +1,7 @@
-use super::vertex_type::VertexType;
+use super::VertexType;
 use crate::{
-    math::{Scalar, Vector2D},
-    mesh::{tesselate::IndexedVertex2D, IndexType},
+    math::{IndexType, Scalar, Vector2D},
+    tesselate::IndexedVertex2D,
 };
 
 #[derive(Debug, Clone)]

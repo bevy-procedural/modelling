@@ -1,7 +1,7 @@
 use crate::mesh::{DefaultEdgePayload, DefaultFacePayload, Face, Mesh, MeshType};
 use itertools::Itertools;
 
-impl<T: MeshType> Mesh<T> {
+impl<T: MeshType> T::Mesh {
     /// Close the open boundary with a single face. Doesn't create new edges or vertices.
     pub fn close_hole(&mut self, e: T::E, fp: T::FP, curved: bool) -> T::F {
         let f = self.faces.push(Face::new(e, curved, fp));
@@ -104,7 +104,7 @@ impl<T: MeshType> Mesh<T> {
     }
 }
 
-impl<T: MeshType> Mesh<T>
+impl<T: MeshType> T::Mesh
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,

@@ -1,6 +1,6 @@
 use crate::mesh::{DefaultEdgePayload, IndexType, Mesh, MeshType, Vertex};
 
-impl<T: MeshType> Mesh<T> {
+impl<T: MeshType> T::Mesh {
     /// Creates a new vertex based on `vp` and connects it to vertex `v` with a pair of halfedges
     /// TODO: Docs
     pub fn add_vertex_via_vertex(
@@ -65,7 +65,7 @@ impl<T: MeshType> Mesh<T> {
     }
 }
 
-impl<T: MeshType> Mesh<T>
+impl<T: MeshType> T::Mesh
 where
     T::EP: DefaultEdgePayload,
 {

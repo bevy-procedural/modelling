@@ -2,8 +2,8 @@ mod iterator;
 
 use super::HalfEdgeMeshType;
 use crate::{
-    math::IndexType,
-    mesh::{DefaultFacePayload, Face, FacePayload, Mesh},
+    math::{HasPosition, IndexType, Vector3D},
+    mesh::{DefaultFacePayload, Edge, Face, Face3d, FacePayload, Mesh},
     util::Deletable,
 };
 
@@ -25,6 +25,13 @@ pub struct HalfEdgeFace<T: HalfEdgeMeshType> {
 
     /// Some user-defined payload
     payload: T::FP,
+}
+
+impl<T: HalfEdgeMeshType> Face3d<T> for HalfEdgeFace<T>
+where
+    T::Vec: Vector3D<S = T::S>,
+    T::VP: HasPosition<T::Vec, S = T::S>,
+{
 }
 
 impl<T: HalfEdgeMeshType> Face<T> for HalfEdgeFace<T> {
@@ -71,31 +78,21 @@ impl<T: HalfEdgeMeshType> Face<T> for HalfEdgeFace<T> {
     fn payload_mut(&mut self) -> &mut T::FP {
         &mut self.payload
     }
-}
 
-impl<T: HalfEdgeMeshType> HalfEdgeFace<T> {
-    /// Returns the id of a half-edge incident to the face.
+    /// Iterates all vertices adjacent to the face
     #[inline(always)]
-    pub fn edge_id(&self) -> T::E {
-        self.edge
-    }
-
-    /// Creates a new face.
-    pub fn new(edge: T::E, curved: bool, payload: T::FP) -> Self {
-        assert!(edge != IndexType::max());
-        Self {
-            id: IndexType::max(),
-            edge,
-            curved,
-            payload,
-        }
+    fn vertices<'a>(
+        &'a self,
+        mesh: &'a T::Mesh,
+    ) -> impl Iterator<Item = T::Vertex> + 'a + Clone + ExactSizeIterator {
+        self.edges(mesh).map(|e| e.target(mesh))
     }
 
     /// Whether a triangle shares a halfedge with the face.
     ///
     /// If there is no evidence that the triangle is touching the face, return None.
     /// Given that all vertices are part of this face, this implies that the triangle is part of the face.
-    pub fn triangle_touches_boundary(
+    fn triangle_touches_boundary(
         &self,
         mesh: &T::Mesh,
         v0: T::V,
@@ -123,6 +120,25 @@ impl<T: HalfEdgeMeshType> HalfEdgeFace<T> {
         }
 
         return None;
+    }
+}
+
+impl<T: HalfEdgeMeshType> HalfEdgeFace<T> {
+    /// Returns the id of a half-edge incident to the face.
+    #[inline(always)]
+    pub fn edge_id(&self) -> T::E {
+        self.edge
+    }
+
+    /// Creates a new face.
+    pub fn new(edge: T::E, curved: bool, payload: T::FP) -> Self {
+        assert!(edge != IndexType::max());
+        Self {
+            id: IndexType::max(),
+            edge,
+            curved,
+            payload,
+        }
     }
 }
 

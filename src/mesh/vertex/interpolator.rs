@@ -8,7 +8,7 @@ use crate::{
 /// As you might expect, vertex interpolators are used to interpolate vertices resp. their positions.
 pub trait VertexInterpolator<const N: usize, T: MeshType> {
     /// Interpolates the vertex positions based on the given vertices.
-    fn call(&self, mesh: &Mesh<T>, vertices: [(usize, T::V); N]) -> T::VP;
+    fn call(&self, mesh: &T::Mesh, vertices: [(usize, T::V); N]) -> T::VP;
 }
 
 /// Vertex interpolator that performs linear interpolation.
@@ -18,7 +18,7 @@ where
     T::VP: HasPosition<T::Vec, S = T::S>,
 {
     /// Subdivides by linear interpolation of the positions of the vertices.
-    fn call(&self, mesh: &Mesh<T>, [(i, vi), (j, vj), (k, vk)]: [(usize, T::V); 3]) -> T::VP {
+    fn call(&self, mesh: &T::Mesh, [(i, vi), (j, vj), (k, vk)]: [(usize, T::V); 3]) -> T::VP {
         let pi = *mesh.vertex(vi).pos();
         let pj = *mesh.vertex(vj).pos();
         let pk = *mesh.vertex(vk).pos();
@@ -51,7 +51,7 @@ where
     T::Vec: Vector3D<S = T::S>,
 {
     /// Subdivides by linear interpolation of the positions of the vertices.
-    fn call(&self, mesh: &Mesh<T>, [(i, vi), (j, vj), (k, vk)]: [(usize, T::V); 3]) -> T::VP {
+    fn call(&self, mesh: &T::Mesh, [(i, vi), (j, vj), (k, vk)]: [(usize, T::V); 3]) -> T::VP {
         let pi = (*mesh.vertex(vi).pos() - self.center).normalize();
         let pj = (*mesh.vertex(vj).pos() - self.center).normalize();
         let pk = (*mesh.vertex(vk).pos() - self.center).normalize();

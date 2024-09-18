@@ -7,7 +7,7 @@ use crate::{
     },
 };
 
-impl<T: MeshType> Mesh<T>
+impl<T: MeshType> T::Mesh
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
@@ -68,7 +68,7 @@ where
     }
 }
 
-impl<T: MeshType> Mesh<T>
+impl<T: MeshType> T::Mesh
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
@@ -137,7 +137,7 @@ where
     }
 }
 
-impl<T: MeshType> Mesh<T>
+impl<T: MeshType> T::Mesh
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
@@ -145,7 +145,7 @@ where
     T::VP: HasPosition<T::Vec, S = T::S>,
 {
     /// create a rectangular cuboid with side lengths `x`, `y`, and `z`
-    pub fn cuboid(size: T::Vec) -> Mesh<T> {
+    pub fn cuboid(size: T::Vec) -> T::Mesh {
         let p = size * T::S::HALF;
         let mut mesh = Mesh::new();
         let vp = |x, y, z| T::VP::from_pos(T::Vec::from_xyz(x, y, z));
@@ -172,12 +172,12 @@ where
     }
 
     /// create a cube with side length `x`
-    pub fn cube(x: T::S) -> Mesh<T> {
+    pub fn cube(x: T::S) -> T::Mesh {
         Self::cuboid(T::Vec::splat(x))
     }
 
     /// an alias for `cube`
-    pub fn regular_hexahedron(l: T::S) -> Mesh<T> {
+    pub fn regular_hexahedron(l: T::S) -> T::Mesh {
         Self::cube(l)
     }
 
@@ -190,7 +190,7 @@ where
     }
 
     /// Creates a regular cone
-    pub fn cone(radius: T::S, height: T::S, n: usize) -> Mesh<T> {
+    pub fn cone(radius: T::S, height: T::S, n: usize) -> T::Mesh {
         Mesh::pyramid(
             circle_iter(radius, n, T::S::ZERO, T::S::ZERO),
             T::VP::from_pos(T::Vec::from_xyz(T::S::ZERO, height, T::S::ZERO)),
@@ -199,7 +199,7 @@ where
     }
 
     /// Creates a regular tetrahedron with edge length `l` centered at the origin
-    pub fn regular_tetrahedron(l: T::S) -> Mesh<T> {
+    pub fn regular_tetrahedron(l: T::S) -> T::Mesh {
         let e = T::S::HALF * l;
         let sq = e / T::S::TWO.sqrt();
         let zero = T::S::ZERO;
@@ -214,7 +214,7 @@ where
     }
 
     /// Creates a regular octahedron with a given circumscribed `radius` centered at the origin
-    pub fn regular_octahedron(radius: T::S) -> Mesh<T> {
+    pub fn regular_octahedron(radius: T::S) -> T::Mesh {
         let zero = T::S::ZERO;
         let h = radius;
         let mut mesh = Mesh::new();
@@ -237,7 +237,7 @@ where
     }
 
     /// Creates a regular cylinder
-    pub fn cylinder(radius: T::S, height: T::S, n: usize) -> Mesh<T> {
+    pub fn cylinder(radius: T::S, height: T::S, n: usize) -> T::Mesh {
         Self::regular_frustum(radius, radius, height, n, true)
     }
 }
@@ -254,7 +254,7 @@ fn circle_iter<S: Scalar, Vec: Vector<S>, VP: VertexPayload + HasPosition<Vec, S
     })
 }
 
-impl<T: MeshType> Mesh<T>
+impl<T: MeshType> T::Mesh
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,

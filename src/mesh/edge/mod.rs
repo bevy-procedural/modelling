@@ -19,7 +19,8 @@ pub trait Edge<T: MeshType<Edge = Self>>: std::fmt::Display + Clone + Copy + Par
     /// Returns whether the edge (i.e., this HalfEdge or its twin) is a boundary edge
     fn is_boundary(&self, mesh: &T::Mesh) -> bool;
 
-    fn center(&self, mesh: &T::Mesh) -> T::Vec
+    /// Returns the centroid of the edge.
+    fn centroid(&self, mesh: &T::Mesh) -> T::Vec
     where
         T::VP: HasPosition<T::Vec, S = T::S>,
     {

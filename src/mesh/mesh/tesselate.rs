@@ -9,7 +9,7 @@ use crate::{
     },
 };
 
-impl<T: MeshType> Mesh<T> {
+impl<T: MeshType> T::Mesh {
     /// Since the vertex payloads in the `Deletable` can be sparse,
     /// we need to compact the vertices when converting them to a dense vector.
     /// This function returns the cloned compact vertices and maps the indices to the new compact buffer.

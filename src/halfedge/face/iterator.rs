@@ -16,12 +16,4 @@ impl<T: HalfEdgeMeshType> HalfEdgeFace<T> {
         self.edges(mesh).map(|e| e.id())
     }
 
-    /// Iterates all vertices adjacent to the face
-    #[inline(always)]
-    pub fn vertices<'a>(
-        &'a self,
-        mesh: &'a T::Mesh,
-    ) -> impl Iterator<Item = T::Vertex> + 'a + Clone + ExactSizeIterator {
-        self.edges(mesh).map(|e| e.target(mesh))
-    }
 }

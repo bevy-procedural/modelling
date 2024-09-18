@@ -51,7 +51,7 @@ impl<E: IndexType, V: IndexType, F: IndexType> std::fmt::Display for PseudoWinge
     }
 }
 
-impl<T: MeshType> Mesh<T> {
+impl<T: MeshType> T::Mesh {
     /// Checks whether the twin of the twin is always the edge itself,
     /// the precursor to the next edge is the same, and the successor of the previous.
     fn check_edge_invariants(&self) -> Result<(), String> {

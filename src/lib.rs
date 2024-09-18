@@ -13,7 +13,7 @@ pub mod math;
 pub mod mesh;
 //pub mod operations;
 //pub mod primitives;
-//pub mod tesselate;
+pub mod tesselate;
 pub mod util;
 
 //#[cfg(feature = "bevy")]

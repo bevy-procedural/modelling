@@ -1,6 +1,6 @@
 use crate::mesh::{DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType};
 
-impl<T: MeshType> Mesh<T>
+impl<T: MeshType> T::Mesh
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,

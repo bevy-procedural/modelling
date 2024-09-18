@@ -41,7 +41,7 @@ impl MeshType for BevyMeshType3d32 {
 /// A mesh with bevy 3D vertices
 pub type BevyMesh3d = Mesh<BevyMeshType3d32>;
 
-impl<T: MeshType<VP = BevyVertexPayload, Vec = Vec3, S = f32>> Mesh<T> {
+impl<T: MeshType<VP = BevyVertexPayload, Vec = Vec3, S = f32>> T::Mesh {
     fn bevy_indices(&self, indices: &Vec<T::V>) -> bevy::render::mesh::Indices {
         if std::mem::size_of::<T::V>() == std::mem::size_of::<u32>() {
             bevy::render::mesh::Indices::U32(

@@ -1,8 +1,5 @@
 use super::chain::ReflexChain;
-use crate::{
-    math::{HasZero, IndexType, Vector2D},
-    mesh::tesselate::{sweep::chain::ReflexChainDirection, IndexedVertex2D},
-};
+use crate::{math::{HasZero, IndexType, Vector2D}, tesselate::{sweep::chain::ReflexChainDirection, IndexedVertex2D}};
 
 /// This represents a single edge constraining a sweep line interval.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

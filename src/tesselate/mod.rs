@@ -1,20 +1,24 @@
 //! Triangulation Algorithms
 
-use crate::{
-    math::Vector3D,
-    mesh::{payload::HasPosition, IndexType, MeshType},
-};
-use itertools::Itertools;
-
 mod convex;
 mod delaunay;
 mod ear_clipping;
 mod min_weight;
+mod sweep;
 mod triangulation;
-pub use triangulation::{IndexedVertex2D, Triangulation};
 
-/// The Sweep-line triangulation algorithm
-pub mod sweep;
+pub use convex::*;
+pub use delaunay::*;
+pub use ear_clipping::*;
+use itertools::Itertools;
+pub use min_weight::*;
+pub use sweep::*;
+pub use triangulation::*;
+
+use crate::{
+    math::{HasPosition, IndexType, Vector3D},
+    mesh::{Face, Face3d, MeshType, Vertex},
+};
 
 /// The algorithm to use for triangulating a face.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -53,57 +57,56 @@ pub struct TesselationMeta<V: IndexType> {
     pub sweep: sweep::SweepMeta<V>,
 }
 
-impl<E: IndexType, F: IndexType, FP: FacePayload> Face<E, F, FP> {
-    /// Converts the face into a triangle list.
-    pub fn triangulate<T: MeshType<E = E, F = F, FP = FP>>(
-        &self,
-        mesh: &Mesh<T>,
-        tri: &mut Triangulation<T::V>,
-        algorithm: TriangulationAlgorithm,
-        meta: &mut TesselationMeta<T::V>,
-    ) where
-        T::Vec: Vector3D<S = T::S>,
-        T::VP: HasPosition<T::Vec, S = T::S>,
-    {
-        let n = self.num_vertices(mesh);
-        if n < 3 {
-            return;
-        } else if n == 3 {
-            let (a, b, c) = self.vertices(mesh).map(|v| v.id()).collect_tuple().unwrap();
-            tri.insert_triangle(a, b, c);
-            return;
-        } else if n == 4 {
-            self.quad_triangulate(mesh, tri);
-            return;
-        }
+/// Triangulate a face using the specified algorithm.
+pub fn triangulate_face<T: MeshType>(
+    face: &T::Face,
+    mesh: &T::Mesh,
+    tri: &mut Triangulation<T::V>,
+    algorithm: TriangulationAlgorithm,
+    meta: &mut TesselationMeta<T::V>,
+) where
+    T::Vec: Vector3D<S = T::S>,
+    T::VP: HasPosition<T::Vec, S = T::S>,
+    T::Face: Face3d<T>,
+{
+    let n = face.num_vertices(mesh);
+    if n < 3 {
+        return;
+    } else if n == 3 {
+        let (a, b, c) = face.vertices(mesh).map(|v| v.id()).collect_tuple().unwrap();
+        tri.insert_triangle(a, b, c);
+        return;
+    } else if n == 4 {
+        quad_triangulate::<T>(face, mesh, tri);
+        return;
+    }
 
-        match algorithm {
-            TriangulationAlgorithm::Auto => {
-                // TODO: make something smarter
-                self.delaunay_triangulation(mesh, tri);
-            }
-            TriangulationAlgorithm::EarClipping => {
-                self.ear_clipping(mesh, tri, false);
-            }
-            TriangulationAlgorithm::Sweep => {
-                self.sweep_line(mesh, tri, meta);
-            }
-            TriangulationAlgorithm::MinWeight => {
-                //self.min_weight_triangulation_stoch(mesh, indices);
-                todo!("TriangulationAlgorithm::MinWeight is not implemented yet");
-            }
-            TriangulationAlgorithm::Delaunay => {
-                self.delaunay_triangulation(mesh, tri);
-            }
-            TriangulationAlgorithm::EdgeFlip => {
-                todo!("TriangulationAlgorithm::EdgeFlip is not implemented yet");
-            }
-            TriangulationAlgorithm::Fan => {
-                self.fan_triangulation(mesh, tri);
-            }
-            TriangulationAlgorithm::Heuristic => {
-                todo!("TriangulationAlgorithm::Heuristic is not implemented yet");
-            }
+    match algorithm {
+        TriangulationAlgorithm::Auto => {
+            // TODO: make something smarter
+            delaunay_triangulation::<T>(face, mesh, tri);
+        }
+        TriangulationAlgorithm::EarClipping => {
+            ear_clipping::<T>(face, mesh, tri, false);
+        }
+        TriangulationAlgorithm::Sweep => {
+            sweep_line::<T>(face, mesh, tri, meta);
+        }
+        TriangulationAlgorithm::MinWeight => {
+            //self.min_weight_triangulation_stoch(mesh, indices);
+            todo!("TriangulationAlgorithm::MinWeight is not implemented yet");
+        }
+        TriangulationAlgorithm::Delaunay => {
+            delaunay_triangulation::<T>(face, mesh, tri);
+        }
+        TriangulationAlgorithm::EdgeFlip => {
+            todo!("TriangulationAlgorithm::EdgeFlip is not implemented yet");
+        }
+        TriangulationAlgorithm::Fan => {
+            fan_triangulation::<T>(face, mesh, tri);
+        }
+        TriangulationAlgorithm::Heuristic => {
+            todo!("TriangulationAlgorithm::Heuristic is not implemented yet");
         }
     }
 }

@@ -37,7 +37,7 @@ impl SubdivisionDescription {
     }
 }
 
-impl<T: MeshType> Mesh<T>
+impl<T: MeshType> T::Mesh
 where
     T::EP: DefaultEdgePayload,
 {

@@ -1,7 +1,7 @@
 use crate::mesh::{DefaultEdgePayload, HalfEdge, IndexType, Mesh, MeshType, Vertex};
 
 // The simplest non-empty mesh: a single edge with two vertices
-impl<T: MeshType> From<(T::VP, T::EP, T::VP, T::EP)> for Mesh<T>
+impl<T: MeshType> From<(T::VP, T::EP, T::VP, T::EP)> for T::Mesh
 where
     T::EP: DefaultEdgePayload,
 {
@@ -12,7 +12,7 @@ where
     }
 }
 
-impl<T: MeshType> Mesh<T> {
+impl<T: MeshType> T::Mesh {
     /// Inserts vertices a and b and adds an isolated edge between a and b.
     pub fn add_isolated_edge(
         &mut self,
@@ -309,7 +309,7 @@ impl<T: MeshType> Mesh<T> {
     }
 }
 
-impl<T: MeshType> Mesh<T>
+impl<T: MeshType> T::Mesh
 where
     T::EP: DefaultEdgePayload,
 {

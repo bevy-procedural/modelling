@@ -1,6 +1,6 @@
 use crate::{math::Vector3D, mesh::Mesh};
 
-impl<T: MeshType> Mesh<T>
+impl<T: MeshType> T::Mesh
 where
     T::Vec: Vector3D<S = T::S>,
     T::VP: HasPosition<T::Vec, S = T::S>,

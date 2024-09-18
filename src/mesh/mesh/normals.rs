@@ -18,7 +18,7 @@ pub enum GenerateNormals {
     //Groups,
 }
 
-impl<T: MeshType> Mesh<T>
+impl<T: MeshType> T::Mesh
 where
     T::VP: HasPosition<T::Vec, S = T::S> + HasNormal<T::Vec, S = T::S>,
 {

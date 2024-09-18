@@ -1,7 +1,4 @@
-use crate::{
-    math::{Scalar, Vector2D},
-    mesh::IndexType,
-};
+use crate::math::{IndexType, Scalar, Vector2D};
 
 #[derive(Debug, Clone, PartialEq, Eq, Copy, Default)]
 /// The type of a vertex in a sweep line reflex chain
