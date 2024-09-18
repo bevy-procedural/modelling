@@ -1,9 +1,7 @@
+use super::payload::MeshPayload;
 use crate::{
     math::{IndexType, Scalar, Transform, Vector, Vector2D, Vector3D, Vector4D},
-    representation::{
-        payload::VertexPayload,
-        EdgePayload, FacePayload,
-    },
+    representation::{payload::VertexPayload, EdgePayload, FacePayload},
 };
 
 /// This trait defines all the associated types used in a mesh and puts them into relation.
@@ -25,6 +23,9 @@ pub trait MeshType: Copy {
 
     /// The type of the face payload.
     type FP: FacePayload;
+
+    /// The type of the mesh payload.
+    type MP: MeshPayload<Self>;
 
     /// The type of the vector used for vertices.
     type Vec: Vector<

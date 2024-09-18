@@ -1,6 +1,6 @@
 //! This module implements bevy specific mesh handling
 
-use super::{Mesh, MeshType};
+use super::{payload::EmptyMeshPayload, Mesh, MeshType};
 use crate::{
     math::IndexType,
     representation::{
@@ -28,6 +28,7 @@ impl MeshType for BevyMeshType3d32 {
     type EP = EmptyEdgePayload;
     type VP = BevyVertexPayload;
     type FP = EmptyFacePayload;
+    type MP = EmptyMeshPayload;
     type S = f32;
     type Vec = Vec3;
     type Vec2 = Vec2;

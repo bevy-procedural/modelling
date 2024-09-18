@@ -1,20 +1,21 @@
 pub mod builder;
 mod check;
+mod geometry;
 mod iterator;
 mod mesh_type;
+mod normals;
+mod payload;
 pub mod primitives;
 mod tesselate;
-mod normals;
 mod topology;
 mod transform;
-mod geometry;
 
 #[cfg(feature = "bevy")]
 pub mod bevy;
 
 use super::{Deletable, DeletableVector, Face, HalfEdge, Vertex};
-pub use mesh_type::MeshType;
 pub use builder::*;
+pub use mesh_type::MeshType;
 
 /// A mesh data structure for (open) manifold meshes.
 ///
@@ -33,6 +34,7 @@ pub struct Mesh<T: MeshType> {
     vertices: DeletableVector<Vertex<T::E, T::V, T::VP>, T::V>,
     halfedges: DeletableVector<HalfEdge<T::E, T::V, T::F, T::EP>, T::E>,
     faces: DeletableVector<Face<T::E, T::F, T::FP>, T::F>,
+    payload: T::MP,
 }
 
 impl<T: MeshType> Mesh<T> {
@@ -42,6 +44,7 @@ impl<T: MeshType> Mesh<T> {
             vertices: DeletableVector::new(),
             halfedges: DeletableVector::new(),
             faces: DeletableVector::new(),
+            payload: T::MP::default()
         }
     }
 
