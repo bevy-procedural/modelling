@@ -10,9 +10,9 @@ use bevy::{
 };
 use procedural_modelling::{
     math::{Scalar, Vector, Vector3D},
-    representation::{
+    mesh::{
         bevy::BevyMesh3d,
-        payload::{bevy::BevyVertexPayload, HasPosition, Transformable},
+        payload::{vertex_payload::BevyVertexPayload, HasPosition, Transformable},
         tesselate::TriangulationAlgorithm,
         DefaultEdgePayload, DefaultFacePayload, Mesh as TMesh, MeshType,
     },

@@ -15,9 +15,9 @@ use procedural_modelling::{
         self,
         bevy::{text::Text3dGizmos, *},
     },
-    representation::{
+    mesh::{
         bevy::BevyMesh3d,
-        payload::{bevy::BevyVertexPayload, HasPosition},
+        payload::{vertex_payload::BevyVertexPayload, HasPosition},
         primitives::{generate_zigzag, random_star},
         tesselate::{TesselationMeta, TriangulationAlgorithm},
     },

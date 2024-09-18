@@ -5,9 +5,9 @@ use bevy::{
     render::render_asset::RenderAssetUsages,
     window::{PresentMode, WindowResolution},
 };
-use procedural_modelling::representation::{
+use procedural_modelling::mesh::{
     bevy::BevyMesh3d,
-    payload::{bevy::BevyVertexPayload, HasPosition},
+    payload::{vertex_payload::BevyVertexPayload, HasPosition},
     primitives::generate_zigzag,
     tesselate::TriangulationAlgorithm,
 };

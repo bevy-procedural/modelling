@@ -5,7 +5,7 @@ use bevy::{
     prelude::*,
     render::render_asset::RenderAssetUsages,
 };
-use procedural_modelling::representation::{bevy::BevyMesh3d, tesselate::TriangulationAlgorithm};
+use procedural_modelling::mesh::{bevy::BevyMesh3d, tesselate::TriangulationAlgorithm};
 use std::f32::consts::PI;
 
 fn main() {

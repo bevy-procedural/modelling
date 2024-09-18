@@ -5,9 +5,9 @@ use bevy::{
     transform::components::Transform,
 };
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use procedural_modelling::representation::{
+use procedural_modelling::mesh::{
     bevy::BevyMesh3d,
-    payload::{bevy::BevyVertexPayload, HasPosition},
+    payload::{vertex_payload::BevyVertexPayload, HasPosition},
     primitives::generate_zigzag,
     tesselate::TriangulationAlgorithm,
 };

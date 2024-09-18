@@ -7,7 +7,14 @@
 //! A framework-agnostic Procedural Modelling crate.
 //!
 
-pub mod gizmo;
+//pub mod gizmo;
+//pub mod halfedge;
 pub mod math;
-pub mod representation;
+pub mod mesh;
+//pub mod operations;
+//pub mod primitives;
+//pub mod tesselate;
 pub mod util;
+
+//#[cfg(feature = "bevy")]
+//pub mod bevy;
