@@ -71,17 +71,15 @@ pub trait Mesh<T: MeshType>: Default + std::fmt::Display + Clone {
     where
         T: 'a;
 
-    // TODO
-    /*
     /// Returns an iterator over all non-deleted halfedge pairs without duplicates
     fn edges<'a>(&'a self) -> impl Iterator<Item = &'a T::Edge>
     where
-        T::Edge: 'a;
+        T: 'a;
 
     /// Returns an iterator over all non-deleted faces
     fn faces<'a>(&'a self) -> impl Iterator<Item = &'a T::Face>
     where
-        T::Face: 'a;*/
+        T: 'a;
 
     /// Transforms all vertices in the mesh
     fn transform(&mut self, t: &T::Trans) -> &mut Self

@@ -127,6 +127,22 @@ impl<T: HalfEdgeMeshType> Mesh<T> for HalfEdgeMesh<T> {
     {
         self.vertices.iter_mut()
     }
+
+    /// Returns an iterator over all non-deleted faces
+    fn faces<'a>(&'a self) -> impl Iterator<Item = &'a T::Face>
+    where
+        T::Face: 'a,
+    {
+        self.faces.iter()
+    }
+
+    /// Returns an iterator over all non-deleted halfedges
+    fn edges<'a>(&'a self) -> impl Iterator<Item = &'a T::Edge>
+    where
+        T::Edge: 'a,
+    {
+        self.halfedges.iter()
+    }
 }
 
 impl<T: HalfEdgeMeshType> std::fmt::Display for HalfEdgeMesh<T> {

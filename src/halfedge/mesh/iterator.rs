@@ -1,16 +1,16 @@
 use super::HalfEdgeMesh;
-use crate::{halfedge::{HalfEdgeMeshType, IncidentToFaceBackIterator, IncidentToFaceIterator}, mesh::{Edge, Mesh}, util::Deletable};
+use crate::{
+    halfedge::{HalfEdgeMeshType, IncidentToFaceBackIterator, IncidentToFaceIterator},
+    mesh::Mesh,
+};
 
 impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
-   
-
-    /// Returns an iterator over all non-deleted halfedges
-    pub fn halfedges(&self) -> impl Iterator<Item = &T::Edge> {
-        self.halfedges.iter()
-    }
-
+    /*
     /// Returns an iterator over all non-deleted halfedge pairs without duplicates
-    pub fn edges(&self) -> impl Iterator<Item = (&T::Edge, &T::Edge)> {
+    fn edges<'a>(&'a self) -> impl Iterator<Item = (&'a T::Edge, &'a T::Edge)>
+    where
+        T::Edge: 'a,
+    {
         self.halfedges.iter().filter_map(move |e| {
             if e.is_deleted() {
                 None
@@ -21,12 +21,7 @@ impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
             }
         })
     }
-
-    /// Returns an iterator over all non-deleted faces
-    pub fn faces(&self) -> impl Iterator<Item = &T::Face> {
-        self.faces.iter()
-    }
-
+    */
     /// Iterates forwards over the half-edge chain starting at the given edge
     pub fn edges_from<'a>(&'a self, e: T::E) -> IncidentToFaceIterator<'a, T> {
         IncidentToFaceIterator::<'a, T>::new(*self.edge(e), self)
