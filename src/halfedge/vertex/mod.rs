@@ -1,13 +1,14 @@
 mod iterator;
 
 pub use iterator::*;
+use itertools::Itertools;
 
 use super::HalfEdgeMeshType;
 use crate::{
     math::{IndexType, Transformable},
     mesh::{
         payload::{DefaultVertexPayload, VertexPayload},
-        Edge, Mesh, MeshType, Vertex,
+        Edge, MeshBasics, MeshType, Vertex,
     },
     util::Deletable,
 };
@@ -49,13 +50,8 @@ impl<T: HalfEdgeMeshType> HalfEdgeVertex<T> {
         self.edge = edge;
     }
 
-    // TODO
-    /*
     /// Returns an outgoing boundary edge incident to the vertex
-    pub fn outgoing_boundary_edge<T: MeshType<Vertex = Self>>(
-        &self,
-        mesh: &HalfEdgeMesh<T>,
-    ) -> Option<E> {
+    pub fn outgoing_boundary_edge(&self, mesh: &T::Mesh) -> Option<T::E> {
         // TODO: Assumes a manifold vertex. Otherwise, there can be multiple boundary edges!
         debug_assert!(
             self.edges_out(mesh)
@@ -76,10 +72,7 @@ impl<T: HalfEdgeMeshType> HalfEdgeVertex<T> {
     }
 
     /// Returns an ingoing boundary edge incident to the vertex
-    pub fn ingoing_boundary_edge<T: MeshType<Vertex = Self>>(
-        &self,
-        mesh: &HalfEdgeMesh<T>,
-    ) -> Option<E> {
+    pub fn ingoing_boundary_edge(&self, mesh: &T::Mesh) -> Option<T::E> {
         debug_assert!(
             self.edges_in(mesh)
                 .filter(|e| e.is_boundary_self())
@@ -96,7 +89,7 @@ impl<T: HalfEdgeMeshType> HalfEdgeVertex<T> {
                 None
             }
         })
-    }*/
+    }
 }
 
 impl<T: HalfEdgeMeshType> Vertex<T> for HalfEdgeVertex<T>

@@ -1,6 +1,6 @@
 use crate::{
     math::{HasPosition, Vector, Vector3D},
-    mesh::{Face, Face3d, Mesh, MeshType, Vertex},
+    mesh::{Face, Face3d, MeshBasics, MeshType, Vertex},
 };
 use std::collections::HashMap;
 

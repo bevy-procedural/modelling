@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use super::{HalfEdge, HalfEdgeMeshType};
 use crate::{
     math::IndexType,
-    mesh::{payload::VertexPayload, Edge, Mesh, Vertex},
+    mesh::{payload::VertexPayload, Edge, Mesh, MeshBasics, MeshNormals, MeshTransforms, Vertex},
     tesselate::Triangulation,
     util::{Deletable, DeletableVector},
 };
@@ -66,7 +66,7 @@ impl<T: HalfEdgeMeshType> Default for HalfEdgeMesh<T> {
     }
 }
 
-impl<T: HalfEdgeMeshType> Mesh<T> for HalfEdgeMesh<T> {
+impl<T: HalfEdgeMeshType> MeshBasics<T> for HalfEdgeMesh<T> {
     fn has_vertex(&self, index: T::V) -> bool {
         self.vertices.has(index)
     }
@@ -194,8 +194,13 @@ impl<T: HalfEdgeMeshType> Mesh<T> for HalfEdgeMesh<T> {
     }
 }
 
+impl<T: HalfEdgeMeshType> MeshTransforms<T> for HalfEdgeMesh<T> {}
+impl<T: HalfEdgeMeshType> MeshNormals<T> for HalfEdgeMesh<T> {}
+impl<T: HalfEdgeMeshType> Mesh<T> for HalfEdgeMesh<T> {}
+
 impl<T: HalfEdgeMeshType> std::fmt::Display for HalfEdgeMesh<T> {
     fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // TODO:
         /*write!(
             f,
             "Mesh:\nvertices:\n{}\n edge --><-- twin   |  face: edge/twin \n{}\n faces: \n{}\n{} ",
@@ -220,7 +225,7 @@ impl<T: HalfEdgeMeshType> std::fmt::Display for HalfEdgeMesh<T> {
             } else {
                 "".to_string()
             }
-        )*/
+        );*/
         todo!("Display not implemented yet");
     }
 }

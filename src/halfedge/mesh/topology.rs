@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use super::HalfEdgeMesh;
 use crate::{
     halfedge::HalfEdgeMeshType,
-    mesh::{Edge, Face, Mesh, Vertex},
+    mesh::{Edge, Face, MeshBasics, Vertex},
 };
 
 impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
@@ -82,8 +82,6 @@ impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
 
         None
     }
-
-    
 
     /*
     /// Whether the mesh has non-manifold vertices

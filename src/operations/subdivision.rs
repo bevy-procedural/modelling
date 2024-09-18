@@ -65,12 +65,6 @@ where
         self.edge_mut(old_edge.next_id()).set_prev(new_edge);
         self.edge_mut(old_edge.id()).set_next(new_edge);
 
-        /*println!(
-            "insert\nnew {:?}\nold {:?}",
-            self.edge(new_edge),
-            self.edge(old_edge.id())
-        );*/
-
         new_edge
     }
 
@@ -118,14 +112,6 @@ where
         self.edge_mut(other_old.id()).set_twin(new_edge);
         self.edge_mut(old_edge.next_id()).set_prev(new_edge);
         self.edge_mut(old_edge.id()).set_next(new_edge);
-
-        /*println!(
-            "fixup\nnew {:?}\nold {:?}\non  {:?}\noo  {:?}",
-            self.edge(new_edge),
-            self.edge(old_edge.id()),
-            self.edge(other_new.id()),
-            self.edge(other_old.id())
-        );*/
 
         Some(new_edge)
     }

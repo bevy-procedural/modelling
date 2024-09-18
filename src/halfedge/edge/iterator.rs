@@ -1,5 +1,8 @@
 use super::HalfEdge;
-use crate::{halfedge::HalfEdgeMeshType, mesh::{Edge, Mesh}};
+use crate::{
+    halfedge::HalfEdgeMeshType,
+    mesh::{Edge, MeshBasics},
+};
 
 impl<T: HalfEdgeMeshType> HalfEdge<T> {
     /// Iterates all half-edges incident to the same face (counter-clockwise)

@@ -5,7 +5,7 @@ pub use iterator::*;
 use super::{HalfEdgeMesh, HalfEdgeMeshType};
 use crate::{
     math::IndexType,
-    mesh::{DefaultEdgePayload, Edge, EdgePayload, Mesh},
+    mesh::{DefaultEdgePayload, Edge, EdgePayload, MeshBasics},
     util::Deletable,
 };
 

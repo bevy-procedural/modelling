@@ -1,7 +1,7 @@
 use super::HalfEdgeVertex;
 use crate::{
     halfedge::HalfEdgeMeshType,
-    mesh::{Edge, Mesh, Vertex},
+    mesh::{Edge, MeshBasics, Vertex},
 };
 
 impl<T: HalfEdgeMeshType> HalfEdgeVertex<T> {
@@ -16,7 +16,6 @@ impl<T: HalfEdgeMeshType> HalfEdgeVertex<T> {
     pub fn edges_in<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Edge> + 'a {
         IncidentToVertexIterator::<T>::new(self.edge(mesh), mesh).map(|e| e.twin(mesh))
     }
-
 
     /*
     /// Iterates the wheel of vertices (will have length one if the vertex is manifold)

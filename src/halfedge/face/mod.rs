@@ -3,7 +3,7 @@ mod iterator;
 use super::HalfEdgeMeshType;
 use crate::{
     math::{HasPosition, IndexType, Vector3D},
-    mesh::{DefaultFacePayload, Edge, Face, Face3d, FacePayload, Mesh},
+    mesh::{DefaultFacePayload, Edge, Face, Face3d, FacePayload, MeshBasics},
     util::Deletable,
 };
 

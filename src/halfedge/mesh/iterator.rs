@@ -1,13 +1,13 @@
 use super::HalfEdgeMesh;
 use crate::{
     halfedge::{HalfEdgeMeshType, IncidentToFaceBackIterator, IncidentToFaceIterator},
-    mesh::Mesh,
+    mesh::{Edge, MeshBasics},
+    util::Deletable,
 };
 
 impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
-    /*
     /// Returns an iterator over all non-deleted halfedge pairs without duplicates
-    fn edges<'a>(&'a self) -> impl Iterator<Item = (&'a T::Edge, &'a T::Edge)>
+    fn twin_edges<'a>(&'a self) -> impl Iterator<Item = (&'a T::Edge, &'a T::Edge)>
     where
         T::Edge: 'a,
     {
@@ -21,7 +21,7 @@ impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
             }
         })
     }
-    */
+
     /// Iterates forwards over the half-edge chain starting at the given edge
     pub fn edges_from<'a>(&'a self, e: T::E) -> IncidentToFaceIterator<'a, T> {
         IncidentToFaceIterator::<'a, T>::new(*self.edge(e), self)
