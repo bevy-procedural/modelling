@@ -19,7 +19,6 @@ pub trait Face<T: MeshType<Face = Self>>: FaceBasics<T> {
     where
         T::VP: HasPosition<T::Vec, S = T::S>,
     {
-        // TODO: or centroid?
         self.vertices(mesh).map(|v| v.pos()).stable_mean()
     }
 

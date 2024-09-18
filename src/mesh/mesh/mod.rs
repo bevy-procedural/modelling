@@ -1,11 +1,13 @@
 //mod check;
 mod basics;
+mod check;
 mod mesh_type;
 mod normals;
 mod payload;
 mod transform;
 
 pub use basics::*;
+pub use check::*;
 pub use mesh_type::*;
 pub use normals::*;
 pub use payload::*;

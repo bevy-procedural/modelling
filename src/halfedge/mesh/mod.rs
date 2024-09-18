@@ -2,6 +2,7 @@ mod basics;
 mod iterator;
 mod topology;
 mod check;
+mod pseudo_winged;
 
 use super::{HalfEdge, HalfEdgeMeshType};
 use crate::{
