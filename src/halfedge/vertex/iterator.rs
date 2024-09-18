@@ -17,19 +17,6 @@ impl<T: HalfEdgeMeshType> HalfEdgeVertex<T> {
         IncidentToVertexIterator::<T>::new(self.edge(mesh), mesh).map(|e| e.twin(mesh))
     }
 
-    /// Iterates all vertices adjacent to the vertex in the same manifold edge wheel (clockwise)
-    #[inline(always)]
-    pub fn vertices<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Vertex> + 'a {
-        // TODO: slightly inefficient because of the clone and target being indirect
-        self.edges_out(mesh).map(|e| e.target(mesh))
-    }
-
-    /// Iterates all faces adjacent to this vertex in the same manifold edge wheel (clockwise)
-    #[inline(always)]
-    pub fn faces<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Face> + 'a {
-        // TODO: slightly inefficient because of the clone
-        self.edges_out(mesh).filter_map(|e| e.face(mesh).clone())
-    }
 
     /*
     /// Iterates the wheel of vertices (will have length one if the vertex is manifold)

@@ -179,6 +179,22 @@ where
     {
         self.payload = self.payload.scale(transform);
     }
+
+    /// Iterates all vertices adjacent to the vertex in the same manifold edge wheel (clockwise)
+    #[inline(always)]
+    fn vertices<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Vertex> + 'a {
+        // TODO: slightly inefficient because of the clone and target being indirect
+        self.edges_out(mesh).map(|e| e.target(mesh).clone())
+    }
+
+    /// Iterates all faces adjacent to this vertex in the same manifold edge wheel (clockwise)
+    #[inline(always)]
+    fn faces<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Face> + 'a
+    where
+        T: 'a,
+    {
+        self.edges_out(mesh).filter_map(|e| e.face(mesh).cloned())
+    }
 }
 
 impl<T: HalfEdgeMeshType> std::fmt::Display for HalfEdgeVertex<T> {

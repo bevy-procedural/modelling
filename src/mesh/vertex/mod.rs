@@ -36,6 +36,14 @@ pub trait Vertex<T: MeshType<Vertex = Self>>: std::fmt::Display + Clone + Partia
     /// Returns whether the vertex has only one edge incident to it
     fn has_only_one_edge(&self, mesh: &T::Mesh) -> bool;
 
+    /// Iterates all vertices adjacent to the vertex in the same manifold edge wheel (clockwise)
+    fn vertices<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Vertex> + 'a;
+
+    /// Iterates all faces adjacent to this vertex in the same manifold edge wheel (clockwise)
+    fn faces<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Face> + 'a
+    where
+        T: 'a;
+
     /// Transforms the payload.
     fn transform(&mut self, transform: &T::Trans)
     where

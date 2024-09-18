@@ -85,7 +85,7 @@ impl<T: HalfEdgeMeshType> Face<T> for HalfEdgeFace<T> {
         &'a self,
         mesh: &'a T::Mesh,
     ) -> impl Iterator<Item = T::Vertex> + 'a + Clone + ExactSizeIterator {
-        self.edges(mesh).map(|e| e.target(mesh))
+        self.edges(mesh).map(|e| e.target(mesh).clone())
     }
 
     /// Whether a triangle shares a halfedge with the face.

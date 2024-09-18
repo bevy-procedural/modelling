@@ -3,15 +3,16 @@ mod mesh_type;
 //mod normals;
 mod payload;
 
+use std::collections::HashMap;
+
 pub use mesh_type::*;
 pub use payload::*;
 
+use super::{Face, Face3d, Vertex};
 use crate::{
-    math::{HasPosition, Transformable, Vector3D, VectorIteratorExt},
+    math::{HasNormal, HasPosition, IndexType, Transformable, Vector, Vector3D, VectorIteratorExt},
     tesselate::{triangulate_face, TesselationMeta, Triangulation, TriangulationAlgorithm},
 };
-
-use super::{Face3d, Vertex};
 
 /// The `Mesh` trait doesn't assume any specific data structure or topology.
 pub trait Mesh<T: MeshType<Mesh = Self>>: Default + std::fmt::Display + Clone {
@@ -159,5 +160,78 @@ pub trait Mesh<T: MeshType<Mesh = Self>>: Default + std::fmt::Display + Clone {
 
         let vs = self.get_compact_vertices(&mut indices);
         (indices, vs)
+    }
+
+    /// Generates flat normals and safes them in the mesh.
+    /// Requires all vertices in the mesh to be duplicated.
+    /// TODO: Implement this function and also the duplication methods.
+    fn generate_flat_normals(&mut self) -> &mut Self {
+        todo!("generate_normals_flat is not implemented yet");
+    }
+
+    /// Triangulates the mesh and duplicates the vertices for use with flat normals.
+    /// This doesn't duplicate the halfedge mesh but only the exported vertex buffer.
+    fn triangulate_and_generate_flat_normals_post(
+        &self,
+        algorithm: TriangulationAlgorithm,
+        meta: &mut TesselationMeta<T::V>,
+    ) -> (Vec<T::V>, Vec<T::VP>)
+    where
+        T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S> + HasNormal<T::Vec, S = T::S>,
+        T::Face: Face3d<T>,
+    {
+        let mut vertices = Vec::new();
+        let mut indices = Vec::new();
+
+        for f in self.faces() {
+            let mut tri = Triangulation::new(&mut indices);
+            let face_normal = Face3d::normal(f, self).normalize();
+            let mut id_map = HashMap::new();
+            // generate a new list of vertices (full duplication)
+            f.vertices(self).for_each(|v| {
+                let mut p = v.payload().clone();
+                id_map.insert(v.id(), IndexType::new(vertices.len()));
+                p.set_normal(face_normal);
+                vertices.push(p)
+            });
+            triangulate_face::<T>(f, self, &mut tri, algorithm, meta);
+            tri.map_indices(&id_map);
+        }
+
+        (indices, vertices)
+    }
+
+    /// Generates smooth normals and safes them in the mesh.
+    fn generate_smooth_normals(&mut self) -> &mut Self
+    where
+        T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S> + HasNormal<T::Vec, S = T::S>,
+        T::Face: Face3d<T>,
+    {
+        // Smooth normals are calculated without vertex duplication.
+        // Hence, we have to set the normals of the whole mesh.
+        // we copy the vertices still to both compact the indices and set the normals without mutating the mesh
+        let face_normals: HashMap<T::F, T::Vec> = self
+            .faces()
+            .map(|f| (f.id(), Face3d::normal(f, self).normalize()))
+            .collect();
+
+        let normals = self
+            .vertices()
+            .map(|v| {
+                v.faces(self)
+                    .map(|f| face_normals[&f.id()])
+                    .stable_mean()
+                    .normalize()
+            })
+            .collect::<Vec<_>>();
+
+        self.vertices_mut().enumerate().for_each(|(i, v)| {
+            // set the average of face normals for each vertex
+            v.payload_mut().set_normal(normals[i]);
+        });
+
+        self
     }
 }

@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use super::HalfEdgeMesh;
 use crate::{
     halfedge::HalfEdgeMeshType,
-    mesh::{Edge, Face, Mesh},
+    mesh::{Edge, Face, Mesh, Vertex},
 };
 
 impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {

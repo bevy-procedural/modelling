@@ -60,9 +60,8 @@ impl<T: HalfEdgeMeshType> Edge<T> for HalfEdge<T> {
 
     /// Returns the target vertex of the half-edge. Reached via the next half-edge, not the twin.
     #[inline(always)]
-    fn target(&self, mesh: &T::Mesh) -> T::Vertex {
-        // TODO: avoid this clone?
-        self.next(mesh).origin(mesh).clone()
+    fn target<'a>(&'a self, mesh: &'a T::Mesh) -> &'a T::Vertex {
+        mesh.vertex(self.next(mesh).origin_id())
     }
 
     /// Returns whether the edge (i.e., this HalfEdge or its twin) is a boundary edge
@@ -176,11 +175,11 @@ impl<T: HalfEdgeMeshType> HalfEdge<T> {
 
     /// Returns the face the half-edge is incident to
     #[inline(always)]
-    pub fn face<'a>(&'a self, mesh: &'a HalfEdgeMesh<T>) -> Option<T::Face> {
+    pub fn face<'a>(&'a self, mesh: &'a HalfEdgeMesh<T>) -> Option<&'a T::Face> {
         if self.face == IndexType::max() {
             None
         } else {
-            Some(*mesh.face(self.face))
+            Some(mesh.face(self.face))
         }
     }
 
@@ -192,8 +191,13 @@ impl<T: HalfEdgeMeshType> HalfEdge<T> {
 
     /// Returns the other face (incident to the twin)
     #[inline(always)]
-    pub fn other_face<'a>(&'a self, mesh: &'a HalfEdgeMesh<T>) -> Option<T::Face> {
-        self.twin(mesh).face(mesh)
+    pub fn other_face<'a>(&'a self, mesh: &'a HalfEdgeMesh<T>) -> Option<&'a T::Face> {
+        let face = self.twin(mesh).face_id();
+        if face == IndexType::max() {
+            None
+        } else {
+            Some(mesh.face(face))
+        }
     }
 
     /// Returns whether the edge (i.e., this HalfEdge and not necessarily its twin) is a boundary edge
