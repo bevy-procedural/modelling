@@ -45,7 +45,7 @@ pub trait Face<T: MeshType<Face = Self>>:
     ) -> impl Iterator<Item = T::Vertex> + 'a + Clone + ExactSizeIterator;
 
     /// Naive method to get the center of the face by averaging the vertices.
-    fn center(&self, mesh: &T::Mesh) -> T::Vec
+    fn centroid(&self, mesh: &T::Mesh) -> T::Vec
     where
         T::VP: HasPosition<T::Vec, S = T::S>,
     {

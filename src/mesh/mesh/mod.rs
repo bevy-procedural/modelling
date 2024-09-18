@@ -1,12 +1,13 @@
 //mod check;
 mod mesh_type;
-//mod normals;
+mod normals;
 mod payload;
 
 use std::collections::HashMap;
 
 pub use mesh_type::*;
 pub use payload::*;
+pub use normals::*;
 
 use super::{Face, Face3d, Vertex};
 use crate::{

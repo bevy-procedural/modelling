@@ -1,7 +1,9 @@
 //! Implements 3d text gizmos
 
-pub mod text3d;
 use bevy::prelude::*;
+
+use super::text3d;
+pub use super::text3d::*;
 
 // TODO: Convert this to a real gizmo where the text is requested every frame and other texts are deleted. Text widgets are re-used.
 // TODO: move this to its own crate

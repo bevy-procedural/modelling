@@ -1,8 +1,11 @@
 //! Bevy specific implementations for the vertex payload and 3d rotation.
 
-use super::{HasNormal, HasPosition, Transformable, VertexPayload};
-use crate::math::Transform;
 use bevy::math::{Quat, Vec2, Vec3};
+
+use crate::{
+    math::{HasNormal, HasPosition, Transform, Transformable},
+    mesh::payload::VertexPayload,
+};
 
 /// Vertex Payload for Bevy with 3d position, normal, and uv.
 #[derive(Debug, Clone, PartialEq, Default, Copy)]
@@ -92,7 +95,7 @@ impl HasPosition<Vec3> for BevyVertexPayload {
             uv: Vec2::ZERO,
         }
     }
-    
+
     #[inline(always)]
     fn pos(&self) -> &Vec3 {
         &self.position

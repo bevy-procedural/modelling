@@ -1,13 +1,11 @@
 //! This module implements bevy specific mesh handling
 
-use super::{payload::EmptyMeshPayload, Mesh, MeshType};
+use super::BevyVertexPayload;
 use crate::{
-    math::IndexType,
-    mesh::{
-        payload::{vertex_payload::BevyVertexPayload, HasNormal, HasPosition},
-        tesselate::{TesselationMeta, TriangulationAlgorithm},
-        EmptyEdgePayload, EmptyFacePayload,
-    },
+    halfedge::{HalfEdge, HalfEdgeFace, HalfEdgeMesh, HalfEdgeMeshType, HalfEdgeVertex},
+    math::{HasNormal, HasPosition, IndexType},
+    mesh::{EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, Mesh, MeshType},
+    tesselate::{TesselationMeta, TriangulationAlgorithm},
 };
 use bevy::{
     math::{Quat, Vec2, Vec3, Vec4},
@@ -18,7 +16,7 @@ use bevy::{
 };
 
 /// A mesh type for bevy with 3D vertices, 32 bit indices, 32 bit floats, and no face or edge payload (no normals etc.)
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct BevyMeshType3d32;
 
 impl MeshType for BevyMeshType3d32 {
@@ -36,12 +34,18 @@ impl MeshType for BevyMeshType3d32 {
     type Vec4 = Vec4;
     type Trans = bevy::transform::components::Transform;
     type Rot = Quat;
+    type Mesh = BevyMesh3d;
+    type Face = HalfEdgeFace<Self>;
+    type Edge = HalfEdge<Self>;
+    type Vertex = HalfEdgeVertex<Self>;
 }
 
-/// A mesh with bevy 3D vertices
-pub type BevyMesh3d = Mesh<BevyMeshType3d32>;
+impl HalfEdgeMeshType for BevyMeshType3d32 {}
 
-impl<T: MeshType<VP = BevyVertexPayload, Vec = Vec3, S = f32>> T::Mesh {
+/// A mesh with bevy 3D vertices
+pub type BevyMesh3d = HalfEdgeMesh<BevyMeshType3d32>;
+
+impl<T: HalfEdgeMeshType<VP = BevyVertexPayload, Vec = Vec3, S = f32>> HalfEdgeMesh<T> {
     fn bevy_indices(&self, indices: &Vec<T::V>) -> bevy::render::mesh::Indices {
         if std::mem::size_of::<T::V>() == std::mem::size_of::<u32>() {
             bevy::render::mesh::Indices::U32(
