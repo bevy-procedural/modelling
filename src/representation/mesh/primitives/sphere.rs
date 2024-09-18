@@ -1,8 +1,8 @@
 use crate::{
     math::{HasZero, IndexType, Scalar, Vector, Vector3D},
     representation::{
-        payload::{HasPosition, SlerpVertexInterpolator}, DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
-        SubdivisionDescription,
+        payload::{HasPosition, SlerpVertexInterpolator},
+        DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType, SubdivisionDescription,
     },
 };
 
@@ -121,7 +121,7 @@ where
     }
 
     /// Create a icosahedron with a given edge length 'l'.
-    pub fn icosahedron(l: T::S) -> Self {
+    pub fn regular_icosahedron(l: T::S) -> Self {
         let long = l * T::S::PHI * T::S::HALF;
         let short = l * T::S::HALF;
         let zero = T::S::ZERO;
@@ -168,9 +168,14 @@ where
         todo!("seamless_cubesphere")
     }*/
 
+    /// An alias for `geodesic_icosahedron`.
+    pub fn icosphere(radius: T::S, n: usize) {
+        Self::geodesic_icosahedron(radius, n);
+    }
+
     /// Create a geodesic icosahedron (aka icosphere) with a given `radius` and `n` subdivisions.
-    pub fn icosphere(radius: T::S, n: usize) -> Self {
-        let mut mesh = Mesh::<T>::icosahedron(icosahedron_r2a(radius));
+    pub fn geodesic_icosahedron(radius: T::S, n: usize) -> Self {
+        let mut mesh = Mesh::<T>::regular_icosahedron(icosahedron_r2a(radius));
         debug_assert!(mesh.centroid().is_about(&T::Vec::ZERO, T::S::EPS));
         mesh.subdivision_frequency(
             SubdivisionDescription::new(n, 0),
@@ -181,7 +186,7 @@ where
 
     /// Create a geodesic tetrahedron with a given `radius` and `n` subdivisions.
     pub fn geodesic_tetrahedron(radius: T::S, n: usize) -> Self {
-        let mut mesh = Mesh::<T>::tetrahedron(radius);
+        let mut mesh = Mesh::<T>::regular_tetrahedron(radius);
         debug_assert!(mesh.centroid().is_about(&T::Vec::ZERO, T::S::EPS));
         mesh.subdivision_frequency(
             SubdivisionDescription::new(n, 0),
@@ -192,7 +197,7 @@ where
 
     /// Create a geodesic octahedron with a given `radius` and `n` subdivisions.
     pub fn geodesic_octahedron(radius: T::S, n: usize) -> Self {
-        let mut mesh = Mesh::<T>::octahedron(radius);
+        let mut mesh = Mesh::<T>::regular_octahedron(radius);
         debug_assert!(mesh.centroid().is_about(&T::Vec::ZERO, T::S::EPS));
         mesh.subdivision_frequency(
             SubdivisionDescription::new(n, 0),

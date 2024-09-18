@@ -257,7 +257,7 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     mesh*/
 
     //BevyMesh3d::uv_sphere(3.0, 64, 64)
-    BevyMesh3d::icosphere(3.0, 64)
+    BevyMesh3d::geodesic_icosahedron(3.0, 64)
     //BevyMesh3d::geodesic_tetrahedron(3.0, 128)
     //BevyMesh3d::geodesic_octahedron(3.0, 128)
 }

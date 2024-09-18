@@ -177,6 +177,11 @@ where
         Self::cuboid(T::Vec::splat(x))
     }
 
+    /// an alias for `cube`
+    pub fn regular_hexahedron(l: T::S) -> Mesh<T> {
+        Self::cube(l)
+    }
+
     /// Creates a regular pyramid
     pub fn regular_pyramid(radius: T::S, height: T::S, n: usize) -> Self {
         Mesh::pyramid(
@@ -195,7 +200,7 @@ where
     }
 
     /// Creates a regular tetrahedron with edge length `l` centered at the origin
-    pub fn tetrahedron(l: T::S) -> Mesh<T> {
+    pub fn regular_tetrahedron(l: T::S) -> Mesh<T> {
         let e = T::S::HALF * l;
         let sq = e / T::S::TWO.sqrt();
         let zero = T::S::ZERO;
@@ -210,7 +215,7 @@ where
     }
 
     /// Creates a regular octahedron with a given circumscribed `radius` centered at the origin
-    pub fn octahedron(radius: T::S) -> Mesh<T> {
+    pub fn regular_octahedron(radius: T::S) -> Mesh<T> {
         let zero = T::S::ZERO;
         let h = radius;
         let mut mesh = Mesh::new();
