@@ -1,3 +1,4 @@
+use super::regular_polygon::regular_polygon_sidelength;
 use crate::{
     math::{HasZero, Scalar, Transform, Vector, Vector3D},
     representation::{
@@ -5,8 +6,6 @@ use crate::{
         DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
     },
 };
-
-use super::regular_polygon::regular_polygon_sidelength;
 
 impl<T: MeshType> Mesh<T>
 where

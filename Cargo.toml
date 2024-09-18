@@ -10,7 +10,7 @@ license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/bevy-procedural/modelling"
 documentation = "https://docs.rs/procedural_modelling"
-rust-version = "1.79.0"
+rust-version = "1.81.0"
 
 [lib]
 name = "procedural_modelling"
