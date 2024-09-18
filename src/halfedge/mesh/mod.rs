@@ -1,8 +1,6 @@
 mod iterator;
 mod topology;
 
-pub use iterator::*;
-
 use super::HalfEdgeMeshType;
 use crate::{
     mesh::Mesh,
@@ -112,6 +110,22 @@ impl<T: HalfEdgeMeshType> Mesh<T> for HalfEdgeMesh<T> {
 
     fn payload_mut(&mut self) -> &mut T::MP {
         &mut self.payload
+    }
+
+    /// Returns an iterator over all non-deleted vertices
+    fn vertices<'a>(&'a self) -> impl Iterator<Item = &'a T::Vertex>
+    where
+        T::Vertex: 'a,
+    {
+        self.vertices.iter()
+    }
+
+    /// Returns an mutable iterator over all non-deleted vertices
+    fn vertices_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T::Vertex>
+    where
+        T::Vertex: 'a,
+    {
+        self.vertices.iter_mut()
     }
 }
 

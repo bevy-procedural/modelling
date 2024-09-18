@@ -1,17 +1,12 @@
+use crate::math::Transformable;
+
 use super::{Mesh, MeshType};
-use crate::mesh::{payload::Transformable, HalfEdge};
 
 impl<T: MeshType> Mesh<T>
 where
     T::VP: Transformable<Rot = T::Rot, Vec = T::Vec, Trans = T::Trans>,
 {
-    /// Transforms all vertices in the mesh
-    pub fn transform(&mut self, t: &T::Trans) -> &mut Self {
-        for v in self.vertices.iter_mut() {
-            v.transform(t);
-        }
-        self
-    }
+    
 
     /// Translates all vertices in the mesh
     pub fn translate(&mut self, t: &T::Vec) -> &mut Self {

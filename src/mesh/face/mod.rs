@@ -5,6 +5,9 @@ pub use payload::*;
 
 use super::MeshType;
 
+/// A face in a mesh.
+///
+/// Isn't necessarily planar or triangular.
 pub trait Face<T: MeshType>: std::fmt::Display + Clone + Copy + PartialEq + Eq {
     /// Returns the index of the face.
     fn id(&self) -> T::F;

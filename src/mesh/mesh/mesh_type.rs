@@ -54,11 +54,15 @@ pub trait MeshType: Copy + Eq {
     /// The type of the rotation data used for vertices.
     type Rot;
 
+    /// The type of the mesh.
     type Mesh: Mesh<Self>;
 
+    /// The type of the (half-)edge or arc.
     type Edge: Edge<Self>;
 
+    /// The type of the vertex.
     type Vertex: Vertex<Self>;
 
+    /// The type of the face.
     type Face: Face<Self>;
 }

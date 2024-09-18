@@ -6,7 +6,7 @@ pub mod payload;
 // pub use interpolator::*;
 
 use super::MeshType;
-use crate::math::{HasPosition, Scalar, Vector};
+use crate::math::{HasPosition, Scalar, Transformable, Vector};
 
 /// A vertex in a mesh.
 pub trait Vertex<T: MeshType<Vertex = Self>>: std::fmt::Display + Clone + PartialEq {
@@ -30,11 +30,29 @@ pub trait Vertex<T: MeshType<Vertex = Self>>: std::fmt::Display + Clone + Partia
     /// Returns an outgoing edge incident to the vertex
     fn edge(&self, mesh: &T::Mesh) -> T::Edge;
 
-    /*
     /// Returns whether the vertex is a boundary vertex
-    fn is_boundary<T: MeshType<Vertex = Self>>(&self, mesh: &T::Mesh) -> bool;
-    */
+    fn is_boundary(&self, mesh: &T::Mesh) -> bool;
 
     /// Returns whether the vertex has only one edge incident to it
     fn has_only_one_edge(&self, mesh: &T::Mesh) -> bool;
+
+    /// Transforms the payload.
+    fn transform(&mut self, transform: &T::Trans)
+    where
+        T::VP: Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>;
+
+    /// Translates the payload.
+    fn translate(&mut self, transform: &T::Vec)
+    where
+        T::VP: Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>;
+
+    /// Rotates the payload.
+    fn rotate(&mut self, transform: &T::Rot)
+    where
+        T::VP: Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>;
+
+    /// Scales the payload.
+    fn scale(&mut self, transform: &T::Vec)
+    where
+        T::VP: Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>;
 }

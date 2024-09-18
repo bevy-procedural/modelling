@@ -1,8 +1,6 @@
 mod iterator;
 
-pub use iterator::*;
-
-use super::{HalfEdgeMesh, HalfEdgeMeshType};
+use super::HalfEdgeMeshType;
 use crate::{
     math::IndexType,
     mesh::{DefaultFacePayload, Face, FacePayload, Mesh},

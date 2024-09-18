@@ -2,15 +2,7 @@ use super::HalfEdgeMesh;
 use crate::{halfedge::{HalfEdgeMeshType, IncidentToFaceBackIterator, IncidentToFaceIterator}, mesh::{Edge, Mesh}, util::Deletable};
 
 impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
-    /// Returns an iterator over all non-deleted vertices
-    pub fn vertices(&self) -> impl Iterator<Item = &T::Vertex> {
-        self.vertices.iter()
-    }
-
-    /// Returns an mutable iterator over all non-deleted vertices
-    pub fn vertices_mut(&mut self) -> impl Iterator<Item = &mut T::Vertex> {
-        self.vertices.iter_mut()
-    }
+   
 
     /// Returns an iterator over all non-deleted halfedges
     pub fn halfedges(&self) -> impl Iterator<Item = &T::Edge> {

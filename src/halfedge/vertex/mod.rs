@@ -7,7 +7,7 @@ use crate::{
     math::{IndexType, Transformable},
     mesh::{
         payload::{DefaultVertexPayload, VertexPayload},
-        Mesh, MeshType, Vertex,
+        Edge, Mesh, MeshType, Vertex,
     },
     util::Deletable,
 };
@@ -122,10 +122,10 @@ where
     }
 
     /// Returns whether the vertex is a boundary vertex
-    /*#[inline(always)]
-    fn is_boundary<T: MeshType<Vertex = Self>>(&self, mesh: &T::Mesh) -> bool {
+    #[inline(always)]
+    fn is_boundary(&self, mesh: &T::Mesh) -> bool {
         self.edges_out(mesh).any(|e| e.is_boundary(mesh))
-    }*/
+    }
 
     /*
     /// Returns whether the vertex is manifold
@@ -147,33 +147,36 @@ where
     fn edge(&self, mesh: &T::Mesh) -> T::Edge {
         *mesh.edge(self.edge)
     }
-}
 
-impl<T: HalfEdgeMeshType> HalfEdgeVertex<T>
-where
-    T::VP: Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
-{
-    /// Transforms the payload.
     #[inline(always)]
-    pub fn transform(&mut self, transform: &T::Trans) {
+    fn transform(&mut self, transform: &T::Trans)
+    where
+        T::VP: Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
+    {
         self.payload = self.payload.transform(transform);
     }
 
-    /// Translates the payload.
     #[inline(always)]
-    pub fn translate(&mut self, transform: &T::Vec) {
+    fn translate(&mut self, transform: &T::Vec)
+    where
+        T::VP: Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
+    {
         self.payload = self.payload.translate(transform);
     }
 
-    /// Rotates the payload.
     #[inline(always)]
-    pub fn rotate(&mut self, transform: &T::Rot) {
+    fn rotate(&mut self, transform: &T::Rot)
+    where
+        T::VP: Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
+    {
         self.payload = self.payload.rotate(transform);
     }
 
-    /// Scales the payload.
     #[inline(always)]
-    pub fn scale(&mut self, transform: &T::Vec) {
+    fn scale(&mut self, transform: &T::Vec)
+    where
+        T::VP: Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
+    {
         self.payload = self.payload.scale(transform);
     }
 }

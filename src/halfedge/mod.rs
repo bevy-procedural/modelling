@@ -1,7 +1,9 @@
-pub mod edge;
-pub mod face;
-pub mod mesh;
-pub mod vertex;
+//! This module implements a half-edge data structure for representing meshes.
+
+mod edge;
+mod face;
+mod mesh;
+mod vertex;
 
 pub use edge::*;
 pub use face::*;
@@ -10,6 +12,7 @@ pub use vertex::*;
 
 use crate::mesh::MeshType;
 
+/// This trait defines the associated types used in a half-edge mesh and puts them into relation.
 pub trait HalfEdgeMeshType:
     MeshType<
     Mesh = HalfEdgeMesh<Self>,

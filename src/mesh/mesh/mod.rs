@@ -4,12 +4,17 @@ mod mesh_type;
 //mod normals;
 mod payload;
 //mod tesselate;
-//mod topology;
 //mod transform;
 
 pub use payload::*;
 
 pub use mesh_type::MeshType;
+
+use crate::math::Transformable;
+
+use super::Vertex;
+
+/// The `Mesh` trait doesn't assume any specific data structure or topology.
 pub trait Mesh<T: MeshType>: Default + std::fmt::Display + Clone {
     /// Returns whether the vertex exists and is not deleted
     fn has_vertex(&self, index: T::V) -> bool;
@@ -56,18 +61,18 @@ pub trait Mesh<T: MeshType>: Default + std::fmt::Display + Clone {
     /// Get a mutable reference to the payload of the mesh
     fn payload_mut(&mut self) -> &mut T::MP;
 
-    // TODO
-    /*
     /// Returns an iterator over all non-deleted vertices
     fn vertices<'a>(&'a self) -> impl Iterator<Item = &'a T::Vertex>
     where
-        T::Vertex: 'a;
+        T: 'a;
 
     /// Returns an mutable iterator over all non-deleted vertices
     fn vertices_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T::Vertex>
     where
-        T::Vertex: 'a;
+        T: 'a;
 
+    // TODO
+    /*
     /// Returns an iterator over all non-deleted halfedge pairs without duplicates
     fn edges<'a>(&'a self) -> impl Iterator<Item = &'a T::Edge>
     where
@@ -77,4 +82,15 @@ pub trait Mesh<T: MeshType>: Default + std::fmt::Display + Clone {
     fn faces<'a>(&'a self) -> impl Iterator<Item = &'a T::Face>
     where
         T::Face: 'a;*/
+
+    /// Transforms all vertices in the mesh
+    fn transform(&mut self, t: &T::Trans) -> &mut Self
+    where
+        T::VP: Transformable<Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
+    {
+        for v in self.vertices_mut() {
+            v.transform(t);
+        }
+        self
+    }
 }
