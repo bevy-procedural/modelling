@@ -1,23 +1,27 @@
 //! Triangulation Algorithms
 
+// TODO: move this whole module to a separate crate!
+
 mod convex;
 mod delaunay;
 mod ear_clipping;
-mod min_weight;
+mod fixed_n;
+mod min_weight_dynamic;
+mod min_weight_greedy;
 mod sweep;
-mod triangulation;
 
 pub use convex::*;
 pub use delaunay::*;
 pub use ear_clipping::*;
+pub use fixed_n::*;
 use itertools::Itertools;
-pub use min_weight::*;
+pub use min_weight_dynamic::*;
+pub use min_weight_greedy::*;
 pub use sweep::*;
-pub use triangulation::*;
 
 use crate::{
     math::{HasPosition, IndexType, Vector3D},
-    mesh::{Face3d, FaceBasics, MeshType, Vertex},
+    mesh::{Face3d, FaceBasics, MeshType, Triangulation, Vertex},
 };
 
 /// The algorithm to use for triangulating a face.
@@ -70,14 +74,19 @@ pub fn triangulate_face<T: MeshType>(
     T::Face: Face3d<T>,
 {
     let n = face.num_vertices(mesh);
-    if n < 3 {
-        return;
-    } else if n == 3 {
+    assert!(
+        n >= 3,
+        "a face must have at least 3 vertices, but {} only had {}",
+        face.id(),
+        n
+    );
+
+    if n == 3 {
         let (a, b, c) = face.vertices(mesh).map(|v| v.id()).collect_tuple().unwrap();
         tri.insert_triangle(a, b, c);
         return;
     } else if n == 4 {
-        quad_triangulate::<T>(face, mesh, tri);
+        min_weight_quad::<T>(face, mesh, tri);
         return;
     }
 

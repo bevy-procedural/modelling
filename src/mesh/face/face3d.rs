@@ -1,10 +1,7 @@
 use super::{basics::FaceBasics, MeshType, Vertex};
-use crate::{
-    math::{
-        HasPosition, LineSegment2D, Scalar, TransformTrait, Vector, Vector3D, VectorIteratorExt,
-    },
-    tesselate::IndexedVertex2D,
-};
+use crate::{math::{
+    HasPosition, LineSegment2D, Scalar, TransformTrait, Vector, Vector3D, VectorIteratorExt,
+}, mesh::IndexedVertex2D};
 use itertools::Itertools;
 
 /// A face with vertices that have 3d positions.

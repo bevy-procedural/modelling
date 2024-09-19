@@ -1,4 +1,7 @@
-use crate::{math::{HasZero, IndexType, Vector2D}, tesselate::{IndexedVertex2D, Triangulation}};
+use crate::{
+    math::{HasZero, IndexType, Vector2D},
+    mesh::{IndexedVertex2D, Triangulation},
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ReflexChainDirection {

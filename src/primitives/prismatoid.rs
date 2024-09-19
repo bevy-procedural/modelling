@@ -282,6 +282,7 @@ where
 
     /// Creates a uniform antiprism with given radius `r` and `n` sides.
     pub fn uniform_antiprism(r: T::S, n: usize) -> Self {
+        // TODO: isn't this the edge length?
         Mesh::regular_antiprism(
             r,
             regular_polygon_sidelength(r, n) * T::S::THREE.sqrt() * T::S::HALF,

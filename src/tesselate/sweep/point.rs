@@ -1,8 +1,5 @@
 use super::VertexType;
-use crate::{
-    math::{IndexType, Scalar, Vector2D},
-    tesselate::IndexedVertex2D,
-};
+use crate::{math::{IndexType, Scalar, Vector2D}, mesh::IndexedVertex2D};
 
 #[derive(Debug, Clone)]
 pub struct EventPoint<Vec2>

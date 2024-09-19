@@ -7,7 +7,7 @@ use super::{
 };
 use crate::{
     math::{IndexType, Vector2D},
-    tesselate::{IndexedVertex2D, Triangulation},
+    mesh::{IndexedVertex2D, Triangulation},
 };
 
 /// Perform the sweep line triangulation

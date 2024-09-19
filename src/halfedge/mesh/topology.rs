@@ -10,6 +10,8 @@ impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
     /// Returns the id of the half edge from `v` to `w` or `None` if they are not neighbors.
     /// Runs in O(n) time since it iterates over all edges of `v`.
     pub fn shared_edge(&self, v: T::V, w: T::V) -> Option<T::Edge> {
+        // TODO: this could work without halfedge but any graph
+        
         self.vertex(v).edges_out(self).find_map(|e| {
             if e.target_id(self) == w {
                 Some(e)
@@ -44,7 +46,7 @@ impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
     /// or returns `None` if no path exists.
     /// Uses Breadth-First Search (BFS) to find the shortest path.
     fn shortest_path(&self, v0: T::V, v1: T::V) -> Option<Vec<T::V>> {
-        // TODO: This could easily work without halfedge but directed graph
+        // TODO: This could easily work without halfedge but any graph
 
         if v0 == v1 {
             return Some(vec![v0]);

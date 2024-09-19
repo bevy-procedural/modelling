@@ -13,10 +13,10 @@ pub use normals::*;
 pub use payload::*;
 pub use transform::*;
 
-use super::{Face3d, Vertex};
+use super::{Face3d, Triangulation, Vertex};
 use crate::{
     math::{HasPosition, Vector3D, VectorIteratorExt},
-    tesselate::{triangulate_face, TesselationMeta, Triangulation, TriangulationAlgorithm},
+    tesselate::{triangulate_face, TesselationMeta, TriangulationAlgorithm},
 };
 
 /// The `MeshTrait` doesn't assume any specific data structure or topology,

@@ -1,5 +1,5 @@
 use super::interval::SweepLineInterval;
-use crate::{math::{HasZero, IndexType, Scalar, Vector2D}, tesselate::IndexedVertex2D};
+use crate::{math::{HasZero, IndexType, Scalar, Vector2D}, mesh::IndexedVertex2D};
 use std::collections::{BTreeSet, HashMap};
 
 /// Sweep Line Interval Sorter

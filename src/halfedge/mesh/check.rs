@@ -99,6 +99,7 @@ impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
     }
 
     fn check_faces_nondegenerate(&self) -> Result<(), String> {
+        // TODO: this and many other checks would also work without half edges!
         if let Some(bad_face) = self.faces().find(|f| f.edges(self).count() < 3) {
             return Err(format!(
                 "Face {} has only {} faces!",
