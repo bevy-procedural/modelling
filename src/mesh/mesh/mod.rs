@@ -26,7 +26,11 @@ use crate::{
 /// The `MeshTrait` doesn't assume any specific data structure or topology,
 /// i.e., could be a manifold half-edge mesh, a topological directed graph, etc.
 pub trait MeshTrait:
-    MeshBasics<Self::T> + MeshNormals<Self::T> + MeshTransforms<Self::T> + MeshTopology<Self::T>
+    MeshBasics<Self::T>
+    + MeshNormals<Self::T>
+    + MeshTransforms<Self::T>
+    + MeshTopology<Self::T>
+    + MeshBuilder<Self::T>
 {
     /// Associated mesh type
     type T: MeshType<Mesh = Self>;

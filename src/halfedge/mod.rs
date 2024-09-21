@@ -4,6 +4,7 @@ mod edge;
 mod face;
 mod mesh;
 mod vertex;
+mod primitives;
 
 pub use edge::*;
 pub use face::*;

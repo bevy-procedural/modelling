@@ -13,7 +13,7 @@ pub mod mesh;
 pub mod tesselate;
 pub mod util;
 pub mod operations;
-//pub mod primitives;
+pub mod primitives;
 
 #[cfg(feature = "bevy")]
 pub mod bevy;
@@ -26,6 +26,7 @@ pub mod prelude {
     pub use crate::mesh::*;
     pub use crate::tesselate::*;
     pub use crate::util::*;
+    pub use crate::operations::*;
 
     #[cfg(feature = "bevy")]
     pub use crate::bevy::*;
