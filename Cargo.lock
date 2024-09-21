@@ -3036,6 +3036,7 @@ dependencies = [
  "bevy-inspector-egui",
  "criterion",
  "itertools 0.13.0",
+ "lazy_static",
  "meshopt",
  "rand",
  "spade",

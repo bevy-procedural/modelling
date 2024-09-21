@@ -3,7 +3,12 @@
 // TODO: Include the fps bench as custom measurement: https://github.com/bheisler/criterion.rs/blob/master/book/src/user_guide/custom_measurements.md
 // TODO: Profiling https://github.com/bheisler/criterion.rs/blob/master/book/src/user_guide/profiling.md
 
-use bevy::math::{Vec2, Vec3};
+//mod bevy_bench;
+
+use bevy::{
+    math::{Vec2, Vec3},
+    render::render_asset::RenderAssetUsages,
+};
 use criterion::{
     criterion_group, criterion_main, AxisScale, BenchmarkId, Criterion, PlotConfiguration,
     Throughput,
@@ -56,42 +61,66 @@ fn bench_triangulation(c: &mut Criterion) {
         //("Star", BevyMesh3d::regular_star(2.0, 0.9, 1000)),
         //("Spiral", _make_spiral()),
     ] {
-        let mut group = c.benchmark_group(format!("Triangulation {}", mesh_name));
-        group
-            .sample_size(10)
-            .measurement_time(Duration::from_secs(5));
-        let plot_config = PlotConfiguration::default().summary_scale(AxisScale::Logarithmic);
-        group.plot_config(plot_config);
+        for record_fps in [false /*true */] {
+            let mut group = c.benchmark_group(format!("Triangulation {}", mesh_name));
+            // allow the lowest minimum number of samples since the large meshes are really slow.
+            group
+                .sample_size(10)
+                .measurement_time(Duration::from_secs(5));
 
-        for size in [10, 100, 1000] {
-            // 10_000, 100_000, 1_000_000] {
-            let mesh = maker(size);
-            let mut create_bench =
-                |algo_name: &str, max_size: usize, algo: TriangulationAlgorithm| {
-                    if (size * difficulty) > max_size {
-                        return;
-                    }
-                    group.throughput(Throughput::Elements(size as u64));
-                    group.bench_with_input(
-                        BenchmarkId::new(algo_name, size),
-                        &mesh,
-                        |b, para: &BevyMesh3d| {
-                            b.iter(|| {
-                                let mut meta = Default::default();
-                                para.triangulate(algo, &mut meta);
-                            })
-                        },
-                    );
-                };
+            let plot_config = PlotConfiguration::default().summary_scale(AxisScale::Logarithmic);
+            group.plot_config(plot_config);
 
-            create_bench("Sweep", 1000_000, TriangulationAlgorithm::Sweep);
-            create_bench("Delaunay", 1000_000, TriangulationAlgorithm::Delaunay);
-            create_bench("Ears", 10_000, TriangulationAlgorithm::EarClipping);
-            if is_convex {
-                create_bench("Fan", 1000_000, TriangulationAlgorithm::Fan);
+            for size in [10, 100, 1000, 10_000, 100_000, 1_000_000] {
+                let mesh = maker(size);
+
+                let mut create_bench =
+                    |algo_name: &str, max_size: usize, algo: TriangulationAlgorithm| {
+                        if (size * difficulty) > max_size {
+                            return;
+                        }
+                        let bevy_mesh = if record_fps {
+                            Some(mesh.to_bevy_ex(RenderAssetUsages::all(), algo, true))
+                        } else {
+                            None
+                        };
+                        group.throughput(Throughput::Elements(size as u64));
+                        group.bench_with_input(
+                            BenchmarkId::new(
+                                if record_fps {
+                                    format!("{} FPS", algo_name)
+                                } else {
+                                    algo_name.to_string()
+                                },
+                                size,
+                            ),
+                            &mesh,
+                            |b, para: &BevyMesh3d| {
+                                if record_fps {
+                                    /*b.iter_custom(|iters| {
+                                        println!("Running with {} iters", iters);
+                                        let time = run_fps_bench(iters, bevy_mesh.clone().unwrap());
+                                        Duration::from_secs_f64(time)
+                                    });*/
+                                } else {
+                                    b.iter(|| {
+                                        let mut meta = Default::default();
+                                        para.triangulate(algo, &mut meta);
+                                    })
+                                }
+                            },
+                        );
+                    };
+
+                create_bench("Sweep", 1000_000, TriangulationAlgorithm::Sweep);
+                create_bench("Delaunay", 1000_000, TriangulationAlgorithm::Delaunay);
+                create_bench("Ears", 10_000, TriangulationAlgorithm::EarClipping);
+                if is_convex {
+                    create_bench("Fan", 1000_000, TriangulationAlgorithm::Fan);
+                }
             }
+            group.finish();
         }
-        group.finish();
     }
 }
 

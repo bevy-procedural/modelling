@@ -54,9 +54,10 @@ meshopt = { version = "^0.3.0", optional = true }
 rand = "^0.8.5"
 spade = "^2.12.1"
 criterion = { version = "0.5.1", features = ["html_reports"], optional = true }
+lazy_static = "1.5.0"
 
 [features]
-default = ["bevy", "benchmarks"]
+default = ["bevy"]
 bevy = [
     "dep:bevy",
     "dep:bevy-inspector-egui",
@@ -73,19 +74,34 @@ sweep_debug_print = ["sweep_debug"]
 name = "box"
 path = "examples/box.rs"
 doc-scrape-examples = true
-required-features = ["bevy", "bevy/bevy_pbr", "bevy/bevy_winit", "bevy/tonemapping_luts"]
+required-features = [
+    "bevy",
+    "bevy/bevy_pbr",
+    "bevy/bevy_winit",
+    "bevy/tonemapping_luts",
+]
 
 [[example]]
 name = "fps_bench"
 path = "examples/fps_bench.rs"
 doc-scrape-examples = true
-required-features = ["bevy", "bevy/bevy_pbr", "bevy/bevy_winit", "bevy/tonemapping_luts"]
+required-features = [
+    "bevy",
+    "bevy/bevy_pbr",
+    "bevy/bevy_winit",
+    "bevy/tonemapping_luts",
+]
 
 [[example]]
 name = "spiral"
 path = "examples/spiral.rs"
 doc-scrape-examples = true
-required-features = ["bevy", "bevy/bevy_pbr", "bevy/bevy_winit", "bevy/tonemapping_luts"]
+required-features = [
+    "bevy",
+    "bevy/bevy_pbr",
+    "bevy/bevy_winit",
+    "bevy/tonemapping_luts",
+]
 
 [[bench]]
 name = "triangulation"
