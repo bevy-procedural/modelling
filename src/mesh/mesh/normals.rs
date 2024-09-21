@@ -1,7 +1,7 @@
 use super::{basics::MeshBasics, Face3d, MeshType, Vertex};
 use crate::{
     math::{HasNormal, HasPosition, IndexType, Vector, Vector3D, VectorIteratorExt},
-    mesh::{FaceBasics, Triangulation},
+    mesh::{FaceBasics, Triangulation, VertexBasics, VertexIterators},
     tesselate::{triangulate_face, TesselationMeta, TriangulationAlgorithm},
 };
 use std::collections::HashMap;

@@ -21,7 +21,7 @@ pub use sweep::*;
 
 use crate::{
     math::{HasPosition, IndexType, Vector3D},
-    mesh::{Face3d, FaceBasics, MeshType, Triangulation, Vertex},
+    mesh::{Face3d, FaceBasics, MeshType, Triangulation, Vertex, VertexBasics},
 };
 
 /// The algorithm to use for triangulating a face.

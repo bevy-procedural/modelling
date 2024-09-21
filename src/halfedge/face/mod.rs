@@ -12,7 +12,7 @@ use crate::{
 /// If you want to handle a non-orientable mesh, you have to use double covering.
 ///
 /// Also, if you have inner components, you have to use multiple faces!
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct HalfEdgeFace<T: HalfEdgeMeshType> {
     /// the index of the face
     id: T::F,
@@ -131,7 +131,7 @@ impl<T: HalfEdgeMeshType> HalfEdgeFace<T> {
     }
 }
 
-impl<T: HalfEdgeMeshType> std::fmt::Display for HalfEdgeFace<T> {
+impl<T: HalfEdgeMeshType> std::fmt::Debug for HalfEdgeFace<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,

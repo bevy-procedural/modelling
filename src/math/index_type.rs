@@ -1,9 +1,8 @@
 /// based on petgraph::csr::IndexType;
-use std::{fmt, hash::Hash};
 
 /// Trait for the unsigned integer type used for node and edge indices.
 pub trait IndexType:
-    Copy + Default + Hash + Ord + fmt::Debug + 'static + std::fmt::Display
+    Copy + Default + std::hash::Hash + Ord + std::fmt::Debug + 'static + std::fmt::Display
 {
     /// Create a new index from a usize. Panics if the usize is out of range.
     fn new(x: usize) -> Self;

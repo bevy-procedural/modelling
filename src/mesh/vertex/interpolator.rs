@@ -1,7 +1,7 @@
-use super::HasPosition;
+use super::{HasPosition, Vertex, VertexBasics};
 use crate::{
     math::{Scalar, Vector, Vector3D},
-    mesh::{Mesh, MeshType},
+    mesh::{MeshBasics, MeshType},
 };
 
 /// A trait that defines how vertex interpolators should behave.
@@ -19,9 +19,9 @@ where
 {
     /// Subdivides by linear interpolation of the positions of the vertices.
     fn call(&self, mesh: &T::Mesh, [(i, vi), (j, vj), (k, vk)]: [(usize, T::V); 3]) -> T::VP {
-        let pi = *mesh.vertex(vi).pos();
-        let pj = *mesh.vertex(vj).pos();
-        let pk = *mesh.vertex(vk).pos();
+        let pi = mesh.vertex(vi).pos();
+        let pj = mesh.vertex(vj).pos();
+        let pk = mesh.vertex(vk).pos();
         T::VP::from_pos(
             (pi * T::S::from_usize(i) + pj * T::S::from_usize(j) + pk * T::S::from_usize(k))
                 / T::S::from_usize(i + j + k),
@@ -52,9 +52,9 @@ where
 {
     /// Subdivides by linear interpolation of the positions of the vertices.
     fn call(&self, mesh: &T::Mesh, [(i, vi), (j, vj), (k, vk)]: [(usize, T::V); 3]) -> T::VP {
-        let pi = (*mesh.vertex(vi).pos() - self.center).normalize();
-        let pj = (*mesh.vertex(vj).pos() - self.center).normalize();
-        let pk = (*mesh.vertex(vk).pos() - self.center).normalize();
+        let pi = (mesh.vertex(vi).pos() - self.center).normalize();
+        let pj = (mesh.vertex(vj).pos() - self.center).normalize();
+        let pk = (mesh.vertex(vk).pos() - self.center).normalize();
 
         // slerp
         let pos = if i == 0 {

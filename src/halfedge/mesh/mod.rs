@@ -1,12 +1,13 @@
 mod basics;
-mod iterator;
-mod topology;
+mod builder;
 mod check;
+mod iterator;
 mod pseudo_winged;
+mod topology;
 
 use super::{HalfEdge, HalfEdgeMeshType};
 use crate::{
-    mesh::{Edge, MeshTrait, MeshBasics, MeshNormals, MeshTransforms},
+    mesh::{Edge, MeshBasics, MeshNormals, MeshTopology, MeshTrait, MeshTransforms},
     util::DeletableVector,
 };
 
@@ -67,4 +68,5 @@ impl<T: HalfEdgeMeshType> Default for HalfEdgeMesh<T> {
 
 impl<T: HalfEdgeMeshType> MeshTransforms<T> for HalfEdgeMesh<T> {}
 impl<T: HalfEdgeMeshType> MeshNormals<T> for HalfEdgeMesh<T> {}
+impl<T: HalfEdgeMeshType> MeshTopology<T> for HalfEdgeMesh<T> {}
 impl<T: HalfEdgeMeshType> MeshTrait<T> for HalfEdgeMesh<T> {}

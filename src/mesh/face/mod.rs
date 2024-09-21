@@ -7,7 +7,7 @@ pub use basics::*;
 pub use face3d::*;
 pub use payload::*;
 
-use super::{MeshType, Vertex};
+use super::{MeshType, Vertex, VertexBasics};
 use crate::math::{HasPosition, VectorIteratorExt};
 
 /// A face in a mesh.

@@ -4,7 +4,7 @@ use super::MeshType;
 ///
 /// Isn't necessarily planar or triangular.
 pub trait FaceBasics<T: MeshType<Face = Self>>:
-    std::fmt::Display + Clone + Copy + PartialEq + Eq
+    std::fmt::Debug + Clone + Copy + PartialEq + Eq
 {
     /// Returns the index of the face.
     fn id(&self) -> T::F;

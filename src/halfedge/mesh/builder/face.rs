@@ -1,10 +1,16 @@
-use crate::mesh::{DefaultEdgePayload, DefaultFacePayload, Face, Mesh, MeshType};
 use itertools::Itertools;
 
-impl<T: MeshType> T::Mesh {
+use crate::{
+    halfedge::{HalfEdgeFace, HalfEdgeMesh, HalfEdgeMeshType},
+    mesh::{DefaultEdgePayload, DefaultFacePayload, Edge, FaceBasics, MeshBasics},
+};
+
+// TODO: move more functions to the builder trait!
+
+impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
     /// Close the open boundary with a single face. Doesn't create new edges or vertices.
     pub fn close_hole(&mut self, e: T::E, fp: T::FP, curved: bool) -> T::F {
-        let f = self.faces.push(Face::new(e, curved, fp));
+        let f = self.faces.push(HalfEdgeFace::new(e, curved, fp));
         self.edge(e)
             .clone()
             .edges_face_mut(self)
@@ -39,7 +45,7 @@ impl<T: MeshType> T::Mesh {
         let (e1, e2) = self.insert_edge(inside, ep1, outside, ep2);
 
         // Insert the face
-        let f = self.faces.push(Face::new(inside, curved, fp));
+        let f = self.faces.push(HalfEdgeFace::new(inside, curved, fp));
 
         self.edge(inside)
             .clone()
@@ -91,7 +97,7 @@ impl<T: MeshType> T::Mesh {
     /// Removes the provided face.
     pub fn remove_face(&mut self, f: T::F) -> T::FP {
         let face = self.face(f);
-        
+
         // TODO: move the payload out of the face without cloning
         let fp = face.payload().clone();
 
@@ -104,7 +110,7 @@ impl<T: MeshType> T::Mesh {
     }
 }
 
-impl<T: MeshType> T::Mesh
+impl<T: HalfEdgeMeshType> HalfEdgeMesh<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,

@@ -1,19 +1,23 @@
 //mod check;
 mod basics;
+mod builder;
 mod check;
 mod mesh_type;
 mod normals;
 mod payload;
+mod topology;
 mod transform;
 
 pub use basics::*;
+pub use builder::*;
 pub use check::*;
 pub use mesh_type::*;
 pub use normals::*;
 pub use payload::*;
+pub use topology::*;
 pub use transform::*;
 
-use super::{Face3d, Triangulation, Vertex};
+use super::{Face3d, Triangulation, Vertex, VertexBasics};
 use crate::{
     math::{HasPosition, Vector3D, VectorIteratorExt},
     tesselate::{triangulate_face, TesselationMeta, TriangulationAlgorithm},
@@ -22,7 +26,7 @@ use crate::{
 /// The `MeshTrait` doesn't assume any specific data structure or topology,
 /// i.e., could be a manifold half-edge mesh, a topological directed graph, etc.
 pub trait MeshTrait<T: MeshType<Mesh = Self>>:
-    basics::MeshBasics<T> + MeshNormals<T> + MeshTransforms<T>
+    basics::MeshBasics<T> + MeshNormals<T> + MeshTransforms<T> + MeshTopology<T>
 {
     /// Returns the mean of all vertex positions.
     fn centroid(&self) -> T::Vec

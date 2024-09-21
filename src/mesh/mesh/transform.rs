@@ -1,5 +1,5 @@
-use super::{basics::MeshBasics, MeshType, Vertex};
-use crate::math::Transformable;
+use super::{basics::MeshBasics, MeshType};
+use crate::{math::Transformable, mesh::VertexBasics};
 
 /// Methods for transforming meshes.
 pub trait MeshTransforms<T: MeshType<Mesh = Self>>: MeshBasics<T> {

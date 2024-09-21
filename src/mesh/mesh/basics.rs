@@ -1,7 +1,7 @@
 use super::MeshType;
 
 /// Some basic operations to retrieve information about the mesh.
-pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Display + Clone {
+pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clone {
     /// Returns whether the vertex exists and is not deleted
     fn has_vertex(&self, index: T::V) -> bool;
 
@@ -46,7 +46,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Display + Cl
 
     /// Get a mutable reference to the payload of the mesh
     fn payload_mut(&mut self) -> &mut T::MP;
-    
+
     /// Since the vertex payloads in the `Deletable` can be sparse,
     /// we need to compact the vertices when converting them to a dense vector.
     /// This function returns the cloned compact vertices and maps the indices to the new compact buffer.
@@ -71,4 +71,14 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Display + Cl
     fn faces<'a>(&'a self) -> impl Iterator<Item = &'a T::Face>
     where
         T: 'a;
+
+    /// Returns the id of the (half)edge from `v` to `w` or `None` if they are not neighbors.
+    fn shared_edge(&self, v: T::V, w: T::V) -> Option<T::Edge>;
+
+    /// Returns the (half)edge id from v to w. Panics if the edge does not exist.
+    fn shared_edge_id(&self, v: T::V, w: T::V) -> Option<T::E>;
+
+    /// Returns the face shared by the two vertices or `None`.
+    /// TODO: Currently cannot distinguish between holes and "the outside"
+    fn shared_face(&self, v0: T::V, v1: T::V) -> Option<T::F>;
 }

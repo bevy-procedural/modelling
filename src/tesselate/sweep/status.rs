@@ -1,9 +1,12 @@
 use super::interval::SweepLineInterval;
-use crate::{math::{HasZero, IndexType, Scalar, Vector2D}, mesh::IndexedVertex2D};
+use crate::{
+    math::{HasZero, IndexType, Scalar, Vector2D},
+    mesh::IndexedVertex2D,
+};
 use std::collections::{BTreeSet, HashMap};
 
 /// Sweep Line Interval Sorter
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 struct SLISorter<Vec2: Vector2D> {
     /// The left end index of the interval
     left: usize,
@@ -42,7 +45,7 @@ impl<Vec2: Vector2D> Ord for SLISorter<Vec2> {
     }
 }
 
-impl<Vec2: Vector2D> std::fmt::Display for SLISorter<Vec2> {
+impl<Vec2: Vector2D> std::fmt::Debug for SLISorter<Vec2> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -169,7 +172,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
                 let last_at = SLISorter::new(l.left, Vec2::new(l.x_at_y(at), at), l.to);
                 assert!(
                     last_at <= *sorter,
-                    "Tree is not sorted correctly at {} because {} <= {} does not hold.",
+                    "Tree is not sorted correctly at {} because {:?} <= {:?} does not hold.",
                     at,
                     last_at,
                     *sorter
@@ -260,11 +263,11 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
     }
 }
 
-impl<V: IndexType, Vec2: Vector2D> std::fmt::Display for SweepLineStatus<V, Vec2> {
+impl<V: IndexType, Vec2: Vector2D> std::fmt::Debug for SweepLineStatus<V, Vec2> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "SweepLineStatus:\n")?;
         for (k, v) in &self.left {
-            write!(f, "  {}: {}\n", k, v)?;
+            write!(f, "  {}: {:?}\n", k, v)?;
         }
         Ok(())
     }

@@ -1,20 +1,21 @@
 mod iterator;
+mod transform;
 
 pub use iterator::*;
-use itertools::Itertools;
 
 use super::HalfEdgeMeshType;
 use crate::{
-    math::{IndexType, Transformable},
+    math::IndexType,
     mesh::{
-        payload::{DefaultVertexPayload, VertexPayload},
-        Edge, MeshBasics, MeshType, Vertex,
+        DefaultVertexPayload, Edge, MeshBasics, MeshType, Vertex, VertexBasics, VertexIterators,
+        VertexPayload,
     },
     util::Deletable,
 };
+use itertools::Itertools;
 
 /// A vertex in a mesh.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct HalfEdgeVertex<T: HalfEdgeMeshType> {
     /// the index of the vertex
     id: T::V,
@@ -92,10 +93,7 @@ impl<T: HalfEdgeMeshType> HalfEdgeVertex<T> {
     }
 }
 
-impl<T: HalfEdgeMeshType> Vertex<T> for HalfEdgeVertex<T>
-where
-    T: MeshType<Vertex = HalfEdgeVertex<T>>,
-{
+impl<T: HalfEdgeMeshType> VertexBasics<T> for HalfEdgeVertex<T> {
     /// Returns the index of the vertex
     #[inline(always)]
     fn id(&self) -> T::V {
@@ -140,39 +138,9 @@ where
     fn edge(&self, mesh: &T::Mesh) -> T::Edge {
         *mesh.edge(self.edge)
     }
+}
 
-    #[inline(always)]
-    fn transform(&mut self, transform: &T::Trans)
-    where
-        T::VP: Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
-    {
-        self.payload = self.payload.transform(transform);
-    }
-
-    #[inline(always)]
-    fn translate(&mut self, transform: &T::Vec)
-    where
-        T::VP: Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
-    {
-        self.payload = self.payload.translate(transform);
-    }
-
-    #[inline(always)]
-    fn rotate(&mut self, transform: &T::Rot)
-    where
-        T::VP: Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
-    {
-        self.payload = self.payload.rotate(transform);
-    }
-
-    #[inline(always)]
-    fn scale(&mut self, transform: &T::Vec)
-    where
-        T::VP: Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
-    {
-        self.payload = self.payload.scale(transform);
-    }
-
+impl<T: HalfEdgeMeshType> VertexIterators<T> for HalfEdgeVertex<T> {
     /// Iterates all vertices adjacent to the vertex in the same manifold edge wheel (clockwise)
     #[inline(always)]
     fn vertices<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Vertex> + 'a {
@@ -190,7 +158,14 @@ where
     }
 }
 
-impl<T: HalfEdgeMeshType> std::fmt::Display for HalfEdgeVertex<T> {
+impl<T: HalfEdgeMeshType> Vertex for HalfEdgeVertex<T>
+where
+    T: MeshType<Vertex = HalfEdgeVertex<T>>,
+{
+    type T = T;
+}
+
+impl<T: HalfEdgeMeshType> std::fmt::Debug for HalfEdgeVertex<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,

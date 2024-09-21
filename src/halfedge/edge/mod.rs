@@ -45,7 +45,9 @@ pub struct HalfEdge<T: HalfEdgeMeshType> {
     payload: T::EP,
 }
 
-impl<T: HalfEdgeMeshType> Edge<T> for HalfEdge<T> {
+impl<T: HalfEdgeMeshType> Edge for HalfEdge<T> {
+    type T = T;
+    
     /// Returns the index of the half-edge
     #[inline(always)]
     fn id(&self) -> T::E {
@@ -261,7 +263,7 @@ where
     }
 }*/
 
-impl<T: HalfEdgeMeshType> std::fmt::Display for HalfEdge<T> {
+impl<T: HalfEdgeMeshType> std::fmt::Debug for HalfEdge<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,

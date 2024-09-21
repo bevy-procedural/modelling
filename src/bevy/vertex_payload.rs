@@ -4,11 +4,11 @@ use bevy::math::{Quat, Vec2, Vec3};
 
 use crate::{
     math::{HasNormal, HasPosition, TransformTrait, Transformable},
-    mesh::payload::VertexPayload,
+    mesh::VertexPayload,
 };
 
 /// Vertex Payload for Bevy with 3d position, normal, and uv.
-#[derive(Debug, Clone, PartialEq, Default, Copy)]
+#[derive(Clone, PartialEq, Default, Copy)]
 pub struct BevyVertexPayload {
     /// The position of the vertex.
     position: Vec3,
@@ -38,49 +38,41 @@ impl Transformable for BevyVertexPayload {
     type Rot = Quat;
 
     #[inline(always)]
-    fn translate(&self, v: &Self::Vec) -> Self {
-        Self {
-            position: self.position + *v,
-            normal: self.normal,
-            uv: self.uv,
-        }
+    fn translate(&mut self, v: &Self::Vec) -> &mut Self {
+        self.position += *v;
+        // TODO: should the uv be translated as well?
+        self
     }
 
     #[inline(always)]
-    fn transform(&self, t: &Self::Trans) -> Self {
-        Self {
-            position: t.apply(self.position),
-            normal: t.apply_vec(self.normal),
-            uv: self.uv,
-        }
+    fn transform(&mut self, t: &Self::Trans) -> &mut Self {
+        self.position = t.apply(self.position);
+        self.normal = t.apply_vec(self.normal);
+        // TODO: should the uv be transformed as well?
+        self
     }
 
     #[inline(always)]
-    fn rotate(&self, r: &Self::Rot) -> Self {
-        Self {
-            position: r.mul_vec3(self.position),
-            normal: r.mul_vec3(self.normal),
-            uv: self.uv,
-        }
+    fn rotate(&mut self, r: &Self::Rot) -> &mut Self {
+        self.position = r.mul_vec3(self.position);
+        self.normal = r.mul_vec3(self.normal);
+        // TODO: should the uv be transformed as well?
+        self
     }
 
     #[inline(always)]
-    fn scale(&self, s: &Self::Vec) -> Self {
-        Self {
-            position: self.position * *s,
-            normal: self.normal,
-            uv: self.uv,
-        }
+    fn scale(&mut self, s: &Self::Vec) -> &mut Self {
+        self.position *= *s;
+        self
     }
 
     #[inline(always)]
-    fn lerp(&self, other: &Self, t: Self::S) -> Self {
-        Self {
-            position: self.position.lerp(other.position, t),
-            // TODO: or reset to zero?
-            normal: self.normal.lerp(other.normal, t),
-            uv: self.uv.lerp(other.uv, t),
-        }
+    fn lerp(&mut self, other: &Self, t: Self::S) -> &mut Self {
+        self.position = self.position.lerp(other.position, t);
+        // TODO: or reset to zero?
+        self.normal = self.normal.lerp(other.normal, t);
+        self.uv = self.uv.lerp(other.uv, t);
+        self
     }
 }
 
@@ -121,7 +113,7 @@ impl HasNormal<Vec3> for BevyVertexPayload {
     }
 }
 
-impl std::fmt::Display for BevyVertexPayload {
+impl std::fmt::Debug for BevyVertexPayload {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,

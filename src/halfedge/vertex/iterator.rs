@@ -1,7 +1,7 @@
 use super::HalfEdgeVertex;
 use crate::{
     halfedge::HalfEdgeMeshType,
-    mesh::{Edge, MeshBasics, Vertex},
+    mesh::{Edge, MeshBasics, VertexBasics},
 };
 
 impl<T: HalfEdgeMeshType> HalfEdgeVertex<T> {

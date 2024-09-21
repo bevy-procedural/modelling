@@ -21,7 +21,7 @@ pub enum ReflexChainDirection {
 /// at least one edge. Only one of the two chains contains more than one edge. The chain with the single
 /// edge has its bottom endpoint below the sweep line. Hence, we place the start vertex before the other
 /// chain. The currently active chain is indicated by d.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct ReflexChain<V: IndexType, Vec2: Vector2D> {
     stack: Vec<usize>,
     d: ReflexChainDirection,
@@ -30,7 +30,7 @@ pub struct ReflexChain<V: IndexType, Vec2: Vector2D> {
     phantom: std::marker::PhantomData<(V, Vec2)>,
 }
 
-impl<V: IndexType, Vec2: Vector2D> std::fmt::Display for ReflexChain<V, Vec2> {
+impl<V: IndexType, Vec2: Vector2D> std::fmt::Debug for ReflexChain<V, Vec2> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}{:?}", self.d, self.stack)
     }

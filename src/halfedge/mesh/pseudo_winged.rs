@@ -1,9 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-    math::IndexType,
-    mesh::{Edge, MeshBasics},
-    prelude::HalfEdgeMeshType,
+    halfedge::HalfEdgeMeshType, math::IndexType, mesh::{Edge, MeshBasics}
 };
 
 use super::HalfEdgeMesh;
@@ -28,7 +26,7 @@ where
     twin_next: E,
 }
 
-impl<E: IndexType, V: IndexType, F: IndexType> std::fmt::Display for PseudoWingedEdge<E, V, F> {
+impl<E: IndexType, V: IndexType, F: IndexType> std::fmt::Debug for PseudoWingedEdge<E, V, F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,

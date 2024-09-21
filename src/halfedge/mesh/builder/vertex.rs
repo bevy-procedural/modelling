@@ -1,6 +1,12 @@
-use crate::mesh::{DefaultEdgePayload, IndexType, Mesh, MeshType, Vertex};
+use crate::{
+    halfedge::{HalfEdgeMesh, HalfEdgeMeshType},
+    math::IndexType,
+    mesh::{Edge, MeshBasics, VertexBasics},
+};
 
-impl<T: MeshType> T::Mesh {
+// TODO: move more functions to the builder trait!
+
+impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
     /// Creates a new vertex based on `vp` and connects it to vertex `v` with a pair of halfedges
     /// TODO: Docs
     pub fn add_vertex_via_vertex(
@@ -56,31 +62,11 @@ impl<T: MeshType> T::Mesh {
             (output, IndexType::max(), new, IndexType::max(), ep2),
         );
 
-        self.vertices.set(new, Vertex::new(e2, vp));
+        self.vertices.set(new, T::Vertex::new(e2, vp));
 
         self.edge_mut(input).set_next(e1);
         self.edge_mut(output).set_prev(e2);
 
         return (new, e1, e2);
-    }
-}
-
-impl<T: MeshType> T::Mesh
-where
-    T::EP: DefaultEdgePayload,
-{
-    /// Same as `add_vertex_via_vertex` but with default edge payloads
-    pub fn add_vertex_via_vertex_default(&mut self, v: T::V, vp: T::VP) -> (T::V, T::E, T::E) {
-        self.add_vertex_via_vertex(v, vp, T::EP::default(), T::EP::default())
-    }
-
-    /// Same as `add_vertex_via_edge` but with default edge payloads
-    pub fn add_vertex_via_edge_default(
-        &mut self,
-        input: T::E,
-        output: T::E,
-        vp: T::VP,
-    ) -> (T::V, T::E, T::E) {
-        self.add_vertex_via_edge(input, output, vp, T::EP::default(), T::EP::default())
     }
 }

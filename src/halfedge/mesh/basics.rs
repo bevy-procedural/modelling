@@ -3,8 +3,7 @@ use std::collections::HashMap;
 use super::{HalfEdgeMesh, HalfEdgeMeshType};
 use crate::{
     math::IndexType,
-    mesh::{payload::VertexPayload, MeshBasics, Vertex},
-    tesselate::Triangulation,
+    mesh::{Edge, FaceBasics, MeshBasics, Triangulation, VertexBasics, VertexIterators, VertexPayload},
     util::Deletable,
 };
 
@@ -133,5 +132,37 @@ impl<T: HalfEdgeMeshType> MeshBasics<T> for HalfEdgeMesh<T> {
         }
 
         vertices
+    }
+
+    /// Returns the id of the half edge from `v` to `w` or `None` if they are not neighbors.
+    /// Runs in O(n) time since it iterates over all edges of `v`.
+    fn shared_edge(&self, v: T::V, w: T::V) -> Option<T::Edge> {
+        self.vertex(v).edges_out(self).find_map(|e| {
+            if e.target_id(self) == w {
+                Some(e)
+            } else {
+                None
+            }
+        })
+    }
+
+    fn shared_edge_id(&self, v: T::V, w: T::V) -> Option<T::E> {
+        self.shared_edge(v, w).map(|e| e.id())
+    }
+
+    /// Returns the face shared by the two vertices or `None`.
+    /// TODO: Currently cannot distinguish between holes and "the outside"
+    fn shared_face(&self, v0: T::V, v1: T::V) -> Option<T::F> {
+        let w0 = self.vertex(v0);
+        let w1 = self.vertex(v1);
+        w0.faces(self).find_map(|f0| {
+            w1.faces(self).find_map(|f1: T::Face| {
+                if f0.id() == f1.id() {
+                    Some(f0.id())
+                } else {
+                    None
+                }
+            })
+        })
     }
 }

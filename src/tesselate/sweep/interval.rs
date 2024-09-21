@@ -62,7 +62,7 @@ impl IntervalBoundaryEdge {
 /// This represents a single interval of the sweep line.
 /// Each interval stores edges that are still work in progress
 /// and information in how to connect them to the rest of the mesh.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct SweepLineInterval<V: IndexType, Vec2: Vector2D> {
     /// The lowest vertex index of the interval.
     /// Things can be connected to this vertex when needed.
@@ -144,14 +144,14 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineInterval<V, Vec2> {
 }
 
 // TODO: local indices
-impl<V: IndexType, Vec2: Vector2D> std::fmt::Display for SweepLineInterval<V, Vec2> {
+impl<V: IndexType, Vec2: Vector2D> std::fmt::Debug for SweepLineInterval<V, Vec2> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "lowest: {} ", self.helper)?;
         write!(f, "left: {}->{} ", self.left.start, self.left.end)?;
         write!(f, "right: {}->{} ", self.right.start, self.right.end)?;
-        write!(f, "stacks: {} ", self.chain)?;
+        write!(f, "stacks: {:?} ", self.chain)?;
         if let Some(fixup) = &self.fixup {
-            write!(f, "fixup: {}", fixup)?;
+            write!(f, "fixup: {:?}", fixup)?;
         }
         Ok(())
     }

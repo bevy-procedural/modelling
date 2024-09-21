@@ -1,7 +1,10 @@
 use super::{basics::FaceBasics, MeshType, Vertex};
-use crate::{math::{
-    HasPosition, LineSegment2D, Scalar, TransformTrait, Vector, Vector3D, VectorIteratorExt,
-}, mesh::IndexedVertex2D};
+use crate::{
+    math::{
+        HasPosition, LineSegment2D, Scalar, TransformTrait, Vector, Vector3D, VectorIteratorExt,
+    },
+    mesh::{IndexedVertex2D, VertexBasics},
+};
 use itertools::Itertools;
 
 /// A face with vertices that have 3d positions.
@@ -91,7 +94,7 @@ where
         // TODO: allows only for slight curvature...
         debug_assert!(
             self.may_be_curved() || self.is_planar2(mesh),
-            "Face is not planar {}",
+            "Face is not planar {:?}",
             self
         );
 
