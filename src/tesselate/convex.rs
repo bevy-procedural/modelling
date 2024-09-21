@@ -1,6 +1,6 @@
 use crate::{
     math::{HasPosition, Vector3D},
-    mesh::{Face3d, FaceBasics, MeshType, Triangulation, Vertex, VertexBasics},
+    mesh::{Face3d, FaceBasics, MeshType, Triangulation, VertexBasics},
 };
 use itertools::Itertools;
 

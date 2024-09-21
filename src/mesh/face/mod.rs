@@ -7,17 +7,20 @@ pub use basics::*;
 pub use face3d::*;
 pub use payload::*;
 
-use super::{MeshType, Vertex, VertexBasics};
+use super::{MeshType, VertexBasics};
 use crate::math::{HasPosition, VectorIteratorExt};
 
 /// A face in a mesh.
 ///
 /// Isn't necessarily planar or triangular.
-pub trait Face<T: MeshType<Face = Self>>: FaceBasics<T> {
+pub trait Face: FaceBasics<Self::T> {
+    type T: MeshType<Face = Self>;
+
     /// Naive method to get the center of the face by averaging the vertices.
-    fn centroid(&self, mesh: &T::Mesh) -> T::Vec
+    fn centroid(&self, mesh: &<Self::T as MeshType>::Mesh) -> <Self::T as MeshType>::Vec
     where
-        T::VP: HasPosition<T::Vec, S = T::S>,
+        <Self::T as MeshType>::VP:
+            HasPosition<<Self::T as MeshType>::Vec, S = <Self::T as MeshType>::S>,
     {
         self.vertices(mesh).map(|v| v.pos()).stable_mean()
     }
@@ -28,9 +31,9 @@ pub trait Face<T: MeshType<Face = Self>>: FaceBasics<T> {
     /// Given that all vertices are part of this face, this implies that the triangle is part of the face.
     fn triangle_touches_boundary(
         &self,
-        mesh: &T::Mesh,
-        v0: T::V,
-        v1: T::V,
-        v2: T::V,
+        mesh: &<Self::T as MeshType>::Mesh,
+        v0: <Self::T as MeshType>::V,
+        v1: <Self::T as MeshType>::V,
+        v2: <Self::T as MeshType>::V,
     ) -> Option<bool>;
 }

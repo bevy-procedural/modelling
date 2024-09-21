@@ -1,4 +1,4 @@
-use super::{HasPosition, Vertex, VertexBasics};
+use super::{HasPosition, VertexBasics};
 use crate::{
     math::{Scalar, Vector, Vector3D},
     mesh::{MeshBasics, MeshType},

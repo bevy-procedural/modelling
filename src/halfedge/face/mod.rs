@@ -80,7 +80,9 @@ impl<T: HalfEdgeMeshType> FaceBasics<T> for HalfEdgeFace<T> {
     }
 }
 
-impl<T: HalfEdgeMeshType> Face<T> for HalfEdgeFace<T> {
+impl<T: HalfEdgeMeshType> Face for HalfEdgeFace<T> {
+    type T = T;
+
     fn triangle_touches_boundary(
         &self,
         mesh: &T::Mesh,

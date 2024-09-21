@@ -64,5 +64,5 @@ pub trait MeshType: Copy + Eq {
     type Vertex: Vertex<T = Self>;
 
     /// The type of the face.
-    type Face: Face<Self>;
+    type Face: Face<T = Self>;
 }

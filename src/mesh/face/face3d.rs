@@ -1,4 +1,4 @@
-use super::{basics::FaceBasics, MeshType, Vertex};
+use super::{basics::FaceBasics, MeshType};
 use crate::{
     math::{
         HasPosition, LineSegment2D, Scalar, TransformTrait, Vector, Vector3D, VectorIteratorExt,

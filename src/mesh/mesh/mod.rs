@@ -17,7 +17,7 @@ pub use payload::*;
 pub use topology::*;
 pub use transform::*;
 
-use super::{Face3d, Triangulation, Vertex, VertexBasics};
+use super::{Face3d, Triangulation, VertexBasics};
 use crate::{
     math::{HasPosition, Vector3D, VectorIteratorExt},
     tesselate::{triangulate_face, TesselationMeta, TriangulationAlgorithm},
