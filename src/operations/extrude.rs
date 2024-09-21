@@ -1,13 +1,11 @@
+use crate::{
+    halfedge::{HalfEdgeMesh, HalfEdgeMeshType},
+    math::{Scalar, Transformable},
+    mesh::{DefaultEdgePayload, DefaultFacePayload, EdgeBasics, MeshBasics, VertexBasics},
+};
 use itertools::Itertools;
 
-use crate::{
-    math::Scalar,
-    mesh::{
-        payload::Transformable, DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
-    },
-};
-
-impl<T: MeshType> T::Mesh
+impl<T: HalfEdgeMeshType> HalfEdgeMesh<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
@@ -22,7 +20,7 @@ where
         // TODO: avoid collecting
         let vps: Vec<_> = self
             .edges_back_from(self.edge(e).next_id())
-            .map(|v| v.origin(self).payload().transform(&transform))
+            .map(|v| v.origin(self).payload().transformed(&transform))
             .collect();
         let start = self.loft_polygon_back(e, 2, 2, vps);
         self.close_hole(start, Default::default(), false);
@@ -52,7 +50,7 @@ where
         // TODO: avoid collecting
         let vps: Vec<_> = self
             .edges_from(self.edge(e).next_id())
-            .map(|v| v.origin(self).payload().transform(&transform))
+            .map(|v| v.origin(self).payload().transformed(&transform))
             .collect();
         let start = self.loft_tri_closed(e, vps);
         self.close_hole(start, Default::default(), false);
@@ -68,9 +66,9 @@ where
         // TODO: avoid collecting
         let mut vps: Vec<_> = self
             .edges_from(self.edge(e).next_id())
-            .map(|v| v.origin(self).payload().transform(&transform))
+            .map(|v| v.origin(self).payload().transformed(&transform))
             .circular_tuple_windows()
-            .map(|(a, b)| a.lerp(&b, T::S::HALF))
+            .map(|(a, b)| a.lerped(&b, T::S::HALF))
             .collect();
         vps.rotate_right(1);
         let start = self.loft_tri_closed(e, vps);
@@ -79,7 +77,7 @@ where
     }
 }
 
-impl<T: MeshType> T::Mesh
+impl<T: HalfEdgeMeshType> HalfEdgeMesh<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,

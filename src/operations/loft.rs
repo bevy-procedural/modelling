@@ -1,6 +1,11 @@
-use crate::mesh::{DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType};
+use crate::{
+    halfedge::{HalfEdgeMesh, HalfEdgeMeshType},
+    mesh::{DefaultEdgePayload, DefaultFacePayload, MeshBasics},
+};
 
-impl<T: MeshType> T::Mesh
+// TODO: implement this as a trait for MeshTrait instead. The parameters should be slightly adjusted to fit for non-halfedge graphs!
+
+impl<T: HalfEdgeMeshType> HalfEdgeMesh<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
@@ -16,7 +21,7 @@ where
     /// If `shift` is true, the first inserted triangle will be with the tip pointing to the target of `start`.
     /// Otherwise, the first triangle will include the edge `start`.
     /// This doesn't affect the number of triangles but shifts the "hem" by one.
-    pub fn loft_tri_back(
+    fn loft_tri_back(
         &mut self,
         start: T::E,
         shift: bool,
