@@ -1,7 +1,7 @@
 use crate::{
     halfedge::{HalfEdgeMesh, HalfEdgeMeshType},
     math::IndexType,
-    mesh::{Edge, MeshBasics, VertexBasics},
+    mesh::{EdgeBasics, MeshBasics, VertexBasics},
 };
 
 // TODO: move more functions to the builder trait!

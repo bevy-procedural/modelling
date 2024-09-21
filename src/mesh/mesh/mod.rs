@@ -25,13 +25,17 @@ use crate::{
 
 /// The `MeshTrait` doesn't assume any specific data structure or topology,
 /// i.e., could be a manifold half-edge mesh, a topological directed graph, etc.
-pub trait MeshTrait<T: MeshType<Mesh = Self>>:
-    basics::MeshBasics<T> + MeshNormals<T> + MeshTransforms<T> + MeshTopology<T>
+pub trait MeshTrait:
+    MeshBasics<Self::T> + MeshNormals<Self::T> + MeshTransforms<Self::T> + MeshTopology<Self::T>
 {
+    /// Associated mesh type
+    type T: MeshType<Mesh = Self>;
+
     /// Returns the mean of all vertex positions.
-    fn centroid(&self) -> T::Vec
+    fn centroid(&self) -> <Self::T as MeshType>::Vec
     where
-        T::VP: HasPosition<T::Vec, S = T::S>,
+        <Self::T as MeshType>::VP:
+            HasPosition<<Self::T as MeshType>::Vec, S = <Self::T as MeshType>::S>,
     {
         self.vertices().map(|v| v.pos()).stable_mean()
     }
@@ -41,17 +45,21 @@ pub trait MeshTrait<T: MeshType<Mesh = Self>>:
     fn triangulate(
         &self,
         algorithm: TriangulationAlgorithm,
-        meta: &mut TesselationMeta<T::V>,
-    ) -> (Vec<T::V>, Vec<T::VP>)
+        meta: &mut TesselationMeta<<Self::T as MeshType>::V>,
+    ) -> (
+        Vec<<Self::T as MeshType>::V>,
+        Vec<<Self::T as MeshType>::VP>,
+    )
     where
-        T::Vec: Vector3D<S = T::S>,
-        T::VP: HasPosition<T::Vec, S = T::S>,
-        T::Face: Face3d<T>,
+        <Self::T as MeshType>::Vec: Vector3D<S = <Self::T as MeshType>::S>,
+        <Self::T as MeshType>::VP:
+            HasPosition<<Self::T as MeshType>::Vec, S = <Self::T as MeshType>::S>,
+        <Self::T as MeshType>::Face: Face3d<Self::T>,
     {
         let mut indices = Vec::new();
         for f in self.faces() {
             let mut tri = Triangulation::new(&mut indices);
-            triangulate_face::<T>(f, self, &mut tri, algorithm, meta)
+            triangulate_face::<Self::T>(f, self, &mut tri, algorithm, meta)
 
             // TODO debug_assert!(tri.verify_full());
         }

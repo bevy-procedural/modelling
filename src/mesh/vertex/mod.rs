@@ -13,6 +13,7 @@ use crate::math::{HasPosition, Transformable};
 
 /// A vertex in a mesh.
 pub trait Vertex: VertexBasics<Self::T> + VertexIterators<Self::T> {
+    /// Associated mesh type
     type T: MeshType<Vertex = Self>;
 }
 

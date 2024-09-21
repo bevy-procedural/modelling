@@ -14,6 +14,7 @@ use crate::math::{HasPosition, VectorIteratorExt};
 ///
 /// Isn't necessarily planar or triangular.
 pub trait Face: FaceBasics<Self::T> {
+    /// Associated mesh type
     type T: MeshType<Face = Self>;
 
     /// Naive method to get the center of the face by averaging the vertices.

@@ -3,7 +3,10 @@ use std::collections::HashMap;
 use super::{HalfEdgeMesh, HalfEdgeMeshType};
 use crate::{
     math::IndexType,
-    mesh::{Edge, FaceBasics, MeshBasics, Triangulation, VertexBasics, VertexIterators, VertexPayload},
+    mesh::{
+        EdgeBasics, FaceBasics, MeshBasics, Triangulation, VertexBasics, VertexIterators,
+        VertexPayload,
+    },
     util::Deletable,
 };
 

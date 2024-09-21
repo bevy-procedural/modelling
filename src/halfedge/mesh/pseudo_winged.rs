@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 
 use crate::{
-    halfedge::HalfEdgeMeshType, math::IndexType, mesh::{Edge, MeshBasics}
+    halfedge::HalfEdgeMeshType,
+    math::IndexType,
+    mesh::{EdgeBasics, MeshBasics},
 };
 
 use super::HalfEdgeMesh;

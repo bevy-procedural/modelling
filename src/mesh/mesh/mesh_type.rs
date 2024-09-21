@@ -55,7 +55,7 @@ pub trait MeshType: Copy + Eq {
     type Rot: Rotator<Self::Vec>;
 
     /// The type of the mesh.
-    type Mesh: MeshTrait<Self>;
+    type Mesh: MeshTrait<T = Self>;
 
     /// The type of the (half-)edge or arc.
     type Edge: Edge<T = Self>;

@@ -1,6 +1,7 @@
 use super::VertexBasics;
 use crate::mesh::MeshType;
 
+/// Basic vertex iterators for a mesh
 pub trait VertexIterators<T: MeshType>: VertexBasics<T> {
     /// Iterates all vertices adjacent to the vertex in the same manifold edge wheel (clockwise)
     fn vertices<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Vertex> + 'a;

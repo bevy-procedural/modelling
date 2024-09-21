@@ -5,6 +5,7 @@ use crate::{
     mesh::MeshType,
 };
 
+/// Basic vertex functionality for a mesh
 pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone + PartialEq {
     /// Returns the index of the vertex
     fn id(&self) -> T::V;

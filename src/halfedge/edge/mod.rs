@@ -5,7 +5,7 @@ pub use iterator::*;
 use super::{HalfEdgeMesh, HalfEdgeMeshType};
 use crate::{
     math::IndexType,
-    mesh::{DefaultEdgePayload, Edge, EdgePayload, MeshBasics},
+    mesh::{DefaultEdgePayload, Edge, EdgeBasics, EdgePayload, MeshBasics},
     util::Deletable,
 };
 
@@ -45,9 +45,7 @@ pub struct HalfEdge<T: HalfEdgeMeshType> {
     payload: T::EP,
 }
 
-impl<T: HalfEdgeMeshType> Edge for HalfEdge<T> {
-    type T = T;
-    
+impl<T: HalfEdgeMeshType> EdgeBasics<T> for HalfEdge<T> {
     /// Returns the index of the half-edge
     #[inline(always)]
     fn id(&self) -> T::E {
@@ -71,6 +69,10 @@ impl<T: HalfEdgeMeshType> Edge for HalfEdge<T> {
     fn is_boundary(&self, mesh: &T::Mesh) -> bool {
         self.is_boundary_self() || self.twin(mesh).is_boundary_self()
     }
+}
+
+impl<T: HalfEdgeMeshType> Edge for HalfEdge<T> {
+    type T = T;
 }
 
 impl<T: HalfEdgeMeshType> HalfEdge<T> {

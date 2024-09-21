@@ -1,7 +1,7 @@
 use super::super::{HalfEdgeFace, IncidentToFaceIterator};
 use crate::{
     halfedge::HalfEdgeMeshType,
-    mesh::{Edge, FaceBasics},
+    mesh::{EdgeBasics, FaceBasics},
 };
 
 impl<T: HalfEdgeMeshType> HalfEdgeFace<T> {

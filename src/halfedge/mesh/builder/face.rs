@@ -2,7 +2,7 @@ use itertools::Itertools;
 
 use crate::{
     halfedge::{HalfEdgeFace, HalfEdgeMesh, HalfEdgeMeshType},
-    mesh::{DefaultEdgePayload, DefaultFacePayload, Edge, FaceBasics, MeshBasics},
+    mesh::{DefaultEdgePayload, DefaultFacePayload, EdgeBasics, FaceBasics, MeshBasics},
 };
 
 // TODO: move more functions to the builder trait!

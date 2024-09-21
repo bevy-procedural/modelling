@@ -6,7 +6,7 @@ use super::HalfEdgeMeshType;
 use crate::{
     math::IndexType,
     mesh::{
-        DefaultVertexPayload, Edge, MeshBasics, MeshType, Vertex, VertexBasics, VertexIterators,
+        DefaultVertexPayload, EdgeBasics, MeshBasics, MeshType, Vertex, VertexBasics, VertexIterators,
         VertexPayload,
     },
     util::Deletable,
