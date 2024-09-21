@@ -1,17 +1,21 @@
 //! A benchmark to test the speed of the triangulation
 
-use bevy::{
-    math::{Quat, Vec2, Vec3},
-    transform::components::Transform,
+// TODO: Include the fps bench as custom measurement: https://github.com/bheisler/criterion.rs/blob/master/book/src/user_guide/custom_measurements.md
+// TODO: Profiling https://github.com/bheisler/criterion.rs/blob/master/book/src/user_guide/profiling.md
+
+use bevy::math::{Vec2, Vec3};
+use criterion::{
+    criterion_group, criterion_main, AxisScale, BenchmarkId, Criterion, PlotConfiguration,
+    Throughput,
 };
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use procedural_modelling::mesh::{
-    bevy::BevyMesh3d,
-    payload::{vertex_payload::BevyVertexPayload, HasPosition},
-    primitives::generate_zigzag,
+use procedural_modelling::{
+    bevy::{BevyMesh3d, BevyVertexPayload},
+    math::HasPosition,
+    mesh::MeshTrait,
+    primitives::{generate_zigzag, Make2dShape},
     tesselate::TriangulationAlgorithm,
 };
-use std::{f32::consts::PI, time::Duration};
+use std::time::Duration;
 
 /*
 fn _make_spiral() -> BevyMesh3d {
@@ -36,41 +40,59 @@ fn zigzag(n: usize) -> BevyMesh3d {
 }
 
 fn bench_triangulation(c: &mut Criterion) {
-    let mut group = c.benchmark_group("Triangulation");
-    group
-        .sample_size(10)
-        .measurement_time(Duration::from_secs(5));
-
-    for (name, mesh) in [
-        //("Spiral", _make_spiral()),
+    for (mesh_name, difficulty, is_convex, maker) in [
+        (
+            "Circle",
+            1,
+            true,
+            Box::new(|n| BevyMesh3d::regular_star(1.0, 1.0, n)) as Box<dyn Fn(usize) -> BevyMesh3d>,
+        ),
+        (
+            "Zigzag",
+            10,
+            false,
+            Box::new(|n| zigzag(n)) as Box<dyn Fn(usize) -> BevyMesh3d>,
+        ),
         //("Star", BevyMesh3d::regular_star(2.0, 0.9, 1000)),
-        ("Circle10", BevyMesh3d::regular_star(1.0, 1.0, 10)),
-        ("Circle100", BevyMesh3d::regular_star(1.0, 1.0, 100)),
-        ("Circle1000", BevyMesh3d::regular_star(1.0, 1.0, 1000)),
-        ("Circle10000", BevyMesh3d::regular_star(1.0, 1.0, 10000)),
-        ("Zigzag1001", zigzag(1000)),
-        ("Zigzag10001", zigzag(10000)),
+        //("Spiral", _make_spiral()),
     ] {
-        let mut create_bench = |f_name: &str, algo: TriangulationAlgorithm| {
-            group.bench_with_input(
-                BenchmarkId::new(f_name, name),
-                &mesh,
-                |b, para: &BevyMesh3d| {
-                    b.iter(|| {
-                        let mut meta = Default::default();
-                        para.triangulate(algo, &mut meta);
-                    })
-                },
-            );
-        };
+        let mut group = c.benchmark_group(format!("Triangulation {}", mesh_name));
+        group
+            .sample_size(10)
+            .measurement_time(Duration::from_secs(5));
+        let plot_config = PlotConfiguration::default().summary_scale(AxisScale::Logarithmic);
+        group.plot_config(plot_config);
 
-        create_bench("Sweep", TriangulationAlgorithm::Sweep);
-        create_bench("Delaunay", TriangulationAlgorithm::Delaunay);
-        create_bench("Ears", TriangulationAlgorithm::EarClipping);
-        create_bench("Fan", TriangulationAlgorithm::Fan);
+        for size in [10, 100, 1000] {
+            // 10_000, 100_000, 1_000_000] {
+            let mesh = maker(size);
+            let mut create_bench =
+                |algo_name: &str, max_size: usize, algo: TriangulationAlgorithm| {
+                    if (size * difficulty) > max_size {
+                        return;
+                    }
+                    group.throughput(Throughput::Elements(size as u64));
+                    group.bench_with_input(
+                        BenchmarkId::new(algo_name, size),
+                        &mesh,
+                        |b, para: &BevyMesh3d| {
+                            b.iter(|| {
+                                let mut meta = Default::default();
+                                para.triangulate(algo, &mut meta);
+                            })
+                        },
+                    );
+                };
+
+            create_bench("Sweep", 1000_000, TriangulationAlgorithm::Sweep);
+            create_bench("Delaunay", 1000_000, TriangulationAlgorithm::Delaunay);
+            create_bench("Ears", 10_000, TriangulationAlgorithm::EarClipping);
+            if is_convex {
+                create_bench("Fan", 1000_000, TriangulationAlgorithm::Fan);
+            }
+        }
+        group.finish();
     }
-
-    group.finish();
 }
 
 criterion_group!(benches, bench_triangulation);

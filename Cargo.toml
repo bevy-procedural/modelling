@@ -56,7 +56,7 @@ spade = "^2.12.1"
 criterion = { version = "0.5.1", features = ["html_reports"], optional = true }
 
 [features]
-default = ["bevy"]
+default = ["bevy", "benchmarks"]
 bevy = [
     "dep:bevy",
     "dep:bevy-inspector-egui",
