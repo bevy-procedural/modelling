@@ -10,9 +10,18 @@ use bevy_inspector_egui::{
     InspectorOptions,
 };
 use bevy_panorbit_camera::*;
-use procedural_modelling::prelude::*;
+use procedural_modelling::{
+    bevy::{
+        show_edges, show_faces, show_tesselation_meta, show_vertex_indices,
+        text::{Text3dGizmos, Text3dGizmosPlugin},
+        BevyMesh3d, BevyVertexPayload,
+    },
+    math::HasPosition,
+    mesh::{MeshBasics, MeshNormals, MeshTransforms},
+    primitives::{generate_zigzag, random_star, Make2dShape},
+    tesselate::{TesselationMeta, TriangulationAlgorithm},
+};
 use std::{env, f32::consts::PI};
-use text::Text3dGizmos;
 
 #[derive(Reflect, Resource, InspectorOptions)]
 #[reflect(Resource, InspectorOptions)]
@@ -154,6 +163,7 @@ fn _make_2d_zigzag() -> BevyMesh3d {
     mesh
 }
 
+/*
 fn _make_prism() -> BevyMesh3d {
     /*BevyMesh3d::prism(
         (0..10).map(|i| {
@@ -222,6 +232,7 @@ fn _make_prism() -> BevyMesh3d {
         false,
     )
 }
+*/
 
 fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     //_make_hell_8()
@@ -246,9 +257,11 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     mesh*/
 
     //BevyMesh3d::uv_sphere(3.0, 64, 64)
-    BevyMesh3d::geodesic_icosahedron(3.0, 64)
+    //BevyMesh3d::geodesic_icosahedron(3.0, 64)
     //BevyMesh3d::geodesic_tetrahedron(3.0, 128)
     //BevyMesh3d::geodesic_octahedron(3.0, 128)
+
+    BevyMesh3d::regular_polygon(2.0, 100)
 }
 
 pub fn main() {
@@ -278,7 +291,7 @@ pub fn main() {
             WorldInspectorPlugin::default(),
             FrameTimeDiagnosticsPlugin,
             PanOrbitCameraPlugin,
-            gizmo::bevy::text::Text3dGizmosPlugin,
+            Text3dGizmosPlugin,
         ))
         .add_systems(Startup, setup_meshes)
         .add_systems(Update, update_meshes)

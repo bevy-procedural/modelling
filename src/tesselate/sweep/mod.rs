@@ -1,10 +1,12 @@
 mod chain;
 mod interval;
+mod monotone;
 mod point;
 mod status;
 mod sweep;
 mod vertex_type;
 
+use monotone::LinearMonoTriangulator;
 pub use sweep::sweep_line_triangulation;
 pub use vertex_type::VertexType;
 
@@ -66,7 +68,11 @@ pub fn sweep_line<T: MeshType>(
         .map(|(p, i)| IndexedVertex2D::<T::V, T::Vec2>::new(p, i))
         .collect();
 
-    sweep_line_triangulation::<T::V, T::Vec2>(indices, &vec2s, &mut meta.sweep);
+    sweep_line_triangulation::<LinearMonoTriangulator<T::V, T::Vec2>>(
+        indices,
+        &vec2s,
+        &mut meta.sweep,
+    );
 }
 
 /// A variant of the sweep-line algorithm that finds the min-weight triangulation for each
@@ -89,14 +95,14 @@ pub fn sweep_dynamic<T: MeshType>(
 {
     // TODO: Use the fact that we can find the min-weight triangulation of a x-monotone polygon in O(n^2) time using dynamic programming.
     // Basically, just run the sweep algorithm but replace the `ReflexChain` insertion step with a dynamic programming step.
-    
+
     // Using k we limit the amount of edges to consider in the dynamic programming step, leading to k^2 during the chain insertion step instead of n^2.
-    // This is called strip-based triangulation. We should chose the boundaries of the strips using some clever heuristic, 
+    // This is called strip-based triangulation. We should chose the boundaries of the strips using some clever heuristic,
     // maybe based on density. We could also use orthogonal strips if the chains are very far away, i.e., cut the euclidean plane
     // into squares with each around k vertices inside and run the algorithm within each square. Because we still need vertices from both sides,
     // we could include a single vertex from the opposite chain effectively separating this into large triangles that are then triangulated each.
     // This is probably an important optimization since dense but far-away chains are a common scenario if we triangulates faces that consist
-    // of simple but high-resolution geometry (e.g., a polygon-approximation of a circle). That would also be a point where we can easily insert 
+    // of simple but high-resolution geometry (e.g., a polygon-approximation of a circle). That would also be a point where we can easily insert
     // additional vertices significantly reducing edge lengths of the result.
 
     // The k-mechanism should also be available independent of the heuristic that is run in the end.
@@ -178,4 +184,3 @@ pub fn sweep_greedy<T: MeshType>(
 
     todo!("sweep greedy");
 }
-

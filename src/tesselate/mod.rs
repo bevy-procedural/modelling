@@ -37,6 +37,9 @@ pub enum TriangulationAlgorithm {
     /// Very fast sweep-line algorithm that might produces triangulations with unnecessarily long edges. Works for arbitrary polygons (yes, they don't have to be simple). Runs in O(n log n) time. See [CMSC 754](https://www.cs.umd.edu/class/spring2020/cmsc754/Lects/lect05-triangulate.pdf).
     Sweep,
 
+    /// The sweep-line algorithm, but with a O(n^2) dynamic programming min-weight algorithm running on each monotone sub-polygon.
+    SweepDynamic,
+
     /// Slow, but large flat surfaces might render faster. Currently uses [Spade](https://github.com/Stoeoef/spade). TODO: allow Delaunay refinements! Runs in O(n log n) time.
     Delaunay,
 
@@ -100,6 +103,9 @@ pub fn triangulate_face<T: MeshType>(
         }
         TriangulationAlgorithm::Sweep => {
             sweep_line::<T>(face, mesh, tri, meta);
+        }
+        TriangulationAlgorithm::SweepDynamic => {
+            sweep_dynamic::<T>(face, mesh, tri, 1000);
         }
         TriangulationAlgorithm::MinWeight => {
             //self.min_weight_triangulation_stoch(mesh, indices);

@@ -1,6 +1,6 @@
-use super::interval::SweepLineInterval;
+use super::{interval::SweepLineInterval, monotone::MonotoneTriangulator};
 use crate::{
-    math::{HasZero, IndexType, Scalar, Vector2D},
+    math::{HasZero, IndexType, Scalar, Vector, Vector2D},
     mesh::IndexedVertex2D,
 };
 use std::collections::{BTreeSet, HashMap};
@@ -74,9 +74,9 @@ impl<Vec2: Vector2D> SLISorter<Vec2> {
         SLISorter { left, from, to }
     }
 
-    pub fn from_interval<V: IndexType>(
-        interval: &SweepLineInterval<V, Vec2>,
-        vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
+    pub fn from_interval<V: IndexType, MT: MonotoneTriangulator<V = V, Vec2 = Vec2>>(
+        interval: &SweepLineInterval<MT>,
+        vec2s: &Vec<IndexedVertex2D<MT::V, MT::Vec2>>,
     ) -> SLISorter<Vec2> {
         let from = vec2s[interval.left.start].vec;
         let to = vec2s[interval.left.end].vec;
@@ -88,18 +88,18 @@ impl<Vec2: Vector2D> SLISorter<Vec2> {
 /// into smaller intervals by the edges of the polygon.
 /// The sweep line status keeps track of all sweep line intervals
 /// that are currently inside the polygon.
-pub struct SweepLineStatus<V: IndexType, Vec2: Vector2D> {
+pub struct SweepLineStatus<MT: MonotoneTriangulator> {
     /// The sweep lines, ordered by the target vertex index of the left edge
-    left: HashMap<usize, SweepLineInterval<V, Vec2>>,
+    left: HashMap<usize, SweepLineInterval<MT>>,
 
     /// Maps right targets to left targets
     right: HashMap<usize, usize>,
 
     /// Use a b-tree to quickly find the correct interval
-    tree: Option<BTreeSet<SLISorter<Vec2>>>,
+    tree: Option<BTreeSet<SLISorter<MT::Vec2>>>,
 }
 
-impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
+impl<MT: MonotoneTriangulator> SweepLineStatus<MT> {
     pub fn new() -> Self {
         SweepLineStatus {
             left: HashMap::new(),
@@ -110,8 +110,8 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
 
     pub fn insert(
         &mut self,
-        value: SweepLineInterval<V, Vec2>,
-        vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
+        value: SweepLineInterval<MT>,
+        vec2s: &Vec<IndexedVertex2D<MT::V, MT::Vec2>>,
     ) {
         // TODO: assert that the pos is in between the start and end
         debug_assert!(value.sanity_check());
@@ -127,8 +127,8 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
     pub fn remove_left(
         &mut self,
         key: usize,
-        vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
-    ) -> Option<SweepLineInterval<V, Vec2>> {
+        vec2s: &Vec<IndexedVertex2D<MT::V, MT::Vec2>>,
+    ) -> Option<SweepLineInterval<MT>> {
         if let Some(v) = self.left.remove(&key) {
             self.tree
                 .as_mut()
@@ -140,15 +140,15 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
         }
     }
 
-    pub fn peek_left(&self, key: usize) -> Option<&SweepLineInterval<V, Vec2>> {
+    pub fn peek_left(&self, key: usize) -> Option<&SweepLineInterval<MT>> {
         self.left.get(&key)
     }
 
     pub fn remove_right(
         &mut self,
         key: usize,
-        vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
-    ) -> Option<SweepLineInterval<V, Vec2>> {
+        vec2s: &Vec<IndexedVertex2D<MT::V, MT::Vec2>>,
+    ) -> Option<SweepLineInterval<MT>> {
         if let Some(k) = self.right.remove(&key) {
             self.left.remove(&k).map(|v| {
                 self.tree
@@ -161,15 +161,15 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
         }
     }
 
-    pub fn peek_right(&self, key: usize) -> Option<&SweepLineInterval<V, Vec2>> {
+    pub fn peek_right(&self, key: usize) -> Option<&SweepLineInterval<MT>> {
         self.right.get(&key).and_then(|k| self.peek_left(*k))
     }
 
-    pub fn tree_sanity_check(&self, at: Vec2::S) -> bool {
-        let mut last: Option<&SLISorter<Vec2>> = None;
+    pub fn tree_sanity_check(&self, at: <MT::Vec2 as Vector2D>::S) -> bool {
+        let mut last: Option<&SLISorter<MT::Vec2>> = None;
         for sorter in self.tree.as_ref().unwrap() {
             if let Some(l) = last {
-                let last_at = SLISorter::new(l.left, Vec2::new(l.x_at_y(at), at), l.to);
+                let last_at = SLISorter::new(l.left, MT::Vec2::new(l.x_at_y(at), at), l.to);
                 assert!(
                     last_at <= *sorter,
                     "Tree is not sorted correctly at {} because {:?} <= {:?} does not hold.",
@@ -185,7 +185,11 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
 
     /// Find an interval by its coordinates on the sweep line using linear search.
     /// This runs in O(n) time.
-    fn find_linearly(&self, pos: &Vec2, vec2s: &Vec<IndexedVertex2D<V, Vec2>>) -> Option<usize> {
+    fn find_linearly(
+        &self,
+        pos: &MT::Vec2,
+        vec2s: &Vec<IndexedVertex2D<MT::V, MT::Vec2>>,
+    ) -> Option<usize> {
         self.left
             .iter()
             .find(|(_, v)| v.contains(pos, vec2s))
@@ -194,7 +198,11 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
 
     /// Find an interval by its coordinates on the sweep line using binary search.
     /// This runs in O(B * log n) time.
-    fn find_btree(&self, pos: &Vec2, vec2s: &Vec<IndexedVertex2D<V, Vec2>>) -> Option<usize> {
+    fn find_btree(
+        &self,
+        pos: &MT::Vec2,
+        vec2s: &Vec<IndexedVertex2D<MT::V, MT::Vec2>>,
+    ) -> Option<usize> {
         let sorter = SLISorter::new(usize::MAX, *pos, *pos);
 
         debug_assert!(
@@ -232,7 +240,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
     }
 
     /// Delayed initialization of the b-tree
-    fn init_btree(&mut self, vec2s: &Vec<IndexedVertex2D<V, Vec2>>) {
+    fn init_btree(&mut self, vec2s: &Vec<IndexedVertex2D<MT::V, MT::Vec2>>) {
         assert!(self.tree.is_none());
         let mut tree = BTreeSet::new();
         for (_, v) in &self.left {
@@ -247,8 +255,8 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
     /// The BTree will only be initialized and kept alive during the insert/remove operations once it is needed for the first time.
     pub fn find_by_position(
         &mut self,
-        pos: &Vec2,
-        vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
+        pos: &MT::Vec2,
+        vec2s: &Vec<IndexedVertex2D<MT::V, MT::Vec2>>,
     ) -> Option<usize> {
         const MIN_INTERVALS_FOR_BTREE: usize = 8;
 
@@ -263,7 +271,7 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineStatus<V, Vec2> {
     }
 }
 
-impl<V: IndexType, Vec2: Vector2D> std::fmt::Debug for SweepLineStatus<V, Vec2> {
+impl<MT: MonotoneTriangulator> std::fmt::Debug for SweepLineStatus<MT> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "SweepLineStatus:\n")?;
         for (k, v) in &self.left {

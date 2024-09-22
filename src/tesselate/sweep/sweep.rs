@@ -1,6 +1,6 @@
 use super::{
-    chain::{ReflexChain, ReflexChainDirection},
     interval::{IntervalBoundaryEdge, SweepLineInterval},
+    monotone::MonotoneTriangulator,
     point::EventPoint,
     status::SweepLineStatus,
     SweepMeta, VertexType,
@@ -18,16 +18,16 @@ use crate::{
 /// `indices` is the list of indices where the new triangles are appended (in local coordinates)
 /// `vec2s` is the list of 2d-vertices with local indices
 /// `meta` is a structure where debug information can be stored
-pub fn sweep_line_triangulation<V: IndexType, Vec2: Vector2D>(
-    indices: &mut Triangulation<V>,
-    vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
-    meta: &mut SweepMeta<V>,
+pub fn sweep_line_triangulation<MT: MonotoneTriangulator>(
+    indices: &mut Triangulation<MT::V>,
+    vec2s: &Vec<IndexedVertex2D<MT::V, MT::Vec2>>,
+    meta: &mut SweepMeta<MT::V>,
 ) {
     assert!(vec2s.len() >= 3, "At least 3 vertices are required");
 
-    let mut event_queue: Vec<EventPoint<Vec2>> = Vec::new();
+    let mut event_queue: Vec<EventPoint<MT::Vec2>> = Vec::new();
     for here in 0..vec2s.len() {
-        event_queue.push(EventPoint::classify::<V>(here, &vec2s));
+        event_queue.push(EventPoint::classify::<MT::V>(here, &vec2s));
     }
     event_queue.sort_unstable();
 
@@ -52,7 +52,7 @@ pub fn sweep_line_triangulation<V: IndexType, Vec2: Vector2D>(
             .collect();
     }
 
-    let mut q = SweepContext::new(indices, vec2s);
+    let mut q = SweepContext::<MT>::new(indices, vec2s);
 
     for event in event_queue.iter() {
         #[cfg(feature = "sweep_debug_print")]
@@ -76,20 +76,23 @@ pub fn sweep_line_triangulation<V: IndexType, Vec2: Vector2D>(
 }
 
 /// Central event queue of the sweep line triangulation
-struct SweepContext<'a, 'b, Vec2: Vector2D, V: IndexType> {
+struct SweepContext<'a, 'b, MT: MonotoneTriangulator> {
     /// sweep line status lexicographically indexed by y and then x
-    sls: SweepLineStatus<V, Vec2>,
+    sls: SweepLineStatus<MT>,
 
     /// The list of indices where the new triangles are appended (in local coordinates)
-    tri: &'a mut Triangulation<'b, V>,
+    tri: &'a mut Triangulation<'b, MT::V>,
 
     /// The list of 2d-vertices with local indices
-    vec2s: &'a Vec<IndexedVertex2D<V, Vec2>>,
+    vec2s: &'a Vec<IndexedVertex2D<MT::V, MT::Vec2>>,
 }
 
-impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
+impl<'a, 'b, MT: MonotoneTriangulator> SweepContext<'a, 'b, MT> {
     /// Creates a new event queue from a list of indexed vertex points
-    fn new(tri: &'a mut Triangulation<'b, V>, vec2s: &'a Vec<IndexedVertex2D<V, Vec2>>) -> Self {
+    fn new(
+        tri: &'a mut Triangulation<'b, MT::V>,
+        vec2s: &'a Vec<IndexedVertex2D<MT::V, MT::Vec2>>,
+    ) -> Self {
         return Self {
             sls: SweepLineStatus::new(),
             tri,
@@ -98,14 +101,14 @@ impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
     }
 
     /// Start a new sweep line at the given event
-    fn start(&mut self, event: &EventPoint<Vec2>) {
+    fn start(&mut self, event: &EventPoint<MT::Vec2>) {
         // Both reflex
         self.sls.insert(
             SweepLineInterval {
                 helper: event.here,
                 left: IntervalBoundaryEdge::new(event.here, event.next),
                 right: IntervalBoundaryEdge::new(event.here, event.prev),
-                chain: ReflexChain::single(event.here),
+                chain: MonotoneTriangulator::new(event.here),
                 fixup: None,
             },
             self.vec2s,
@@ -113,7 +116,7 @@ impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
     }
 
     /// Split the sweep line at the given event
-    fn try_split(&mut self, event: &EventPoint<Vec2>) -> bool {
+    fn try_split(&mut self, event: &EventPoint<MT::Vec2>) -> bool {
         let Some(i) = self
             .sls
             .find_by_position(&self.vec2s[event.here].vec, &self.vec2s)
@@ -130,17 +133,17 @@ impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
             let t = fixup.first();
 
             fixup.right(event.here, self.tri, self.vec2s);
-            assert!(fixup.is_done());
+            fixup.finish(self.tri, self.vec2s);
 
-            let mut x = ReflexChain::single(t);
+            let mut x = MT::new(t);
             x.left(event.here, self.tri, self.vec2s);
             x
-        } else if line.chain.direction() == ReflexChainDirection::Right {
-            let mut x = ReflexChain::single(line.helper);
+        } else if line.chain.is_right() {
+            let mut x = MT::new(line.helper);
             x.left(event.here, self.tri, self.vec2s);
             x
         } else {
-            let mut x = ReflexChain::single(line.chain.first());
+            let mut x = MT::new(line.chain.first());
             x.left(event.here, self.tri, self.vec2s);
             x
         };
@@ -175,7 +178,11 @@ impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
     }
 
     /// Detects and handles either a start or split vertex in the situation where it's difficult to distinguish
-    fn start_or_split(&mut self, event: &EventPoint<Vec2>, _meta: &mut SweepMeta<V>) -> bool {
+    fn start_or_split(
+        &mut self,
+        event: &EventPoint<MT::Vec2>,
+        _meta: &mut SweepMeta<MT::V>,
+    ) -> bool {
         /*
         let Some(next) = queue.get(event_i + 1) else {
             panic!("Regular vertex not found in sweep line status");
@@ -214,7 +221,7 @@ impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
 
     /// End a sweep line at the given event
     #[inline]
-    fn end(&mut self, event: &EventPoint<Vec2>) {
+    fn end(&mut self, event: &EventPoint<MT::Vec2>) {
         let mut line = self.sls.remove_left(event.here, &self.vec2s).unwrap();
         assert!(line.is_end());
 
@@ -223,30 +230,30 @@ impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
             println!("fixup end: {}", fixup);
 
             fixup.right(event.here, self.tri, self.vec2s);
-            assert!(fixup.is_done());
+            fixup.finish(self.tri, self.vec2s);
         }
 
         line.chain.left(event.here, self.tri, self.vec2s);
-        assert!(line.chain.is_done());
+        line.chain.finish(self.tri, self.vec2s);
     }
 
     /// Merge two parts of the sweep line at the given event
-    fn merge(&mut self, event: &EventPoint<Vec2>) {
+    fn merge(&mut self, event: &EventPoint<MT::Vec2>) {
         // left and right are swapped because "remove_right" will get the left one _from_ the right (and vice versa)
         let left = self.sls.remove_right(event.here, &self.vec2s).unwrap();
-        let mut right: SweepLineInterval<V, Vec2> =
+        let mut right: SweepLineInterval<MT> =
             self.sls.remove_left(event.here, &self.vec2s).unwrap();
 
         assert!(!left.is_end(), "Mustn't merge with an end vertex");
         assert!(!right.is_end(), "Mustn't merge with an end vertex");
-        assert!(left != right, "Mustn't be the same to merge them");
+        //assert!(left != right, "Mustn't be the same to merge them");
 
         let mut new_stacks = if let Some(mut fixup) = left.fixup {
             #[cfg(feature = "sweep_debug_print")]
             println!("fixup merge l: {}", fixup);
 
             fixup.right(event.here, self.tri, self.vec2s);
-            assert!(fixup.is_done());
+            fixup.finish(self.tri, self.vec2s);
             left.chain
         } else {
             left.chain
@@ -257,7 +264,7 @@ impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
             println!("fixup merge r: {}", fixup);
 
             right.chain.left(event.here, self.tri, self.vec2s);
-            assert!(right.chain.is_done());
+            right.chain.finish(self.tri, self.vec2s);
             fixup
         } else {
             right.chain
@@ -282,7 +289,12 @@ impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
     }
 
     /// Handle a regular vertex
-    fn regular(&mut self, event: &EventPoint<Vec2>, meta: &mut SweepMeta<V>, undecisive: bool) {
+    fn regular(
+        &mut self,
+        event: &EventPoint<MT::Vec2>,
+        meta: &mut SweepMeta<MT::V>,
+        undecisive: bool,
+    ) {
         // PERF: find whether to expect the left or right side beforehand. The lookup is expensive.
 
         if let Some(mut interval) = self.sls.remove_left(event.here, &self.vec2s) {
@@ -313,7 +325,7 @@ impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
                 println!("fixup regular l: {}", fixup);
 
                 interval.chain.left(event.here, self.tri, self.vec2s);
-                assert!(interval.chain.is_done());
+                interval.chain.finish(self.tri, self.vec2s);
                 fixup
             } else {
                 interval.chain
@@ -359,7 +371,7 @@ impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
                 println!("fixup regular r: {}", fixup);
 
                 fixup.right(event.here, self.tri, self.vec2s);
-                assert!(fixup.is_done());
+                fixup.finish(self.tri, self.vec2s);
             }
             self.sls.insert(
                 SweepLineInterval {
@@ -381,14 +393,16 @@ impl<'a, 'b, Vec2: Vector2D, V: IndexType> SweepContext<'a, 'b, Vec2, V> {
 }
 
 // TODO
-/*
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::{
-        math::{impls::bevy::Bevy2DPolygon, Polygon, Scalar},
-        mesh::primitives::{generate_zigzag, random_star},
+        bevy::Bevy2DPolygon,
+        math::{Polygon, Scalar},
+        primitives::{generate_zigzag, random_star},
+        tesselate::sweep::monotone::LinearMonoTriangulator,
     };
+
+    use super::*;
     use bevy::math::Vec2;
 
     fn verify_triangulation(vec2s: &Vec<IndexedVertex2D<usize, Vec2>>) {
@@ -399,7 +413,9 @@ mod tests {
         let mut indices = Vec::new();
         let mut tri = Triangulation::new(&mut indices);
         let mut meta = SweepMeta::default();
-        sweep_line_triangulation(&mut tri, &vec2s, &mut meta);
+        sweep_line_triangulation::<LinearMonoTriangulator<usize, Vec2>>(
+            &mut tri, &vec2s, &mut meta,
+        );
         tri.verify_full::<Vec2, Bevy2DPolygon>(vec2s);
     }
 
@@ -587,4 +603,3 @@ mod tests {
         }
     }
 }
-*/

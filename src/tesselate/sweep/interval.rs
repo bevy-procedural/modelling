@@ -1,8 +1,7 @@
-use super::chain::ReflexChain;
+use super::monotone::MonotoneTriangulator;
 use crate::{
-    math::{HasZero, IndexType, Vector2D},
+    math::{HasZero, IndexType, Vector, Vector2D},
     mesh::IndexedVertex2D,
-    tesselate::sweep::chain::ReflexChainDirection,
 };
 
 /// This represents a single edge constraining a sweep line interval.
@@ -63,7 +62,7 @@ impl IntervalBoundaryEdge {
 /// Each interval stores edges that are still work in progress
 /// and information in how to connect them to the rest of the mesh.
 #[derive(Clone, PartialEq, Eq)]
-pub struct SweepLineInterval<V: IndexType, Vec2: Vector2D> {
+pub struct SweepLineInterval<MT: MonotoneTriangulator> {
     /// The lowest vertex index of the interval.
     /// Things can be connected to this vertex when needed.
     pub helper: usize,
@@ -78,21 +77,21 @@ pub struct SweepLineInterval<V: IndexType, Vec2: Vector2D> {
     /// and right edge and are not yet included in generated triangles.
     /// Those are stored in the reflex chain and are either leading to the
     /// left or to the right edge.
-    pub chain: ReflexChain<V, Vec2>,
+    pub chain: MT,
 
     /// Whether there was a merge that needs to be fixed up.
-    pub fixup: Option<ReflexChain<V, Vec2>>,
+    pub fixup: Option<MT>,
 }
 
-impl<V: IndexType, Vec2: Vector2D> SweepLineInterval<V, Vec2> {
+impl<MT: MonotoneTriangulator> SweepLineInterval<MT> {
     /// Check whether the interval contains a position
-    pub fn contains(&self, pos: &Vec2, vec2s: &Vec<IndexedVertex2D<V, Vec2>>) -> bool {
-        let p1 = self.left.x_at_y::<V, Vec2>(pos.y(), vec2s);
+    pub fn contains(&self, pos: &MT::Vec2, vec2s: &Vec<IndexedVertex2D<MT::V, MT::Vec2>>) -> bool {
+        let p1 = self.left.x_at_y::<MT::V, MT::Vec2>(pos.y(), vec2s);
         // return `false` early to speed things up
         if p1 > pos.x() {
             return false;
         }
-        let p2 = self.right.x_at_y::<V, Vec2>(pos.y(), vec2s);
+        let p2 = self.right.x_at_y::<MT::V, MT::Vec2>(pos.y(), vec2s);
         assert!(p1 <= p2);
         return pos.x() <= p2;
     }
@@ -110,41 +109,13 @@ impl<V: IndexType, Vec2: Vector2D> SweepLineInterval<V, Vec2> {
 
     pub fn sanity_check(&self) -> bool {
         assert!(!self.is_circular());
-        match self.chain.direction() {
-            ReflexChainDirection::None => {
-                assert!(self.chain.len() == 1);
-                assert_eq!(self.left.start, self.chain.first());
-                assert_eq!(self.right.start, self.chain.first());
-            }
-            ReflexChainDirection::Left => {
-                assert!(self.chain.len() >= 2);
-                if let Some(fixup) = &self.fixup {
-                    assert!(fixup.len() >= 2);
-                    assert_eq!(self.right.start, self.chain.first());
-                    assert_eq!(self.left.start, fixup.first());
-                } else {
-                    assert_eq!(self.right.start, self.chain.first());
-                    assert_eq!(self.left.start, self.chain.last());
-                }
-            }
-            ReflexChainDirection::Right => {
-                assert!(self.chain.len() >= 2);
-                if let Some(fixup) = &self.fixup {
-                    assert!(fixup.len() >= 2);
-                    assert_eq!(self.left.start, self.chain.first());
-                    assert_eq!(self.right.start, fixup.first());
-                } else {
-                    assert_eq!(self.left.start, self.chain.first());
-                    assert_eq!(self.right.start, self.chain.last());
-                }
-            }
-        };
+        self.chain
+            .sanity_check(self.left.start, self.right.start, &self.fixup);
         return true;
     }
 }
 
-// TODO: local indices
-impl<V: IndexType, Vec2: Vector2D> std::fmt::Debug for SweepLineInterval<V, Vec2> {
+impl<MT: MonotoneTriangulator> std::fmt::Debug for SweepLineInterval<MT> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "lowest: {} ", self.helper)?;
         write!(f, "left: {}->{} ", self.left.start, self.left.end)?;
