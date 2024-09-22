@@ -1,18 +1,8 @@
-use super::MonotoneTriangulator;
+use super::{ChainDirection, MonotoneTriangulator};
 use crate::{
     math::{HasZero, IndexType, Vector2D},
     mesh::{IndexedVertex2D, Triangulation},
 };
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum ReflexChainDirection {
-    /// The reflex chain is completely on the left
-    Left,
-    /// The reflex chain is completely on the right
-    Right,
-    /// The reflex chain consists of the first single item having no preference for a side or is empty
-    None,
-}
 
 /// This structure stores the reflex chain of the untriangulated region above.
 /// See https://www.cs.umd.edu/class/spring2020/cmsc754/Lects/lect05-triangulate.pdf
@@ -25,7 +15,7 @@ enum ReflexChainDirection {
 #[derive(Clone)]
 pub struct LinearMonoTriangulator<V: IndexType, Vec2: Vector2D> {
     stack: Vec<usize>,
-    d: ReflexChainDirection,
+    d: ChainDirection,
 
     /// Bind the types to the chain. There is no need to mix the types and it simplifies the type signatures.
     phantom: std::marker::PhantomData<(V, Vec2)>,
@@ -39,7 +29,7 @@ impl<V: IndexType, Vec2: Vector2D> std::fmt::Debug for LinearMonoTriangulator<V,
 
 impl<V: IndexType, Vec2: Vector2D> LinearMonoTriangulator<V, Vec2> {
     /// Get the direction of the chain
-    fn direction(&self) -> ReflexChainDirection {
+    fn direction(&self) -> ChainDirection {
         self.d
     }
 
@@ -54,7 +44,7 @@ impl<V: IndexType, Vec2: Vector2D> LinearMonoTriangulator<V, Vec2> {
         value: usize,
         indices: &mut Triangulation<V>,
         vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
-        d: ReflexChainDirection,
+        d: ChainDirection,
     ) {
         assert!(self.stack.len() >= 1);
         // TODO: assert for direction not none?
@@ -68,7 +58,7 @@ impl<V: IndexType, Vec2: Vector2D> LinearMonoTriangulator<V, Vec2> {
             let angle = vec2s[value]
                 .vec
                 .angle(vec2s[self.stack[l - 1]].vec, vec2s[self.stack[l - 2]].vec);
-            if d == ReflexChainDirection::Left {
+            if d == ChainDirection::Left {
                 if angle > Vec2::S::ZERO {
                     break;
                 }
@@ -101,7 +91,7 @@ impl<V: IndexType, Vec2: Vector2D> LinearMonoTriangulator<V, Vec2> {
         value: usize,
         indices: &mut Triangulation<V>,
         vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
-        d: ReflexChainDirection,
+        d: ChainDirection,
     ) {
         assert!(self.d != d);
         // TODO: assert for direction not none?
@@ -113,7 +103,7 @@ impl<V: IndexType, Vec2: Vector2D> LinearMonoTriangulator<V, Vec2> {
         } else {
             // there is enough on the stack to consume
             for i in 1..self.stack.len() {
-                if d == ReflexChainDirection::Left {
+                if d == ChainDirection::Left {
                     indices.insert_triangle_local(self.stack[i - 1], value, self.stack[i], vec2s);
                 } else {
                     indices.insert_triangle_local(self.stack[i - 1], self.stack[i], value, vec2s);
@@ -140,11 +130,11 @@ impl<V: IndexType, Vec2: Vector2D> LinearMonoTriangulator<V, Vec2> {
         value: usize,
         indices: &mut Triangulation<V>,
         vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
-        d: ReflexChainDirection,
+        d: ChainDirection,
     ) -> &Self {
         #[cfg(feature = "sweep_debug_print")]
         println!("chain add: {:?} {} {:?}", self.d, value, self.stack);
-        if self.d == ReflexChainDirection::None {
+        if self.d == ChainDirection::None {
             assert!(self.stack.len() <= 1);
             self.stack.push(value);
             self.d = d;
@@ -154,6 +144,7 @@ impl<V: IndexType, Vec2: Vector2D> LinearMonoTriangulator<V, Vec2> {
             self.add_opposite_direction(value, indices, vec2s, d);
         }
 
+        assert!(self.d == d);
         self
     }
 
@@ -176,7 +167,7 @@ impl<V: IndexType, Vec2: Vector2D> MonotoneTriangulator for LinearMonoTriangulat
     fn new(v: usize) -> Self {
         LinearMonoTriangulator {
             stack: vec![v],
-            d: ReflexChainDirection::None,
+            d: ChainDirection::None,
             phantom: std::marker::PhantomData,
         }
     }
@@ -188,18 +179,18 @@ impl<V: IndexType, Vec2: Vector2D> MonotoneTriangulator for LinearMonoTriangulat
 
     /// Whether the chain is oriented to the right
     fn is_right(&self) -> bool {
-        self.direction() == ReflexChainDirection::Right
+        self.direction() == ChainDirection::Right
     }
 
     /// Validate the reflex chain
     fn sanity_check(&self, left_start: usize, right_start: usize, fixup: &Option<Self>) {
         match self.direction() {
-            ReflexChainDirection::None => {
+            ChainDirection::None => {
                 assert!(self.len() == 1);
                 assert_eq!(left_start, self.first());
                 assert_eq!(right_start, self.first());
             }
-            ReflexChainDirection::Left => {
+            ChainDirection::Left => {
                 assert!(self.len() >= 2);
                 if let Some(fixup) = fixup {
                     assert!(fixup.len() >= 2);
@@ -210,7 +201,7 @@ impl<V: IndexType, Vec2: Vector2D> MonotoneTriangulator for LinearMonoTriangulat
                     assert_eq!(left_start, self.last());
                 }
             }
-            ReflexChainDirection::Right => {
+            ChainDirection::Right => {
                 assert!(self.len() >= 2);
                 if let Some(fixup) = fixup {
                     assert!(fixup.len() >= 2);
@@ -232,7 +223,7 @@ impl<V: IndexType, Vec2: Vector2D> MonotoneTriangulator for LinearMonoTriangulat
         indices: &mut Triangulation<V>,
         vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
     ) {
-        self.add(value, indices, vec2s, ReflexChainDirection::Right);
+        self.add(value, indices, vec2s, ChainDirection::Right);
     }
 
     /// Add a new value to the left reflex chain
@@ -243,7 +234,7 @@ impl<V: IndexType, Vec2: Vector2D> MonotoneTriangulator for LinearMonoTriangulat
         indices: &mut Triangulation<V>,
         vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
     ) {
-        self.add(value, indices, vec2s, ReflexChainDirection::Left);
+        self.add(value, indices, vec2s, ChainDirection::Left);
     }
 
     /// Finish triangulating the reflex chain

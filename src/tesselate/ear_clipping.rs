@@ -1,5 +1,5 @@
 use crate::{
-    math::{HasPosition, Scalar, Vector2D, Vector3D},
+    math::{HasPosition, IndexType, Scalar, Vector2D, Vector3D},
     mesh::{Face3d, FaceBasics, MeshType, Triangulation},
 };
 
@@ -18,12 +18,22 @@ pub fn ear_clipping<T: MeshType>(
     T::VP: HasPosition<T::Vec, S = T::S>,
     T::Face: Face3d<T>,
 {
-    let eps = <T::S as Scalar>::EPS * 2.0.into();
-    let mut success_since_fail = 0;
     debug_assert!(face.may_be_curved() || face.is_planar2(mesh));
     debug_assert!(face.is_simple(mesh));
 
     let vs: Vec<(T::Vec2, T::V)> = face.vertices_2d(mesh).collect();
+
+    ear_clipping_direct(&vs, indices, randomize);
+}
+
+/// Given a list of vertices, triangulate them using ear-clipping.
+pub fn ear_clipping_direct<Vec2: Vector2D, V: IndexType>(
+    vs: &[(Vec2, V)],
+    indices: &mut Triangulation<V>,
+    randomize: bool,
+) {
+    let eps = <Vec2::S as Scalar>::EPS * 2.0.into();
+    let mut success_since_fail = 0;
 
     let triangle_empty = |a: usize, b: usize, c: usize| {
         let av = vs[a].0;
@@ -93,12 +103,16 @@ pub fn ear_clipping<T: MeshType>(
     }
 }
 
-// TODO
-/*
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{math::{impls::bevy::Bevy2DPolygon, Polygon, Scalar}, tesselate::{IndexedVertex2D, Triangulation}};
+    use crate::{
+        bevy::{Bevy2DPolygon, BevyMesh3d, BevyMeshType3d32, BevyVertexPayload},
+        math::Polygon,
+        mesh::{IndexedVertex2D, MeshBasics},
+        primitives::Make2dShape,
+        tesselate::Triangulation,
+    };
     use bevy::math::{Vec2, Vec3};
 
     fn verify_triangulation(vec2s: &Vec<IndexedVertex2D<u32, Vec2>>) {
@@ -113,7 +127,7 @@ mod tests {
                 .iter()
                 .map(|v| BevyVertexPayload::from_pos(Vec3::new(v.vec.x, 0.0, v.vec.y))),
         );
-        m.face(0).ear_clipping(&m, &mut tri, false);
+        ear_clipping::<BevyMeshType3d32>(m.face(0), &m, &mut tri, false);
         tri.verify_full::<Vec2, Bevy2DPolygon>(vec2s);
     }
 
@@ -173,4 +187,3 @@ mod tests {
         }
     }*/
 }
-*/

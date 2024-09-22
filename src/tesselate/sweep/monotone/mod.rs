@@ -9,6 +9,16 @@ use crate::{
     mesh::{IndexedVertex2D, Triangulation},
 };
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ChainDirection {
+    /// The reflex chain is completely on the left
+    Left,
+    /// The reflex chain is completely on the right
+    Right,
+    /// The reflex chain consists of the first single item having no preference for a side or is empty
+    None,
+}
+
 /// While a monotone sub-polygon is being processed, the vertices are stored in this data structure.
 /// They will come as two chains, one for the left and one for the right side of the polygon.
 /// It doesn't have to store all vertices - it's fine to do all the proccessing in

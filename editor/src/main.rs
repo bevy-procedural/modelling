@@ -238,7 +238,6 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     //_make_hell_8()
     //BevyMesh3d::regular_polygon(1.0, 10)
     //_make_spiral()
-    //_make_2d_zigzag()
     //BevyMesh3d::octahedron(1.0)
     //BevyMesh3d::cone(1.0, 1.0, 16)
     //BevyMesh3d::regular_antiprism(1.0, 1.0, 8)
@@ -261,7 +260,8 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     //BevyMesh3d::geodesic_tetrahedron(3.0, 128)
     //BevyMesh3d::geodesic_octahedron(3.0, 128)
 
-    BevyMesh3d::regular_polygon(2.0, 100)
+    //BevyMesh3d::regular_polygon(2.0, 100)
+    _make_2d_zigzag()
 }
 
 pub fn main() {
@@ -342,7 +342,7 @@ fn update_meshes(
         mesh.generate_smooth_normals();
         mesh.bevy_set_ex(
             assets.get_mut(handle).unwrap(),
-            TriangulationAlgorithm::Delaunay,
+            TriangulationAlgorithm::SweepDynamic,
             false,
             &mut meta,
         );

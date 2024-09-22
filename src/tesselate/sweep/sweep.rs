@@ -5,10 +5,7 @@ use super::{
     status::SweepLineStatus,
     SweepMeta, VertexType,
 };
-use crate::{
-    math::{IndexType, Vector2D},
-    mesh::{IndexedVertex2D, Triangulation},
-};
+use crate::mesh::{IndexedVertex2D, Triangulation};
 
 /// Perform the sweep line triangulation
 /// The sweep line moves from the top (positive y) to the bottom (negative y).
@@ -399,13 +396,15 @@ mod tests {
         bevy::Bevy2DPolygon,
         math::{Polygon, Scalar},
         primitives::{generate_zigzag, random_star},
-        tesselate::sweep::monotone::LinearMonoTriangulator,
+        tesselate::sweep::{monotone::LinearMonoTriangulator, DynamicMonoTriangulator},
     };
 
     use super::*;
     use bevy::math::Vec2;
 
-    fn verify_triangulation(vec2s: &Vec<IndexedVertex2D<usize, Vec2>>) {
+    fn verify_triangulation_i<MT: MonotoneTriangulator<V = usize, Vec2 = Vec2>>(
+        vec2s: &Vec<IndexedVertex2D<usize, Vec2>>,
+    ) {
         assert!(
             Bevy2DPolygon::from_iter(vec2s.iter().map(|v| v.vec)).is_ccw(),
             "Polygon must be counterclockwise"
@@ -413,10 +412,13 @@ mod tests {
         let mut indices = Vec::new();
         let mut tri = Triangulation::new(&mut indices);
         let mut meta = SweepMeta::default();
-        sweep_line_triangulation::<LinearMonoTriangulator<usize, Vec2>>(
-            &mut tri, &vec2s, &mut meta,
-        );
+        sweep_line_triangulation::<MT>(&mut tri, &vec2s, &mut meta);
         tri.verify_full::<Vec2, Bevy2DPolygon>(vec2s);
+    }
+
+    fn verify_triangulation(vec2s: &Vec<IndexedVertex2D<usize, Vec2>>) {
+        verify_triangulation_i::<LinearMonoTriangulator<usize, Vec2>>(vec2s);
+        verify_triangulation_i::<DynamicMonoTriangulator<usize, Vec2>>(vec2s);
     }
 
     fn liv_from_array(arr: &[[f32; 2]]) -> Vec<IndexedVertex2D<usize, Vec2>> {

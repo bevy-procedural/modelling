@@ -6,7 +6,7 @@ mod status;
 mod sweep;
 mod vertex_type;
 
-use monotone::LinearMonoTriangulator;
+use monotone::*;
 pub use sweep::sweep_line_triangulation;
 pub use vertex_type::VertexType;
 
@@ -84,64 +84,25 @@ pub fn sweep_line<T: MeshType>(
 /// For the quality of the approximation it is generally beneficial to rotate the mesh
 /// such that the mesh can be decomposed in a large number of y-monotone components.
 pub fn sweep_dynamic<T: MeshType>(
-    _face: &T::Face,
-    _mesh: &T::Mesh,
-    _indices: &mut Triangulation<T::V>,
+    face: &T::Face,
+    mesh: &T::Mesh,
+    indices: &mut Triangulation<T::V>,
     _k: usize,
 ) where
     T::Vec: Vector3D<S = T::S>,
     T::VP: HasPosition<T::Vec, S = T::S>,
     T::Face: Face3d<T>,
 {
-    // TODO: Use the fact that we can find the min-weight triangulation of a x-monotone polygon in O(n^2) time using dynamic programming.
-    // Basically, just run the sweep algorithm but replace the `ReflexChain` insertion step with a dynamic programming step.
+    debug_assert!(face.may_be_curved() || face.is_planar2(mesh));
 
-    // Using k we limit the amount of edges to consider in the dynamic programming step, leading to k^2 during the chain insertion step instead of n^2.
-    // This is called strip-based triangulation. We should chose the boundaries of the strips using some clever heuristic,
-    // maybe based on density. We could also use orthogonal strips if the chains are very far away, i.e., cut the euclidean plane
-    // into squares with each around k vertices inside and run the algorithm within each square. Because we still need vertices from both sides,
-    // we could include a single vertex from the opposite chain effectively separating this into large triangles that are then triangulated each.
-    // This is probably an important optimization since dense but far-away chains are a common scenario if we triangulates faces that consist
-    // of simple but high-resolution geometry (e.g., a polygon-approximation of a circle). That would also be a point where we can easily insert
-    // additional vertices significantly reducing edge lengths of the result.
+    // TODO: Improve performance by directly using the nd-vertices instead of converting to 2d
+    let vec2s: Vec<_> = face
+        .vertices_2d(mesh)
+        .map(|(p, i)| IndexedVertex2D::<T::V, T::Vec2>::new(p, i))
+        .collect();
 
-    // The k-mechanism should also be available independent of the heuristic that is run in the end.
-
-    /*
-    ChatGPT says:
-
-    Enumerate Subpolygons:
-
-        Consider all possible subpolygons formed by vertices vi​ to vj​, where i<j.
-        Due to the x-monotonicity, these subpolygons are themselves x-monotone and simple.
-
-    Dynamic Programming Table:
-
-        Create a table M[i][j] that stores the minimum weight triangulation cost for the subpolygon from vi​ to vj.
-        Initialize the table for base cases where j−i ≤ 2 (triangles and edges).
-
-    Recurrence Relation:
-
-        For each subpolygon from vi​ to vj​, compute:
-        M[i][j] = min {⁡i<k<j} (M[i][k] + M[k][j] + weight(vi,vj,vk))
-        Here, weight(vi,vj,vk) is the sum of the edge lengths of triangle △vivjvk.
-
-        Note: also make sure that there are no boundary intersections. This should be
-        somewhat fast since we only have to check whether there is no larger y component before that.
-
-    Order of Computation:
-
-        Process the table in order of increasing subpolygon size to ensure that smaller subproblems are solved before larger ones.
-
-    Result Retrieval:
-
-        The minimum weight triangulation cost for the entire polygon is stored in M[1][n].
-        */
-
-    // To improve speed of the algorithm, we could use some pruning techniques and lazy evaluation.
-    // Also, we could heuristically assume that that triangles that span a large range are not worth exploring.
-
-    todo!("sweep dynamic");
+    let mut sweep = SweepMeta::default();
+    sweep_line_triangulation::<DynamicMonoTriangulator<T::V, T::Vec2>>(indices, &vec2s, &mut sweep);
 }
 
 /// A variant of the sweep-line algorithm that greedily approximates the min-weight triangulation for each
