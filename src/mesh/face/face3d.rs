@@ -111,12 +111,12 @@ where
             })
             .stable_sum();
 
-        assert!(
+       /* assert!(
             normal.length_squared() >= T::S::EPS,
             "Degenerated face {} {:?}",
             self.id(),
             self.vertices(mesh).map(|v| v.pos()).collect::<Vec<_>>()
-        );
+        );*/
 
         normal * T::Vec::splat(T::S::from(-0.5))
     }

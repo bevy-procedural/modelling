@@ -17,6 +17,7 @@ impl Scalar for f64 {
     const TEN: Self = 10.0;
     const HALF: Self = 0.5;
     const PHI: Self = 1.61803398874989484820;
+    const INFINITY: Self = std::f64::INFINITY;
 
     #[inline(always)]
     fn is_positive(self) -> bool {

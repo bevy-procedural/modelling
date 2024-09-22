@@ -52,6 +52,9 @@ pub trait Scalar:
 
     /// The golden ratio.
     const PHI: Self;
+    
+    /// The golden ratio.
+    const INFINITY: Self;
 
     /// Returns whether the scalar is strictly positive.
     fn is_positive(self) -> bool;

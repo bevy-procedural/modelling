@@ -139,6 +139,24 @@ fn _make_hell_8() -> BevyMesh3d {
     mesh
 }
 
+fn _make_hell_9() -> BevyMesh3d {
+    let mut mesh = BevyMesh3d::polygon(
+        [
+            [1.877369, 0.0],
+            [0.72744876, 0.912192],
+            [-0.037827354, 0.16573237],
+            [-1.0770108, 0.51866084],
+            [-0.040608216, -0.0195559],
+            [-0.3308545, -1.449571],
+            [1.1276244, -1.4139954],
+        ]
+        .iter()
+        .map(|[x, z]| BevyVertexPayload::from_pos(Vec3::new(*x, 0.0, *z))),
+    );
+    mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
+    mesh
+}
+
 fn _make_2d_star(_settings: &MeshSettings) -> BevyMesh3d {
     let mut mesh = BevyMesh3d::regular_star(2.0, 2.0f32.sqrt(), 10000);
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
@@ -260,8 +278,10 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     //BevyMesh3d::geodesic_tetrahedron(3.0, 128)
     //BevyMesh3d::geodesic_octahedron(3.0, 128)
 
-    //BevyMesh3d::regular_polygon(2.0, 100)
-    _make_2d_zigzag()
+    //BevyMesh3d::regular_polygon(2.0, 1000)
+    //_make_2d_zigzag()
+
+    _make_hell_9()
 }
 
 pub fn main() {

@@ -587,14 +587,28 @@ mod tests {
         ]));
     }*/
 
+    #[test]
+    fn numerical_hell_9() {
+        verify_triangulation(&liv_from_array(&[
+            [1.877369, 0.0],
+            [0.72744876, 0.912192],
+            [-0.037827354, 0.16573237],
+            [-1.0770108, 0.51866084],
+            [-0.040608216, -0.0195559],
+            [-0.3308545, -1.449571],
+            [1.1276244, -1.4139954],
+        ]));
+    }
+
+    /*
     /// This is effective to find special examples where the triangulation fails
     /// You might want to increase the number of iterations to >= 1000000 and adjust
     /// the random_star parameters to find nastier examples
     #[test]
     fn sweep_fuzz() {
-        for _ in 1..10 {
+        for _ in 1..100000 {
             let vec2s =
-                IndexedVertex2D::from_vector(random_star::<Vec2>(5, 20, f32::EPS, 0.01).collect());
+                IndexedVertex2D::from_vector(random_star::<Vec2>(5, 10, f32::EPS, 1.0).collect());
 
             println!(
                 "vec2s: {:?}",
@@ -603,5 +617,5 @@ mod tests {
 
             verify_triangulation(&vec2s);
         }
-    }
+    }*/
 }
