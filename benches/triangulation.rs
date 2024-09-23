@@ -52,12 +52,12 @@ fn bench_triangulation(c: &mut Criterion) {
             true,
             Box::new(|n| BevyMesh3d::regular_star(1.0, 1.0, n)) as Box<dyn Fn(usize) -> BevyMesh3d>,
         ),
-        (
+        /*(
             "Zigzag",
-            10,
+            1,
             false,
             Box::new(|n| zigzag(n)) as Box<dyn Fn(usize) -> BevyMesh3d>,
-        ),
+        ),*/
         //("Star", BevyMesh3d::regular_star(2.0, 0.9, 1000)),
         //("Spiral", _make_spiral()),
     ] {
@@ -71,7 +71,7 @@ fn bench_triangulation(c: &mut Criterion) {
             let plot_config = PlotConfiguration::default().summary_scale(AxisScale::Logarithmic);
             group.plot_config(plot_config);
 
-            for size in [10, 50, 100, 500, 1000, 10_000, 100_000, 1_000_000] {
+            for size in [10, 50, 100, 500, 1000, 5000, 10_000, 100_000, 1_000_000] {
                 let mesh = maker(size);
 
                 let mut create_bench =
@@ -112,8 +112,8 @@ fn bench_triangulation(c: &mut Criterion) {
                         );
                     };
 
-                create_bench("Sweep", 1000_000, TriangulationAlgorithm::Sweep);
-                create_bench("SweepD", 1000, TriangulationAlgorithm::SweepDynamic);
+                //create_bench("Sweep", 1000_000, TriangulationAlgorithm::Sweep);
+                create_bench("SweepD", 2000, TriangulationAlgorithm::SweepDynamic);
                 /*create_bench("Delaunay", 1000_000, TriangulationAlgorithm::Delaunay);
                 create_bench("Ears", 10_000, TriangulationAlgorithm::EarClipping);
                 if is_convex {

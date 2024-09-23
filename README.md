@@ -39,8 +39,9 @@ mesh.to_bevy(RenderAssetUsages::default())
 ## Examples
 
 Try the live examples!
- * [box](https://bevy-procedural.org/examples/modelling/box) demonstrates different methods to build a cube from scratch. This is a good place to get started with this crate!
- * [fps_bench](https://bevy-procedural.org/examples/modelling/fps_bench) benchmarks the rendering performance of the different triangulation algorithms.
+
+-   [box](https://bevy-procedural.org/examples/modelling/box) demonstrates different methods to build a cube from scratch. This is a good place to get started with this crate!
+-   [fps_bench](https://bevy-procedural.org/examples/modelling/fps_bench) benchmarks the rendering performance of the different triangulation algorithms.
 
 Or run the [examples](https://github.com/bevy-procedural/modelling/tree/main/examples) on your computer like, e.g., `cargo run --features="bevy bevy/bevy_pbr bevy/bevy_winit bevy/tonemapping_luts" --profile fast-dev --example box`.
 
@@ -97,7 +98,7 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
 
 -   Operations
 
-    -   [x] Extrude 
+    -   [x] Extrude
     -   [x] Linear Loft (Triangle, Polygon)
     -   [x] Transform (Translate, Rotate, Scale, [ ] Shear)
     -   [x] Frequency Subdivision (partial)
@@ -176,20 +177,20 @@ The package supports different triangulation algorithms. The robustness and rend
 -   **Delaunay** Slow, but large flat surfaces might render faster. Currently uses [Spade](https://github.com/Stoeoef/spade). Runs in $\mathcal{O}(n \log n)$ time.
 -   **EdgeFlip** Same output as Delaunay, but without external dependencies and using a very slow edge-flipping algorithm. Runs in $\mathcal{O}(n^3)$ time.
     EdgeFlip,
--   **MinWeight** Minimizes the overall edge length of the triangulation. Very slow, but produces the theoretically fastest rendering triangulations for large flat surfaces. Runs in $\mathcal{O}(n^3)$ time using dynamic programming. (Since we don't have inner points this is not NP-hard)
+-   **SweepDynamic** Calculates the minimum weight triangulation, i.e., minimizes the overall edge length of the triangulation. Very slow, but produces the theoretically fastest rendering triangulations for large flat surfaces. Runs in $\mathcal{O}(n^3)$ time using dynamic programming. (Since we don't have inner points this is not NP-hard)
 -   **Heuristic** Heuristic algorithm that tries to find a compromise between the speed of `Sweep` and the quality of `EdgeMin`.
 -   **Auto** (default) Automatically choose the "best" algorithm based on the input, i.e., with the given ratio of numerical stability and performance.
 
-| Algorithm   | Requirements | Worst Case | Circle 10        | Circle 100         | Circle 1000       | Circle 10000      | ZigZag 1000       | ZigZag 10000      |
-| ----------- | ------------ | ---------- | ---------------- | ------------------ | ----------------- | ----------------- | ----------------- | ----------------- |
-| Fan         | Convex       | $n$          | 0.258µs (151fps) | 2.419µs¹ (118fps)² | 15.41µs (52.4fps) | 161.8µs (12.5fps) | -                 | -                 |
-| EarClipping | Simple       | $n^2$        | 0.746µs (150fps) | 21.75µs (118fps)   | 1.746ms (52.1fps) | 3.276s (11.4fps)  | 49.10ms (35.6fps) | 46.03s (9.51fps)  |
-| Sweep       | None         | $n \log n$    | 1.584µs (151fps) | 13.58µs (118fps)   | 142.4µs (44.2fps) | 1.556ms (9.87fps) | 402.3µs (42.8fps) | 4.334ms (9.87fps) |
-| Delaunay    | Simple       | $n \log n$    | 2.778µs (151fps) | 29.89µs (134fps)   | 308.5µs (132fps)  | 3.296ms (129fps)  | 3.002ms (42.1fps) | 158.7ms (9.33fps) |
-| EdgeFlip    | Simple       | $n^3$        |                  |                    |                   |                   |                   |
-| MinWeight   | Simple       | $n^3$        |                  |                    |                   |                   |                   |
-| Heuristic   | Simple       | $n \log n$    |                  |                    |                   |                   |                   |
-| Auto        | Simple       | $n \log n$    |                  |                    |                   |                   |                   |
+| Algorithm    | Requirements | Worst Case | Circle 10        | Circle 100         | Circle 1000       | Circle 10000      | ZigZag 1000        | ZigZag 10000      |
+| ------------ | ------------ | ---------- | ---------------- | ------------------ | ----------------- | ----------------- | ------------------ | ----------------- |
+| Fan          | Convex       | $n$        | 0.258µs (195fps) | 2.419µs¹ (154fps)² | 71.0µs (52.4fps)  | 161.8µs (15.7fps) | -                  | -                 |
+| EarClipping  | Simple       | $n^2$      | 0.746µs (196fps) | 21.75µs (155fps)   | 1.746ms (70.8fps) | 3.276s (15.9fps)  | 49.10ms (77.1fps)  | 46.03s (17.3fps)  |
+| Sweep        | None         | $n \log n$ | 1.584µs (196fps) | 13.58µs (161fps)   | 142.4µs (73.4fps) | 1.556ms (15.6fps) | 402.3µs (77.3fps)  | 4.334ms (17.2fps) |
+| Delaunay     | Simple       | $n \log n$ | 2.778µs (194fps) | 29.89µs (178fps)   | 308.5µs (178fps)  | 3.296ms (172fps)  | 3.002ms (77.0fps)  | 158.7ms (17.2fps) |
+| EdgeFlip     | Simple       | $n^3$      |                  |                    |                   |                   |                    |
+| SweepDynamic | Simple       | $n^3$      | 4.087µs (196fps) | 2.320ms (181fps)   | 1.817s (177fps)  |                   | 684.74µs (77.3fps) | 7.550ms (17.2fps) |
+| Heuristic    | Simple       | $n \log n$ |                  |                    |                   |                   |                    |
+| Auto         | Simple       | $n \log n$ |                  |                    |                   |                   |                    |
 
 -   ¹) Time for the triangulation on a Intel i7-12700K (single threaded). Run the benchmarks using `cargo bench --features benchmarks`.
 -   ²) FPS when rendering 100 large, transparent instances with the bevy 0.14.2 pbr shader on a Nvidia GeForce RTX 4060 Ti in Full HD. See `cargo run --example fps_bench --profile release --features="bevy bevy/bevy_pbr bevy/bevy_winit bevy/tonemapping_luts"`. For the non-Delaunay algorithms, the rendering time deteriorates for the larger circles since the edge length is not minimized causing significant overdraw.
