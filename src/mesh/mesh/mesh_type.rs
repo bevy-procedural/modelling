@@ -1,6 +1,8 @@
 use super::{payload::MeshPayload, MeshTrait};
 use crate::{
-    math::{IndexType, Rotator, Scalar, TransformTrait, Vector, Vector2D, Vector3D, Vector4D},
+    math::{
+        IndexType, Polygon, Rotator, Scalar, TransformTrait, Vector, Vector2D, Vector3D, Vector4D,
+    },
     mesh::{Edge, EdgePayload, Face, FacePayload, Vertex, VertexPayload},
 };
 
@@ -53,6 +55,9 @@ pub trait MeshType: Copy + Eq {
 
     /// The type of the rotation data used for vertices.
     type Rot: Rotator<Self::Vec>;
+
+    /// The implementation of 2d polygons.
+    type Poly: Polygon<Self::Vec2>;
 
     /// The type of the mesh.
     type Mesh: MeshTrait<T = Self>;

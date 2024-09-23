@@ -1,10 +1,12 @@
 //! This module implements bevy specific mesh handling
 
-use super::BevyVertexPayload;
+use super::{Bevy2DPolygon, BevyVertexPayload};
 use crate::{
     halfedge::{HalfEdge, HalfEdgeFace, HalfEdgeMesh, HalfEdgeMeshType, HalfEdgeVertex},
     math::{HasNormal, HasPosition, IndexType},
-    mesh::{EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, MeshTrait, MeshNormals, MeshType},
+    mesh::{
+        EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, MeshNormals, MeshTrait, MeshType,
+    },
     tesselate::{TesselationMeta, TriangulationAlgorithm},
 };
 use bevy::{
@@ -34,6 +36,7 @@ impl MeshType for BevyMeshType3d32 {
     type Vec4 = Vec4;
     type Trans = bevy::transform::components::Transform;
     type Rot = Quat;
+    type Poly = Bevy2DPolygon;
     type Mesh = BevyMesh3d;
     type Face = HalfEdgeFace<Self>;
     type Edge = HalfEdge<Self>;
@@ -97,14 +100,14 @@ impl<T: HalfEdgeMeshType<VP = BevyVertexPayload, Vec = Vec3, S = f32>> HalfEdgeM
         Self::bevy_remove_attributes(mesh);
 
         // use https://crates.io/crates/stats_alloc to measure memory usage
-        //let now = Instant::now();
+        //let now = std::time::Instant::now();
         let (is, vs) = if generate_flat_normals {
             self.triangulate_and_generate_flat_normals_post(algo, meta)
         } else {
             self.triangulate(algo, meta)
         };
         //let elapsed = now.elapsed();
-        // println!("///////////////////\nTriangulation took {:.2?}", elapsed);
+        //println!("///////////////////\nTriangulation took {:.2?}", elapsed);
 
         mesh.insert_indices(self.bevy_indices(&is));
         mesh.insert_attribute(

@@ -157,9 +157,20 @@ impl<'a, V: IndexType> Triangulation<'a, V> {
 
     /// Check that no two triangles have intersecting edges
     pub fn verify_no_intersections<Vec2: Vector2D>(&self, vec_hm: &HashMap<V, Vec2>) {
-        let num_vertices = vec_hm.len();
-        for i in (0..num_vertices).step_by(3) {
-            for j in (0..num_vertices).step_by(3) {
+        let num_vertices = self.indices.len() - self.start;
+        /*for i in (0..num_vertices).step_by(3) {
+            println!(
+                "tri: {:?}",
+                (
+                    self.get_index(i),
+                    self.get_index(i + 1),
+                    self.get_index(i + 2)
+                ),
+            );
+        }*/
+
+        for i in (self.start..num_vertices).step_by(3) {
+            for j in (self.start..num_vertices).step_by(3) {
                 if i == j {
                     continue;
                 }
@@ -190,7 +201,7 @@ impl<'a, V: IndexType> Triangulation<'a, V> {
                         );
                         assert!(
                             inter.is_none(),
-                            "Edges: \n{} {:?} -> {} {:?}\n{} {:?} -> {} {:?}\nintersect in {:?} (shortest distance: {} * sqrt(eps))",
+                            "Edges: \n{} {:?} -> {} {:?}\n{} {:?} -> {} {:?}\nintersect in {:?} (shortest distance: {} * sqrt(eps))\nTriangles {:?} and {:?}",
                             i0,
                             v0,
                             i1,
@@ -200,7 +211,9 @@ impl<'a, V: IndexType> Triangulation<'a, V> {
                             i3,
                             v3,
                             inter.unwrap(),
-                            [v0,v1,v2,v3].iter().map(|v| inter.unwrap().distance(&v)).min_by(|a, b| a.partial_cmp(b).unwrap()).unwrap() / Vec2::S::EPS.sqrt()
+                            [v0,v1,v2,v3].iter().map(|v| inter.unwrap().distance(&v)).min_by(|a, b| a.partial_cmp(b).unwrap()).unwrap() / Vec2::S::EPS.sqrt(),
+                            (self.get_index(i), self.get_index(i+1), self.get_index(i+2)),
+                            (self.get_index(j), self.get_index(j+1), self.get_index(j+2)),
                         );
                     }
                 }

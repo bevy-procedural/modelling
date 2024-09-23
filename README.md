@@ -176,7 +176,7 @@ The package supports different triangulation algorithms. The robustness and rend
 -   **Delaunay** Slow, but large flat surfaces might render faster. Currently uses [Spade](https://github.com/Stoeoef/spade). Runs in $\mathcal{O}(n \log n)$ time.
 -   **EdgeFlip** Same output as Delaunay, but without external dependencies and using a very slow edge-flipping algorithm. Runs in $\mathcal{O}(n^3)$ time.
     EdgeFlip,
--   **MinWeight** Minimizes the overall edge length of the triangulation. Very slow, but produces the theoretically fastest rendering triangulations for large flat surfaces. Runs in $\mathcal{O}(2^n)$ time.
+-   **MinWeight** Minimizes the overall edge length of the triangulation. Very slow, but produces the theoretically fastest rendering triangulations for large flat surfaces. Runs in $\mathcal{O}(n^3)$ time using dynamic programming. (Since we don't have inner points this is not NP-hard)
 -   **Heuristic** Heuristic algorithm that tries to find a compromise between the speed of `Sweep` and the quality of `EdgeMin`.
 -   **Auto** (default) Automatically choose the "best" algorithm based on the input, i.e., with the given ratio of numerical stability and performance.
 
@@ -187,7 +187,7 @@ The package supports different triangulation algorithms. The robustness and rend
 | Sweep       | None         | $n \log n$    | 1.584µs (151fps) | 13.58µs (118fps)   | 142.4µs (44.2fps) | 1.556ms (9.87fps) | 402.3µs (42.8fps) | 4.334ms (9.87fps) |
 | Delaunay    | Simple       | $n \log n$    | 2.778µs (151fps) | 29.89µs (134fps)   | 308.5µs (132fps)  | 3.296ms (129fps)  | 3.002ms (42.1fps) | 158.7ms (9.33fps) |
 | EdgeFlip    | Simple       | $n^3$        |                  |                    |                   |                   |                   |
-| MinWeight   | Simple       | $2^n$        |                  |                    |                   |                   |                   |
+| MinWeight   | Simple       | $n^3$        |                  |                    |                   |                   |                   |
 | Heuristic   | Simple       | $n \log n$    |                  |                    |                   |                   |                   |
 | Auto        | Simple       | $n \log n$    |                  |                    |                   |                   |                   |
 

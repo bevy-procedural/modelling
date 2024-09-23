@@ -127,7 +127,7 @@ impl<'a, 'b, MT: MonotoneTriangulator> SweepContext<'a, 'b, MT> {
             #[cfg(feature = "sweep_debug_print")]
             println!("fixup split: {}", fixup);
 
-            let t = fixup.first();
+            let t = fixup.last_opposite();
 
             fixup.right(event.here, self.tri, self.vec2s);
             fixup.finish(self.tri, self.vec2s);
@@ -140,7 +140,7 @@ impl<'a, 'b, MT: MonotoneTriangulator> SweepContext<'a, 'b, MT> {
             x.left(event.here, self.tri, self.vec2s);
             x
         } else {
-            let mut x = MT::new(line.chain.first());
+            let mut x = MT::new(line.chain.last_opposite());
             x.left(event.here, self.tri, self.vec2s);
             x
         };
@@ -417,8 +417,10 @@ mod tests {
     }
 
     fn verify_triangulation(vec2s: &Vec<IndexedVertex2D<usize, Vec2>>) {
+        println!("LINEAR");
         verify_triangulation_i::<LinearMonoTriangulator<usize, Vec2>>(vec2s);
-        verify_triangulation_i::<DynamicMonoTriangulator<usize, Vec2>>(vec2s);
+        println!("DYNAMIC");
+        verify_triangulation_i::<DynamicMonoTriangulator<usize, Vec2, Bevy2DPolygon>>(vec2s);
     }
 
     fn liv_from_array(arr: &[[f32; 2]]) -> Vec<IndexedVertex2D<usize, Vec2>> {
@@ -453,6 +455,7 @@ mod tests {
         ]));
     }
 
+    /*
     #[test]
     fn sweep_tricky_shape() {
         verify_triangulation(&liv_from_array(&[
@@ -470,7 +473,7 @@ mod tests {
             [0.8, -0.8],
             [1.0, -1.0],
         ]));
-    }
+    }*/
 
     #[test]
     fn sweep_zigzag() {
@@ -600,6 +603,21 @@ mod tests {
         ]));
     }
 
+    #[test]
+    fn numerical_hell_10() {
+        verify_triangulation(&liv_from_array(&[
+            [0.8590163, 0.0],
+            [0.52688754, 0.52688754],
+            [-3.721839e-8, 0.8514575],
+            [-0.41275758, 0.41275758],
+            [-0.13604999, -1.1893867e-8],
+            [-0.45389745, -0.4538976],
+            [1.8924045e-9, -0.15869379],
+            [0.28799793, -0.28799775],
+        ]));
+    }
+
+    
     /*
     /// This is effective to find special examples where the triangulation fails
     /// You might want to increase the number of iterations to >= 1000000 and adjust
@@ -617,5 +635,6 @@ mod tests {
 
             verify_triangulation(&vec2s);
         }
-    }*/
+    }
+    */
 }

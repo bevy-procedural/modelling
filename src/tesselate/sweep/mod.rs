@@ -102,7 +102,7 @@ pub fn sweep_dynamic<T: MeshType>(
         .collect();
 
     let mut sweep = SweepMeta::default();
-    sweep_line_triangulation::<DynamicMonoTriangulator<T::V, T::Vec2>>(indices, &vec2s, &mut sweep);
+    sweep_line_triangulation::<DynamicMonoTriangulator<T::V, T::Vec2, T::Poly>>(indices, &vec2s, &mut sweep);
 }
 
 /// A variant of the sweep-line algorithm that greedily approximates the min-weight triangulation for each

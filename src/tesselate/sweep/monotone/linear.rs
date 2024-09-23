@@ -12,10 +12,12 @@ use crate::{
 /// at least one edge. Only one of the two chains contains more than one edge. The chain with the single
 /// edge has its bottom endpoint below the sweep line. Hence, we place the start vertex before the other
 /// chain. The currently active chain is indicated by d.
-#[derive(Clone)]
 pub struct LinearMonoTriangulator<V: IndexType, Vec2: Vector2D> {
     stack: Vec<usize>,
     d: ChainDirection,
+
+    last_left: Option<usize>,
+    last_right: Option<usize>,
 
     /// Bind the types to the chain. There is no need to mix the types and it simplifies the type signatures.
     phantom: std::marker::PhantomData<(V, Vec2)>,
@@ -36,6 +38,11 @@ impl<V: IndexType, Vec2: Vector2D> LinearMonoTriangulator<V, Vec2> {
     /// Get the last element of the chain
     fn last(&self) -> usize {
         self.stack.last().unwrap().clone()
+    }
+
+    /// Get the first element of the chain (the last inserted vertex)
+    fn first(&self) -> usize {
+        self.stack.first().unwrap().clone()
     }
 
     #[inline]
@@ -169,12 +176,24 @@ impl<V: IndexType, Vec2: Vector2D> MonotoneTriangulator for LinearMonoTriangulat
             stack: vec![v],
             d: ChainDirection::None,
             phantom: std::marker::PhantomData,
+            last_left: Some(v),
+            last_right: None,
         }
     }
 
-    /// Get the first element of the chain (the last inserted vertex)
-    fn first(&self) -> usize {
-        self.stack.first().unwrap().clone()
+    fn last_opposite(&self) -> usize {
+        let res = if self.d == ChainDirection::None {
+            assert!(self.last_right.is_none());
+            self.last_left.unwrap()
+        } else if self.d == ChainDirection::Right {
+            self.last_left.unwrap()
+        } else {
+            self.last_right.unwrap()
+        };
+
+        assert!(res == self.first());
+
+        return res
     }
 
     /// Whether the chain is oriented to the right
@@ -223,6 +242,11 @@ impl<V: IndexType, Vec2: Vector2D> MonotoneTriangulator for LinearMonoTriangulat
         indices: &mut Triangulation<V>,
         vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
     ) {
+        self.last_right = Some(value);
+        if self.d == ChainDirection::None {
+            //self.last_left = None;
+        }
+
         self.add(value, indices, vec2s, ChainDirection::Right);
     }
 
@@ -234,6 +258,8 @@ impl<V: IndexType, Vec2: Vector2D> MonotoneTriangulator for LinearMonoTriangulat
         indices: &mut Triangulation<V>,
         vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
     ) {
+        self.last_left = Some(value);
+
         self.add(value, indices, vec2s, ChainDirection::Left);
     }
 
