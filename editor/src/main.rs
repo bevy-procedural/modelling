@@ -176,7 +176,7 @@ fn _make_2d_random_star() -> BevyMesh3d {
 fn _make_2d_zigzag() -> BevyMesh3d {
     let n = 50;
     let mut mesh = BevyMesh3d::polygon(
-        generate_zigzag::<Vec2>(n).map(|v| BevyVertexPayload::from_pos(Vec3::new(v.x, 0.0, -v.y))),
+        generate_zigzag::<Vec2>(n).map(|v| BevyVertexPayload::from_pos(Vec3::new(v.x, 0.0, v.y))),
     );
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh
@@ -282,7 +282,7 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     BevyMesh3d::regular_polygon(2.0, 600)
     //_make_2d_zigzag()
 
-   // _make_hell_10()
+    //_make_hell_10()
 }
 
 pub fn main() {
@@ -363,7 +363,7 @@ fn update_meshes(
         mesh.generate_smooth_normals();
         mesh.bevy_set_ex(
             assets.get_mut(handle).unwrap(),
-            TriangulationAlgorithm::SweepDynamic,
+            TriangulationAlgorithm::MinWeight,
             false,
             &mut meta,
         );

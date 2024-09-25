@@ -116,6 +116,7 @@ fn bench_triangulation(c: &mut Criterion) {
                 create_bench("SweepD", 2000, TriangulationAlgorithm::SweepDynamic);
                 /*create_bench("Delaunay", 1000_000, TriangulationAlgorithm::Delaunay);
                 create_bench("Ears", 10_000, TriangulationAlgorithm::EarClipping);
+                create_bench("Ears", 10_000, TriangulationAlgorithm::MinWeight);
                 if is_convex {
                     create_bench("Fan", 1000_000, TriangulationAlgorithm::Fan);
                 }*/

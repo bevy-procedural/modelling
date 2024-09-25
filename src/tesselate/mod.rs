@@ -108,8 +108,7 @@ pub fn triangulate_face<T: MeshType>(
             sweep_dynamic::<T>(face, mesh, tri, 1000);
         }
         TriangulationAlgorithm::MinWeight => {
-            //self.min_weight_triangulation_stoch(mesh, indices);
-            todo!("TriangulationAlgorithm::MinWeight is not implemented yet");
+            minweight_dynamic::<T>(face, mesh, tri);
         }
         TriangulationAlgorithm::Delaunay => {
             delaunay_triangulation::<T>(face, mesh, tri);

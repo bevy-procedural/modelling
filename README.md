@@ -177,7 +177,8 @@ The package supports different triangulation algorithms. The robustness and rend
 -   **Delaunay** Slow, but large flat surfaces might render faster. Currently uses [Spade](https://github.com/Stoeoef/spade). Runs in $\mathcal{O}(n \log n)$ time.
 -   **EdgeFlip** Same output as Delaunay, but without external dependencies and using a very slow edge-flipping algorithm. Runs in $\mathcal{O}(n^3)$ time.
     EdgeFlip,
--   **SweepDynamic** Calculates the minimum weight triangulation, i.e., minimizes the overall edge length of the triangulation. Very slow, but produces the theoretically fastest rendering triangulations for large flat surfaces. Runs in $\mathcal{O}(n^3)$ time using dynamic programming. (Since we don't have inner points this is not NP-hard)
+-   **SweepDynamic** Applies the MinWeight algorithm to each monotone sub-polygon.
+-   **MinWeight** Calculates the minimum weight triangulation, i.e., minimizes the overall edge length of the triangulation. Very slow, but produces the theoretically fastest rendering triangulations for large flat surfaces. Runs in $\mathcal{O}(n^3)$ time using dynamic programming. (Since we don't have inner points this is not NP-hard)
 -   **Heuristic** Heuristic algorithm that tries to find a compromise between the speed of `Sweep` and the quality of `EdgeMin`.
 -   **Auto** (default) Automatically choose the "best" algorithm based on the input, i.e., with the given ratio of numerical stability and performance.
 
@@ -188,7 +189,8 @@ The package supports different triangulation algorithms. The robustness and rend
 | Sweep        | None         | $n \log n$ | 1.584µs (196fps) | 13.58µs (161fps)   | 142.4µs (73.4fps) | 1.556ms (15.6fps) | 402.3µs (77.3fps)  | 4.334ms (17.2fps) |
 | Delaunay     | Simple       | $n \log n$ | 2.778µs (194fps) | 29.89µs (178fps)   | 308.5µs (178fps)  | 3.296ms (172fps)  | 3.002ms (77.0fps)  | 158.7ms (17.2fps) |
 | EdgeFlip     | Simple       | $n^3$      |                  |                    |                   |                   |                    |
-| SweepDynamic | Simple       | $n^3$      | 4.087µs (196fps) | 2.320ms (181fps)   | 1.817s (177fps)  |                   | 684.74µs (77.3fps) | 7.550ms (17.2fps) |
+| SweepDynamic | Simple       | $n^3$      | 4.087µs (196fps) | 2.320ms (181fps)   | 1.817s (177fps)   |                   | 684.74µs (77.3fps) | 7.550ms (17.2fps) |
+| MinWeight    | Simple       | $n^3$      | 4.087µs (196fps) | 2.320ms (181fps)   | 1.817s (177fps)   |                   |                    |                   |
 | Heuristic    | Simple       | $n \log n$ |                  |                    |                   |                   |                    |
 | Auto         | Simple       | $n \log n$ |                  |                    |                   |                   |                    |
 

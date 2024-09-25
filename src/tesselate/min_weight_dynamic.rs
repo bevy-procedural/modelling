@@ -113,7 +113,12 @@ fn calculate_lower_bound<S: Scalar>(
         .collect::<Vec<_>>();
     sizes_of_key.sort_unstable_by(|x, y| x.partial_cmp(y).unwrap());
     for i in 1..(n / (pre_rendered - 1)) {
-        k_smallest[i] = k_smallest[i - 1] + sizes_of_key[i];
+        k_smallest[i] = k_smallest[i - 1]
+            + if sizes_of_key[i] == S::INFINITY {
+                sizes_of_key[0]
+            } else {
+                sizes_of_key[i]
+            };
     }
 
     // Now, we fill the lower bounds for the larger polygons by combining the above
@@ -330,6 +335,7 @@ fn expand_mij_k_on_demand<V: IndexType, Vec2: Vector2D>(
 
     // if still not stopped, try to calculate one of the actual costs
     if mik == Vec2::S::NEG_INFINITY {
+        // TODO: use a stack or priority queue or something. This recursion can cause a stack overflow!
         mik = calculate_mij_on_demand(i, k, m, s, valid_diagonal, lower_bound, vs);
         if mij <= mik + mkj_lower + weight {
             if mkj == Vec2::S::NEG_INFINITY {
@@ -422,7 +428,7 @@ pub fn minweight_dynamic_direct<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2
     indices: &mut Triangulation<V>,
 ) {
     let n = vs.len();
-    assert!(n >= 5);
+    assert!(n >= 5, "n={} < 5", n);
     let mut m = initialize_m(n);
     let mut s = TriangularStore::<usize>::new(n, IndexType::max());
 
@@ -486,36 +492,40 @@ mod tests {
 
     use super::*;
     use crate::{
-        bevy::{Bevy2DPolygon, BevyMesh3d, BevyMeshType3d32},
+        bevy::{Bevy2DPolygon, BevyMesh3d, BevyMeshType3d32, BevyVertexPayload},
         mesh::MeshBasics,
-        primitives::Make2dShape,
+        primitives::{generate_zigzag, Make2dShape},
         tesselate::{
             delaunay_triangulation, triangulate_face, TesselationMeta, TriangulationAlgorithm,
         },
     };
-    use bevy::math::Vec2;
+    use bevy::math::{Vec2, Vec3};
 
     #[test]
     fn test_minweight_dynamic_performance() {
-        let poly = BevyMesh3d::regular_polygon(1.0, 10);
+        /*let mesh = BevyMesh3d::polygon(
+            generate_zigzag::<Vec2>(100)
+                .map(|v| BevyVertexPayload::from_pos(Vec3::new(v.x, 0.0, v.y))),
+        );*/
+        let mesh = BevyMesh3d::regular_polygon(1.0, 10);
         let mut meta = TesselationMeta::default();
         let mut indices = Vec::new();
         let mut tri = Triangulation::new(&mut indices);
         triangulate_face::<BevyMeshType3d32>(
-            poly.face(0),
-            &poly,
+            mesh.face(0),
+            &mesh,
             &mut tri,
-            TriangulationAlgorithm::SweepDynamic,
+            TriangulationAlgorithm::MinWeight,
             &mut meta,
         );
-        let vec2s = poly.face(0).vec2s(&poly);
+        let vec2s = mesh.face(0).vec2s(&mesh);
         let vec_hm: HashMap<u32, Vec2> = vec2s.iter().map(|v| (v.index, v.vec)).collect();
         tri.verify_full::<Vec2, Bevy2DPolygon>(&vec2s);
         let w = tri.total_edge_weight(&vec_hm);
 
         let mut indices3 = Vec::new();
         let mut tri3 = Triangulation::new(&mut indices3);
-        delaunay_triangulation::<BevyMeshType3d32>(poly.face(0), &poly, &mut tri3);
+        delaunay_triangulation::<BevyMeshType3d32>(mesh.face(0), &mesh, &mut tri3);
         let w3 = tri3.total_edge_weight(&vec_hm);
 
         let mut indices4 = Vec::new();
