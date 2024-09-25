@@ -393,8 +393,8 @@ impl<'a, 'b, MT: MonotoneTriangulator> SweepContext<'a, 'b, MT> {
 mod tests {
     use crate::{
         bevy::Bevy2DPolygon,
-        math::{Polygon, Scalar},
-        primitives::{generate_zigzag, random_star},
+        math::Polygon,
+        primitives::generate_zigzag,
         tesselate::sweep::{monotone::LinearMonoTriangulator, DynamicMonoTriangulator},
     };
 
@@ -616,7 +616,6 @@ mod tests {
         ]));
     }
 
-    
     /*
     /// This is effective to find special examples where the triangulation fails
     /// You might want to increase the number of iterations to >= 1000000 and adjust

@@ -230,6 +230,19 @@ impl<'a, V: IndexType> Triangulation<'a, V> {
                 .stable_sum()
     }
 
+    /// Calculate the total edge weight of the triangulation
+    pub fn total_edge_weight<Vec2: Vector2D>(&self, vec_hm: &HashMap<V, Vec2>) -> Vec2::S {
+        let mut total = Vec2::S::ZERO;
+        for i in self.start..self.len() {
+            let (i1, i2, i3) = self.get_triangle(i);
+            let v0 = vec_hm[&i1];
+            let v1 = vec_hm[&i2];
+            let v2 = vec_hm[&i3];
+            total += v1.distance(&v0) + v2.distance(&v1) + v0.distance(&v2);
+        }
+        total
+    }
+
     /// Calculate the area of the polygon and check if it is the same as the sum of the areas of the triangles
     pub fn verify_area<Vec2: Vector2D, Poly: Polygon<Vec2, S = Vec2::S>>(
         &self,
