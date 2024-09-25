@@ -389,7 +389,6 @@ impl<'a, 'b, MT: MonotoneTriangulator> SweepContext<'a, 'b, MT> {
     }
 }
 
-// TODO
 #[cfg(test)]
 mod tests {
     use crate::{

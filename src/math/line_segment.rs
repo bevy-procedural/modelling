@@ -64,12 +64,17 @@ impl<Vec2: Vector2D> LineSegment2D<Vec2> {
             return None;
         }
         let q_p = other.start() - self.start();
+
         let t = q_p.cross2d(&s) / rxs;
-        let u = q_p.cross2d(&r) / rxs;
-        if t >= -eps2 && t <= eps2 + 1.0.into() && u >= -eps2 && u <= eps2 + 1.0.into() {
-            Some(self.start() + r * t)
-        } else {
-            None
+        if t < -eps2 || t > eps2 + 1.0.into() {
+            return None;
         }
+
+        let u = q_p.cross2d(&r) / rxs;
+        if u < -eps2 || u > eps2 + 1.0.into() {
+            return None;
+        }
+
+        Some(self.start() + r * t)
     }
 }

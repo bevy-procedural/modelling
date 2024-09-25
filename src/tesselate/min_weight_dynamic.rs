@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use crate::{
     math::{HasPosition, HasZero, IndexType, Polygon, Scalar, Vector2D, Vector3D},
     mesh::{Face3d, FaceBasics, IndexedVertex2D, MeshType, Triangulation},
@@ -35,6 +37,8 @@ pub fn minweight_dynamic_direct<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2
     let mut m = vec![vec![Vec2::S::ZERO; n]; n];
     let mut s = vec![vec![0; n]; n];
 
+    let now = Instant::now();
+
     let mut valid_diagonal = vec![true; n * n];
     let poly = Poly::from_iter(vs.iter().map(|v| v.vec));
     for i in 0..n {
@@ -43,6 +47,9 @@ pub fn minweight_dynamic_direct<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2
             valid_diagonal[i * n + j] = res;
         }
     }
+
+    println!("Valid diagonals: {:?}", now.elapsed());
+    let now = Instant::now();
 
     for l in 2..n {
         for i in 0..(n - l) {
@@ -67,6 +74,8 @@ pub fn minweight_dynamic_direct<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2
             }
         }
     }
+
+    println!("Dynamic programming: {:?}", now.elapsed());
 
     traceback(0, n - 1, &s, indices, &vs);
 }
@@ -96,33 +105,21 @@ fn traceback<V: IndexType, Vec2: Vector2D>(
     traceback(k, j, s, indices, vs);
 }
 
-/*
-fn is_valid_triangle<V: IndexType, Vec2: Vector2D>(
-    i: usize,
-    j: usize,
-    k: usize,
-    vs: &Vec<IndexedVertex2D<V, Vec2>>,
-) -> bool {
-    // Check if triangle (v_i, v_j, v_k) is valid
-    // Ensure no other vertex lies inside the triangle
-    for m in (i + 1)..j {
-        if m == k {
-            continue;
-        }
-        if point_in_triangle(&vs[m].vec, &vs[i].vec, &vs[j].vec, &vs[k].vec) {
-            return false;
-        }
-    }
-    true
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        bevy::BevyMesh3d,
+        mesh::MeshTrait,
+        primitives::Make2dShape,
+        tesselate::{TesselationMeta, TriangulationAlgorithm},
+    };
 
-fn point_in_triangle<Vec2: Vector2D>(p: &Vec2, a: &Vec2, b: &Vec2, c: &Vec2) -> bool {
-    let area = Vec2::S::HALF
-        * (-b.y() * c.x() + a.y() * (-b.x() + c.x()) + a.x() * (b.y() - c.y()) + b.x() * c.y());
-    let s = Vec2::S::ONE / (Vec2::S::TWO * area)
-        * (a.y() * c.x() - a.x() * c.y() + (c.y() - a.y()) * p.x() + (a.x() - c.x()) * p.y());
-    let t = Vec2::S::ONE / (Vec2::S::TWO * area)
-        * (a.x() * b.y() - a.y() * b.x() + (a.y() - b.y()) * p.x() + (b.x() - a.x()) * p.y());
-    s > Vec2::S::ZERO && t > Vec2::S::ZERO && Vec2::S::ONE - s - t > Vec2::S::ZERO
+    #[test]
+    fn test_minweight_dynamic_performance() {
+        let poly = BevyMesh3d::regular_polygon(1.0, 1000);
+        let mut meta = TesselationMeta::default();
+        poly.triangulate(TriangulationAlgorithm::SweepDynamic, &mut meta);
+        assert!(false);
+    }
 }
-*/

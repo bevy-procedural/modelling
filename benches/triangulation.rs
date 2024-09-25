@@ -71,7 +71,7 @@ fn bench_triangulation(c: &mut Criterion) {
             let plot_config = PlotConfiguration::default().summary_scale(AxisScale::Logarithmic);
             group.plot_config(plot_config);
 
-            for size in [10, 50, 100, 500, 1000, 5000, 10_000, 100_000, 1_000_000] {
+            for size in [/*10, 50, 100, 500,*/ 1000, /*5000, 10_000, 100_000, 1_000_000*/] {
                 let mesh = maker(size);
 
                 let mut create_bench =
