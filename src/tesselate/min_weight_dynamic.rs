@@ -181,6 +181,64 @@ fn traceback<V: IndexType, Vec2: Vector2D>(
     traceback(n, k, j, s, indices, vs);
 }
 
+fn minweight_dynamic_direct_naive<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2>>(
+    vs: &Vec<IndexedVertex2D<V, Vec2>>,
+    indices: &mut Triangulation<V>,
+) {
+    let n = vs.len();
+    let mut m = vec![vec![Vec2::S::ZERO; n]; n];
+    let mut s = vec![vec![0; n]; n];
+
+    let mut valid_diagonal = vec![true; n * n];
+    let poly = Poly::from_iter(vs.iter().map(|v| v.vec));
+    for i in 0..n {
+        for j in (i + 2)..n {
+            let res = poly.valid_diagonal(i, j);
+            valid_diagonal[i * n + j] = res;
+        }
+    }
+
+    for l in 2..n {
+        for i in 0..(n - l) {
+            let j = i + l;
+            m[i][j] = Vec2::S::INFINITY;
+            for k in (i + 1)..j {
+                assert!(i < k && k < j);
+
+                if !valid_diagonal[i * n + k] || !valid_diagonal[k * n + j] {
+                    continue;
+                }
+
+                let weight = triangle_weight(&vs[i].vec, &vs[j].vec, &vs[k].vec);
+                let cost = m[i][k] + m[k][j] + weight;
+                if cost < m[i][j] {
+                    m[i][j] = cost;
+                    s[i][j] = k;
+                }
+            }
+        }
+    }
+    traceback_naive(0, n - 1, &s, indices, &vs);
+}
+
+fn traceback_naive<V: IndexType, Vec2: Vector2D>(
+    i: usize,
+    j: usize,
+    s: &Vec<Vec<usize>>,
+    indices: &mut Triangulation<V>,
+    vs: &Vec<IndexedVertex2D<V, Vec2>>,
+) {
+    if j - i < 2 {
+        return;
+    }
+    let k = s[i][j];
+    // Add triangle (vi, vk, vj)
+    indices.insert_triangle_local(i, k, j, vs);
+    // Recurse on subpolygons
+    traceback_naive(i, k, s, indices, vs);
+    traceback_naive(k, j, s, indices, vs);
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
@@ -190,13 +248,15 @@ mod tests {
         bevy::{Bevy2DPolygon, BevyMesh3d, BevyMeshType3d32},
         mesh::MeshBasics,
         primitives::Make2dShape,
-        tesselate::{triangulate_face, TesselationMeta, TriangulationAlgorithm},
+        tesselate::{
+            delaunay_triangulation, triangulate_face, TesselationMeta, TriangulationAlgorithm,
+        },
     };
     use bevy::math::Vec2;
 
     #[test]
     fn test_minweight_dynamic_performance() {
-        let poly = BevyMesh3d::regular_polygon(1.0, 1000);
+        let poly = BevyMesh3d::regular_polygon(1.0, 100);
         let mut meta = TesselationMeta::default();
         let mut indices = Vec::new();
         let mut tri = Triangulation::new(&mut indices);
@@ -207,10 +267,23 @@ mod tests {
             TriangulationAlgorithm::SweepDynamic,
             &mut meta,
         );
+
         let vec2s = poly.face(0).vec2s(&poly);
         let vec_hm: HashMap<u32, Vec2> = vec2s.iter().map(|v| (v.index, v.vec)).collect();
         tri.verify_full::<Vec2, Bevy2DPolygon>(&vec2s);
         let w = tri.total_edge_weight(&vec_hm);
-        assert!(false, "Edge w: {}", w);
+
+        let mut indices2 = Vec::new();
+        let mut tri2 = Triangulation::new(&mut indices2);
+        minweight_dynamic_direct_naive::<u32, Vec2, Bevy2DPolygon>(&vec2s, &mut tri2);
+        tri2.verify_full::<Vec2, Bevy2DPolygon>(&vec2s);
+        let w2 = tri2.total_edge_weight(&vec_hm);
+
+        let mut indices3 = Vec::new();
+        let mut tri3 = Triangulation::new(&mut indices3);
+        delaunay_triangulation::<BevyMeshType3d32>(poly.face(0), &poly, &mut tri3);
+        let w3 = tri3.total_edge_weight(&vec_hm);
+
+        assert!(false, "Edge w: {} w2: {} w3: {}", w, w2, w3);
     }
 }
