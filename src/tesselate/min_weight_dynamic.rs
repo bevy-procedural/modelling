@@ -94,7 +94,7 @@ pub fn minweight_dynamic_direct<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2
 ) {
     let n = vs.len();
     assert!(n >= 5);
-    let mut m = TriangularStore::<Vec2::S>::new(n, -Vec2::S::INFINITY);
+    let mut m = TriangularStore::<Vec2::S>::new(n, Vec2::S::INFINITY);
     let mut s = TriangularStore::<usize>::new(n, IndexType::max());
 
     let now = Instant::now();
@@ -122,13 +122,10 @@ pub fn minweight_dynamic_direct<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2
             let j = i + l;
 
             let ij = m.index(i, j);
-            m[ij] = Vec2::S::INFINITY;
             for k in (i + 1)..j {
                 debug_assert!(i < k && k < j);
                 let ik = m.index(i, k);
                 let kj = m.index(k, j);
-                debug_assert!(m[ik] != -Vec2::S::INFINITY);
-                debug_assert!(m[kj] != -Vec2::S::INFINITY);
 
                 if !valid_diagonal[ik] || !valid_diagonal[kj] {
                     continue;
@@ -138,8 +135,8 @@ pub fn minweight_dynamic_direct<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2
 
                 /*if m[ik] + weight >= m[ij] {
                     continue;
-                }*/
-                evaluated += 1;
+                }
+                evaluated += 1;*/
 
                 let cost = m[ik] + m[kj] + weight;
                 if cost < m[ij] {
@@ -152,7 +149,7 @@ pub fn minweight_dynamic_direct<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2
 
     let ela = now.elapsed();
     println!(
-        "Dynamic programming: {:?} eval: {}",
+        "Dynamic programming: {:?} eval: {}%",
         ela,
         evaluated as f32 / binomial(n as u32, 3) as f32 * 100.0
     );
