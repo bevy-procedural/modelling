@@ -42,10 +42,10 @@ pub trait Polygon<Vec2: Vector2D>: Clone + PartialEq + std::fmt::Debug + 'static
             let a = points[i];
             let b = points[(i + 1) % points.len()];
             if a.y() <= point.y() {
-                if b.y() > point.y() && (b - a).cross2d(&(*point - a)).is_positive() {
+                if b.y() > point.y() && (b - a).perp_dot(&(*point - a)).is_positive() {
                     count += 1;
                 }
-            } else if b.y() <= point.y() && (b - a).cross2d(&(*point - a)).is_negative() {
+            } else if b.y() <= point.y() && (b - a).perp_dot(&(*point - a)).is_negative() {
                 count -= 1;
             }
         }

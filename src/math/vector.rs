@@ -80,7 +80,7 @@ pub trait Vector<S: Scalar>:
     /// Create a vector from three coordinates. Drops the y- and z-coordinate if not present.
     fn from_xyz(x: S, y: S, z: S) -> Self;
 
-    /// Normalizes the vector.
+    /// Normalizes the vector. Panics if the vector is the zero vector.
     fn normalize(&self) -> Self;
 
     /// Creates a vector with all the same coordinates.

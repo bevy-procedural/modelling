@@ -57,9 +57,7 @@ pub trait Vector3D: Vector<Self::S> {
 
     /// Returns the non-normalized normal of the vector.
     fn normal(&self, prev: Self, next: Self) -> Self {
-        let a = *self - prev;
-        let b = next - prev;
-        a.cross(&b)
+        (*self - prev).cross(&(next - prev))
     }
 
     /// Returns the cross product of two vectors.

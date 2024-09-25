@@ -110,6 +110,10 @@ impl Vector2D for Vec2 {
     fn angle(&self, a: Self, b: Self) -> f32 {
         Vec2::angle_between(a - *self, b - *self)
     }
+
+    fn perp_dot(&self, other: &Self) -> Self::S {
+        Vec2::perp_dot(*self, *other)
+    }
 }
 
 impl TransformTrait for Affine2 {

@@ -56,7 +56,7 @@ impl VertexType {
         next: Vec2,
         tol: Vec2::S,
     ) -> Self {
-        let cross = (here - prev).cross2d(&(next - here));
+        let cross = (here - prev).perp_dot(&(next - here));
 
         let is_above_prev = here.y() - prev.y() > tol;
         let is_above_next = here.y() - next.y() > tol;
