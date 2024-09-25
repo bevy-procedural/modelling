@@ -40,7 +40,7 @@ pub enum TriangulationAlgorithm {
     /// The sweep-line algorithm, but with a O(n^2) dynamic programming min-weight algorithm running on each monotone sub-polygon.
     SweepDynamic,
 
-    /// Slow, but large flat surfaces might render faster. Currently uses [Spade](https://github.com/Stoeoef/spade). TODO: allow Delaunay refinements! Runs in O(n log n) time.
+    /// Slow, but large flat surfaces might render faster. Currently uses [Spade](https://github.com/Stoeoef/spade). TODO: allow Delaunay refinements! Runs in O(n log n) time. TODO: Isn't constrained delaunay O(n^2)?
     Delaunay,
 
     /// Same output as Delaunay, but without external dependencies and using a very slow edge-flipping algorithm. Runs in O(n^3) time.

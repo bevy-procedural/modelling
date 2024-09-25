@@ -18,6 +18,7 @@ impl Scalar for f32 {
     const HALF: Self = 0.5;
     const PHI: Self = 1.61803398874989484820;
     const INFINITY: Self = std::f32::INFINITY;
+    const NEG_INFINITY: Self = std::f32::NEG_INFINITY;
 
     #[inline(always)]
     fn is_positive(self) -> bool {
