@@ -93,7 +93,8 @@ pub fn minweight_dynamic_direct<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2
     indices: &mut Triangulation<V>,
 ) {
     let n = vs.len();
-    let mut m = TriangularStore::<Vec2::S>::new(n, Vec2::S::INFINITY);
+    assert!(n >= 5);
+    let mut m = TriangularStore::<Vec2::S>::new(n, -Vec2::S::INFINITY);
     let mut s = TriangularStore::<usize>::new(n, IndexType::max());
 
     let now = Instant::now();
@@ -114,7 +115,6 @@ pub fn minweight_dynamic_direct<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2
         // pairs of vertices have no edge length
         m[(i, i + 1)] = Vec2::S::ZERO;
     }
-    m[(0, n - 1)] = Vec2::S::ZERO;
 
     let mut evaluated = 0;
     for l in 2..n {
@@ -127,18 +127,20 @@ pub fn minweight_dynamic_direct<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2
                 debug_assert!(i < k && k < j);
                 let ik = m.index(i, k);
                 let kj = m.index(k, j);
+                debug_assert!(m[ik] != -Vec2::S::INFINITY);
+                debug_assert!(m[kj] != -Vec2::S::INFINITY);
 
                 if !valid_diagonal[ik] || !valid_diagonal[kj] {
                     continue;
                 }
 
-                evaluated += 1;
                 let weight = triangle_weight(&vs[i].vec, &vs[j].vec, &vs[k].vec);
 
-                if weight >= m[ij] {
-                    //println!("stop early");
+                /*if m[ik] + weight >= m[ij] {
                     continue;
-                }
+                }*/
+                evaluated += 1;
+
                 let cost = m[ik] + m[kj] + weight;
                 if cost < m[ij] {
                     m[ij] = cost;
@@ -149,9 +151,25 @@ pub fn minweight_dynamic_direct<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2
     }
 
     let ela = now.elapsed();
-    println!("Dynamic programming: {:?} eval: {}", ela, evaluated);
+    println!(
+        "Dynamic programming: {:?} eval: {}",
+        ela,
+        evaluated as f32 / binomial(n as u32, 3) as f32 * 100.0
+    );
 
     traceback(n, 0, n - 1, &s, indices, &vs);
+}
+
+fn binomial(n: u32, k: u32) -> u32 {
+    if k > n {
+        return 0;
+    }
+    let mut res = 1;
+    for i in 0..k {
+        res *= n - i;
+        res /= i + 1;
+    }
+    res
 }
 
 #[inline(always)]
@@ -186,6 +204,7 @@ fn minweight_dynamic_direct_naive<V: IndexType, Vec2: Vector2D, Poly: Polygon<Ve
     indices: &mut Triangulation<V>,
 ) {
     let n = vs.len();
+    assert!(n >= 5);
     let mut m = vec![vec![Vec2::S::ZERO; n]; n];
     let mut s = vec![vec![0; n]; n];
 
@@ -256,7 +275,7 @@ mod tests {
 
     #[test]
     fn test_minweight_dynamic_performance() {
-        let poly = BevyMesh3d::regular_polygon(1.0, 100);
+        let poly = BevyMesh3d::regular_polygon(1.0, 1000);
         let mut meta = TesselationMeta::default();
         let mut indices = Vec::new();
         let mut tri = Triangulation::new(&mut indices);
