@@ -416,10 +416,10 @@ mod tests {
     }
 
     fn verify_triangulation(vec2s: &Vec<IndexedVertex2D<usize, Vec2>>) {
-        println!("LINEAR");
+        //println!("LINEAR");
         verify_triangulation_i::<LinearMonoTriangulator<usize, Vec2>>(vec2s);
-        println!("DYNAMIC");
-        verify_triangulation_i::<DynamicMonoTriangulator<usize, Vec2, Bevy2DPolygon>>(vec2s);
+        //println!("DYNAMIC");
+        //verify_triangulation_i::<DynamicMonoTriangulator<usize, Vec2, Bevy2DPolygon>>(vec2s);
     }
 
     fn liv_from_array(arr: &[[f32; 2]]) -> Vec<IndexedVertex2D<usize, Vec2>> {

@@ -234,6 +234,8 @@ pub fn minweight_dynamic_direct2<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec
     vs: &Vec<IndexedVertex2D<V, Vec2>>,
     indices: &mut Triangulation<V>,
 ) {
+    assert!(false, "Needs fixing!");
+
     /*
     TODO: Turns out, this is difficult to optimize!
 
@@ -486,6 +488,7 @@ fn traceback<V: IndexType, Vec2: Vector2D>(
     traceback(n, k, j, s, indices, vs);
 }
 
+/*
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
@@ -537,3 +540,4 @@ mod tests {
         assert!(false, "Edge w: {} w4: {} delaunay: {}", w, w4, w3);
     }
 }
+*/

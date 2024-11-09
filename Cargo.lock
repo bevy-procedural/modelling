@@ -3296,7 +3296,7 @@ dependencies = [
 
 [[package]]
 name = "procedural_modelling"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "bevy",
  "bevy-inspector-egui 0.27.0",

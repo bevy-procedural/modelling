@@ -70,7 +70,7 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
     -   [ ] Non-Manifold (with branching surfaces)
     -   [ ] Non-Euclidean
     -   [ ] Combinatorial (purely topological)
-    -   [ ] NURBS <!-- (Bezier Surfaces / Parametric Surfaces / Spline Networks...?) -->
+    -   [ ] NURBS <!-- Bezier Surfaces / Parametric Surfaces / Spline Networks...? -->
 
 -   Triangulation
 
@@ -203,8 +203,8 @@ The following table shows the compatibility of `procedural_modelling` (when usin
 
 | bevy | bevy_procedural_meshes |
 | ---- | ---------------------- |
-| 0.15 | 0.2.1+, main           |
-| 0.14 | 0.2.0                  |
+| 0.15 | 0.3.\*, main           |
+| 0.14 | 0.2.\*                 |
 | 0.13 | 0.1.\*                 |
 
 ## License
