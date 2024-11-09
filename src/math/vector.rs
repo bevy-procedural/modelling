@@ -1,4 +1,4 @@
-use super::{kahan_summation, HasZero, Scalar, Transform, Vector2D, Vector3D};
+use super::{kahan_summation, HasZero, Scalar, TransformTrait, Vector2D, Vector3D, Vector4D};
 
 /// Trait for coordinates in n-dimensional space.
 pub trait Vector<S: Scalar>:
@@ -10,23 +10,26 @@ pub trait Vector<S: Scalar>:
     + std::ops::AddAssign
     + std::ops::Sub<Output = Self>
     + std::ops::SubAssign
-    + std::ops::Mul<Output = Self>
-    + std::ops::MulAssign
+    + std::ops::Mul<Self, Output = Self>
     + std::ops::Mul<S, Output = Self>
-    + std::ops::Div<Output = Self>
-    + std::ops::Sub<Output = Self>
+    + std::ops::MulAssign
+    + std::ops::Div<Self, Output = Self>
+    + std::ops::Div<S, Output = Self>
     + std::ops::Neg<Output = Self>
     + HasZero
     + 'static
 {
-    /// The 2d vector type used in the coordinates.
+    /// The associated 2d vector type
     type Vec2: Vector2D<S = S>;
 
-    /// The 3d vector type used in the coordinates.
+    /// The associated 3d vector type
     type Vec3: Vector3D<S = S>;
 
-    /// The rotation type used in the vector.
-    type Trans: Transform<S = S, Vec = Self>;
+    /// The associated 4d vector type
+    type Vec4: Vector4D<S = S>;
+
+    /// The data structure used for linear transformations of this vector.
+    type Trans: TransformTrait<S = S, Vec = Self>;
 
     /// Returns the number of dimensions.
     fn dimensions() -> usize;
@@ -37,11 +40,14 @@ pub trait Vector<S: Scalar>:
     /// Returns the squared distance between two points.
     fn distance_squared(&self, other: &Self) -> S;
 
+    /// Length of the vector
+    fn length(&self) -> S;
+
+    /// Squared length of the vector
+    fn length_squared(&self) -> S;
+
     /// Returns the dot product of two vectors.
     fn dot(&self, other: &Self) -> S;
-
-    /// Returns the cross product of two vectors.
-    fn cross(&self, other: &Self) -> Self;
 
     /// Returns the x-coordinate.
     fn x(&self) -> S;
@@ -56,29 +62,62 @@ pub trait Vector<S: Scalar>:
     fn w(&self) -> S;
 
     /// Returns the coordinates as a tuple.
-    fn xy(&self) -> Self::Vec2 {
-        Self::Vec2::from_xy(self.x(), self.y())
+    fn vec2(&self) -> Self::Vec2 {
+        <Self::Vec2 as Vector2D>::new(self.x(), self.y())
     }
 
     /// Returns the coordinates as a tuple.
-    fn xyz(&self) -> Self::Vec3 {
-        Self::Vec3::from_xyz(self.x(), self.y(), self.z())
+    fn vec3(&self) -> Self::Vec3 {
+        <Self::Vec3 as Vector3D>::new(self.x(), self.y(), self.z())
     }
 
-    /// Normalizes the vector.
+    /// Create a vector from one coordinate
+    fn from_x(x: S) -> Self;
+
+    /// Create a vector from two coordinates. Drops the y-coordinate if not present.
+    fn from_xy(x: S, y: S) -> Self;
+
+    /// Create a vector from three coordinates. Drops the y- and z-coordinate if not present.
+    fn from_xyz(x: S, y: S, z: S) -> Self;
+
+    /// Normalizes the vector. Panics if the vector is the zero vector.
     fn normalize(&self) -> Self;
 
     /// Creates a vector with all the same coordinates.
     fn splat(value: S) -> Self;
 
-    /// Sum of vectors, ideally numerically stable.
-    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+    /// Calculate the sum of an iterator of vectors using some numerically stable algorithm.
+    fn stable_sum<I: Iterator<Item = Self>>(iter: I) -> Self {
         kahan_summation(iter).0
     }
 
-    /// Mean of vectors, ideally numerically stable.
-    fn mean<I: Iterator<Item = Self>>(iter: I) -> Self {
+    /// Calculate the mean of an iterator of vectors using some numerically stable algorithm.
+    fn stable_mean<I: Iterator<Item = Self>>(iter: I) -> Self {
         let (sum, count) = kahan_summation(iter);
         sum / Self::splat(S::from_usize(count))
     }
+
+    /// Check if two vectors are approximately equal.
+    fn is_about(&self, other: &Self, epsilon: S) -> bool;
 }
+
+/// Additional methods for vector iterators.
+pub trait VectorIteratorExt<S: Scalar, V: Vector<S>>: Iterator<Item = V> {
+    /// Calculate the sum of an iterator of vectors using some numerically stable algorithm.
+    fn stable_sum(self) -> Self::Item
+    where
+        Self: Sized,
+    {
+        V::stable_sum(self)
+    }
+
+    /// Calculate the mean of an iterator of vectors using some numerically stable algorithm.
+    fn stable_mean(self) -> Self::Item
+    where
+        Self: Sized,
+    {
+        V::stable_mean(self)
+    }
+}
+
+impl<I: Iterator<Item = V>, S: Scalar, V: Vector<S>> VectorIteratorExt<S, V> for I {}

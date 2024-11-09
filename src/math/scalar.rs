@@ -32,6 +32,33 @@ pub trait Scalar:
     /// A value of one.
     const ONE: Self;
 
+    /// A value of two.
+    const TWO: Self;
+
+    /// A value of three.
+    const THREE: Self;
+
+    /// A value of four.
+    const FOUR: Self;
+
+    /// A value of five.
+    const FIVE: Self;
+
+    /// A value of ten.
+    const TEN: Self;
+
+    /// A value of one half.
+    const HALF: Self;
+
+    /// The golden ratio.
+    const PHI: Self;
+    
+    /// Positive infinity.
+    const INFINITY: Self;
+
+    /// Negative infinity.
+    const NEG_INFINITY: Self;
+
     /// Returns whether the scalar is strictly positive.
     fn is_positive(self) -> bool;
 
@@ -56,11 +83,23 @@ pub trait Scalar:
     /// Returns the arcus cosine of the scalar.
     fn acos(self) -> Self;
 
+    /// Returns the sine of the scalar.
+    fn sin(&self) -> Self;
+
+    /// Returns the cosine of the scalar.
+    fn cos(&self) -> Self;
+
+    /// Returns the tangent of the scalar.
+    fn tan(&self) -> Self;
+
+    /// Returns the atan2 of the scalar.
+    fn atan2(&self, x: Self) -> Self;
+
     /// Returns the maximum of two scalars.
-    fn max(self: &Self, b: Self) -> Self;
+    fn max(&self, b: Self) -> Self;
 
     /// Returns the minimum of two scalars.
-    fn min(self: &Self, b: Self) -> Self;
+    fn min(&self, b: Self) -> Self;
 
     /// Returns the square root of the scalar.
     fn sqrt(self) -> Self;
@@ -86,17 +125,56 @@ pub trait Scalar:
         a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g)
     }
 
-    /// Calculate the sum of a list of scalars. Should try to achieve good numerical stability.
-    fn sum<I: Iterator<Item = Self>>(values: I) -> Self {
+    /// Calculate the sum of an iterator of scalars using some numerically stable algorithm.
+    fn stable_sum<I: Iterator<Item = Self>>(values: I) -> Self {
         neumaier_summation(values).0
     }
 
-    /// Calculate the mean of a list of scalars. Should try to achieve good numerical stability.
-    fn mean<I: Iterator<Item = Self>>(values: I) -> Self {
+    /// Calculate the mean of an iterator of scalars using some numerically stable algorithm.
+    fn stable_mean<I: Iterator<Item = Self>>(values: I) -> Self {
         let (sum, n) = neumaier_summation(values);
         sum / Self::from_usize(n)
     }
+
+    /// Clamp the scalar to a given range.
+    fn clamp(self, min: Self, max: Self) -> Self {
+        if self < min {
+            min
+        } else if self > max {
+            max
+        } else {
+            self
+        }
+    }
+
+    /// Returns whether the scalar is about another scalar within a given epsilon.
+    fn is_about(&self, other: Self, epsilon: Self) -> bool {
+        (*self - other).abs() < epsilon
+    }
 }
+
+/// Additional methods for scalar iterators.
+pub trait ScalarIteratorExt<S: Scalar>: Iterator<Item = S> {
+    /// Calculate the sum of an iterator of scalars using some numerically stable algorithm.
+    fn stable_sum(self) -> Self::Item
+    where
+        Self: Sized,
+        Self::Item: std::ops::Add<Output = Self::Item> + HasZero,
+    {
+        Scalar::stable_sum(self)
+    }
+
+    /// Calculate the mean of an iterator of scalars using some numerically stable algorithm.
+    fn stable_mean(self) -> Self::Item
+    where
+        Self: Sized,
+        Self::Item: std::ops::Add<Output = Self::Item> + HasZero,
+    {
+        Scalar::stable_mean(self)
+    }
+}
+
+impl<I: Iterator<Item = S>, S: Scalar> ScalarIteratorExt<S> for I {}
 
 /// A scalar that is ordered.
 #[derive(Debug, Clone, PartialEq, PartialOrd)]

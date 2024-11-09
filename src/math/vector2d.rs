@@ -6,21 +6,21 @@ pub trait Vector2D: Vector<Self::S> {
     type S: Scalar;
 
     /// Construct from scalar values.
-    fn from_xy(x: Self::S, y: Self::S) -> Self;
+    fn new(x: Self::S, y: Self::S) -> Self;
 
     /// True iff the vertex curr is a convex corner.
     /// Assume counter-clockwise vertex order.
     #[inline(always)]
     fn convex(&self, prev: Self, next: Self) -> bool {
         // TODO: Numerical robustness
-        (*self - prev).cross2d(&(next - *self)).is_positive()
+        (*self - prev).perp_dot(&(next - *self)).is_positive()
     }
 
     /// True if the vertex is collinear.
     fn collinear(&self, a: Self, b: Self, eps: Self::S) -> bool {
         let ab = b - a;
         let ac = *self - a;
-        ab.cross2d(&ac).abs() <= eps
+        ab.perp_dot(&ac).abs() <= eps
     }
 
     /// Magnitude of the vector.
@@ -32,12 +32,12 @@ pub trait Vector2D: Vector<Self::S> {
     /// Returns the barycentric sign of a point in a triangle.
     #[inline(always)]
     fn barycentric_sign(a: Self, b: Self, c: Self) -> Self::S {
-        (a - c).cross2d(&(b - c))
+        (a - c).perp_dot(&(b - c))
     }
 
-    /// Returns the cross product of two 2d vectors.
+    /// Returns the cross product (perpendicular dot product) of two 2d vectors.
     #[inline(always)]
-    fn cross2d(&self, other: &Self) -> Self::S {
+    fn perp_dot(&self, other: &Self) -> Self::S {
         self.x() * other.y() - self.y() * other.x()
     }
 
@@ -76,5 +76,20 @@ pub trait Vector2D: Vector<Self::S> {
             cdx * cdx + cdy * cdy,
         );
         d >= eps
+    }
+
+    /// Returns the coordinate values as a tuple.
+    fn tuple(&self) -> (Self::S, Self::S) {
+        (self.x(), self.y())
+    }
+
+    /// Swizzle
+    fn xy(&self) -> Self {
+        Self::new(self.x(), self.y())
+    }
+
+    /// Swizzle
+    fn yx(&self) -> Self {
+        Self::new(self.y(), self.x())
     }
 }

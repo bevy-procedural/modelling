@@ -1,4 +1,5 @@
 //! utility functions
 
-pub mod iter;
-pub mod deletable;
+mod deletable;
+
+pub use deletable::*;

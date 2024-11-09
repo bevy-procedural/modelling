@@ -2,7 +2,6 @@ use bevy::{
     diagnostic::FrameTimeDiagnosticsPlugin,
     pbr::wireframe::{WireframeConfig, WireframePlugin},
     prelude::*,
-    render::render_asset::RenderAssetUsages,
     window::WindowResolution,
 };
 use bevy_inspector_egui::{
@@ -12,15 +11,15 @@ use bevy_inspector_egui::{
 };
 use bevy_panorbit_camera::*;
 use procedural_modelling::{
-    gizmo::{
-        self,
-        bevy::{text::Text3dGizmos, *},
+    bevy::{
+        show_edges, show_faces, show_tesselation_meta, show_vertex_indices,
+        text::{Text3dGizmos, Text3dGizmosPlugin},
+        BevyMesh3d, BevyVertexPayload,
     },
-    representation::{
-        bevy::MeshVec3,
-        primitives::{generate_zigzag, random_star},
-        tesselate::{GenerateNormals, TesselationMeta, TriangulationAlgorithm},
-    },
+    math::HasPosition,
+    mesh::{TransformableMesh, WithNormals},
+    primitives::{generate_zigzag, random_star, Make2dShape, MakeSphere},
+    tesselate::{TesselationMeta, TriangulationAlgorithm},
 };
 use std::{env, f32::consts::PI};
 
@@ -77,107 +76,218 @@ impl Default for MeshSettings {
     }
 }
 
-fn _make_hex_bridge(settings: &MeshSettings) -> MeshVec3 {
-    let mut mesh = MeshVec3::regular_polygon(settings.r, 6); //cuboid(1.0, 1.0, 2.0);
+/*
+fn _make_hex_bridge(settings: &MeshSettings) -> BevyMesh3d {
+    let mut mesh = BevyMesh3d::regular_polygon(settings.r, 6); //cuboid(1.0, 1.0, 2.0);
     mesh.extrude(mesh.edge_between(1, 0).unwrap().id(), settings.d1, true);
     let fe = mesh.extrude_face(1, Vec3::new(0.2, 0.1, 0.2), true);
     mesh.extrude_face(fe, Vec3::new(0.2, -0.1, 0.2), true);
     println!("{}", mesh);
     mesh
-}
+}*/
 
-fn _make_spiral(settings: &MeshSettings) -> MeshVec3 {
-    let mut mesh = MeshVec3::regular_star(settings.r, settings.r2, settings.n);
-    mesh.transform(
-        &Transform::from_translation(Vec3::new(0.0, -0.99, 0.0))
-            .with_rotation(Quat::from_rotation_z(PI)),
-    );
-    let trans =
-        Transform::from_rotation(Quat::from_rotation_y(settings.rot)).with_translation(settings.d1);
-    let mut f = mesh.extrude_ex(mesh.edge_between(1, 0).unwrap().id(), trans, true, true);
-    for _ in 0..settings.segs {
-        f = mesh.extrude_face_ex(f, trans, true, true);
+/*
+fn _make_spiral() -> BevyMesh3d {
+    let mut mesh = BevyMesh3d::new();
+    let mut edge = mesh.insert_regular_star(1.0, 0.8, 30);
+    mesh.flip_yz().translate(&Vec3::new(0.0, -0.99, 0.0));
+    let trans = Transform::from_rotation(Quat::from_rotation_y(0.3))
+        .with_translation(Vec3::new(-0.2, 0.3, -0.3));
+    edge = mesh.extrude_tri(edge, trans);
+    for _ in 0..5 {
+        edge = mesh.extrude_tri_face(mesh.edge(edge).face_id(), trans);
     }
-
     mesh
-}
+}*/
 
-fn _make_2d_merge_join() -> MeshVec3 {
-    let mut mesh = MeshVec3::polygon(&[
-        // Front edge
-        Vec3::new(1.0, 0.0, -1.0),
-        Vec3::new(0.5, 0.0, 0.9),
-        Vec3::new(0.0, 0.0, -0.8),
-        Vec3::new(-0.6, 0.0, -1.0),
-        Vec3::new(-0.8, 0.0, -0.8),
-        Vec3::new(-1.0, 0.0, -1.0),
-        // Back edge
-        Vec3::new(-1.0, 0.0, 1.0),
-        Vec3::new(0.0, 0.0, 0.8),
-        Vec3::new(0.6, 0.0, 1.0),
-        Vec3::new(0.8, 0.0, 0.8),
-        Vec3::new(1.0, 0.0, 1.0),
-    ]);
-    mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
-    mesh
-}
-
-fn _make_hell_8() -> MeshVec3 {
-    let mut mesh = MeshVec3::polygon(
-        &[
-            [4.5899906, 0.0],
-            [0.7912103, 0.7912103],
-            [-4.2923173e-8, 0.9819677],
-            [-1.2092295, 1.2092295],
-            [-0.835097, -7.30065e-8],
+fn _make_2d_merge_join() -> BevyMesh3d {
+    let mut mesh = BevyMesh3d::polygon(
+        [
+            // Front edge
+            (1.0, -1.0),
+            (0.5, 0.9),
+            (0.0, -0.8),
+            (-0.6, -1.0),
+            (-0.8, -0.8),
+            (-1.0, -1.0),
+            // Back edge
+            (-1.0, 1.0),
+            (0.0, 0.8),
+            (0.6, 1.0),
+            (0.8, 0.8),
+            (1.0, 1.0),
         ]
         .iter()
-        .map(|v| Vec3::new(v[0], 0.0, v[1]))
-        .collect::<Vec<_>>(),
+        .map(|(x, z)| BevyVertexPayload::from_pos(Vec3::new(*x, 0.0, *z))),
     );
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh
 }
 
-fn _make_2d_star(_settings: &MeshSettings) -> MeshVec3 {
-    let mut mesh = MeshVec3::regular_star(2.0, 2.0f32.sqrt(), 10000);
-    mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
-    mesh
-}
-
-fn _make_2d_random_star() -> MeshVec3 {
-    let mut mesh = MeshVec3::polygon(
-        &random_star::<Vec2>(5, 6, 0.1, 1.0)
-            .iter()
-            .map(|v| Vec3::new(v[0], 0.0, v[1]))
-            .collect::<Vec<_>>(),
+fn _make_hell_8() -> BevyMesh3d {
+    let mut mesh = BevyMesh3d::polygon(
+        [
+            (4.5899906, 0.0),
+            (0.7912103, 0.7912103),
+            (-4.2923173e-8, 0.9819677),
+            (-1.2092295, 1.2092295),
+            (-0.835097, -7.30065e-8),
+        ]
+        .iter()
+        .map(|(x, z)| BevyVertexPayload::from_pos(Vec3::new(*x, 0.0, *z))),
     );
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh
 }
 
-fn _make_2d_zigzag() -> MeshVec3 {
+fn _make_hell_10() -> BevyMesh3d {
+    let mut mesh = BevyMesh3d::polygon(
+        [
+            [0.8590163, 0.0],
+            [0.52688754, 0.52688754],
+            [-3.721839e-8, 0.8514575],
+            [-0.41275758, 0.41275758],
+            [-0.13604999, -1.1893867e-8],
+            [-0.45389745, -0.4538976],
+            [1.8924045e-9, -0.15869379],
+            [0.28799793, -0.28799775],
+        ]
+        .iter()
+        .map(|[x, z]| BevyVertexPayload::from_pos(Vec3::new(*x, 0.0, *z))),
+    );
+    mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
+    mesh
+}
+
+fn _make_2d_star(_settings: &MeshSettings) -> BevyMesh3d {
+    let mut mesh = BevyMesh3d::regular_star(2.0, 2.0f32.sqrt(), 10000);
+    mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
+    mesh
+}
+
+fn _make_2d_random_star() -> BevyMesh3d {
+    let mut mesh = BevyMesh3d::polygon(
+        random_star::<Vec2>(5, 6, 0.1, 1.0)
+            .map(|v| BevyVertexPayload::from_pos(Vec3::new(v.x, 0.0, v.y))),
+    );
+    mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
+    mesh
+}
+
+fn _make_2d_zigzag() -> BevyMesh3d {
     let n = 50;
-    let mut mesh = MeshVec3::polygon(
-        &generate_zigzag::<Vec2>(n)
-            .iter()
-            .map(|v| Vec3::new(v[0], 0.0, -v[1]))
-            .collect::<Vec<_>>(),
+    let mut mesh = BevyMesh3d::polygon(
+        generate_zigzag::<Vec2>(n).map(|v| BevyVertexPayload::from_pos(Vec3::new(v.x, 0.0, v.y))),
     );
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh
 }
 
-fn make_mesh(_settings: &MeshSettings) -> MeshVec3 {
+/*
+fn _make_prism() -> BevyMesh3d {
+    /*BevyMesh3d::prism(
+        (0..10).map(|i| {
+            BevyVertexPayload::from_pos(Vec3::new(
+                (i as f32 / 5.0 * PI).sin(),
+                0.0,
+                (i as f32 / 5.0 * PI).cos(),
+            ))
+        }),
+        0.4,
+    )*/
+    /* BevyMesh3d::antiprism_iter(
+        (0..10).map(|i| {
+            BevyVertexPayload::from_pos(Vec3::new(
+                (i as f32 / 5.0 * PI).sin(),
+                0.0,
+                (i as f32 / 5.0 * PI).cos(),
+            ))
+        }),
+        (0..10).map(|i| {
+            BevyVertexPayload::from_pos(Vec3::new(
+                ((i as f32 + 0.5) / 5.0 * PI).sin(),
+                0.3,
+                ((i as f32 + 0.5) / 5.0 * PI).cos(),
+            ))
+        }),
+    )*/
+
+    /*BevyMesh3d::antiprism(
+        (0..10).map(|i| {
+            BevyVertexPayload::from_pos(Vec3::new(
+                (i as f32 / 5.0 * PI).sin(),
+                0.0,
+                (i as f32 / 5.0 * PI).cos(),
+            ))
+        }),
+        0.4,
+    )*/
+
+    /*BevyMesh3d::pyramid(
+        (0..10).map(|i| {
+            BevyVertexPayload::from_pos(Vec3::new(
+                (i as f32 / 5.0 * PI).sin(),
+                0.0,
+                (i as f32 / 5.0 * PI).cos(),
+            ))
+        }),
+        BevyVertexPayload::from_pos(Vec3::new(0.0, 1.0, 0.0)),
+    )*/
+
+    BevyMesh3d::frustum(
+        (0..10).map(|i| {
+            BevyVertexPayload::from_pos(Vec3::new(
+                (i as f32 / 5.0 * PI).sin(),
+                0.0,
+                (i as f32 / 5.0 * PI).cos(),
+            ))
+        }),
+        (0..10).map(|i| {
+            BevyVertexPayload::from_pos(Vec3::new(
+                ((i as f32) / 5.0 * PI).sin() * 0.5,
+                0.8,
+                ((i as f32) / 5.0 * PI).cos() * 0.5,
+            ))
+        }),
+        false,
+    )
+}
+*/
+
+fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     //_make_hell_8()
-    //MeshVec3::regular_polygon(1.0, 10000)
-    // _make_spiral(_settings)
-    _make_2d_zigzag()
-    //MeshVec3::octahedron(1.0)
+    //BevyMesh3d::regular_polygon(1.0, 10)
+    //_make_spiral()
+    //BevyMesh3d::octahedron(1.0)
+    //BevyMesh3d::cone(1.0, 1.0, 16)
+    //BevyMesh3d::regular_antiprism(1.0, 1.0, 8)
+    //BevyMesh3d::uniform_antiprism(1.0, 16)
+    //BevyMesh3d::regular_prism(1.0, 1.0, 8)
+    //BevyMesh3d::uniform_prism(1.0, 8)
+    //BevyMesh3d::regular_frustum(1.0, 0.5, 1.0, 8, false)
+    //BevyMesh3d::regular_pyramid(1.0, 1.0, 8)
+    //BevyMesh3d::tetrahedron(1.0)
+    //BevyMesh3d::octahedron(1.0)
+
+    //BevyMesh3d::dodecahedron(1.0)
+
+    /*let mut mesh = BevyMesh3d::hex_plane(10, 8);
+    mesh.flip_yz();
+    mesh*/
+
+    //BevyMesh3d::uv_sphere(3.0, 64, 64)
+    BevyMesh3d::geodesic_icosahedron(3.0, 64)
+    //BevyMesh3d::geodesic_tetrahedron(3.0, 128)
+    //BevyMesh3d::geodesic_octahedron(3.0, 128)
+
+    //BevyMesh3d::regular_polygon(2.0, 600)
+    //_make_2d_zigzag()
+
+    //_make_hell_10()
 }
 
 pub fn main() {
-    env::set_var("RUST_BACKTRACE", "1"); // or "full"
+    env::set_var("RUST_BACKTRACE", "1"); // or "full", "1", "0"
 
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
@@ -203,7 +313,7 @@ pub fn main() {
             WorldInspectorPlugin::default(),
             FrameTimeDiagnosticsPlugin,
             PanOrbitCameraPlugin,
-            gizmo::bevy::text::Text3dGizmosPlugin,
+            Text3dGizmosPlugin,
         ))
         .add_systems(Startup, setup_meshes)
         .add_systems(Update, update_meshes)
@@ -249,12 +359,13 @@ fn update_meshes(
     }
 
     for (handle, settings) in query.iter() {
-        let mesh = make_mesh(settings);
+        let mut mesh = make_mesh(settings);
         let mut meta = TesselationMeta::default();
+        mesh.generate_smooth_normals();
         mesh.bevy_set_ex(
             assets.get_mut(handle).unwrap(),
-            TriangulationAlgorithm::Sweep,
-            GenerateNormals::Flat,
+            TriangulationAlgorithm::MinWeight,
+            false,
             &mut meta,
         );
 
@@ -268,12 +379,11 @@ fn setup_meshes(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut texts: ResMut<Text3dGizmos>,
 ) {
-    let mesh = make_mesh(&MeshSettings::default());
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(mesh.to_bevy(RenderAssetUsages::all())),
+            mesh: meshes.add(Mesh::from(Plane3d::new(Vec3::Y, Vec2::new(1.0, 1.0)))),
             material: materials.add(StandardMaterial {
-                base_color: Color::srgba(1.0, 1.0, 1.0, 1.0),
+                base_color: Color::srgba(0.9, 0.9, 0.9, 1.0),
                 //alpha_mode: AlphaMode::Blend,
                 double_sided: false,
                 cull_mode: None,
@@ -286,12 +396,13 @@ fn setup_meshes(
     ));
 
     if false {
+        let mesh = make_mesh(&MeshSettings::default());
         show_vertex_indices(&mut texts, &mesh);
         show_edges(&mut texts, &mesh, 0.1);
         show_faces(&mut texts, &mesh);
     }
 
-    commands.spawn((
+    /*commands.spawn((
         PbrBundle {
             mesh: meshes.add(Mesh::from(Plane3d::new(Vec3::Y, Vec2::new(1.0, 1.0)))),
             material: materials.add(StandardMaterial::default()),
@@ -300,14 +411,14 @@ fn setup_meshes(
             ..default()
         },
         Name::new("Floor"),
-    ));
+    ));*/
 
     commands.insert_resource(AmbientLight::default());
 
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             color: Color::WHITE,
-            shadows_enabled: true,
+            shadows_enabled: false,
             ..default()
         },
         transform: Transform {

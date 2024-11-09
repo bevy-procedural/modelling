@@ -1,0 +1,68 @@
+use std::collections::HashMap;
+
+use super::{basics::MeshBasics, MeshType};
+use crate::{
+    math::{HasNormal, HasPosition, IndexType, Vector, Vector3D},
+    mesh::{Face3d, FaceBasics, Triangulation, VertexBasics},
+    tesselate::{triangulate_face, TesselationMeta, TriangulationAlgorithm},
+};
+
+/// Methods for transforming meshes.
+pub trait Triangulateable<T: MeshType<Mesh = Self>>: MeshBasics<T> {
+    /// convert the mesh to triangles and get all indices to do so.
+    /// Compact the vertices and return the indices
+    fn triangulate(
+        &self,
+        algorithm: TriangulationAlgorithm,
+        meta: &mut TesselationMeta<T::V>,
+    ) -> (Vec<T::V>, Vec<T::VP>)
+    where
+        T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
+        T::Face: Face3d<T>,
+    {
+        let mut indices = Vec::new();
+        for f in self.faces() {
+            let mut tri = Triangulation::new(&mut indices);
+            triangulate_face::<T>(f, self, &mut tri, algorithm, meta)
+
+            // TODO debug_assert!(tri.verify_full());
+        }
+
+        let vs = self.get_compact_vertices(&mut indices);
+        (indices, vs)
+    }
+
+    /// Triangulates the mesh and duplicates the vertices for use with flat normals.
+    /// This doesn't duplicate the halfedge mesh but only the exported vertex buffer.
+    fn triangulate_and_generate_flat_normals_post(
+        &self,
+        algorithm: TriangulationAlgorithm,
+        meta: &mut TesselationMeta<T::V>,
+    ) -> (Vec<T::V>, Vec<T::VP>)
+    where
+        T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S> + HasNormal<T::Vec, S = T::S>,
+        T::Face: Face3d<T>,
+    {
+        let mut vertices = Vec::new();
+        let mut indices = Vec::new();
+
+        for f in self.faces() {
+            let mut tri = Triangulation::new(&mut indices);
+            let face_normal = Face3d::normal(f, self).normalize();
+            let mut id_map = HashMap::new();
+            // generate a new list of vertices (full duplication)
+            f.vertices(self).for_each(|v| {
+                let mut p = v.payload().clone();
+                id_map.insert(v.id(), IndexType::new(vertices.len()));
+                p.set_normal(face_normal);
+                vertices.push(p)
+            });
+            triangulate_face::<T>(f, self, &mut tri, algorithm, meta);
+            tri.map_indices(&id_map);
+        }
+
+        (indices, vertices)
+    }
+}

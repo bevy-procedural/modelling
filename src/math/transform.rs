@@ -1,18 +1,28 @@
 use super::{Scalar, Vector};
 
-/// Trait for tansformations in 3d space.
+/// Trait for the data structure needed to rotate the value of type V.
+pub trait Rotator<V> {}
 
-pub trait Transform: Clone + Copy + Default + std::fmt::Debug + 'static {
+/// Trait for tansformations in nd space. We call it `TransformTrait` to avoid
+/// collisions with the `Transform` struct in Bevy.
+
+pub trait TransformTrait: Clone + Copy + Default + std::fmt::Debug + 'static {
     /// The scalar type of the coordinates and angles used in the rotation.
     type S: Scalar;
 
-    /// The vector type used in the rotation.
+    /// The vector type used in the transformatiom.
     type Vec: Vector<Self::S>;
 
-    /// Returns the identity rotation.
+    /// The rotation type used in the transformation.
+    type Rot: Rotator<Self::Vec>;
+
+    /// Returns the identity transformation.
     fn identity() -> Self;
 
-    /// Returns a rotation from a rotation arc.
+    /// Constructs a transform from a rotation.
+    fn from_rotation(r: Self::Rot) -> Self;
+
+    /// Constructs a transform from a rotation arc.
     fn from_rotation_arc(from: Self::Vec, to: Self::Vec) -> Self;
 
     /// Constructs a transform from a translation.

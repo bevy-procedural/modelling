@@ -1,0 +1,66 @@
+// TODO: iterator for neighboring faces
+
+use crate::{
+    math::{HasPosition, Scalar, Vector},
+    mesh::MeshType,
+};
+
+/// Basic vertex functionality for a mesh
+pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone + PartialEq {
+    /// Returns the index of the vertex
+    fn id(&self) -> T::V;
+
+    /// Returns the payload of the vertex
+    fn payload(&self) -> &T::VP;
+
+    /// Returns the vertex coordinates of the payload
+    fn pos<Vec: Vector<S>, S: Scalar>(&self) -> Vec
+    where
+        T::VP: HasPosition<Vec, S = S>,
+    {
+        *self.payload().pos()
+    }
+
+    /// Returns a mutable reference to the payload of the vertex
+    fn payload_mut(&mut self) -> &mut T::VP;
+
+    /// Returns an outgoing edge incident to the vertex
+    fn edge(&self, mesh: &T::Mesh) -> T::Edge;
+
+    /// Returns whether the vertex is a boundary vertex
+    fn is_boundary(&self, mesh: &T::Mesh) -> bool;
+
+    /// Returns whether the vertex has only one edge incident to it
+    fn has_only_one_edge(&self, mesh: &T::Mesh) -> bool;
+
+    /// Iterates all vertices adjacent to the vertex in the same manifold edge wheel (clockwise)
+    fn vertices<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Vertex> + 'a;
+
+    /// Iterates all faces adjacent to this vertex in the same manifold edge wheel (clockwise)
+    fn faces<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Face> + 'a
+    where
+        T: 'a;
+
+    /// Iterates the ids of all neighbors of the vertex
+    fn neighbor_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::V> + 'a {
+        self.vertices(mesh).map(|v| v.id())
+    }
+
+    /// Iterates all outgoing (half)edges (resp. all edges in outwards-direction
+    /// if undirected) incident to this vertex (clockwise)
+    fn edges_out<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Edge> + 'a;
+
+    /// Iterates all ingoing (half)edges (resp. all edges in inwards-direction
+    /// if undirected) incident to this vertex (clockwise)
+    fn edges_in<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Edge> + 'a;
+
+    /*
+    /// Iterates the wheel of vertices (will have length one if the vertex is manifold)
+    #[inline(always)]
+    pub fn wheel<'a>(
+        &'a self,
+        mesh: &'a T::Mesh,
+    ) -> impl Iterator<Item = Vertex<E, V, VP>> + 'a {
+        NonmanifoldVertexIterator::new(self.clone(), mesh)
+    }*/
+}

@@ -3,12 +3,13 @@
 use bevy::{
     prelude::*,
     render::render_asset::RenderAssetUsages,
-    window::{PresentMode, WindowResolution},
+    window::{PresentMode, WindowMode, WindowResolution},
 };
-use procedural_modelling::representation::{
-    bevy::MeshVec3,
-    primitives::generate_zigzag,
-    tesselate::{GenerateNormals, TriangulationAlgorithm},
+use procedural_modelling::{
+    bevy::{BevyMesh3d, BevyVertexPayload},
+    math::HasPosition,
+    primitives::{generate_zigzag, Make2dShape},
+    tesselate::TriangulationAlgorithm,
 };
 use std::time::Duration;
 
@@ -35,6 +36,8 @@ fn main() {
             primary_window: Some(Window {
                 resolution: WindowResolution::new(1920.0, 1080.0),
                 title: "Bevy Mesh Benchmark".to_string(),
+                resizable: false,
+                mode: WindowMode::BorderlessFullscreen,
                 // disable fps cap
                 present_mode: PresentMode::Immediate,
                 ..default()
@@ -55,12 +58,9 @@ fn main() {
         .run();
 }
 
-fn zigzag(n: usize) -> MeshVec3 {
-    MeshVec3::polygon(
-        &generate_zigzag::<Vec2>(n)
-            .iter()
-            .map(|v| Vec3::new(v.x, v.y, 0.0))
-            .collect::<Vec<_>>(),
+fn zigzag(n: usize) -> BevyMesh3d {
+    BevyMesh3d::polygon(
+        generate_zigzag::<Vec2>(n).map(|v| BevyVertexPayload::from_pos(Vec3::new(v.x, 0.0, v.y))),
     )
 }
 
@@ -70,29 +70,33 @@ fn setup(
     mut mesh_list: ResMut<MeshList>,
 ) {
     for algo in [
-        //TriangulationAlgorithm::Delaunay,
-        //TriangulationAlgorithm::Sweep,
+        TriangulationAlgorithm::Delaunay,
+        /*TriangulationAlgorithm::Sweep,
+        TriangulationAlgorithm::SweepDynamic,
         TriangulationAlgorithm::EarClipping,
-        //TriangulationAlgorithm::Fan,
+        TriangulationAlgorithm::Fan,*/
     ] {
         for (name, num_vertices, mesh) in [
-            ("circle10", 10, MeshVec3::regular_star(1.0, 1.0, 10)),
-            ("circle100", 100, MeshVec3::regular_star(1.0, 1.0, 100)),
-            ("circle1000", 1000, MeshVec3::regular_star(1.0, 1.0, 1000)),
+            //("circle10", 10, BevyMesh3d::regular_star(1.0, 1.0, 10)),
+            //("circle100", 100, BevyMesh3d::regular_star(1.0, 1.0, 100)),
+            /*("circle1000", 1000, BevyMesh3d::regular_star(1.0, 1.0, 1000)),
             (
                 "circle10000",
                 10000,
-                MeshVec3::regular_star(1.0, 1.0, 10000),
-            ),
-            ("zigzag1000", 1000, zigzag(1000)),
+                BevyMesh3d::regular_star(1.0, 1.0, 10000),
+            ),*/
+           // ("zigzag1000", 1000, zigzag(1000)),
             ("zigzag10000", 10000, zigzag(10000)),
         ] {
-            if num_vertices > 1000 && algo == TriangulationAlgorithm::EarClipping {
+            if num_vertices > 1000
+                && (algo == TriangulationAlgorithm::EarClipping
+                    || algo == TriangulationAlgorithm::SweepDynamic)
+            {
                 continue;
             }
             mesh_list.0.push((
                 name.to_string() + format!("_{:?}", algo).as_str(),
-                meshes.add(mesh.to_bevy_ex(RenderAssetUsages::all(), algo, GenerateNormals::Flat)),
+                meshes.add(mesh.to_bevy_ex(RenderAssetUsages::all(), algo, true)),
                 num_vertices,
             ));
         }
@@ -118,10 +122,9 @@ fn setup(
 fn update_mesh(
     mut commands: Commands,
     mut state: ResMut<BenchmarkState>,
-    mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mesh_list: Res<MeshList>,
-    mut query: Query<Entity, With<Handle<Mesh>>>,
+    query: Query<Entity, With<Handle<Mesh>>>,
 ) {
     if state.accumulated_time < BENCHMARK_DURATION {
         return;
