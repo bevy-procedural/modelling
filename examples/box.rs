@@ -9,13 +9,15 @@ use bevy::{
     render::render_asset::RenderAssetUsages,
 };
 use procedural_modelling::{
-    math::{Scalar, Vector, Vector3D},
+    bevy::{BevyMesh3d, BevyMeshType3d32, BevyVertexPayload},
+    math::{HasPosition, Transformable, Vector, Vector3D},
     mesh::{
-        bevy::BevyMesh3d,
-        payload::{vertex_payload::BevyVertexPayload, HasPosition, Transformable},
-        tesselate::TriangulationAlgorithm,
-        DefaultEdgePayload, DefaultFacePayload, MeshTrait as TMesh, MeshType,
+        DefaultEdgePayload, DefaultFacePayload, EdgeBasics, MeshBasics, MeshBuilder,
+        MeshPathBuilder, MeshType,
     },
+    operations::MeshLoft,
+    primitives::{Make2dShape, MakePrismatoid},
+    tesselate::TriangulationAlgorithm,
 };
 use std::f32::consts::PI;
 
@@ -54,7 +56,7 @@ fn cuboid_from_vertices(size: Vec3) -> BevyMesh3d {
 /// Manually keeping track of all half-edges is the most low-level way
 /// to build a mesh. It's cumbersome, but fast and gives you full control
 /// over the connectivity of the mesh.
-fn cuboid_from_edges(size: Vec3) -> BevyMesh3d {
+fn cuboid_from_edges(_size: Vec3) -> BevyMesh3d {
     todo!("cuboid_from_edges")
 }
 
@@ -93,7 +95,7 @@ fn cuboid_from_loft(size: Vec3) -> BevyMesh3d {
 /// method to create a cuboid.
 fn cuboid_from_prism(size: Vec3) -> BevyMesh3d {
     let p = size * 0.5;
-    TMesh::prism(
+    BevyMesh3d::prism(
         [
             vp(-p.x(), -p.y(), -p.z()),
             vp(p.x(), -p.y(), -p.z()),
@@ -124,7 +126,7 @@ fn cuboid_from_prism(size: Vec3) -> BevyMesh3d {
 ///   that the payload can be transformed in 3D space.
 /// - The `S` is the scalar type used in the vector. This is usually implemented
 ///   as a `f32` or `f64`, though, other types like fixed-point numbers are also possible.
-fn cuboid_from_prism_generic<T: MeshType>(size: T::Vec) -> TMesh<T>
+fn cuboid_from_prism_generic<T: MeshType>(_size: T::Vec) -> T::Mesh
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
@@ -132,9 +134,10 @@ where
     T::VP: HasPosition<T::Vec, S = T::S>
         + Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
 {
-    let p = size * T::S::HALF;
+    todo!("cuboid_from_prism_generic")
+    /*let p = size * T::S::HALF;
     let make = |x, y, z| T::VP::from_pos(T::Vec::from_xyz(x, y, z));
-    TMesh::prism(
+    T::Mesh::prism(
         [
             make(-p.x(), -p.y(), -p.z()),
             make(p.x(), -p.y(), -p.z()),
@@ -142,7 +145,7 @@ where
             make(-p.x(), p.y(), -p.z()),
         ],
         p.z() * T::S::TWO,
-    )
+    )*/
 }
 
 /// Creates a cuboid with a given `size`.
@@ -177,7 +180,7 @@ fn setup_meshes(
         //cuboid_from_edges(size),
         cuboid_from_loft(size),
         cuboid_from_prism(size),
-        cuboid_from_prism_generic(size),
+        //cuboid_from_prism_generic::<BevyMeshType3d32>(size),
         cuboid_from_cuboid(size),
     ];
 
@@ -185,7 +188,7 @@ fn setup_meshes(
     // This method will also do some sanity checks to ensure that the mesh is
     // correctly constructed and will warn you, e.g., if there are non-planar
     // faces or if the mesh is not manifold.
-    println!("{}", generated_meshes[0]);
+    println!("{:?}", generated_meshes[0]);
 
     // When adding a mesh to bevy, we need to convert it to a bevy mesh first.
     // This will triangulate the mesh and convert it to a format that bevy can
