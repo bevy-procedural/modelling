@@ -1,9 +1,12 @@
 use crate::{
     halfedge::{HalfEdgeMeshImpl, HalfEdgeMeshType},
-    mesh::{DefaultEdgePayload, EdgeBasics, HalfEdge, MeshBasics, MeshBuilder},
+    mesh::{
+        DefaultEdgePayload, EdgeBasics, HalfEdge, MeshBasics, MeshBuilder, MeshHalfEdgeBuilder,
+        MeshPathBuilder,
+    },
 };
 
-impl<T: HalfEdgeMeshType> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
+impl<T: HalfEdgeMeshType> MeshPathBuilder<T> for HalfEdgeMeshImpl<T> {
     /// Generate a path from the finite iterator of positions and return the halfedges pointing to the first and last vertex.
     fn insert_path(&mut self, vp: impl IntoIterator<Item = T::VP>) -> (T::E, T::E)
     where

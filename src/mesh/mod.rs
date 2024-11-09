@@ -3,11 +3,11 @@
 mod edge;
 mod face;
 mod mesh;
-mod vertex;
 mod triangulation;
+mod vertex;
 
 pub use edge::*;
 pub use face::*;
 pub use mesh::*;
-pub use vertex::*;
 pub use triangulation::*;
+pub use vertex::*;

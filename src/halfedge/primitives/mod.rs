@@ -1,6 +1,8 @@
 use super::{HalfEdgeMeshImpl, HalfEdgeMeshType};
 use crate::{
-    mesh::{DefaultEdgePayload, DefaultFacePayload, HalfEdge, MeshBasics, MeshBuilder},
+    mesh::{
+        DefaultEdgePayload, DefaultFacePayload, HalfEdge, MeshBasics, MeshBuilder, MeshPathBuilder,
+    },
     primitives::Make2dShape,
 };
 

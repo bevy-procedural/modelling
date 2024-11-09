@@ -3,8 +3,8 @@
 mod edge;
 mod face;
 mod mesh;
-mod vertex;
 mod primitives;
+mod vertex;
 
 pub use edge::*;
 pub use face::*;
@@ -16,7 +16,7 @@ use crate::mesh::MeshType;
 /// This trait defines the associated types used in a half-edge mesh and puts them into relation.
 pub trait HalfEdgeMeshType:
     MeshType<
-    Mesh = HalfEdgeMeshImpl<Self>,
+    Mesh = HalfEdgeMeshImpl<Self>, // Self
     Vertex = HalfEdgeVertexImpl<Self>,
     Edge = HalfEdgeImpl<Self>,
     Face = HalfEdgeFaceImpl<Self>,
