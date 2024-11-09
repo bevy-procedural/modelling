@@ -1,6 +1,6 @@
-use crate::{
-    halfedge::{HalfEdgeMesh, HalfEdgeMeshType},
-    mesh::{DefaultEdgePayload, EdgeBasics, FaceBasics, MeshBasics, VertexInterpolator},
+use crate::mesh::{
+    DefaultEdgePayload, EdgeBasics, FaceBasics, HalfEdge, HalfEdgeSemiBuilder, MeshBasics,
+    MeshBuilder, MeshHalfEdgeBuilder, MeshType, VertexInterpolator,
 };
 
 /// Describes how to subdivide a mesh.
@@ -38,16 +38,22 @@ impl SubdivisionDescription {
     }
 }
 
-impl<T: HalfEdgeMeshType> HalfEdgeMesh<T>
+/// TODO
+
+/// A trait for subdividing meshes.
+pub trait MeshSubdivision<T: MeshType<Mesh = Self>>:
+    MeshBasics<T> + HalfEdgeSemiBuilder<T> + MeshHalfEdgeBuilder<T> + MeshBuilder<T>
 where
     T::EP: DefaultEdgePayload,
+    T::Face: FaceBasics<T>,
+    T::Edge: HalfEdge<T> + EdgeBasics<T>,
 {
     /// Subdivides the mesh with frequency (2,0).
     /// Uses the `vp_builder` to create the new vertex payloads.
     /// Returns a new mesh.
     ///
     /// based on an algorithm developed by Charles Loop in 1987
-    pub fn loop_subdivision(&mut self, vp_builder: &impl VertexInterpolator<3, T>) -> &mut Self {
+    fn loop_subdivision(&mut self, vp_builder: &impl VertexInterpolator<3, T>) -> &mut Self {
         // TODO: See https://github.com/OptimisticPeach/hexasphere
         let fs = self.faces().map(|f| f.id()).collect::<Vec<_>>();
         for face in &fs {
@@ -58,7 +64,10 @@ where
 
             // insert an additional vertex for each edge
             for i in 0..3 {
-                if self.subdivide_unsafe_try_fixup(edges[i].id()).is_some() {
+                if self
+                    .subdivide_unsafe_try_fixup(edges[i].id(), Default::default())
+                    .is_some()
+                {
                     // edge is already subdivided
                     continue;
                 }
@@ -91,7 +100,7 @@ where
                         ),
                     ],
                 );
-                self.subdivide_unsafe(edges[i].id(), vp);
+                self.subdivide_unsafe(edges[i].id(), vp, Default::default());
             }
 
             // remove the original face
@@ -119,7 +128,7 @@ where
     /// Subdivides the mesh with frequency (n,m).
     /// Uses the `vp_builder` to create the new vertex payloads.
     /// Returns a new mesh.
-    pub fn subdivision_frequency(
+    fn subdivision_frequency(
         &mut self,
         des: SubdivisionDescription,
         vp_builder: impl VertexInterpolator<3, T>,

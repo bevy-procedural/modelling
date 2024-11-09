@@ -1,19 +1,51 @@
-use super::regular_polygon::regular_polygon_sidelength;
 use crate::{
-    math::{HasZero, Scalar, Transform, Vector, Vector3D},
+    math::{HasPosition, HasZero, Scalar, TransformTrait, Transformable, Vector, Vector3D},
     mesh::{
-        payload::{HasPosition, Transformable, VertexPayload},
-        DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType,
+        DefaultEdgePayload, DefaultFacePayload, EdgeBasics, Face3d, HalfEdge, MeshBuilder,
+        MeshHalfEdgeBuilder, MeshPathBuilder, MeshPosition, MeshTrait, MeshType, VertexPayload,
     },
+    operations::{MeshExtrude, MeshLoft, MeshSubdivision},
+    primitives::polygon::Make2dShape,
 };
 
-impl<T: MeshType> T::Mesh
+use super::regular_polygon_sidelength;
+
+fn circle_iter<S: Scalar, Vec: Vector<S>, VP: VertexPayload + HasPosition<Vec, S = S>>(
+    r: S,
+    n: usize,
+    shift: S,
+    y: S,
+) -> impl Iterator<Item = VP> {
+    (0..n).map(move |i| {
+        let v = S::PI * (S::from_usize(2 * i) + shift) / S::from_usize(n);
+        VP::from_pos(Vec::from_xyz(r * v.cos(), y, -r * v.sin()))
+    })
+}
+
+// TODO: Reduce type requirements
+
+/// A trait for creating prismatoids.
+pub trait MakePrismatoid<T: MeshType<Mesh = Self>>:
+    MeshTrait<T = T>
+    + Make2dShape<T>
+    + MeshBuilder<T>
+    + MeshHalfEdgeBuilder<T>
+    + MeshPathBuilder<T>
+    + MeshExtrude<T>
+    + MeshBuilder<T>
+    + MeshLoft<T>
+    + MeshPosition<T>
+    + MeshSubdivision<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
+    T::Vec: Vector3D<S = T::S>,
     T::VP: Transformable<Vec = T::Vec, Rot = T::Rot, Trans = T::Trans, S = T::S>
         + HasPosition<T::Vec, S = T::S>,
-    T::Vec: Vector3D<S = T::S>,
+    Self: Make2dShape<T>,
+    T::Edge: HalfEdge<T> + EdgeBasics<T>,
+    T::Face: Face3d<T>,
+    T::Trans: TransformTrait<S = T::S>,
 {
     // Waiting for https://github.com/rust-lang/rust/issues/8995
     // type S = T::S;
@@ -21,21 +53,18 @@ where
     /// Creates a prism by inserting the flat polygon given by `vp` and inserting an
     /// translated copy at `height` along the normal of the face.
     /// Uses quads for the sides.
-    pub fn insert_prism(&mut self, vp: impl IntoIterator<Item = T::VP>, height: T::S) -> T::E {
+    fn insert_prism(&mut self, vp: impl IntoIterator<Item = T::VP>, height: T::S) -> T::E {
         let first = self.insert_polygon(vp);
-        let f = self
-            .edge(first)
-            .twin(self)
-            .face(self)
-            .expect("The polygon must have a face");
+        let twin = self.edge(first).twin(self);
+        let f = twin.face(self).expect("The polygon must have a face");
         let normal = f.normal(self).normalize();
         let e = self.extrude(first, T::Trans::from_translation(-normal * height));
         e
     }
 
     /// calls `insert_prism` on a new mesh
-    pub fn prism(vp: impl IntoIterator<Item = T::VP>, height: T::S) -> Self {
-        let mut mesh = Mesh::<T>::new();
+    fn prism(vp: impl IntoIterator<Item = T::VP>, height: T::S) -> Self {
+        let mut mesh = Self::default();
         mesh.insert_prism(vp, height);
         mesh
     }
@@ -46,7 +75,7 @@ where
     ///
     /// WARNING: This doesn't produce a proper regular antiprism since the radius
     /// of the top polygon will be slightly smaller!
-    pub fn insert_antiprism(&mut self, vp: impl IntoIterator<Item = T::VP>, height: T::S) -> T::E {
+    fn insert_antiprism(&mut self, vp: impl IntoIterator<Item = T::VP>, height: T::S) -> T::E {
         let first = self.insert_polygon(vp);
         let f = self
             .edge(first)
@@ -61,21 +90,15 @@ where
     }
 
     /// calls `insert_antiprism` on a new mesh
-    pub fn antiprism(vp: impl IntoIterator<Item = T::VP>, height: T::S) -> Self {
-        let mut mesh = Mesh::<T>::new();
+    fn antiprism(vp: impl IntoIterator<Item = T::VP>, height: T::S) -> Self {
+        let mut mesh = Self::default();
         mesh.insert_antiprism(vp, height);
         mesh
     }
-}
 
-impl<T: MeshType> T::Mesh
-where
-    T::EP: DefaultEdgePayload,
-    T::FP: DefaultFacePayload,
-{
     /// Creates an antiprism by connecting the two polygons given by `vp` and `vp2` with triangles.
     /// Doesn't need to be a antiprism -- can also have a frustum-like shape.
-    pub fn insert_antiprism_iter(
+    fn insert_antiprism_iter(
         &mut self,
         vp: impl IntoIterator<Item = T::VP>,
         vp2: impl IntoIterator<Item = T::VP>,
@@ -87,31 +110,31 @@ where
     }
 
     /// calls `insert_antiprism_iter` on a new mesh
-    pub fn antiprism_iter(
+    fn antiprism_iter(
         vp: impl IntoIterator<Item = T::VP>,
         vp2: impl IntoIterator<Item = T::VP>,
     ) -> Self {
-        let mut mesh = Mesh::<T>::new();
+        let mut mesh = Self::default();
         mesh.insert_antiprism_iter(vp, vp2);
         mesh
     }
 
     /// Creates a pyramid by connecting the polygon given by `vp` with the point `apex`.
-    pub fn insert_pyramid(&mut self, base: impl IntoIterator<Item = T::VP>, apex: T::VP) -> T::E {
+    fn insert_pyramid(&mut self, base: impl IntoIterator<Item = T::VP>, apex: T::VP) -> T::E {
         let first = self.insert_polygon(base);
         self.fill_hole_apex(first, apex);
         self.edge(first).twin_id()
     }
 
     /// calls `insert_pyramid` on a new mesh
-    pub fn pyramid(base: impl IntoIterator<Item = T::VP>, apex: T::VP) -> Self {
-        let mut mesh = Mesh::<T>::new();
+    fn pyramid(base: impl IntoIterator<Item = T::VP>, apex: T::VP) -> Self {
+        let mut mesh = Self::default();
         mesh.insert_pyramid(base, apex);
         mesh
     }
 
     /// Creates a (conical) frustum
-    pub fn insert_frustum(
+    fn insert_frustum(
         &mut self,
         base: impl IntoIterator<Item = T::VP>,
         top: impl IntoIterator<Item = T::VP>,
@@ -126,28 +149,20 @@ where
     }
 
     /// calls `insert_frustum` on a new mesh
-    pub fn frustum(
+    fn frustum(
         base: impl IntoIterator<Item = T::VP>,
         top: impl IntoIterator<Item = T::VP>,
         smooth: bool,
     ) -> Self {
-        let mut mesh = Mesh::<T>::new();
+        let mut mesh = Self::default();
         mesh.insert_frustum(base, top, smooth);
         mesh
     }
-}
 
-impl<T: MeshType> T::Mesh
-where
-    T::EP: DefaultEdgePayload,
-    T::FP: DefaultFacePayload,
-    T::Vec: Vector3D<S = T::S>,
-    T::VP: HasPosition<T::Vec, S = T::S>,
-{
     /// create a rectangular cuboid with side lengths `x`, `y`, and `z`
-    pub fn cuboid(size: T::Vec) -> T::Mesh {
+    fn cuboid(size: T::Vec) -> T::Mesh {
         let p = size * T::S::HALF;
-        let mut mesh = Mesh::new();
+        let mut mesh = Self::default();
         let vp = |x, y, z| T::VP::from_pos(T::Vec::from_xyz(x, y, z));
 
         let bottom_edge = mesh.insert_polygon([
@@ -172,26 +187,26 @@ where
     }
 
     /// create a cube with side length `x`
-    pub fn cube(x: T::S) -> T::Mesh {
+    fn cube(x: T::S) -> T::Mesh {
         Self::cuboid(T::Vec::splat(x))
     }
 
     /// an alias for `cube`
-    pub fn regular_hexahedron(l: T::S) -> T::Mesh {
+    fn regular_hexahedron(l: T::S) -> T::Mesh {
         Self::cube(l)
     }
 
     /// Creates a regular pyramid
-    pub fn regular_pyramid(radius: T::S, height: T::S, n: usize) -> Self {
-        Mesh::pyramid(
+    fn regular_pyramid(radius: T::S, height: T::S, n: usize) -> Self {
+        Self::pyramid(
             circle_iter(radius, n, T::S::ZERO, T::S::ZERO),
             T::VP::from_pos(T::Vec::from_xyz(T::S::ZERO, height, T::S::ZERO)),
         )
     }
 
     /// Creates a regular cone
-    pub fn cone(radius: T::S, height: T::S, n: usize) -> T::Mesh {
-        Mesh::pyramid(
+    fn cone(radius: T::S, height: T::S, n: usize) -> T::Mesh {
+        Self::pyramid(
             circle_iter(radius, n, T::S::ZERO, T::S::ZERO),
             T::VP::from_pos(T::Vec::from_xyz(T::S::ZERO, height, T::S::ZERO)),
         )
@@ -199,11 +214,11 @@ where
     }
 
     /// Creates a regular tetrahedron with edge length `l` centered at the origin
-    pub fn regular_tetrahedron(l: T::S) -> T::Mesh {
+    fn regular_tetrahedron(l: T::S) -> T::Mesh {
         let e = T::S::HALF * l;
         let sq = e / T::S::TWO.sqrt();
         let zero = T::S::ZERO;
-        Mesh::pyramid(
+        Self::pyramid(
             [
                 T::VP::from_pos(T::Vec::from_xyz(-e, zero, -sq)),
                 T::VP::from_pos(T::Vec::from_xyz(zero, -e, sq)),
@@ -214,10 +229,10 @@ where
     }
 
     /// Creates a regular octahedron with a given circumscribed `radius` centered at the origin
-    pub fn regular_octahedron(radius: T::S) -> T::Mesh {
+    fn regular_octahedron(radius: T::S) -> T::Mesh {
         let zero = T::S::ZERO;
         let h = radius;
-        let mut mesh = Mesh::new();
+        let mut mesh = Self::default();
         let e = mesh.insert_pyramid(
             circle_iter(radius, 4, T::S::ZERO, T::S::ZERO),
             T::VP::from_pos(T::Vec::from_xyz(zero, h, zero)),
@@ -228,8 +243,8 @@ where
     }
 
     /// Creates a (conical) frustum
-    pub fn regular_frustum(r1: T::S, r2: T::S, h: T::S, n: usize, smooth: bool) -> Self {
-        Mesh::frustum(
+    fn regular_frustum(r1: T::S, r2: T::S, h: T::S, n: usize, smooth: bool) -> Self {
+        Self::frustum(
             circle_iter(r1, n, T::S::ZERO, T::S::ZERO),
             circle_iter(r2, n, T::S::ZERO, h),
             smooth,
@@ -237,53 +252,32 @@ where
     }
 
     /// Creates a regular cylinder
-    pub fn cylinder(radius: T::S, height: T::S, n: usize) -> T::Mesh {
+    fn cylinder(radius: T::S, height: T::S, n: usize) -> T::Mesh {
         Self::regular_frustum(radius, radius, height, n, true)
     }
-}
 
-fn circle_iter<S: Scalar, Vec: Vector<S>, VP: VertexPayload + HasPosition<Vec, S = S>>(
-    r: S,
-    n: usize,
-    shift: S,
-    y: S,
-) -> impl Iterator<Item = VP> {
-    (0..n).map(move |i| {
-        let v = S::PI * (S::from_usize(2 * i) + shift) / S::from_usize(n);
-        VP::from_pos(Vec::from_xyz(r * v.cos(), y, -r * v.sin()))
-    })
-}
-
-impl<T: MeshType> T::Mesh
-where
-    T::EP: DefaultEdgePayload,
-    T::FP: DefaultFacePayload,
-    T::Vec: Vector3D<S = T::S>,
-    T::VP: HasPosition<T::Vec, S = T::S>
-        + Transformable<Vec = T::Vec, Rot = T::Rot, Trans = T::Trans, S = T::S>,
-{
     /// Creates a regular prism with given radius `r`, height `h`, and `n` sides.
-    pub fn regular_prism(r: T::S, h: T::S, n: usize) -> Self {
-        Mesh::prism(circle_iter(r, n, T::S::ZERO, T::S::ZERO), h)
+    fn regular_prism(r: T::S, h: T::S, n: usize) -> Self {
+        Self::prism(circle_iter(r, n, T::S::ZERO, T::S::ZERO), h)
     }
 
     /// Creates a uniform prism with given radius `r` and `n` sides.
-    pub fn uniform_prism(r: T::S, n: usize) -> Self {
-        Mesh::regular_prism(r, regular_polygon_sidelength(r, n), n)
+    fn uniform_prism(r: T::S, n: usize) -> Self {
+        Self::regular_prism(r, regular_polygon_sidelength(r, n), n)
     }
 
     /// Creates a regular antiprism with given radius `r`, height `h`, and `n` sides.
-    pub fn regular_antiprism(r: T::S, h: T::S, n: usize) -> Self {
-        Mesh::antiprism_iter(
+    fn regular_antiprism(r: T::S, h: T::S, n: usize) -> Self {
+        Self::antiprism_iter(
             circle_iter(r, n, T::S::ZERO, T::S::ZERO),
             circle_iter(r, n, T::S::ONE, h),
         )
     }
 
     /// Creates a uniform antiprism with given radius `r` and `n` sides.
-    pub fn uniform_antiprism(r: T::S, n: usize) -> Self {
+    fn uniform_antiprism(r: T::S, n: usize) -> Self {
         // TODO: isn't this the edge length?
-        Mesh::regular_antiprism(
+        Self::regular_antiprism(
             r,
             regular_polygon_sidelength(r, n) * T::S::THREE.sqrt() * T::S::HALF,
             n,

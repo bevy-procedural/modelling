@@ -10,6 +10,8 @@ pub use payload::*;
 use super::{MeshType, VertexBasics};
 use crate::math::{HasPosition, VectorIteratorExt};
 
+// TODO: Remove methods in trait Face
+
 /// A face in a mesh.
 ///
 /// Isn't necessarily planar or triangular.

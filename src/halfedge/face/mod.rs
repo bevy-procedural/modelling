@@ -1,6 +1,4 @@
-mod iterator;
-
-use super::HalfEdgeMeshType;
+use super::{HalfEdgeMeshType, IncidentToFaceIterator};
 use crate::{
     math::{HasPosition, IndexType, Vector3D},
     mesh::{
@@ -85,6 +83,13 @@ impl<T: HalfEdgeMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
     ) -> impl Iterator<Item = T::Vertex> + 'a + Clone + ExactSizeIterator {
         self.edges(mesh).map(|e| e.target(mesh).clone())
     }
+
+    #[inline(always)]
+    #[allow(refining_impl_trait)]
+    fn edges<'a>(&'a self, mesh: &'a T::Mesh) -> IncidentToFaceIterator<'a, T> {
+        IncidentToFaceIterator::new(self.edge(mesh), mesh)
+    }
+
 }
 
 impl<T: HalfEdgeMeshType> Face for HalfEdgeFaceImpl<T> {

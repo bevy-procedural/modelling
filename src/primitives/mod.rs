@@ -1,10 +1,13 @@
 //! Implementations of the various primitives that can be used to create a mesh.
 
-//mod prismatoid;
 mod misc;
 mod plane;
 mod polygon;
-//mod sphere;
+mod prismatoid;
+mod sphere;
 
 pub use misc::*;
+pub use plane::*;
 pub use polygon::*;
+pub use prismatoid::*;
+pub use sphere::*;

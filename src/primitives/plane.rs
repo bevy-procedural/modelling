@@ -3,6 +3,7 @@ use crate::{
     mesh::{DefaultEdgePayload, DefaultFacePayload, MeshTrait, MeshType},
 };
 
+/// A trait for creating plane approximations.
 pub trait MakePlane<T: MeshType<Mesh = Self>>: MeshTrait<T = T>
 where
     T::EP: DefaultEdgePayload,

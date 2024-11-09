@@ -1,14 +1,16 @@
-use crate::{
-    halfedge::{HalfEdgeMesh, HalfEdgeMeshType},
-    mesh::{DefaultEdgePayload, DefaultFacePayload, MeshBasics},
+use crate::mesh::{
+    DefaultEdgePayload, DefaultFacePayload, EdgeBasics, HalfEdge, MeshBasics, MeshBuilder, MeshHalfEdgeBuilder, MeshType
 };
 
-// TODO: implement this as a trait for MeshTrait instead. The parameters should be slightly adjusted to fit for non-halfedge graphs!
+// TODO: Adjust this to not be halfedge-specific
 
-impl<T: HalfEdgeMeshType> HalfEdgeMesh<T>
+/// A trait for lofting a mesh.
+pub trait MeshLoft<T: MeshType<Mesh = Self>>:
+    MeshBasics<T> + MeshBuilder<T> + MeshHalfEdgeBuilder<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
+    T::Edge: HalfEdge<T> + EdgeBasics<T>,
 {
     /// This will walk clockwise (backwards) along the given boundary and add a "hem" made from triangles.
     /// The payloads are given using the iterator.
@@ -71,11 +73,7 @@ where
     }
 
     /// Like `loft_tri_back` but closes the "hem" with a face.
-    pub fn loft_tri_back_closed(
-        &mut self,
-        start: T::E,
-        vp: impl IntoIterator<Item = T::VP>,
-    ) -> T::E {
+    fn loft_tri_back_closed(&mut self, start: T::E, vp: impl IntoIterator<Item = T::VP>) -> T::E {
         let e = self.loft_tri_back(start, false, vp);
         let outside = self.edge(e).prev_id();
         self.close_face_default(self.edge(e).next(self).next_id(), e, false);
@@ -94,12 +92,7 @@ where
     /// If `shift` is true, the first inserted triangle will be with the tip pointing to the target of `start`.
     /// Otherwise, the first triangle will include the edge `start`.
     /// This doesn't affect the number of triangles but shifts the "hem" by one.
-    pub fn loft_tri(
-        &mut self,
-        start: T::E,
-        shift: bool,
-        vp: impl IntoIterator<Item = T::VP>,
-    ) -> T::E {
+    fn loft_tri(&mut self, start: T::E, shift: bool, vp: impl IntoIterator<Item = T::VP>) -> T::E {
         // TODO: a more efficient implementation could bulk-insert everything at once
         // TODO: assertions
 
@@ -155,7 +148,7 @@ where
 
     /// Like `loft_tri` but closes the "hem" with a face.
     /// Returns the edge pointing from the first inserted vertex to the second inserted vertex.
-    pub fn loft_tri_closed(&mut self, start: T::E, vp: impl IntoIterator<Item = T::VP>) -> T::E {
+    fn loft_tri_closed(&mut self, start: T::E, vp: impl IntoIterator<Item = T::VP>) -> T::E {
         let e = self.loft_tri(start, false, vp);
         let inside = self.edge(e).twin(self).prev_id();
         let outside = self.edge(inside).prev(self).prev_id();
@@ -176,7 +169,7 @@ where
     /// For example, to create a quad loft, use `loft_polygon(start, 2, 2, vp)`.
     /// Pentagons with the tip pointing to the boundary can be created with `loft_polygon(start, 3, 2, vp)`
     /// while pentagons with the tip pointing away from the boundary can be created with `loft_polygon(start, 2, 3, vp)`.
-    pub fn loft_polygon_back(
+    fn loft_polygon_back(
         &mut self,
         start: T::E,
         n: usize,
@@ -248,7 +241,7 @@ where
     /// For example, to create a quad loft, use `loft_polygon(start, 2, 2, vp)`.
     /// Pentagons with the tip pointing to the boundary can be created with `loft_polygon(start, 3, 2, vp)`
     /// while pentagons with the tip pointing away from the boundary can be created with `loft_polygon(start, 2, 3, vp)`.
-    pub fn loft_polygon(
+    fn loft_polygon(
         &mut self,
         start: T::E,
         n: usize,

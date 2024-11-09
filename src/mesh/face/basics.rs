@@ -1,3 +1,5 @@
+use crate::mesh::EdgeBasics;
+
 use super::MeshType;
 
 /// A face in a mesh.
@@ -43,5 +45,16 @@ pub trait FaceBasics<T: MeshType<Face = Self>>:
     /// The data structure (currently!) cannot represent holes, so this is always false.
     fn has_holes(&self) -> bool {
         return false;
+    }
+
+    /// Iterates all half-edges incident to the face
+    fn edges<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Edge>;
+
+    /// Iterates all half-edge ids incident to the face
+    fn edge_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::E> + 'a
+    where
+        T: 'a,
+    {
+        self.edges(mesh).map(|e| e.id())
     }
 }
