@@ -1,7 +1,7 @@
 use super::HalfEdgeMesh;
 use crate::{
     halfedge::{HalfEdgeMeshType, IncidentToFaceBackIterator, IncidentToFaceIterator},
-    mesh::{EdgeBasics, MeshBasics},
+    mesh::{EdgeBasics, Halfedge, MeshBasics},
     util::Deletable,
 };
 

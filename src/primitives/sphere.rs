@@ -1,9 +1,8 @@
 use crate::{
-    math::{HasZero, IndexType, Scalar, Vector, Vector3D},
-    mesh::{
-        payload::{HasPosition, SlerpVertexInterpolator},
-        DefaultEdgePayload, DefaultFacePayload, Mesh, MeshType, SubdivisionDescription,
-    },
+    math::{HasPosition, HasZero, IndexType, Scalar, Vector, Vector3D},
+    mesh::{DefaultEdgePayload, DefaultFacePayload, MeshTrait, MeshType, SlerpVertexInterpolator},
+    operations::SubdivisionDescription,
+    primitives::polygon::Make2dShape,
 };
 
 /// Convert a radius 'r' to edge length 'a' of an icosahedron.
@@ -16,22 +15,23 @@ pub fn icosahedron_a2r<S: Scalar>(a: S) -> S {
     (S::TEN + S::TWO * S::FIVE.sqrt()).sqrt() * a / S::FOUR
 }
 
-impl<T: MeshType> T::Mesh
+pub trait MakeSphere<T: MeshType<Mesh = Self>>: MeshTrait<T = T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
     T::Vec: Vector3D<S = T::S>,
     T::VP: HasPosition<T::Vec, S = T::S>,
+    Self: Make2dShape<T>,
 {
     /// Create a uv sphere with a given `radius`.
     /// `n` is the number of rings (including the two made of triangular faces).
     /// `m` is the number of columns.
-    pub fn uv_sphere(radius: T::S, n: usize, m: usize) -> Self {
+    fn uv_sphere(radius: T::S, n: usize, m: usize) -> Self {
         // TODO: https://catlikecoding.com/unity/tutorials/procedural-meshes/uv-sphere/
         assert!(n >= 2);
         assert!(m >= 3);
 
-        let mut mesh = Self::new();
+        let mut mesh = Self::default();
         let sn = T::S::from_usize(n);
         let sm = T::S::from_usize(m);
 
@@ -65,7 +65,7 @@ where
     }
 
     /// Create a dodecahedron with a given `radius`.
-    pub fn dodecahedron(radius: T::S) -> Self {
+    fn dodecahedron(radius: T::S) -> Self {
         // https://en.wikipedia.org/wiki/Regular_dodecahedron#/media/File:Dodecahedron_vertices.svg
 
         let phi = radius * T::S::PHI;
@@ -74,7 +74,7 @@ where
         let zero = T::S::ZERO;
         let make_vp = |x, y, z| T::VP::from_pos(T::Vec::from_xyz(x, y, z));
 
-        let mut mesh = Self::polygon([
+        let mut mesh: Self = Make2dShape::polygon([
             make_vp(one, one, one),    // orange
             make_vp(zero, phi, iphi),  // green
             make_vp(-one, one, one),   // orange
@@ -121,13 +121,13 @@ where
     }
 
     /// Create a icosahedron with a given edge length 'l'.
-    pub fn regular_icosahedron(l: T::S) -> Self {
+    fn regular_icosahedron(l: T::S) -> Self {
         let long = l * T::S::PHI * T::S::HALF;
         let short = l * T::S::HALF;
         let zero = T::S::ZERO;
         let make_vp = |x, y, z| T::VP::from_pos(T::Vec::from_xyz(x, y, z));
 
-        let mut mesh = Self::new();
+        let mut mesh = Self::default();
 
         let start = mesh.insert_loop([
             make_vp(zero, long, -short),
@@ -169,12 +169,12 @@ where
     }*/
 
     /// An alias for `geodesic_icosahedron`.
-    pub fn icosphere(radius: T::S, n: usize) {
+    fn icosphere(radius: T::S, n: usize) {
         Self::geodesic_icosahedron(radius, n);
     }
 
     /// Create a geodesic icosahedron (aka icosphere) with a given `radius` and `n` subdivisions.
-    pub fn geodesic_icosahedron(radius: T::S, n: usize) -> Self {
+    fn geodesic_icosahedron(radius: T::S, n: usize) -> Self {
         let mut mesh = Mesh::<T>::regular_icosahedron(icosahedron_r2a(radius));
         debug_assert!(mesh.centroid().is_about(&T::Vec::ZERO, T::S::EPS));
         mesh.subdivision_frequency(
@@ -185,7 +185,7 @@ where
     }
 
     /// Create a geodesic tetrahedron with a given `radius` and `n` subdivisions.
-    pub fn geodesic_tetrahedron(radius: T::S, n: usize) -> Self {
+    fn geodesic_tetrahedron(radius: T::S, n: usize) -> Self {
         let mut mesh = Mesh::<T>::regular_tetrahedron(radius);
         debug_assert!(mesh.centroid().is_about(&T::Vec::ZERO, T::S::EPS));
         mesh.subdivision_frequency(
@@ -196,7 +196,7 @@ where
     }
 
     /// Create a geodesic octahedron with a given `radius` and `n` subdivisions.
-    pub fn geodesic_octahedron(radius: T::S, n: usize) -> Self {
+    fn geodesic_octahedron(radius: T::S, n: usize) -> Self {
         let mut mesh = Mesh::<T>::regular_octahedron(radius);
         debug_assert!(mesh.centroid().is_about(&T::Vec::ZERO, T::S::EPS));
         mesh.subdivision_frequency(

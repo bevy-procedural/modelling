@@ -18,7 +18,7 @@ pub trait HalfEdgeMeshType:
     MeshType<
     Mesh = HalfEdgeMesh<Self>,
     Vertex = HalfEdgeVertex<Self>,
-    Edge = HalfEdge<Self>,
+    Edge = HalfEdgeImpl<Self>,
     Face = HalfEdgeFace<Self>,
 >
 {

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::{
     halfedge::HalfEdgeMeshType,
     math::IndexType,
-    mesh::{EdgeBasics, MeshBasics},
+    mesh::{EdgeBasics, Halfedge, MeshBasics},
 };
 
 use super::HalfEdgeMesh;

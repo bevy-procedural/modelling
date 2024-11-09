@@ -1,6 +1,6 @@
 use crate::{
-    halfedge::{HalfEdge, HalfEdgeMesh, HalfEdgeMeshType, HalfEdgeVertex},
-    mesh::{DefaultEdgePayload, EdgeBasics, MeshBasics},
+    halfedge::{HalfEdgeImpl, HalfEdgeMesh, HalfEdgeMeshType, HalfEdgeVertex},
+    mesh::{DefaultEdgePayload, EdgeBasics, Halfedge, MeshBasics},
 };
 
 impl<T: HalfEdgeMeshType> HalfEdgeMesh<T>
@@ -17,7 +17,7 @@ where
 
         self.halfedges.set(
             new_edge,
-            HalfEdge::new(
+            HalfEdgeImpl::new(
                 old_edge.next_id(),
                 old_edge.twin_id(),
                 old_edge.id(),
@@ -63,7 +63,7 @@ where
         let new_edge = self.halfedges.allocate();
         self.halfedges.set(
             new_edge,
-            HalfEdge::new(
+            HalfEdgeImpl::new(
                 old_edge.next_id(),
                 other_old.id(),
                 old_edge.id(),

@@ -4,8 +4,7 @@ use super::{HalfEdgeMesh, HalfEdgeMeshType};
 use crate::{
     math::IndexType,
     mesh::{
-        EdgeBasics, FaceBasics, MeshBasics, Triangulation, VertexBasics, VertexIterators,
-        VertexPayload,
+        EdgeBasics, FaceBasics, Halfedge, MeshBasics, Triangulation, VertexBasics, VertexPayload,
     },
     util::Deletable,
 };

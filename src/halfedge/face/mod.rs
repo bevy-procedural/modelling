@@ -3,7 +3,9 @@ mod iterator;
 use super::HalfEdgeMeshType;
 use crate::{
     math::{HasPosition, IndexType, Vector3D},
-    mesh::{DefaultFacePayload, EdgeBasics, Face, Face3d, FaceBasics, FacePayload, MeshBasics},
+    mesh::{
+        DefaultFacePayload, EdgeBasics, Face, Face3d, FaceBasics, FacePayload, Halfedge, MeshBasics,
+    },
     util::Deletable,
 };
 
@@ -38,6 +40,11 @@ impl<T: HalfEdgeMeshType> FaceBasics<T> for HalfEdgeFace<T> {
     #[inline(always)]
     fn edge(&self, mesh: &T::Mesh) -> T::Edge {
         *mesh.edge(self.edge)
+    }
+
+    #[inline(always)]
+    fn edge_id(&self) -> T::E {
+        self.edge
     }
 
     #[inline(always)]
@@ -115,12 +122,6 @@ impl<T: HalfEdgeMeshType> Face for HalfEdgeFace<T> {
 }
 
 impl<T: HalfEdgeMeshType> HalfEdgeFace<T> {
-    /// Returns the id of a half-edge incident to the face.
-    #[inline(always)]
-    pub fn edge_id(&self) -> T::E {
-        self.edge
-    }
-
     /// Creates a new face.
     pub fn new(edge: T::E, curved: bool, payload: T::FP) -> Self {
         assert!(edge != IndexType::max());

@@ -2,7 +2,7 @@ use super::{basics::MeshBasics, MeshType};
 use crate::math::Transformable;
 
 /// Methods for transforming meshes.
-pub trait MeshTransforms<T: MeshType<Mesh = Self>>: MeshBasics<T> {
+pub trait TransformableMesh<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Transforms all vertices in the mesh
     fn transform(&mut self, t: &T::Trans) -> &mut Self
     where

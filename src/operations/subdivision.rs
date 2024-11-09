@@ -48,6 +48,7 @@ where
     ///
     /// based on an algorithm developed by Charles Loop in 1987
     pub fn loop_subdivision(&mut self, vp_builder: &impl VertexInterpolator<3, T>) -> &mut Self {
+        // TODO: See https://github.com/OptimisticPeach/hexasphere
         let fs = self.faces().map(|f| f.id()).collect::<Vec<_>>();
         for face in &fs {
             // get the edge chain

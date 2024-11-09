@@ -1,8 +1,7 @@
-use super::{basics::MeshBasics, Face3d, MeshType};
+use super::{basics::MeshBasics, MeshType};
 use crate::{
-    math::{HasNormal, HasPosition, IndexType, Vector, Vector3D, VectorIteratorExt},
-    mesh::{FaceBasics, Triangulation, VertexBasics, VertexIterators},
-    tesselate::{triangulate_face, TesselationMeta, TriangulationAlgorithm},
+    math::{HasNormal, HasPosition, Vector, Vector3D, VectorIteratorExt},
+    mesh::{Face3d, FaceBasics, VertexBasics},
 };
 use std::collections::HashMap;
 
@@ -23,45 +22,12 @@ pub enum GenerateNormals {
 }
 
 /// Methods to work with normals in a mesh.
-pub trait MeshNormals<T: MeshType<Mesh = Self>>: MeshBasics<T> {
+pub trait WithNormals<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Generates flat normals and safes them in the mesh.
     /// Requires all vertices in the mesh to be duplicated.
     /// TODO: Implement this function and also the duplication methods.
     fn generate_flat_normals(&mut self) -> &mut Self {
         todo!("generate_normals_flat is not implemented yet");
-    }
-
-    /// Triangulates the mesh and duplicates the vertices for use with flat normals.
-    /// This doesn't duplicate the halfedge mesh but only the exported vertex buffer.
-    fn triangulate_and_generate_flat_normals_post(
-        &self,
-        algorithm: TriangulationAlgorithm,
-        meta: &mut TesselationMeta<T::V>,
-    ) -> (Vec<T::V>, Vec<T::VP>)
-    where
-        T::Vec: Vector3D<S = T::S>,
-        T::VP: HasPosition<T::Vec, S = T::S> + HasNormal<T::Vec, S = T::S>,
-        T::Face: Face3d<T>,
-    {
-        let mut vertices = Vec::new();
-        let mut indices = Vec::new();
-
-        for f in self.faces() {
-            let mut tri = Triangulation::new(&mut indices);
-            let face_normal = Face3d::normal(f, self).normalize();
-            let mut id_map = HashMap::new();
-            // generate a new list of vertices (full duplication)
-            f.vertices(self).for_each(|v| {
-                let mut p = v.payload().clone();
-                id_map.insert(v.id(), IndexType::new(vertices.len()));
-                p.set_normal(face_normal);
-                vertices.push(p)
-            });
-            triangulate_face::<T>(f, self, &mut tri, algorithm, meta);
-            tri.map_indices(&id_map);
-        }
-
-        (indices, vertices)
     }
 
     /// Generates smooth normals and safes them in the mesh.

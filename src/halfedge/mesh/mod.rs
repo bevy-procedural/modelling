@@ -5,9 +5,12 @@ mod iterator;
 mod pseudo_winged;
 mod topology;
 
-use super::{HalfEdge, HalfEdgeMeshType};
+use super::{HalfEdgeImpl, HalfEdgeMeshType};
 use crate::{
-    mesh::{EdgeBasics, MeshBasics, MeshNormals, MeshTopology, MeshTrait, MeshTransforms},
+    mesh::{
+        EdgeBasics, Halfedge, MeshBasics, MeshTopology, MeshTrait, TransformableMesh,
+        Triangulateable, WithNormals,
+    },
     util::DeletableVector,
 };
 
@@ -45,7 +48,7 @@ impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
 
     /// Flips the edge, i.e., swaps the origin and target vertices.
     pub fn flip_edge(&mut self, e: T::E) -> &mut Self {
-        HalfEdge::flip(e, self);
+        Halfedge::<T>::flip(e, self);
         self
     }
 
@@ -66,9 +69,10 @@ impl<T: HalfEdgeMeshType> Default for HalfEdgeMesh<T> {
     }
 }
 
-impl<T: HalfEdgeMeshType> MeshTransforms<T> for HalfEdgeMesh<T> {}
-impl<T: HalfEdgeMeshType> MeshNormals<T> for HalfEdgeMesh<T> {}
+impl<T: HalfEdgeMeshType> TransformableMesh<T> for HalfEdgeMesh<T> {}
+impl<T: HalfEdgeMeshType> WithNormals<T> for HalfEdgeMesh<T> {}
 impl<T: HalfEdgeMeshType> MeshTopology<T> for HalfEdgeMesh<T> {}
+impl<T: HalfEdgeMeshType> Triangulateable<T> for HalfEdgeMesh<T> {}
 impl<T: HalfEdgeMeshType> MeshTrait for HalfEdgeMesh<T> {
     type T = T;
 }

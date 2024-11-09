@@ -17,7 +17,7 @@ use procedural_modelling::{
         BevyMesh3d, BevyVertexPayload,
     },
     math::HasPosition,
-    mesh::{MeshBasics, MeshNormals, MeshTransforms},
+    mesh::{MeshBasics, WithNormals, TransformableMesh},
     primitives::{generate_zigzag, random_star, Make2dShape},
     tesselate::{TesselationMeta, TriangulationAlgorithm},
 };
@@ -86,6 +86,7 @@ fn _make_hex_bridge(settings: &MeshSettings) -> BevyMesh3d {
     mesh
 }*/
 
+/*
 fn _make_spiral() -> BevyMesh3d {
     let mut mesh = BevyMesh3d::new();
     let mut edge = mesh.insert_regular_star(1.0, 0.8, 30);
@@ -97,7 +98,7 @@ fn _make_spiral() -> BevyMesh3d {
         edge = mesh.extrude_tri_face(mesh.edge(edge).face_id(), trans);
     }
     mesh
-}
+}*/
 
 fn _make_2d_merge_join() -> BevyMesh3d {
     let mut mesh = BevyMesh3d::polygon(

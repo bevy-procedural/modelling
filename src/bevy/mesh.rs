@@ -2,11 +2,9 @@
 
 use super::{Bevy2DPolygon, BevyVertexPayload};
 use crate::{
-    halfedge::{HalfEdge, HalfEdgeFace, HalfEdgeMesh, HalfEdgeMeshType, HalfEdgeVertex},
+    halfedge::{HalfEdgeImpl, HalfEdgeFace, HalfEdgeMesh, HalfEdgeMeshType, HalfEdgeVertex},
     math::{HasNormal, HasPosition, IndexType},
-    mesh::{
-        EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, MeshNormals, MeshTrait, MeshType,
-    },
+    mesh::{EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, MeshType, Triangulateable},
     tesselate::{TesselationMeta, TriangulationAlgorithm},
 };
 use bevy::{
@@ -39,7 +37,7 @@ impl MeshType for BevyMeshType3d32 {
     type Poly = Bevy2DPolygon;
     type Mesh = BevyMesh3d;
     type Face = HalfEdgeFace<Self>;
-    type Edge = HalfEdge<Self>;
+    type Edge = HalfEdgeImpl<Self>;
     type Vertex = HalfEdgeVertex<Self>;
 }
 
@@ -112,7 +110,11 @@ impl<T: HalfEdgeMeshType<VP = BevyVertexPayload, Vec = Vec3, S = f32>> HalfEdgeM
         mesh.insert_indices(self.bevy_indices(&is));
         mesh.insert_attribute(
             bevy::render::mesh::Mesh::ATTRIBUTE_POSITION,
-            VertexAttributeValues::Float32x3(vs.iter().map(|vp| vp.pos().to_array()).collect()),
+            VertexAttributeValues::Float32x3(
+                vs.iter()
+                    .map(|vp: &<BevyMeshType3d32 as MeshType>::VP| vp.pos().to_array())
+                    .collect(),
+            ),
         );
         mesh.insert_attribute(
             bevy::render::mesh::Mesh::ATTRIBUTE_NORMAL,

@@ -1,10 +1,11 @@
-use super::HalfEdge;
+use super::HalfEdgeImpl;
 use crate::{
     halfedge::HalfEdgeMeshType,
-    mesh::{EdgeBasics, MeshBasics},
+    mesh::{EdgeBasics, Halfedge, MeshBasics},
 };
 
-impl<T: HalfEdgeMeshType> HalfEdge<T> {
+
+impl<T: HalfEdgeMeshType> HalfEdgeImpl<T> {
     /// Iterates all half-edges incident to the same face (counter-clockwise)
     #[inline(always)]
     pub fn edges_face<'a>(&'a self, mesh: &'a T::Mesh) -> IncidentToFaceIterator<'a, T> {
@@ -30,13 +31,13 @@ impl<T: HalfEdgeMeshType> HalfEdge<T> {
 pub struct IncidentToFaceIterator<'a, T: HalfEdgeMeshType + 'a> {
     is_first: bool,
     first: T::E,
-    current: HalfEdge<T>,
+    current: HalfEdgeImpl<T>,
     mesh: &'a T::Mesh,
 }
 
 impl<'a, T: HalfEdgeMeshType> IncidentToFaceIterator<'a, T> {
     /// Creates a new iterator
-    pub fn new(first: HalfEdge<T>, mesh: &'a T::Mesh) -> Self {
+    pub fn new(first: HalfEdgeImpl<T>, mesh: &'a T::Mesh) -> Self {
         Self {
             first: first.id(),
             current: first,
@@ -82,13 +83,13 @@ impl<'a, T: HalfEdgeMeshType> ExactSizeIterator for IncidentToFaceIterator<'a, T
 pub struct IncidentToFaceBackIterator<'a, T: HalfEdgeMeshType + 'a> {
     is_first: bool,
     first: T::E,
-    current: HalfEdge<T>,
+    current: HalfEdgeImpl<T>,
     mesh: &'a T::Mesh,
 }
 
 impl<'a, T: HalfEdgeMeshType> IncidentToFaceBackIterator<'a, T> {
     /// Creates a new iterator
-    pub fn new(first: HalfEdge<T>, mesh: &'a T::Mesh) -> Self {
+    pub fn new(first: HalfEdgeImpl<T>, mesh: &'a T::Mesh) -> Self {
         Self {
             first: first.id(),
             current: first,
@@ -99,7 +100,7 @@ impl<'a, T: HalfEdgeMeshType> IncidentToFaceBackIterator<'a, T> {
 }
 
 impl<'a, T: HalfEdgeMeshType> Iterator for IncidentToFaceBackIterator<'a, T> {
-    type Item = HalfEdge<T>;
+    type Item = HalfEdgeImpl<T>;
 
     #[inline(always)]
     fn next(&mut self) -> Option<Self::Item> {
@@ -138,7 +139,7 @@ impl<'a, T: HalfEdgeMeshType> IncidentToFaceIteratorMut<'a, T> {
 }
 
 impl<'a, T: HalfEdgeMeshType> Iterator for IncidentToFaceIteratorMut<'a, T> {
-    type Item = &'a mut HalfEdge<T>;
+    type Item = &'a mut HalfEdgeImpl<T>;
 
     fn next(&mut self) -> Option<Self::Item> {
         // SAFETY: This unsafe block assumes exclusive access to `self.mesh`
@@ -149,7 +150,7 @@ impl<'a, T: HalfEdgeMeshType> Iterator for IncidentToFaceIteratorMut<'a, T> {
         unsafe {
             if self.is_first {
                 self.is_first = false;
-                let edge_ptr = self.mesh.edge_mut(self.current) as *mut HalfEdge<T>;
+                let edge_ptr = self.mesh.edge_mut(self.current) as *mut HalfEdgeImpl<T>;
                 return Some(&mut *edge_ptr);
             }
             let next = self.mesh.edge(self.current).next(self.mesh);
@@ -157,7 +158,7 @@ impl<'a, T: HalfEdgeMeshType> Iterator for IncidentToFaceIteratorMut<'a, T> {
                 return None;
             } else {
                 self.current = next.id();
-                let edge_ptr = self.mesh.edge_mut(next.id()) as *mut HalfEdge<T>;
+                let edge_ptr = self.mesh.edge_mut(next.id()) as *mut HalfEdgeImpl<T>;
                 return Some(&mut *edge_ptr);
             }
         }

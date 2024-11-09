@@ -6,7 +6,7 @@ use super::HalfEdgeMeshType;
 use crate::{
     math::IndexType,
     mesh::{
-        DefaultVertexPayload, EdgeBasics, MeshBasics, MeshType, Vertex, VertexBasics, VertexIterators,
+        DefaultVertexPayload, EdgeBasics, Halfedge, MeshBasics, MeshType, Vertex, VertexBasics,
         VertexPayload,
     },
     util::Deletable,
@@ -137,9 +137,7 @@ impl<T: HalfEdgeMeshType> VertexBasics<T> for HalfEdgeVertex<T> {
     fn edge(&self, mesh: &T::Mesh) -> T::Edge {
         *mesh.edge(self.edge)
     }
-}
 
-impl<T: HalfEdgeMeshType> VertexIterators<T> for HalfEdgeVertex<T> {
     /// Iterates all vertices adjacent to the vertex in the same manifold edge wheel (clockwise)
     #[inline(always)]
     fn vertices<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Vertex> + 'a {

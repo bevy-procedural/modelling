@@ -1,3 +1,4 @@
+/// TODO: Min-weight triangulation is very much work in progress
 use std::time::Instant;
 
 use crate::{
@@ -234,8 +235,6 @@ pub fn minweight_dynamic_direct2<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec
     vs: &Vec<IndexedVertex2D<V, Vec2>>,
     indices: &mut Triangulation<V>,
 ) {
-    assert!(false, "Needs fixing!");
-
     /*
     TODO: Turns out, this is difficult to optimize!
 
@@ -279,6 +278,8 @@ pub fn minweight_dynamic_direct2<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec
     );
 
     traceback(n, 0, n - 1, &s, indices, &vs);
+    
+    todo!("Needs fixing!");
 }
 
 #[inline(always)]

@@ -1,7 +1,7 @@
 use crate::{
-    halfedge::{HalfEdge, HalfEdgeMesh, HalfEdgeMeshType, HalfEdgeVertex},
+    halfedge::{HalfEdgeImpl, HalfEdgeMesh, HalfEdgeMeshType, HalfEdgeVertex},
     math::{HasPosition, IndexType, Vector3D},
-    mesh::{DefaultEdgePayload, EdgeBasics, MeshBasics, MeshTopology, VertexBasics},
+    mesh::{DefaultEdgePayload, EdgeBasics, Halfedge, MeshBasics, MeshTopology, VertexBasics},
 };
 
 // TODO: move more functions to the builder trait!
@@ -291,7 +291,7 @@ impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
     ) {
         self.halfedges.set(
             e,
-            HalfEdge::new(
+            HalfEdgeImpl::new(
                 if next == IndexType::max() { twin } else { next },
                 twin,
                 if prev == IndexType::max() { twin } else { prev },

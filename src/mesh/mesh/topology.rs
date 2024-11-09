@@ -1,4 +1,4 @@
-use crate::mesh::VertexIterators;
+use crate::mesh::VertexBasics;
 
 use super::{MeshBasics, MeshType};
 use std::collections::{HashMap, HashSet, VecDeque};

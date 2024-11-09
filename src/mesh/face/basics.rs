@@ -12,6 +12,9 @@ pub trait FaceBasics<T: MeshType<Face = Self>>:
     /// Returns an edge incident to the face.
     fn edge(&self, mesh: &T::Mesh) -> T::Edge;
 
+    /// Returns the id of a half-edge incident to the face.
+    fn edge_id(&self) -> T::E;
+
     /// Whether the face is allowed to be curved.
     fn may_be_curved(&self) -> bool;
 

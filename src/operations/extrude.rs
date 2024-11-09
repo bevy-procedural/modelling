@@ -5,6 +5,7 @@ use crate::{
 };
 use itertools::Itertools;
 
+//pub trait Extrusions<T: MeshType<Mesh = Self>>: MeshTrait<T = T>
 impl<T: HalfEdgeMeshType> HalfEdgeMesh<T>
 where
     T::EP: DefaultEdgePayload,
