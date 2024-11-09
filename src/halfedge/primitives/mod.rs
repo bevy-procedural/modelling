@@ -1,10 +1,10 @@
-use super::{HalfEdgeMesh, HalfEdgeMeshType};
+use super::{HalfEdgeMeshImpl, HalfEdgeMeshType};
 use crate::{
-    mesh::{DefaultEdgePayload, DefaultFacePayload, Halfedge, MeshBasics, MeshBuilder},
+    mesh::{DefaultEdgePayload, DefaultFacePayload, HalfEdge, MeshBasics, MeshBuilder},
     primitives::Make2dShape,
 };
 
-impl<T: HalfEdgeMeshType<Mesh = Self>> Make2dShape<T> for HalfEdgeMesh<T>
+impl<T: HalfEdgeMeshType<Mesh = Self>> Make2dShape<T> for HalfEdgeMeshImpl<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,

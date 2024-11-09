@@ -3,13 +3,11 @@ mod halfedge;
 mod iterator;
 
 pub use iterator::*;
-pub use basics::*;
-pub use halfedge::*;
 
 use super::HalfEdgeMeshType;
 use crate::{
     math::IndexType,
-    mesh::{DefaultEdgePayload, Edge, EdgeBasics, EdgePayload, Halfedge, MeshBasics},
+    mesh::{DefaultEdgePayload, Edge, EdgeBasics, EdgePayload},
     util::Deletable,
 };
 

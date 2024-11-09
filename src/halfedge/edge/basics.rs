@@ -1,5 +1,5 @@
 use super::{HalfEdgeImpl, HalfEdgeMeshType};
-use crate::mesh::{EdgeBasics, Halfedge, MeshBasics};
+use crate::mesh::{EdgeBasics, HalfEdge, MeshBasics};
 
 impl<T: HalfEdgeMeshType> EdgeBasics<T> for HalfEdgeImpl<T> {
     /// Returns the index of the half-edge

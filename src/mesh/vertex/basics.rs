@@ -45,4 +45,22 @@ pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone + PartialEq {
     fn neighbor_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::V> + 'a {
         self.vertices(mesh).map(|v| v.id())
     }
+
+    /// Iterates all outgoing (half)edges (resp. all edges in outwards-direction
+    /// if undirected) incident to this vertex (clockwise)
+    fn edges_out<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Edge> + 'a;
+
+    /// Iterates all ingoing (half)edges (resp. all edges in inwards-direction
+    /// if undirected) incident to this vertex (clockwise)
+    fn edges_in<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Edge> + 'a;
+
+    /*
+    /// Iterates the wheel of vertices (will have length one if the vertex is manifold)
+    #[inline(always)]
+    pub fn wheel<'a>(
+        &'a self,
+        mesh: &'a T::Mesh,
+    ) -> impl Iterator<Item = Vertex<E, V, VP>> + 'a {
+        NonmanifoldVertexIterator::new(self.clone(), mesh)
+    }*/
 }

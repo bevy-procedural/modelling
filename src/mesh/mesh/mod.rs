@@ -2,6 +2,7 @@
 mod basics;
 mod builder;
 mod check;
+mod halfedge;
 mod mesh_type;
 mod normals;
 mod payload;
@@ -13,6 +14,7 @@ mod triangulate;
 pub use basics::*;
 pub use builder::*;
 pub use check::*;
+pub use halfedge::*;
 pub use mesh_type::*;
 pub use normals::*;
 pub use payload::*;

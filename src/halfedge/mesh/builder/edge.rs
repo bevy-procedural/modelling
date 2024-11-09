@@ -1,12 +1,15 @@
 use crate::{
-    halfedge::{HalfEdgeImpl, HalfEdgeMesh, HalfEdgeMeshType, HalfEdgeVertex},
+    halfedge::{HalfEdgeImpl, HalfEdgeMeshImpl, HalfEdgeMeshType, HalfEdgeVertexImpl},
     math::{HasPosition, IndexType, Vector3D},
-    mesh::{DefaultEdgePayload, EdgeBasics, Halfedge, MeshBasics, MeshTopology, VertexBasics},
+    mesh::{
+        DefaultEdgePayload, EdgeBasics, HalfEdge, HalfEdgeVertex, MeshBasics, MeshTopology,
+        VertexBasics,
+    },
 };
 
 // TODO: move more functions to the builder trait!
 
-impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
+impl<T: HalfEdgeMeshType> HalfEdgeMeshImpl<T> {
     /// Inserts vertices a and b and adds an isolated edge between a and b.
     pub fn add_isolated_edge(
         &mut self,
@@ -33,8 +36,8 @@ impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
                 epb,
             ),
         );
-        self.vertices.set(v0, HalfEdgeVertex::new(e0, a));
-        self.vertices.set(v1, HalfEdgeVertex::new(e1, b));
+        self.vertices.set(v0, HalfEdgeVertexImpl::new(e0, a));
+        self.vertices.set(v1, HalfEdgeVertexImpl::new(e1, b));
 
         (v0, v1)
     }
@@ -303,7 +306,7 @@ impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
     }
 }
 
-impl<T: HalfEdgeMeshType> HalfEdgeMesh<T>
+impl<T: HalfEdgeMeshType> HalfEdgeMeshImpl<T>
 where
     T::EP: DefaultEdgePayload,
 {
@@ -323,7 +326,7 @@ where
     }
 }
 
-impl<T: HalfEdgeMeshType> HalfEdgeMesh<T>
+impl<T: HalfEdgeMeshType> HalfEdgeMeshImpl<T>
 where
     T::Vec: Vector3D<S = T::S>,
     T::VP: HasPosition<T::Vec, S = T::S>,

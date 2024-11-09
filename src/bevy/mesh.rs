@@ -2,7 +2,7 @@
 
 use super::{Bevy2DPolygon, BevyVertexPayload};
 use crate::{
-    halfedge::{HalfEdgeImpl, HalfEdgeFace, HalfEdgeMesh, HalfEdgeMeshType, HalfEdgeVertex},
+    halfedge::{HalfEdgeImpl, HalfEdgeFaceImpl, HalfEdgeMeshImpl, HalfEdgeMeshType, HalfEdgeVertexImpl},
     math::{HasNormal, HasPosition, IndexType},
     mesh::{EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, MeshType, Triangulateable},
     tesselate::{TesselationMeta, TriangulationAlgorithm},
@@ -36,17 +36,17 @@ impl MeshType for BevyMeshType3d32 {
     type Rot = Quat;
     type Poly = Bevy2DPolygon;
     type Mesh = BevyMesh3d;
-    type Face = HalfEdgeFace<Self>;
+    type Face = HalfEdgeFaceImpl<Self>;
     type Edge = HalfEdgeImpl<Self>;
-    type Vertex = HalfEdgeVertex<Self>;
+    type Vertex = HalfEdgeVertexImpl<Self>;
 }
 
 impl HalfEdgeMeshType for BevyMeshType3d32 {}
 
 /// A mesh with bevy 3D vertices
-pub type BevyMesh3d = HalfEdgeMesh<BevyMeshType3d32>;
+pub type BevyMesh3d = HalfEdgeMeshImpl<BevyMeshType3d32>;
 
-impl<T: HalfEdgeMeshType<VP = BevyVertexPayload, Vec = Vec3, S = f32>> HalfEdgeMesh<T> {
+impl<T: HalfEdgeMeshType<VP = BevyVertexPayload, Vec = Vec3, S = f32>> HalfEdgeMeshImpl<T> {
     fn bevy_indices(&self, indices: &Vec<T::V>) -> bevy::render::mesh::Indices {
         if std::mem::size_of::<T::V>() == std::mem::size_of::<u32>() {
             bevy::render::mesh::Indices::U32(

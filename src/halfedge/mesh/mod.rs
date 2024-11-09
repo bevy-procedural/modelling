@@ -1,16 +1,12 @@
 mod basics;
 mod builder;
 mod check;
-mod iterator;
+mod halfedge;
 mod pseudo_winged;
-mod topology;
 
-use super::{HalfEdgeImpl, HalfEdgeMeshType};
+use super::HalfEdgeMeshType;
 use crate::{
-    mesh::{
-        EdgeBasics, Halfedge, MeshBasics, MeshTopology, MeshTrait, TransformableMesh,
-        Triangulateable, WithNormals,
-    },
+    mesh::{MeshTopology, MeshTrait, TransformableMesh, Triangulateable, WithNormals},
     util::DeletableVector,
 };
 
@@ -26,7 +22,7 @@ use crate::{
 ///
 /// Currently only euclidean geometry is supported.
 #[derive(Clone)]
-pub struct HalfEdgeMesh<T: HalfEdgeMeshType> {
+pub struct HalfEdgeMeshImpl<T: HalfEdgeMeshType> {
     // TODO: to import non-manifold edges, we could use the "tufted cover" https://www.cs.cmu.edu/~kmcrane/Projects/NonmanifoldLaplace/index.html
     // TODO: non-euclidean geometry
     vertices: DeletableVector<T::Vertex, T::V>,
@@ -35,7 +31,7 @@ pub struct HalfEdgeMesh<T: HalfEdgeMeshType> {
     payload: T::MP,
 }
 
-impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
+impl<T: HalfEdgeMeshType> HalfEdgeMeshImpl<T> {
     /// Creates a new empty halfedge mesh
     pub fn new() -> Self {
         Self {
@@ -45,34 +41,18 @@ impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
             payload: T::MP::default(),
         }
     }
-
-    /// Flips the edge, i.e., swaps the origin and target vertices.
-    pub fn flip_edge(&mut self, e: T::E) -> &mut Self {
-        Halfedge::<T>::flip(e, self);
-        self
-    }
-
-    /// Flip all edges (and faces) turning the mesh inside out.
-    pub fn flip(&mut self) -> &mut Self {
-        // TODO: this is an unnecessary clone
-        let ids: Vec<T::E> = self.edges().map(|e| e.id()).collect();
-        ids.iter().for_each(|&e| {
-            self.flip_edge(e);
-        });
-        self
-    }
 }
 
-impl<T: HalfEdgeMeshType> Default for HalfEdgeMesh<T> {
+impl<T: HalfEdgeMeshType> Default for HalfEdgeMeshImpl<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T: HalfEdgeMeshType> TransformableMesh<T> for HalfEdgeMesh<T> {}
-impl<T: HalfEdgeMeshType> WithNormals<T> for HalfEdgeMesh<T> {}
-impl<T: HalfEdgeMeshType> MeshTopology<T> for HalfEdgeMesh<T> {}
-impl<T: HalfEdgeMeshType> Triangulateable<T> for HalfEdgeMesh<T> {}
-impl<T: HalfEdgeMeshType> MeshTrait for HalfEdgeMesh<T> {
+impl<T: HalfEdgeMeshType> TransformableMesh<T> for HalfEdgeMeshImpl<T> {}
+impl<T: HalfEdgeMeshType> WithNormals<T> for HalfEdgeMeshImpl<T> {}
+impl<T: HalfEdgeMeshType> MeshTopology<T> for HalfEdgeMeshImpl<T> {}
+impl<T: HalfEdgeMeshType> Triangulateable<T> for HalfEdgeMeshImpl<T> {}
+impl<T: HalfEdgeMeshType> MeshTrait for HalfEdgeMeshImpl<T> {
     type T = T;
 }

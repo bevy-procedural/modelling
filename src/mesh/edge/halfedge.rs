@@ -2,7 +2,7 @@ use super::EdgeBasics;
 use crate::mesh::MeshType;
 
 /// Basic halfedge traits.
-pub trait Halfedge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
+pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
     /// Creates a new half-edge
     fn new(next: T::E, twin: T::E, prev: T::E, origin: T::V, face: T::F, payload: T::EP) -> Self;
 

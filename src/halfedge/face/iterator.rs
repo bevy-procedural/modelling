@@ -1,10 +1,10 @@
-use super::super::{HalfEdgeFace, IncidentToFaceIterator};
+use super::super::{HalfEdgeFaceImpl, IncidentToFaceIterator};
 use crate::{
     halfedge::HalfEdgeMeshType,
     mesh::{EdgeBasics, FaceBasics},
 };
 
-impl<T: HalfEdgeMeshType> HalfEdgeFace<T> {
+impl<T: HalfEdgeMeshType> HalfEdgeFaceImpl<T> {
     /// Iterates all half-edges incident to the face
     #[inline(always)]
     pub fn edges<'a>(&'a self, mesh: &'a T::Mesh) -> IncidentToFaceIterator<'a, T> {

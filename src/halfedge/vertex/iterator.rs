@@ -1,32 +1,7 @@
-use super::HalfEdgeVertex;
 use crate::{
     halfedge::HalfEdgeMeshType,
-    mesh::{EdgeBasics, Halfedge, MeshBasics, VertexBasics},
+    mesh::{EdgeBasics, HalfEdge, MeshBasics},
 };
-
-impl<T: HalfEdgeMeshType> HalfEdgeVertex<T> {
-    /// Iterates all outgoing half-edges incident to this vertex in the same manifold edge wheel (clockwise)
-    #[inline(always)]
-    pub fn edges_out<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Edge> + 'a {
-        IncidentToVertexIterator::<T>::new(self.edge(mesh), mesh)
-    }
-
-    /// Iterates all ingoing half-edges incident to this vertex in the same manifold edge wheel (clockwise)
-    #[inline(always)]
-    pub fn edges_in<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Edge> + 'a {
-        IncidentToVertexIterator::<T>::new(self.edge(mesh), mesh).map(|e| e.twin(mesh))
-    }
-
-    /*
-    /// Iterates the wheel of vertices (will have length one if the vertex is manifold)
-    #[inline(always)]
-    pub fn wheel<'a>(
-        &'a self,
-        mesh: &'a T::Mesh,
-    ) -> impl Iterator<Item = Vertex<E, V, VP>> + 'a {
-        NonmanifoldVertexIterator::new(self.clone(), mesh)
-    }*/
-}
 
 /// Iterator over all half-edges incident to the same vertex (clockwise)
 pub struct IncidentToVertexIterator<'a, T: HalfEdgeMeshType + 'a> {

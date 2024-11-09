@@ -199,9 +199,7 @@ The package supports different triangulation algorithms. The robustness and rend
 
 ## Hierarchy of Traits
 
-The availability of algorithms and operations for different mesh data structures is represented by traits. For example, the `Transformable` trait implements methods such as `translate` and `rotate` and the `MakePrismatoid` trait implements methods such as `insert_pyramid` or `insert_cube`. There are also supertraits such as `OpenManifold2d` that combine multiple traits for easier use. For a full list of traits and their implementations, see the [documentation](https://docs.rs/procedural_modelling).
-
-    * WithNormals
+The availability of algorithms and operations for different mesh data structures is represented by traits. For example, the `Transformable` trait implements methods such as `translate` and `rotate` and the `MakePrismatoid` trait implements methods such as `insert_pyramid` or `insert_cube`. There are also supertraits such as `Open2Manifold` that combine multiple traits for easier use. For a full list of traits and their implementations, see the [documentation](https://docs.rs/procedural_modelling).
 
 ## Supported Bevy Versions
 

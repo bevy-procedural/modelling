@@ -17,7 +17,7 @@ use procedural_modelling::{
         BevyMesh3d, BevyVertexPayload,
     },
     math::HasPosition,
-    mesh::{MeshBasics, WithNormals, TransformableMesh},
+    mesh::{TransformableMesh, WithNormals},
     primitives::{generate_zigzag, random_star, Make2dShape},
     tesselate::{TesselationMeta, TriangulationAlgorithm},
 };

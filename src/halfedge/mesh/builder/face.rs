@@ -1,16 +1,16 @@
 use itertools::Itertools;
 
 use crate::{
-    halfedge::{HalfEdgeFace, HalfEdgeMesh, HalfEdgeMeshType},
-    mesh::{DefaultEdgePayload, DefaultFacePayload, EdgeBasics, FaceBasics, Halfedge, MeshBasics},
+    halfedge::{HalfEdgeFaceImpl, HalfEdgeMeshImpl, HalfEdgeMeshType},
+    mesh::{DefaultEdgePayload, DefaultFacePayload, EdgeBasics, FaceBasics, HalfEdge, MeshBasics, VertexBasics},
 };
 
 // TODO: move more functions to the builder trait!
 
-impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
+impl<T: HalfEdgeMeshType> HalfEdgeMeshImpl<T> {
     /// Close the open boundary with a single face. Doesn't create new edges or vertices.
     pub fn close_hole(&mut self, e: T::E, fp: T::FP, curved: bool) -> T::F {
-        let f = self.faces.push(HalfEdgeFace::new(e, curved, fp));
+        let f = self.faces.push(HalfEdgeFaceImpl::new(e, curved, fp));
         self.edge(e)
             .clone()
             .edges_face_mut(self)
@@ -45,7 +45,7 @@ impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
         let (e1, e2) = self.insert_edge(inside, ep1, outside, ep2);
 
         // Insert the face
-        let f = self.faces.push(HalfEdgeFace::new(inside, curved, fp));
+        let f = self.faces.push(HalfEdgeFaceImpl::new(inside, curved, fp));
 
         self.edge(inside)
             .clone()
@@ -110,7 +110,7 @@ impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
     }
 }
 
-impl<T: HalfEdgeMeshType> HalfEdgeMesh<T>
+impl<T: HalfEdgeMeshType> HalfEdgeMeshImpl<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,

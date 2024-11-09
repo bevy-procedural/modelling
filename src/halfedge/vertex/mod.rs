@@ -1,3 +1,4 @@
+mod basics;
 mod iterator;
 
 pub use iterator::*;
@@ -5,17 +6,13 @@ pub use iterator::*;
 use super::HalfEdgeMeshType;
 use crate::{
     math::IndexType,
-    mesh::{
-        DefaultVertexPayload, EdgeBasics, Halfedge, MeshBasics, MeshType, Vertex, VertexBasics,
-        VertexPayload,
-    },
+    mesh::{DefaultVertexPayload, HalfEdgeVertex, MeshType, Vertex, VertexBasics, VertexPayload},
     util::Deletable,
 };
-use itertools::Itertools;
 
 /// A vertex in a mesh.
 #[derive(Clone, PartialEq)]
-pub struct HalfEdgeVertex<T: HalfEdgeMeshType> {
+pub struct HalfEdgeVertexImpl<T: HalfEdgeMeshType> {
     /// the index of the vertex
     id: T::V,
 
@@ -33,7 +30,7 @@ pub struct HalfEdgeVertex<T: HalfEdgeMeshType> {
     payload: T::VP,
 }
 
-impl<T: HalfEdgeMeshType> HalfEdgeVertex<T> {
+impl<T: HalfEdgeMeshType> HalfEdgeVertexImpl<T> {
     /// Creates a new vertex
     pub fn new(edge: T::E, payload: T::VP) -> Self {
         assert!(edge != IndexType::max());
@@ -44,125 +41,22 @@ impl<T: HalfEdgeMeshType> HalfEdgeVertex<T> {
             payload,
         }
     }
+}
 
-    /// Changes the representative of the outgoing edges
-    pub fn set_edge(&mut self, edge: T::E) {
+impl<T: HalfEdgeMeshType> HalfEdgeVertex<T> for HalfEdgeVertexImpl<T> {
+    fn set_edge(&mut self, edge: T::E) {
         self.edge = edge;
     }
-
-    /// Returns an outgoing boundary edge incident to the vertex
-    pub fn outgoing_boundary_edge(&self, mesh: &T::Mesh) -> Option<T::E> {
-        // TODO: Assumes a manifold vertex. Otherwise, there can be multiple boundary edges!
-        debug_assert!(
-            self.edges_out(mesh)
-                .filter(|e| e.is_boundary_self())
-                .exactly_one()
-                .is_ok(),
-            "Vertex {} is not manifold",
-            self.id()
-        );
-
-        self.edges_out(mesh).find_map(|e| {
-            if e.is_boundary_self() {
-                Some(e.id())
-            } else {
-                None
-            }
-        })
-    }
-
-    /// Returns an ingoing boundary edge incident to the vertex
-    pub fn ingoing_boundary_edge(&self, mesh: &T::Mesh) -> Option<T::E> {
-        debug_assert!(
-            self.edges_in(mesh)
-                .filter(|e| e.is_boundary_self())
-                .exactly_one()
-                .is_ok(),
-            "Vertex {} is not manifold",
-            self.id()
-        );
-
-        self.edges_in(mesh).find_map(|e| {
-            if e.is_boundary_self() {
-                Some(e.id())
-            } else {
-                None
-            }
-        })
-    }
 }
 
-impl<T: HalfEdgeMeshType> VertexBasics<T> for HalfEdgeVertex<T> {
-    /// Returns the index of the vertex
-    #[inline(always)]
-    fn id(&self) -> T::V {
-        self.id
-    }
-
-    /// Returns the payload of the vertex
-    #[inline(always)]
-    fn payload(&self) -> &T::VP {
-        &self.payload
-    }
-
-    /// Returns a mutable reference to the payload of the vertex
-    #[inline(always)]
-    fn payload_mut(&mut self) -> &mut T::VP {
-        &mut self.payload
-    }
-
-    /// Returns whether the vertex is a boundary vertex
-    #[inline(always)]
-    fn is_boundary(&self, mesh: &T::Mesh) -> bool {
-        self.edges_out(mesh).any(|e| e.is_boundary(mesh))
-    }
-
-    /*
-    /// Returns whether the vertex is manifold
-    #[inline(always)]
-    fn is_manifold(&self) -> bool {
-        self.next == IndexType::max()
-    }*/
-
-    /// Returns whether the vertex has only one edge incident to it
-    #[inline(always)]
-    fn has_only_one_edge(&self, mesh: &T::Mesh) -> bool {
-        // self.edges(mesh).count() == 1
-        let e = self.edge(mesh);
-        e.prev_id() == e.twin_id()
-    }
-
-    /// Returns an outgoing half-edge incident to the vertex
-    #[inline(always)]
-    fn edge(&self, mesh: &T::Mesh) -> T::Edge {
-        *mesh.edge(self.edge)
-    }
-
-    /// Iterates all vertices adjacent to the vertex in the same manifold edge wheel (clockwise)
-    #[inline(always)]
-    fn vertices<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Vertex> + 'a {
-        // TODO: slightly inefficient because of the clone and target being indirect
-        self.edges_out(mesh).map(|e| e.target(mesh).clone())
-    }
-
-    /// Iterates all faces adjacent to this vertex in the same manifold edge wheel (clockwise)
-    #[inline(always)]
-    fn faces<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Face> + 'a
-    where
-        T: 'a,
-    {
-        self.edges_out(mesh).filter_map(|e| e.face(mesh).cloned())
-    }
-}
-
-impl<T: HalfEdgeMeshType> Vertex for HalfEdgeVertex<T>
+impl<T: HalfEdgeMeshType> Vertex for HalfEdgeVertexImpl<T>
 where
-    T: MeshType<Vertex = HalfEdgeVertex<T>>,
+    T: MeshType<Vertex = HalfEdgeVertexImpl<T>>,
 {
     type T = T;
 }
 
-impl<T: HalfEdgeMeshType> std::fmt::Debug for HalfEdgeVertex<T> {
+impl<T: HalfEdgeMeshType> std::fmt::Debug for HalfEdgeVertexImpl<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -175,7 +69,7 @@ impl<T: HalfEdgeMeshType> std::fmt::Debug for HalfEdgeVertex<T> {
     }
 }
 
-impl<T: HalfEdgeMeshType> Deletable<T::V> for HalfEdgeVertex<T> {
+impl<T: HalfEdgeMeshType> Deletable<T::V> for HalfEdgeVertexImpl<T> {
     fn delete(&mut self) {
         assert!(self.id != IndexType::max());
         self.id = IndexType::max();
@@ -200,7 +94,7 @@ impl<T: HalfEdgeMeshType> Deletable<T::V> for HalfEdgeVertex<T> {
     }
 }
 
-impl<T: HalfEdgeMeshType> Default for HalfEdgeVertex<T>
+impl<T: HalfEdgeMeshType> Default for HalfEdgeVertexImpl<T>
 where
     T::VP: DefaultVertexPayload,
 {

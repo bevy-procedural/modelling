@@ -1,12 +1,12 @@
 use crate::{
-    halfedge::{HalfEdgeMesh, HalfEdgeMeshType},
+    halfedge::{HalfEdgeMeshImpl, HalfEdgeMeshType},
     math::IndexType,
-    mesh::{EdgeBasics, Halfedge, MeshBasics, VertexBasics},
+    mesh::{EdgeBasics, HalfEdge, MeshBasics, VertexBasics},
 };
 
 // TODO: move more functions to the builder trait!
 
-impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
+impl<T: HalfEdgeMeshType> HalfEdgeMeshImpl<T> {
     /// Creates a new vertex based on `vp` and connects it to vertex `v` with a pair of halfedges
     /// TODO: Docs
     pub fn add_vertex_via_vertex(

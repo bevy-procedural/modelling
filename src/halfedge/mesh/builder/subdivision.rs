@@ -1,9 +1,9 @@
 use crate::{
-    halfedge::{HalfEdgeImpl, HalfEdgeMesh, HalfEdgeMeshType, HalfEdgeVertex},
-    mesh::{DefaultEdgePayload, EdgeBasics, Halfedge, MeshBasics},
+    halfedge::{HalfEdgeImpl, HalfEdgeMeshImpl, HalfEdgeMeshType, HalfEdgeVertexImpl},
+    mesh::{DefaultEdgePayload, EdgeBasics, HalfEdge, MeshBasics},
 };
 
-impl<T: HalfEdgeMeshType> HalfEdgeMesh<T>
+impl<T: HalfEdgeMeshType> HalfEdgeMeshImpl<T>
 where
     T::EP: DefaultEdgePayload,
 {
@@ -26,7 +26,7 @@ where
                 Default::default(),
             ),
         );
-        self.vertices.set(new_v, HalfEdgeVertex::new(new_edge, vp));
+        self.vertices.set(new_v, HalfEdgeVertexImpl::new(new_edge, vp));
 
         self.edge_mut(old_edge.next_id()).set_prev(new_edge);
         self.edge_mut(old_edge.id()).set_next(new_edge);

@@ -1,7 +1,7 @@
 use super::HalfEdgeImpl;
 use crate::{
     halfedge::HalfEdgeMeshType,
-    mesh::{EdgeBasics, Halfedge, MeshBasics},
+    mesh::{EdgeBasics, HalfEdge, MeshBasics},
 };
 
 

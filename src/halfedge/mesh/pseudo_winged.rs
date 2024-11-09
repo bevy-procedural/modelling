@@ -3,10 +3,10 @@ use std::collections::HashMap;
 use crate::{
     halfedge::HalfEdgeMeshType,
     math::IndexType,
-    mesh::{EdgeBasics, Halfedge, MeshBasics},
+    mesh::{EdgeBasics, HalfEdge, MeshBasics},
 };
 
-use super::HalfEdgeMesh;
+use super::HalfEdgeMeshImpl;
 
 /// A pseudo-winged edge representation of an edge for debugging purposes
 #[derive(Clone)]
@@ -56,7 +56,7 @@ impl<E: IndexType, V: IndexType, F: IndexType> std::fmt::Debug for PseudoWingedE
     }
 }
 
-impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> {
+impl<T: HalfEdgeMeshType> HalfEdgeMeshImpl<T> {
     /// Returns all edges as pseudo-winged edges
     pub(crate) fn pair_edges(&self) -> Vec<PseudoWingedEdge<T::E, T::V, T::F>> {
         let mut edges: HashMap<T::E, PseudoWingedEdge<T::E, T::V, T::F>> = HashMap::new();

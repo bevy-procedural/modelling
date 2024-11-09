@@ -1,15 +1,15 @@
 use std::collections::HashMap;
 
-use super::{HalfEdgeMesh, HalfEdgeMeshType};
+use super::{HalfEdgeMeshImpl, HalfEdgeMeshType};
 use crate::{
     math::IndexType,
     mesh::{
-        EdgeBasics, FaceBasics, Halfedge, MeshBasics, Triangulation, VertexBasics, VertexPayload,
+        EdgeBasics, FaceBasics, HalfEdge, MeshBasics, Triangulation, VertexBasics, VertexPayload,
     },
     util::Deletable,
 };
 
-impl<T: HalfEdgeMeshType> MeshBasics<T> for HalfEdgeMesh<T> {
+impl<T: HalfEdgeMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     fn has_vertex(&self, index: T::V) -> bool {
         self.vertices.has(index)
     }
