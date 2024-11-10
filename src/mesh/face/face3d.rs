@@ -1,7 +1,7 @@
 use super::{basics::FaceBasics, MeshType};
 use crate::{
     math::{
-        HasPosition, LineSegment2D, Scalar, TransformTrait, Vector, Vector3D, VectorIteratorExt,
+        HasPosition, LineSegment2D, Scalar, TransformTrait, Vector, Vector3D, Vector3DIteratorExt,
     },
     mesh::{IndexedVertex2D, VertexBasics},
 };
@@ -98,27 +98,16 @@ where
             self
         );
 
-        let normal = self
-            .vertices(mesh)
-            .map(|v| v.pos())
-            .circular_tuple_windows::<(_, _)>()
-            .map(|(a, b)| {
-                T::Vec::new(
-                    (a.z() + b.z()) * (b.y() - a.y()),
-                    (a.x() + b.x()) * (b.z() - a.z()),
-                    (a.y() + b.y()) * (b.x() - a.x()),
-                )
-            })
-            .stable_sum();
+        let normal = self.vertices(mesh).map(|v| v.pos()).normal();
 
-       /* assert!(
+        /* assert!(
             normal.length_squared() >= T::S::EPS,
             "Degenerated face {} {:?}",
             self.id(),
             self.vertices(mesh).map(|v| v.pos()).collect::<Vec<_>>()
         );*/
 
-        normal * T::Vec::splat(T::S::from(-0.5))
+        normal
     }
 
     // TODO: check for degenerated faces; empty triangles, collinear points etc...

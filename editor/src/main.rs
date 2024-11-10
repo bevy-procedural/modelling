@@ -16,9 +16,10 @@ use procedural_modelling::{
         text::{Text3dGizmos, Text3dGizmosPlugin},
         BevyMesh3d, BevyVertexPayload,
     },
-    math::HasPosition,
+    math::{HasPosition, Vector3DIteratorExt},
     mesh::{TransformableMesh, WithNormals},
-    primitives::{generate_zigzag, random_star, Make2dShape, MakeSphere},
+    operations::MeshLoft,
+    primitives::{generate_zigzag, random_star, Make2dShape},
     tesselate::{TesselationMeta, TriangulationAlgorithm},
 };
 use std::{env, f32::consts::PI};
@@ -28,6 +29,9 @@ use std::{env, f32::consts::PI};
 struct GlobalSettings {
     #[inspector(min = -20.0, max = 10.0)]
     tol: f32,
+
+    #[inspector(min = 0.0, max = 100.0)]
+    prog: f32,
 
     px: f32,
     py: f32,
@@ -39,6 +43,7 @@ impl Default for GlobalSettings {
             tol: -4.0,
             px: 0.0,
             py: 0.0,
+            prog: 50.0,
         }
     }
 }
@@ -254,11 +259,175 @@ fn _make_prism() -> BevyMesh3d {
 }
 */
 
-fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
+fn _make_drosera_filiformis(settings: &GlobalSettings) -> BevyMesh3d {
+    // leaf strength
+    let r1 = 0.1;
+    let r1b = r1 * 1.1;
+    // strength at the tip
+    let r2 = 0.03;
+
+    // number of circle segments
+    let n = 10;
+
+    // number of spiral segments
+    let m = 80;
+
+    // log spiral radius
+    let a = 4.0;
+
+    // log spiral curvature
+    let curvature = -0.2;
+    let v_res = 0.2;
+
+    let smoothness = 0.1;
+
+    let log_spiral = |a: f32, phi: f32, k: f32| {
+        let r = a * (k * phi).exp();
+        Vec3::new(r * phi.cos(), r * phi.sin(), 0.0)
+    };
+
+    let archimedean_spiral = |a: f32, phi: f32| {
+        let r = a * phi;
+        Vec3::new(r * phi.cos(), r * phi.sin(), 0.0)
+    };
+
+    let circle = |r: f32, i: i32, n: i32| {
+        let phi = PI * ((2 * i) as f32) / n as f32;
+        Vec3::new(r * phi.cos(), 0.0, r * phi.sin())
+    };
+    /*let curve = |i: i32| {
+        let p = settings.prog / 100.0;
+
+        //let alpha = ((i - m / 2) as f32 * 0.04).tanh() / 2.0 + 0.5;
+        let vr = v_res;
+        let phi = (1.0 - p) * vr * i as f32 - PI * 0.1;
+
+        let phi1 = vr * i as f32 - p * 12.0 + 8.0;
+        let log_spiral_r = a * (curvature * phi1).exp();
+
+        let vr2 = v_res; // / (1.0 + p * 10.0);
+        let phi2 = (m as f32 * vr2) - vr2 * i as f32;
+        let a2 = r1b / PI;
+        let archimedean_spiral_r = a2 * phi2;
+
+        assert!(log_spiral_r >= 0.0);
+        assert!(archimedean_spiral_r >= 0.0);
+
+        let alpha = ((i as f32) * smoothness).tanh() * 0.5 + 0.5;
+        let r = log_spiral_r.lerp(archimedean_spiral_r, alpha);
+        Vec3::new(r * phi.cos(), r * phi.sin(), 0.0)
+    };*/
+    let mut curve: Vec<Vec3> = (0..m).map(|_| Vec3::ZERO).collect();
+
+    let smoothstep = |x: f32, center: f32, smoothness: f32, low: f32, high: f32| {
+        (((x - center) * smoothness).tanh() * 0.5 + 0.5) * (high - low) + low
+    };
+
+    let archimedean_arch = |a: f32, phi: f32| {
+        let pps = (1.0 + phi * phi).sqrt();
+        a * 0.5 * (phi * pps + (phi + pps).ln())
+    };
+
+    let archimedean_phi = |a: f32, arch: f32| {
+        // binary search to find phi such that archimedean_arch(a, phi) = arch
+        let mut low = 0.0;
+        let mut high = 1000.0;
+        for _ in 0..10 {
+            let mid = (low + high) / 2.0;
+            let mid_val = archimedean_arch(a, mid);
+            if mid_val < arch {
+                low = mid;
+            } else {
+                high = mid;
+            }
+        }
+        let phi = (low + high) / 2.0;
+        return phi;
+    };
+
+    let archimedean_curvature =
+        |a: f32, phi: f32| (phi * phi + 2.0) / (a * (1.0 + phi * phi).powf(1.5));
+
+    let p = settings.prog / 100.0;
+    // in the beginning, the curvature starts reversed to balance the rolled leaf
+    let mut curvature = -1.5 * p;
+    // the leaf is leaning a bit outwards
+    let mut angle = 0.5;
+    // the leaf is stronger at the base
+    let step_base = 0.1;
+    // the leaf is weaker at the tip
+    let step_tip = 0.03;
+
+    // smoothness of the region between the archimedean and log spiral
+    let smoothness = 0.2;
+    // factor of how much earlier to the final development of the leaf the archimedean spiral should be finished
+    let overshoot = 1.2;
+    // factor of how much earlier to the final development of the leaf the cells should grow
+    let overshoot_grow = 0.9;
+    // How eager the spiral is to get into the archimedean spiral
+    let c1 = 1.0;
+    // Curvature of the spiral in the log spiral region
+    let c2 = 0.1;
+
+    let archimedeanness = 1.0; // 1.0 - p*p*0.5;
+
+    let arch_a = r2 / PI;
+    for i in 1..m {
+        let step = smoothstep(
+            i as f32,
+            (1.0 - p) * (m as f32* overshoot_grow),
+            smoothness,
+            step_base, //* (1.0 - p),
+            step_tip,
+        );
+        curvature += smoothstep(
+            i as f32,
+            (1.0 - p) * (m as f32 * overshoot),
+            smoothness,
+            c2 * p,
+            c1,
+        );
+        curvature = curvature.clamp(-10.0, 50.0);
+
+        let arch_curvature: f32 =
+            archimedean_curvature(arch_a, archimedean_phi(arch_a, (m - i) as f32 * step));
+
+        angle += curvature.lerp(arch_curvature.min(curvature), archimedeanness) * step;
+        angle = angle % (2.0 * PI);
+        let q = Quat::from_rotation_x(angle);
+        curve[i] = curve[i - 1] + q.mul_vec3(Vec3::Y * step);
+    }
+
+    let mut mesh = BevyMesh3d::new();
+    let base: Vec<Vec3> = (0..n).map(|i| circle(r1, -i, n)).collect();
+    let first = curve[0];
+    let mut edge =
+        mesh.insert_polygon(base.iter().map(|v| BevyVertexPayload::from_pos(*v + first)));
+
+    let normal = base.iter().cloned().normal().normalize();
+
+    let mut prev = first;
+    for i in 1..m {
+        let cur = curve[i];
+        let q = Quat::from_rotation_arc(normal, (cur - prev).normalize());
+        prev = cur;
+        let scale = r1.lerp(r2, i as f32 / m as f32) / r1;
+
+        edge = mesh.loft_tri_closed(
+            edge,
+            base.iter()
+                .map(|v| BevyVertexPayload::from_pos(cur + q.mul_vec3(*v * scale))),
+        );
+    }
+
+    mesh.translate(&(Vec3::new(0.0, -2.0, 0.0) - first));
+    mesh
+}
+
+fn make_mesh(_settings: &GlobalSettings) -> BevyMesh3d {
     //_make_hell_8()
     //BevyMesh3d::regular_polygon(1.0, 10)
     //_make_spiral()
-    //BevyMesh3d::octahedron(1.0)
     //BevyMesh3d::cone(1.0, 1.0, 16)
     //BevyMesh3d::regular_antiprism(1.0, 1.0, 8)
     //BevyMesh3d::uniform_antiprism(1.0, 16)
@@ -266,17 +435,16 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     //BevyMesh3d::uniform_prism(1.0, 8)
     //BevyMesh3d::regular_frustum(1.0, 0.5, 1.0, 8, false)
     //BevyMesh3d::regular_pyramid(1.0, 1.0, 8)
+    //BevyMesh3d::regular_octahedron(1.0)
     //BevyMesh3d::tetrahedron(1.0)
-    //BevyMesh3d::octahedron(1.0)
-
-    //BevyMesh3d::dodecahedron(1.0)
+    //BevyMesh3d::dodecahedron(1.0) // TODO: crash?
 
     /*let mut mesh = BevyMesh3d::hex_plane(10, 8);
     mesh.flip_yz();
     mesh*/
 
     //BevyMesh3d::uv_sphere(3.0, 64, 64)
-    BevyMesh3d::geodesic_icosahedron(3.0, 64)
+    //BevyMesh3d::geodesic_icosahedron(3.0, 64)
     //BevyMesh3d::geodesic_tetrahedron(3.0, 128)
     //BevyMesh3d::geodesic_octahedron(3.0, 128)
 
@@ -284,6 +452,8 @@ fn make_mesh(_settings: &MeshSettings) -> BevyMesh3d {
     //_make_2d_zigzag()
 
     //_make_hell_10()
+
+    _make_drosera_filiformis(_settings)
 }
 
 pub fn main() {
@@ -331,9 +501,10 @@ fn exit_on_esc(
 }
 
 fn update_meshes(
-    query: Query<(&Handle<Mesh>, &MeshSettings), Changed<MeshSettings>>,
+    //query: Query<(&Handle<Mesh>, &MeshSettings), Changed<MeshSettings>>,
+    query: Query<(&Handle<Mesh>, &MeshSettings)>,
     mut assets: ResMut<Assets<Mesh>>,
-    mut settings: ResMut<GlobalSettings>,
+    mut global_settings: ResMut<GlobalSettings>,
     windows: Query<&Window>,
     camera_q: Query<(&Camera, &GlobalTransform)>,
     mut texts: ResMut<Text3dGizmos>,
@@ -348,18 +519,18 @@ fn update_meshes(
             .intersect_plane(Vec3::ZERO, InfinitePlane3d::new(Vec3::Y))
             .unwrap_or(0.0);
         let world_position = ray.get_point(distance);
-        if settings.px != world_position.x || settings.py != world_position.z {
-            settings.px = world_position.x;
-            settings.py = world_position.z;
+        if global_settings.px != world_position.x || global_settings.py != world_position.z {
+            global_settings.px = world_position.x;
+            global_settings.py = world_position.z;
         }
     }
 
-    if !settings.is_changed() {
+    if !global_settings.is_changed() {
         return;
     }
 
-    for (handle, settings) in query.iter() {
-        let mut mesh = make_mesh(settings);
+    for (handle, _settings) in query.iter() {
+        let mut mesh = make_mesh(&global_settings);
         let mut meta = TesselationMeta::default();
         mesh.generate_smooth_normals();
         mesh.bevy_set_ex(
@@ -396,7 +567,7 @@ fn setup_meshes(
     ));
 
     if false {
-        let mesh = make_mesh(&MeshSettings::default());
+        let mesh = make_mesh(&GlobalSettings::default());
         show_vertex_indices(&mut texts, &mesh);
         show_edges(&mut texts, &mesh, 0.1);
         show_faces(&mut texts, &mesh);

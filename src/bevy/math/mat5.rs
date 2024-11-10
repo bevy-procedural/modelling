@@ -94,7 +94,6 @@ impl<S: Scalar> Default for Mat5<S> {
     }
 }
 
-// TODO: Implement Rotator for Mat5<f32>
 pub struct Vec4Rotator {}
 
 impl Rotator<Vec4> for Vec4Rotator {}

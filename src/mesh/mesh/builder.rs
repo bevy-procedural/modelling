@@ -175,8 +175,10 @@ pub trait MeshHalfEdgeBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         T::FP: DefaultFacePayload;
 }
 
-/// Some basic operations to build meshes with halfedges. But they are kinda edgy, so we don't want to expose them.
-pub(crate) trait HalfEdgeSemiBuilder<T: MeshType> {
+/// Some basic operations to build meshes with halfedges.
+/// 
+/// TODO: These are kinda edgy. Avoid exposing them in the public API.
+pub trait HalfEdgeSemiBuilder<T: MeshType> {
     /// Provided two edges that point to the start and end vertex of the new edge, insert that new edge.
     /// This will also update the neighbors of the new edge so the halfedge mesh is consistent.
     ///

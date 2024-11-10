@@ -10,6 +10,14 @@ use crate::{
 
 use super::regular_polygon_sidelength;
 
+/// Generates an iterator over vertices positioned in a circle.
+/// 
+/// # Parameters
+/// 
+/// - `r`: The radius of the circle.
+/// - `n`: The number of vertices to generate.
+/// - `shift`: A phase shift to apply to the angle of each vertex.
+/// - `y`: The y-coordinate for all vertices (assuming a 3D space).
 fn circle_iter<S: Scalar, Vec: Vector<S>, VP: VertexPayload + HasPosition<Vec, S = S>>(
     r: S,
     n: usize,
