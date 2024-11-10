@@ -5,9 +5,9 @@ use crate::{
 
 /// Basic edge traits for a mesh. Can be directed or undirected.
 pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone + Copy + PartialEq {
-    /// Returns the index of the edge
+    /// Returns the identifier of the edge
     fn id(&self) -> T::E;
-    
+
     /// Returns the face payload.
     fn payload(&self) -> &T::EP;
 

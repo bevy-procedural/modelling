@@ -1,9 +1,9 @@
-use crate::mesh::{DefaultEdgePayload, DefaultFacePayload, HalfEdge, HalfEdgeMeshType};
+use crate::mesh::{DefaultEdgePayload, DefaultFacePayload, HalfEdge, MeshTypeHalfEdge};
 
 // TODO: Adjust this to not be halfedge-specific
 
 /// A trait for lofting a mesh.
-pub trait MeshLoft<T: HalfEdgeMeshType<Mesh = Self>>
+pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,

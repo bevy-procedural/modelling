@@ -3,7 +3,7 @@ use crate::{
     math::{HasPosition, TransformTrait, Transformable, Vector3D},
     mesh::{
         DefaultEdgePayload, DefaultFacePayload, EdgeBasics, Face3d, FaceBasics, HalfEdge,
-        HalfEdgeMeshType, MeshBasics, MeshBuilder, MeshPathBuilder, MeshPosition,
+        MeshTypeHalfEdge, MeshBasics, MeshBuilder, MeshPathBuilder, MeshPosition,
         MeshType3D,
     },
     operations::{MeshExtrude, MeshLoft, MeshSubdivision},
@@ -37,7 +37,7 @@ where
 {
 }
 
-impl<T: HalfEdgeImplMeshType + HalfEdgeMeshType + MeshType3D> MakePrismatoid<T>
+impl<T: HalfEdgeImplMeshType + MeshTypeHalfEdge + MeshType3D> MakePrismatoid<T>
     for HalfEdgeMeshImpl<T>
 where
     T::EP: DefaultEdgePayload,
@@ -52,7 +52,7 @@ where
 {
 }
 
-impl<T: HalfEdgeImplMeshType + HalfEdgeMeshType + MeshType3D> MakeSphere<T> for HalfEdgeMeshImpl<T>
+impl<T: HalfEdgeImplMeshType + MeshTypeHalfEdge + MeshType3D> MakeSphere<T> for HalfEdgeMeshImpl<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
@@ -66,7 +66,7 @@ where
 {
 }
 
-impl<T: HalfEdgeImplMeshType + HalfEdgeMeshType> MeshSubdivision<T> for HalfEdgeMeshImpl<T>
+impl<T: HalfEdgeImplMeshType + MeshTypeHalfEdge> MeshSubdivision<T> for HalfEdgeMeshImpl<T>
 where
     T::EP: DefaultEdgePayload,
     T::Face: FaceBasics<T>,
@@ -79,7 +79,7 @@ impl<T: HalfEdgeImplMeshType> MeshPosition<T> for HalfEdgeMeshImpl<T> where
 {
 }
 
-impl<T: HalfEdgeImplMeshType + HalfEdgeMeshType> MeshExtrude<T> for HalfEdgeMeshImpl<T>
+impl<T: HalfEdgeImplMeshType + MeshTypeHalfEdge> MeshExtrude<T> for HalfEdgeMeshImpl<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
@@ -88,7 +88,7 @@ where
 {
 }
 
-impl<T: HalfEdgeImplMeshType + HalfEdgeMeshType> MeshLoft<T> for HalfEdgeMeshImpl<T>
+impl<T: HalfEdgeImplMeshType + MeshTypeHalfEdge> MeshLoft<T> for HalfEdgeMeshImpl<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,

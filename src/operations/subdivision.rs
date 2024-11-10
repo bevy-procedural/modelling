@@ -1,5 +1,5 @@
 use crate::mesh::{
-    DefaultEdgePayload, EdgeBasics, FaceBasics, HalfEdge, HalfEdgeMeshType, HalfEdgeSemiBuilder,
+    DefaultEdgePayload, EdgeBasics, FaceBasics, HalfEdge, MeshTypeHalfEdge, HalfEdgeSemiBuilder,
     VertexInterpolator,
 };
 
@@ -41,7 +41,7 @@ impl SubdivisionDescription {
 /// TODO
 
 /// A trait for subdividing meshes.
-pub trait MeshSubdivision<T: HalfEdgeMeshType<Mesh = Self>>: HalfEdgeSemiBuilder<T>
+pub trait MeshSubdivision<T: MeshTypeHalfEdge<Mesh = Self>>: HalfEdgeSemiBuilder<T>
 where
     T::EP: DefaultEdgePayload,
 {

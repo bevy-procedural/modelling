@@ -4,7 +4,7 @@ use super::{Bevy2DPolygon, BevyVertexPayload};
 use crate::{
     halfedge::{HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeImplMeshType, HalfEdgeMeshImpl, HalfEdgeVertexImpl},
     math::{HasNormal, HasPosition, IndexType},
-    mesh::{EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, HalfEdgeMeshType, MeshType, MeshType3D, Triangulateable},
+    mesh::{EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, MeshTypeHalfEdge, MeshType, MeshType3D, Triangulateable},
     tesselate::{TesselationMeta, TriangulationAlgorithm},
 };
 use bevy::{
@@ -42,7 +42,7 @@ impl MeshType for BevyMeshType3d32 {
 }
 
 impl HalfEdgeImplMeshType for BevyMeshType3d32 {}
-impl HalfEdgeMeshType for BevyMeshType3d32 {}
+impl MeshTypeHalfEdge for BevyMeshType3d32 {}
 impl MeshType3D for BevyMeshType3d32 {}
 
 /// A mesh with bevy 3D vertices

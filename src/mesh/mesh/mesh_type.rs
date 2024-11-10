@@ -80,7 +80,7 @@ pub trait MeshType: Copy + Eq {
 }
 
 /// A `MeshType` specialized for half-edge meshes
-pub trait HalfEdgeMeshType:
+pub trait MeshTypeHalfEdge:
     MeshType<
     Mesh: MeshBuilder<Self> + HalfEdgeMesh<Self> + MeshHalfEdgeBuilder<Self>,
     Edge: HalfEdge<Self>,

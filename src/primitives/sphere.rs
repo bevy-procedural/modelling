@@ -1,7 +1,7 @@
 use crate::{
     math::{HasPosition, HasZero, IndexType, Scalar, Vector},
     mesh::{
-        DefaultEdgePayload, DefaultFacePayload, HalfEdge, HalfEdgeMeshType, MeshPathBuilder,
+        DefaultEdgePayload, DefaultFacePayload, HalfEdge, MeshTypeHalfEdge, MeshPathBuilder,
         MeshType3D, SlerpVertexInterpolator,
     },
     operations::{MeshExtrude, MeshLoft, MeshSubdivision, SubdivisionDescription},
@@ -21,7 +21,7 @@ pub fn icosahedron_a2r<S: Scalar>(a: S) -> S {
 // TODO: Reduce type requirements
 
 /// A trait for creating sphere approximations.
-pub trait MakeSphere<T: HalfEdgeMeshType<Mesh = Self> + MeshType3D<Mesh = Self>>:
+pub trait MakeSphere<T: MeshTypeHalfEdge<Mesh = Self> + MeshType3D<Mesh = Self>>:
     MeshLoft<T> + MeshExtrude<T> + MeshSubdivision<T> + MakePrismatoid<T> + MeshPathBuilder<T>
 where
     T::EP: DefaultEdgePayload,

@@ -1,7 +1,7 @@
 use crate::{
     math::{Scalar, Transformable},
     mesh::{
-        DefaultEdgePayload, DefaultFacePayload, EdgeBasics, FaceBasics, HalfEdge, HalfEdgeMeshType,
+        DefaultEdgePayload, DefaultFacePayload, EdgeBasics, FaceBasics, HalfEdge, MeshTypeHalfEdge,
         VertexBasics,
     },
     operations::MeshLoft,
@@ -11,7 +11,7 @@ use itertools::Itertools;
 // TODO: Adjust this to not be halfedge-specific
 
 /// Extrude operations for meshes.
-pub trait MeshExtrude<T: HalfEdgeMeshType<Mesh = Self>>: MeshLoft<T>
+pub trait MeshExtrude<T: MeshTypeHalfEdge<Mesh = Self>>: MeshLoft<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,

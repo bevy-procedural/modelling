@@ -1,8 +1,8 @@
 use crate::{
     math::{HasPosition, HasZero, Scalar, TransformTrait, Vector},
     mesh::{
-        DefaultEdgePayload, DefaultFacePayload, Face3d, HalfEdge, HalfEdgeMeshType, MeshBuilder,
-        MeshType3D, VertexPayload,
+        DefaultEdgePayload, DefaultFacePayload, Face3d, HalfEdge, MeshTypeHalfEdge, MeshType3D,
+        VertexPayload,
     },
     operations::{MeshExtrude, MeshLoft, MeshSubdivision},
     primitives::polygon::Make2dShape,
@@ -25,7 +25,7 @@ fn circle_iter<S: Scalar, Vec: Vector<S>, VP: VertexPayload + HasPosition<Vec, S
 // TODO: Reduce type requirements
 
 /// A trait for creating prismatoids.
-pub trait MakePrismatoid<T: HalfEdgeMeshType<Mesh = Self> + MeshType3D<Mesh = Self>>:
+pub trait MakePrismatoid<T: MeshTypeHalfEdge<Mesh = Self> + MeshType3D<Mesh = Self>>:
     Make2dShape<T> + MeshExtrude<T> + MeshLoft<T> + MeshSubdivision<T>
 where
     T::EP: DefaultEdgePayload,
