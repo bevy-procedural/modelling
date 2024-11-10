@@ -35,6 +35,16 @@ struct GlobalSettings {
 
     px: f32,
     py: f32,
+
+    curvature: f32,
+    angle: f32,
+    step_base: f32,
+    step_tip: f32,
+    smoothness: f32,
+    overshoot: f32,
+    overshoot_grow: f32,
+    c1: f32,
+    c2: f32,
 }
 
 impl Default for GlobalSettings {
@@ -44,6 +54,17 @@ impl Default for GlobalSettings {
             px: 0.0,
             py: 0.0,
             prog: 50.0,
+
+            curvature: -1.5,
+            angle: 0.5,
+            step_base: 0.1,
+            step_tip: 0.03,
+
+            smoothness: 0.2,
+            overshoot: 1.2,
+            overshoot_grow: 0.9,
+            c1: 1.0,
+            c2: 0.1,
         }
     }
 }
@@ -328,6 +349,7 @@ fn _make_drosera_filiformis(settings: &GlobalSettings) -> BevyMesh3d {
         a * 0.5 * (phi * pps + (phi + pps).ln())
     };
 
+    // TODO: do a symbolic regression in julia to approximate this with a closed form
     let archimedean_phi = |a: f32, arch: f32| {
         // binary search to find phi such that archimedean_arch(a, phi) = arch
         let mut low = 0.0;
@@ -350,24 +372,24 @@ fn _make_drosera_filiformis(settings: &GlobalSettings) -> BevyMesh3d {
 
     let p = settings.prog / 100.0;
     // in the beginning, the curvature starts reversed to balance the rolled leaf
-    let mut curvature = -1.5 * p;
+    let mut curvature = settings.curvature * p;
     // the leaf is leaning a bit outwards
-    let mut angle = 0.5;
+    let mut angle = settings.angle;
     // the leaf is stronger at the base
-    let step_base = 0.1;
+    let step_base = settings.step_base;
     // the leaf is weaker at the tip
-    let step_tip = 0.03;
+    let step_tip = settings.step_tip;
 
     // smoothness of the region between the archimedean and log spiral
-    let smoothness = 0.2;
+    let smoothness = settings.smoothness;
     // factor of how much earlier to the final development of the leaf the archimedean spiral should be finished
-    let overshoot = 1.2;
+    let overshoot = settings.overshoot;
     // factor of how much earlier to the final development of the leaf the cells should grow
-    let overshoot_grow = 0.9;
+    let overshoot_grow = settings.overshoot_grow;
     // How eager the spiral is to get into the archimedean spiral
-    let c1 = 1.0;
+    let c1 = settings.c1;
     // Curvature of the spiral in the log spiral region
-    let c2 = 0.1;
+    let c2 = settings.c2;
 
     let archimedeanness = 1.0; // 1.0 - p*p*0.5;
 
@@ -375,7 +397,7 @@ fn _make_drosera_filiformis(settings: &GlobalSettings) -> BevyMesh3d {
     for i in 1..m {
         let step = smoothstep(
             i as f32,
-            (1.0 - p) * (m as f32* overshoot_grow),
+            (1.0 - p) * (m as f32 * overshoot_grow),
             smoothness,
             step_base, //* (1.0 - p),
             step_tip,
@@ -406,11 +428,15 @@ fn _make_drosera_filiformis(settings: &GlobalSettings) -> BevyMesh3d {
 
     let normal = base.iter().cloned().normal().normalize();
 
+    // TODO: this can be an API function: loft_along
+    // TODO: There is sometimes a bug with the rotation or normals in the spiral. Slowly move the progress while observing the downwards facing part of the spiral.
     let mut prev = first;
     for i in 1..m {
         let cur = curve[i];
         let q = Quat::from_rotation_arc(normal, (cur - prev).normalize());
         prev = cur;
+
+        // the radius is linearly interpolated between the base and the tip
         let scale = r1.lerp(r2, i as f32 / m as f32) / r1;
 
         edge = mesh.loft_tri_closed(
@@ -418,6 +444,57 @@ fn _make_drosera_filiformis(settings: &GlobalSettings) -> BevyMesh3d {
             base.iter()
                 .map(|v| BevyVertexPayload::from_pos(cur + q.mul_vec3(*v * scale))),
         );
+
+        let growth_progress = smoothstep(
+            i as f32,
+            (1.0 - p) * (m as f32 * overshoot_grow),
+            smoothness,
+            1.0,
+            0.0,
+        );
+
+        // add the leaves
+        if i > m / 4 {
+            let s_scale = 0.8;
+            let leaf_len_small = 1.0;
+            let leaf_len_big = 5.0;
+            let qq1 = q * Quat::from_rotation_y(-PI * 0.5 * (1.0 - growth_progress));
+            let qq2 = q * Quat::from_rotation_y(PI * 0.5 * (1.0 - growth_progress));
+            mesh.insert_polygon(
+                [
+                    Vec3::new(
+                        leaf_len_small * r1 + r1 * leaf_len_big * growth_progress,
+                        0.0,
+                        0.0,
+                    ),
+                    Vec3::new(0.0, step_base * s_scale, 0.0),
+                    Vec3::new(0.0, -step_base * s_scale, 0.0),
+                ]
+                .iter()
+                .map(|v| {
+                    BevyVertexPayload::from_pos(
+                        cur + qq1.mul_vec3(*v * scale) + Vec3::X * scale * r1,
+                    )
+                }),
+            );
+            mesh.insert_polygon(
+                [
+                    Vec3::new(
+                        leaf_len_small * -r1 - r1 * leaf_len_big * growth_progress,
+                        0.0,
+                        0.0,
+                    ),
+                    Vec3::new(0.0, -step_base * s_scale, 0.0),
+                    Vec3::new(0.0, step_base * s_scale, 0.0),
+                ]
+                .iter()
+                .map(|v| {
+                    BevyVertexPayload::from_pos(
+                        cur + qq2.mul_vec3(*v * scale) - Vec3::X * scale * r1,
+                    )
+                }),
+            );
+        }
     }
 
     mesh.translate(&(Vec3::new(0.0, -2.0, 0.0) - first));
