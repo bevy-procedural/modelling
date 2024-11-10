@@ -1,10 +1,10 @@
 use super::HalfEdgeMeshImpl;
 use crate::{
-    halfedge::{HalfEdgeMeshType, IncidentToFaceBackIterator, IncidentToFaceIterator},
+    halfedge::{HalfEdgeImplMeshType, IncidentToFaceBackIterator, IncidentToFaceIterator},
     mesh::{HalfEdgeMesh, MeshBasics},
 };
 
-impl<T: HalfEdgeMeshType> HalfEdgeMesh<T> for HalfEdgeMeshImpl<T> {
+impl<T: HalfEdgeImplMeshType> HalfEdgeMesh<T> for HalfEdgeMeshImpl<T> {
     #[allow(refining_impl_trait)]
     #[inline(always)]
     fn edges_from<'a>(&'a self, e: T::E) -> IncidentToFaceIterator<'a, T> {

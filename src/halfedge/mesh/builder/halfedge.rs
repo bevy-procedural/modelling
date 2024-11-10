@@ -1,6 +1,6 @@
 use crate::{
     halfedge::{
-        HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeMeshImpl, HalfEdgeMeshType, HalfEdgeVertexImpl,
+        HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeMeshImpl, HalfEdgeImplMeshType, HalfEdgeVertexImpl,
     },
     math::IndexType,
     mesh::{
@@ -12,7 +12,7 @@ use itertools::Itertools;
 
 // TODO: Simplify these
 
-impl<T: HalfEdgeMeshType> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T> {
+impl<T: HalfEdgeImplMeshType> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T> {
     fn add_vertex_via_edge(
         &mut self,
         input: T::E,

@@ -1,11 +1,11 @@
 use super::HalfEdgeImpl;
 use crate::{
-    halfedge::{HalfEdgeMeshImpl, HalfEdgeMeshType},
+    halfedge::{HalfEdgeMeshImpl, HalfEdgeImplMeshType},
     math::IndexType,
     mesh::{HalfEdge, HalfEdgeVertex, MeshBasics},
 };
 
-impl<T: HalfEdgeMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
+impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
     fn new(next: T::E, twin: T::E, prev: T::E, origin: T::V, face: T::F, payload: T::EP) -> Self {
         assert!(next != IndexType::max());
         assert!(prev != IndexType::max());

@@ -1,12 +1,12 @@
 use crate::{
-    halfedge::{HalfEdgeFaceImpl, HalfEdgeMeshImpl, HalfEdgeMeshType},
+    halfedge::{HalfEdgeFaceImpl, HalfEdgeMeshImpl, HalfEdgeImplMeshType},
     mesh::{
         DefaultEdgePayload, DefaultFacePayload, EdgeBasics, FaceBasics, HalfEdge, MeshBasics,
         MeshBuilder, MeshHalfEdgeBuilder,
     },
 };
 
-impl<T: HalfEdgeMeshType> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
+impl<T: HalfEdgeImplMeshType> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     fn add_vertex_via_vertex_default(&mut self, v: T::V, vp: T::VP) -> (T::V, T::E, T::E)
     where
         T::EP: DefaultEdgePayload,

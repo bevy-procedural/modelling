@@ -1,7 +1,7 @@
-use super::{HalfEdgeMeshType, HalfEdgeVertexImpl, IncidentToVertexIterator};
+use super::{HalfEdgeImplMeshType, HalfEdgeVertexImpl, IncidentToVertexIterator};
 use crate::mesh::{EdgeBasics, HalfEdge, MeshBasics, VertexBasics};
 
-impl<T: HalfEdgeMeshType> VertexBasics<T> for HalfEdgeVertexImpl<T> {
+impl<T: HalfEdgeImplMeshType> VertexBasics<T> for HalfEdgeVertexImpl<T> {
     /// Returns the index of the vertex
     #[inline(always)]
     fn id(&self) -> T::V {

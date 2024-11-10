@@ -1,15 +1,16 @@
-use super::{HalfEdgeMeshImpl, HalfEdgeMeshType};
+use super::{HalfEdgeImplMeshType, HalfEdgeMeshImpl};
 use crate::{
     math::{HasPosition, TransformTrait, Transformable, Vector3D},
     mesh::{
         DefaultEdgePayload, DefaultFacePayload, EdgeBasics, Face3d, FaceBasics, HalfEdge,
-        MeshBasics, MeshBuilder, MeshPathBuilder, MeshPosition,
+        HalfEdgeMeshType, MeshBasics, MeshBuilder, MeshPathBuilder, MeshPosition, MeshType,
+        MeshType3D,
     },
     operations::{MeshExtrude, MeshLoft, MeshSubdivision},
     primitives::{Make2dShape, MakePlane, MakePrismatoid, MakeSphere},
 };
 
-impl<T: HalfEdgeMeshType<Mesh = Self>> Make2dShape<T> for HalfEdgeMeshImpl<T>
+impl<T: HalfEdgeImplMeshType<Mesh = Self>> Make2dShape<T> for HalfEdgeMeshImpl<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
@@ -28,7 +29,7 @@ where
     }
 }
 
-impl<T: HalfEdgeMeshType> MakePlane<T> for HalfEdgeMeshImpl<T>
+impl<T: HalfEdgeImplMeshType> MakePlane<T> for HalfEdgeMeshImpl<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
@@ -36,7 +37,8 @@ where
 {
 }
 
-impl<T: HalfEdgeMeshType> MakePrismatoid<T> for HalfEdgeMeshImpl<T>
+impl<T: HalfEdgeImplMeshType + HalfEdgeMeshType + MeshType3D> MakePrismatoid<T>
+    for HalfEdgeMeshImpl<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
@@ -50,7 +52,7 @@ where
 {
 }
 
-impl<T: HalfEdgeMeshType> MakeSphere<T> for HalfEdgeMeshImpl<T>
+impl<T: HalfEdgeImplMeshType + HalfEdgeMeshType + MeshType3D> MakeSphere<T> for HalfEdgeMeshImpl<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
@@ -64,7 +66,7 @@ where
 {
 }
 
-impl<T: HalfEdgeMeshType> MeshSubdivision<T> for HalfEdgeMeshImpl<T>
+impl<T: HalfEdgeImplMeshType + HalfEdgeMeshType> MeshSubdivision<T> for HalfEdgeMeshImpl<T>
 where
     T::EP: DefaultEdgePayload,
     T::Face: FaceBasics<T>,
@@ -72,12 +74,12 @@ where
 {
 }
 
-impl<T: HalfEdgeMeshType> MeshPosition<T> for HalfEdgeMeshImpl<T> where
+impl<T: HalfEdgeImplMeshType> MeshPosition<T> for HalfEdgeMeshImpl<T> where
     T::VP: HasPosition<T::Vec, S = T::S>
 {
 }
 
-impl<T: HalfEdgeMeshType> MeshExtrude<T> for HalfEdgeMeshImpl<T>
+impl<T: HalfEdgeImplMeshType + HalfEdgeMeshType> MeshExtrude<T> for HalfEdgeMeshImpl<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
@@ -86,7 +88,7 @@ where
 {
 }
 
-impl<T: HalfEdgeMeshType> MeshLoft<T> for HalfEdgeMeshImpl<T>
+impl<T: HalfEdgeImplMeshType + HalfEdgeMeshType> MeshLoft<T> for HalfEdgeMeshImpl<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,

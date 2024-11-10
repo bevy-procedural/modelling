@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::{HalfEdgeMeshImpl, HalfEdgeMeshType};
+use super::{HalfEdgeMeshImpl, HalfEdgeImplMeshType};
 use crate::{
     math::IndexType,
     mesh::{
@@ -9,7 +9,7 @@ use crate::{
     util::Deletable,
 };
 
-impl<T: HalfEdgeMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
+impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     fn has_vertex(&self, index: T::V) -> bool {
         self.vertices.has(index)
     }

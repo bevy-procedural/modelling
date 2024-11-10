@@ -1,17 +1,17 @@
 use crate::{
-    halfedge::HalfEdgeMeshType,
+    halfedge::HalfEdgeImplMeshType,
     mesh::{EdgeBasics, HalfEdge, MeshBasics},
 };
 
 /// Iterator over all half-edges incident to the same vertex (clockwise)
-pub struct IncidentToVertexIterator<'a, T: HalfEdgeMeshType + 'a> {
+pub struct IncidentToVertexIterator<'a, T: HalfEdgeImplMeshType + 'a> {
     is_first: bool,
     first: T::E,
     current: T::Edge,
     mesh: &'a T::Mesh,
 }
 
-impl<'a, T: HalfEdgeMeshType> IncidentToVertexIterator<'a, T> {
+impl<'a, T: HalfEdgeImplMeshType> IncidentToVertexIterator<'a, T> {
     /// Creates a new iterator
     pub fn new(first: T::Edge, mesh: &'a T::Mesh) -> Self {
         Self {
@@ -23,7 +23,7 @@ impl<'a, T: HalfEdgeMeshType> IncidentToVertexIterator<'a, T> {
     }
 }
 
-impl<'a, T: HalfEdgeMeshType> Iterator for IncidentToVertexIterator<'a, T> {
+impl<'a, T: HalfEdgeImplMeshType> Iterator for IncidentToVertexIterator<'a, T> {
     type Item = T::Edge;
 
     fn next(&mut self) -> Option<Self::Item> {

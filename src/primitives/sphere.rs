@@ -1,11 +1,8 @@
 use crate::{
-    math::{
-        HasPosition, HasZero, IndexType, Scalar, TransformTrait, Transformable, Vector, Vector3D,
-    },
+    math::{HasPosition, HasZero, IndexType, Scalar, Vector},
     mesh::{
-        DefaultEdgePayload, DefaultFacePayload, EdgeBasics, Face3d, HalfEdge, MeshBuilder,
-        MeshHalfEdgeBuilder, MeshPathBuilder, MeshPosition, MeshTrait, MeshType,
-        SlerpVertexInterpolator,
+        DefaultEdgePayload, DefaultFacePayload, HalfEdge, HalfEdgeMeshType, MeshPathBuilder,
+        MeshType3D, SlerpVertexInterpolator,
     },
     operations::{MeshExtrude, MeshLoft, MeshSubdivision, SubdivisionDescription},
     primitives::{Make2dShape, MakePrismatoid},
@@ -23,30 +20,12 @@ pub fn icosahedron_a2r<S: Scalar>(a: S) -> S {
 
 // TODO: Reduce type requirements
 
-
 /// A trait for creating sphere approximations.
-pub trait MakeSphere<T: MeshType<Mesh = Self>>:
-    MeshTrait<T = T>
-    + Make2dShape<T>
-    + MeshBuilder<T>
-    + MeshHalfEdgeBuilder<T>
-    + MeshPathBuilder<T>
-    + MeshExtrude<T>
-    + MeshBuilder<T>
-    + MeshLoft<T>
-    + MeshPosition<T>
-    + MeshSubdivision<T>
-    + MakePrismatoid<T>
+pub trait MakeSphere<T: HalfEdgeMeshType<Mesh = Self> + MeshType3D<Mesh = Self>>:
+    MeshLoft<T> + MeshExtrude<T> + MeshSubdivision<T> + MakePrismatoid<T> + MeshPathBuilder<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
-    T::Vec: Vector3D<S = T::S>,
-    T::VP: Transformable<Vec = T::Vec, Rot = T::Rot, Trans = T::Trans, S = T::S>
-        + HasPosition<T::Vec, S = T::S>,
-    Self: Make2dShape<T>,
-    T::Edge: HalfEdge<T> + EdgeBasics<T>,
-    T::Trans: TransformTrait<S = T::S>,
-    T::Face: Face3d<T>,
 {
     /// Create a uv sphere with a given `radius`.
     /// `n` is the number of rings (including the two made of triangular faces).

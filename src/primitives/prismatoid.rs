@@ -1,8 +1,8 @@
 use crate::{
-    math::{HasPosition, HasZero, Scalar, TransformTrait, Transformable, Vector, Vector3D},
+    math::{HasPosition, HasZero, Scalar, TransformTrait, Vector},
     mesh::{
-        DefaultEdgePayload, DefaultFacePayload, EdgeBasics, Face3d, HalfEdge, MeshBuilder,
-        MeshHalfEdgeBuilder, MeshPathBuilder, MeshPosition, MeshTrait, MeshType, VertexPayload,
+        DefaultEdgePayload, DefaultFacePayload, Face3d, HalfEdge, HalfEdgeMeshType, MeshBuilder,
+        MeshType3D, VertexPayload,
     },
     operations::{MeshExtrude, MeshLoft, MeshSubdivision},
     primitives::polygon::Make2dShape,
@@ -25,27 +25,11 @@ fn circle_iter<S: Scalar, Vec: Vector<S>, VP: VertexPayload + HasPosition<Vec, S
 // TODO: Reduce type requirements
 
 /// A trait for creating prismatoids.
-pub trait MakePrismatoid<T: MeshType<Mesh = Self>>:
-    MeshTrait<T = T>
-    + Make2dShape<T>
-    + MeshBuilder<T>
-    + MeshHalfEdgeBuilder<T>
-    + MeshPathBuilder<T>
-    + MeshExtrude<T>
-    + MeshBuilder<T>
-    + MeshLoft<T>
-    + MeshPosition<T>
-    + MeshSubdivision<T>
+pub trait MakePrismatoid<T: HalfEdgeMeshType<Mesh = Self> + MeshType3D<Mesh = Self>>:
+    Make2dShape<T> + MeshExtrude<T> + MeshLoft<T> + MeshSubdivision<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
-    T::Vec: Vector3D<S = T::S>,
-    T::VP: Transformable<Vec = T::Vec, Rot = T::Rot, Trans = T::Trans, S = T::S>
-        + HasPosition<T::Vec, S = T::S>,
-    Self: Make2dShape<T>,
-    T::Edge: HalfEdge<T> + EdgeBasics<T>,
-    T::Face: Face3d<T>,
-    T::Trans: TransformTrait<S = T::S>,
 {
     // Waiting for https://github.com/rust-lang/rust/issues/8995
     // type S = T::S;
@@ -57,7 +41,7 @@ where
         let first = self.insert_polygon(vp);
         let twin = self.edge(first).twin(self);
         let f = twin.face(self).expect("The polygon must have a face");
-        let normal = f.normal(self).normalize();
+        let normal = Face3d::normal(f, self).normalize();
         let e = self.extrude(first, T::Trans::from_translation(-normal * height));
         e
     }

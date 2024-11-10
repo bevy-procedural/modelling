@@ -4,7 +4,7 @@ mod iterator;
 
 pub use iterator::*;
 
-use super::HalfEdgeMeshType;
+use super::HalfEdgeImplMeshType;
 use crate::{
     math::IndexType,
     mesh::{DefaultEdgePayload, Edge, EdgeBasics, EdgePayload},
@@ -16,7 +16,7 @@ use crate::{
 
 /// Half-edge inspired data structure
 #[derive(Clone, Copy, PartialEq)]
-pub struct HalfEdgeImpl<T: HalfEdgeMeshType> {
+pub struct HalfEdgeImpl<T: HalfEdgeImplMeshType> {
     /// the index of the half-edge
     id: T::E,
 
@@ -47,11 +47,11 @@ pub struct HalfEdgeImpl<T: HalfEdgeMeshType> {
     payload: T::EP,
 }
 
-impl<T: HalfEdgeMeshType> Edge for HalfEdgeImpl<T> {
+impl<T: HalfEdgeImplMeshType> Edge for HalfEdgeImpl<T> {
     type T = T;
 }
 
-impl<T: HalfEdgeMeshType> std::fmt::Debug for HalfEdgeImpl<T> {
+impl<T: HalfEdgeImplMeshType> std::fmt::Debug for HalfEdgeImpl<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -74,7 +74,7 @@ impl<T: HalfEdgeMeshType> std::fmt::Debug for HalfEdgeImpl<T> {
     }
 }
 
-impl<T: HalfEdgeMeshType> Deletable<T::E> for HalfEdgeImpl<T> {
+impl<T: HalfEdgeImplMeshType> Deletable<T::E> for HalfEdgeImpl<T> {
     fn delete(&mut self) {
         assert!(self.id != IndexType::max());
         self.id = IndexType::max();
@@ -105,7 +105,7 @@ impl<T: HalfEdgeMeshType> Deletable<T::E> for HalfEdgeImpl<T> {
     }
 }
 
-impl<T: HalfEdgeMeshType> Default for HalfEdgeImpl<T>
+impl<T: HalfEdgeImplMeshType> Default for HalfEdgeImpl<T>
 where
     T::EP: DefaultEdgePayload,
 {

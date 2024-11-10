@@ -1,7 +1,7 @@
-use super::{HalfEdgeImpl, HalfEdgeMeshType};
+use super::{HalfEdgeImpl, HalfEdgeImplMeshType};
 use crate::mesh::{EdgeBasics, HalfEdge, MeshBasics};
 
-impl<T: HalfEdgeMeshType> EdgeBasics<T> for HalfEdgeImpl<T> {
+impl<T: HalfEdgeImplMeshType> EdgeBasics<T> for HalfEdgeImpl<T> {
     /// Returns the index of the half-edge
     #[inline(always)]
     fn id(&self) -> T::E {

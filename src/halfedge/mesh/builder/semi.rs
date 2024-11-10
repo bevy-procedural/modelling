@@ -1,5 +1,5 @@
 use crate::{
-    halfedge::{HalfEdgeImpl, HalfEdgeMeshImpl, HalfEdgeMeshType, HalfEdgeVertexImpl},
+    halfedge::{HalfEdgeImpl, HalfEdgeMeshImpl, HalfEdgeImplMeshType, HalfEdgeVertexImpl},
     math::IndexType,
     mesh::{
         EdgeBasics, HalfEdge, HalfEdgeSemiBuilder, MeshBasics, MeshHalfEdgeBuilder, VertexBasics,
@@ -8,7 +8,7 @@ use crate::{
 
 // TODO: Simplify these
 
-impl<T: HalfEdgeMeshType> HalfEdgeSemiBuilder<T> for HalfEdgeMeshImpl<T> {
+impl<T: HalfEdgeImplMeshType> HalfEdgeSemiBuilder<T> for HalfEdgeMeshImpl<T> {
     fn insert_edge_no_check(
         &mut self,
         inside: T::E,

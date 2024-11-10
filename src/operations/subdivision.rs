@@ -1,6 +1,6 @@
 use crate::mesh::{
-    DefaultEdgePayload, EdgeBasics, FaceBasics, HalfEdge, HalfEdgeSemiBuilder, MeshBasics,
-    MeshBuilder, MeshHalfEdgeBuilder, MeshType, VertexInterpolator,
+    DefaultEdgePayload, EdgeBasics, FaceBasics, HalfEdge, HalfEdgeMeshType, HalfEdgeSemiBuilder,
+    VertexInterpolator,
 };
 
 /// Describes how to subdivide a mesh.
@@ -41,12 +41,9 @@ impl SubdivisionDescription {
 /// TODO
 
 /// A trait for subdividing meshes.
-pub trait MeshSubdivision<T: MeshType<Mesh = Self>>:
-    MeshBasics<T> + HalfEdgeSemiBuilder<T> + MeshHalfEdgeBuilder<T> + MeshBuilder<T>
+pub trait MeshSubdivision<T: HalfEdgeMeshType<Mesh = Self>>: HalfEdgeSemiBuilder<T>
 where
     T::EP: DefaultEdgePayload,
-    T::Face: FaceBasics<T>,
-    T::Edge: HalfEdge<T> + EdgeBasics<T>,
 {
     /// Subdivides the mesh with frequency (2,0).
     /// Uses the `vp_builder` to create the new vertex payloads.

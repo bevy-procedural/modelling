@@ -3,7 +3,7 @@ mod iterator;
 
 pub use iterator::*;
 
-use super::HalfEdgeMeshType;
+use super::HalfEdgeImplMeshType;
 use crate::{
     math::IndexType,
     mesh::{DefaultVertexPayload, HalfEdgeVertex, MeshType, Vertex, VertexBasics, VertexPayload},
@@ -12,7 +12,7 @@ use crate::{
 
 /// A vertex in a mesh.
 #[derive(Clone, PartialEq)]
-pub struct HalfEdgeVertexImpl<T: HalfEdgeMeshType> {
+pub struct HalfEdgeVertexImpl<T: HalfEdgeImplMeshType> {
     /// the index of the vertex
     id: T::V,
 
@@ -30,7 +30,7 @@ pub struct HalfEdgeVertexImpl<T: HalfEdgeMeshType> {
     payload: T::VP,
 }
 
-impl<T: HalfEdgeMeshType> HalfEdgeVertexImpl<T> {
+impl<T: HalfEdgeImplMeshType> HalfEdgeVertexImpl<T> {
     /// Creates a new vertex
     pub fn new(edge: T::E, payload: T::VP) -> Self {
         assert!(edge != IndexType::max());
@@ -43,20 +43,20 @@ impl<T: HalfEdgeMeshType> HalfEdgeVertexImpl<T> {
     }
 }
 
-impl<T: HalfEdgeMeshType> HalfEdgeVertex<T> for HalfEdgeVertexImpl<T> {
+impl<T: HalfEdgeImplMeshType> HalfEdgeVertex<T> for HalfEdgeVertexImpl<T> {
     fn set_edge(&mut self, edge: T::E) {
         self.edge = edge;
     }
 }
 
-impl<T: HalfEdgeMeshType> Vertex for HalfEdgeVertexImpl<T>
+impl<T: HalfEdgeImplMeshType> Vertex for HalfEdgeVertexImpl<T>
 where
     T: MeshType<Vertex = HalfEdgeVertexImpl<T>>,
 {
     type T = T;
 }
 
-impl<T: HalfEdgeMeshType> std::fmt::Debug for HalfEdgeVertexImpl<T> {
+impl<T: HalfEdgeImplMeshType> std::fmt::Debug for HalfEdgeVertexImpl<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -69,7 +69,7 @@ impl<T: HalfEdgeMeshType> std::fmt::Debug for HalfEdgeVertexImpl<T> {
     }
 }
 
-impl<T: HalfEdgeMeshType> Deletable<T::V> for HalfEdgeVertexImpl<T> {
+impl<T: HalfEdgeImplMeshType> Deletable<T::V> for HalfEdgeVertexImpl<T> {
     fn delete(&mut self) {
         assert!(self.id != IndexType::max());
         self.id = IndexType::max();
@@ -94,7 +94,7 @@ impl<T: HalfEdgeMeshType> Deletable<T::V> for HalfEdgeVertexImpl<T> {
     }
 }
 
-impl<T: HalfEdgeMeshType> Default for HalfEdgeVertexImpl<T>
+impl<T: HalfEdgeImplMeshType> Default for HalfEdgeVertexImpl<T>
 where
     T::VP: DefaultVertexPayload,
 {

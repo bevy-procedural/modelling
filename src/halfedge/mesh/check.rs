@@ -1,10 +1,10 @@
 use super::HalfEdgeMeshImpl;
 use crate::{
-    halfedge::HalfEdgeMeshType,
+    halfedge::HalfEdgeImplMeshType,
     mesh::{EdgeBasics, FaceBasics, HalfEdge, MeshBasics, MeshChecker, VertexBasics},
 };
 
-impl<T: HalfEdgeMeshType> HalfEdgeMeshImpl<T> {
+impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     /// Checks whether the twin of the twin is always the edge itself,
     /// the precursor to the next edge is the same, and the successor of the previous.
     fn check_edge_invariants(&self) -> Result<(), String> {
@@ -135,7 +135,7 @@ impl<T: HalfEdgeMeshType> HalfEdgeMeshImpl<T> {
     }
 }
 
-impl<T: HalfEdgeMeshType> MeshChecker<T> for HalfEdgeMeshImpl<T> {
+impl<T: HalfEdgeImplMeshType> MeshChecker<T> for HalfEdgeMeshImpl<T> {
     /// Checks the mesh for consistency
     fn check(&self) -> Result<(), String> {
         self.check_edge_invariants()?;
@@ -152,7 +152,7 @@ impl<T: HalfEdgeMeshType> MeshChecker<T> for HalfEdgeMeshImpl<T> {
     }
 }
 
-impl<T: HalfEdgeMeshType> std::fmt::Debug for HalfEdgeMeshImpl<T> {
+impl<T: HalfEdgeImplMeshType> std::fmt::Debug for HalfEdgeMeshImpl<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
