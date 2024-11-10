@@ -280,7 +280,7 @@ fn _make_prism() -> BevyMesh3d {
 }
 */
 
-fn _make_drosera_filiformis(settings: &GlobalSettings) -> BevyMesh3d {
+fn _make_blechnum_spicant(settings: &GlobalSettings) -> BevyMesh3d {
     // leaf strength
     let r1 = 0.1;
     let r1b = r1 * 1.1;
@@ -386,6 +386,8 @@ fn _make_drosera_filiformis(settings: &GlobalSettings) -> BevyMesh3d {
     let overshoot = settings.overshoot;
     // factor of how much earlier to the final development of the leaf the cells should grow
     let overshoot_grow = settings.overshoot_grow;
+    let overshoot_leaf = 1.1;
+    let leaf_offset = 0.0;
     // How eager the spiral is to get into the archimedean spiral
     let c1 = settings.c1;
     // Curvature of the spiral in the log spiral region
@@ -445,55 +447,55 @@ fn _make_drosera_filiformis(settings: &GlobalSettings) -> BevyMesh3d {
                 .map(|v| BevyVertexPayload::from_pos(cur + q.mul_vec3(*v * scale))),
         );
 
-        let growth_progress = smoothstep(
+        // TODO: make the smoothstep a more general concept. Also, investigate different overshoot and offset systems
+        let leaf_progress = smoothstep(
             i as f32,
-            (1.0 - p) * (m as f32 * overshoot_grow),
+            (1.0 - p + leaf_offset) * (m as f32 * overshoot_leaf),
             smoothness,
+            1.0,
+            0.0,
+        );
+
+        let leaf_progress2 = smoothstep(
+            i as f32,
+            (1.0 - p - 0.6) * (m as f32 * overshoot_leaf * 3.0),
+            smoothness * 0.5,
             1.0,
             0.0,
         );
 
         // add the leaves
         if i > m / 4 {
-            let s_scale = 0.8;
+            let s_scale = 1.5;
             let leaf_len_small = 1.0;
             let leaf_len_big = 5.0;
-            let qq1 = q * Quat::from_rotation_y(-PI * 0.5 * (1.0 - growth_progress));
-            let qq2 = q * Quat::from_rotation_y(PI * 0.5 * (1.0 - growth_progress));
-            mesh.insert_polygon(
-                [
-                    Vec3::new(
-                        leaf_len_small * r1 + r1 * leaf_len_big * growth_progress,
-                        0.0,
-                        0.0,
-                    ),
-                    Vec3::new(0.0, step_base * s_scale, 0.0),
-                    Vec3::new(0.0, -step_base * s_scale, 0.0),
-                ]
-                .iter()
-                .map(|v| {
-                    BevyVertexPayload::from_pos(
-                        cur + qq1.mul_vec3(*v * scale) + Vec3::X * scale * r1,
-                    )
-                }),
-            );
-            mesh.insert_polygon(
-                [
-                    Vec3::new(
-                        leaf_len_small * -r1 - r1 * leaf_len_big * growth_progress,
-                        0.0,
-                        0.0,
-                    ),
-                    Vec3::new(0.0, -step_base * s_scale, 0.0),
-                    Vec3::new(0.0, step_base * s_scale, 0.0),
-                ]
-                .iter()
-                .map(|v| {
-                    BevyVertexPayload::from_pos(
-                        cur + qq2.mul_vec3(*v * scale) - Vec3::X * scale * r1,
-                    )
-                }),
-            );
+            let mut sign = 1.0;
+            if i % 2 == 0 {
+                sign = -1.0;
+            }
+            let qq = q * Quat::from_rotation_y(-PI * sign * 0.5 * (1.0 - leaf_progress));
+
+            let tip = sign * (leaf_len_small * r1 + r1 * leaf_len_big * leaf_progress);
+            let base_y = step_base * s_scale * (leaf_progress2 * 0.8 + 0.2);
+            // TODO: Draw the leaflets using a bezier curve
+            let mut ps = [
+                Vec3::new(tip * 0.5, -base_y * 0.5, 0.0),
+                Vec3::new(tip * 0.95, base_y * 0.8, 0.0),
+                Vec3::new(tip, base_y * 1.4, 0.0),
+                Vec3::new(tip * 0.9, base_y * 1.4, 0.0),
+                Vec3::new(tip * 0.8, base_y * 1.3, 0.0),
+                Vec3::new(tip * 0.5, base_y * 0.8, 0.0),
+                Vec3::new(0.0, base_y, 0.0),
+                Vec3::new(0.0, -base_y, 0.0),
+            ];
+            if i % 2 == 0 {
+                ps.reverse();
+            }
+            mesh.insert_polygon(ps.iter().map(|v| {
+                BevyVertexPayload::from_pos(
+                    cur + qq.mul_vec3(*v * scale) + sign * Vec3::X * scale * r1,
+                )
+            }));
         }
     }
 
@@ -530,7 +532,7 @@ fn make_mesh(_settings: &GlobalSettings) -> BevyMesh3d {
 
     //_make_hell_10()
 
-    _make_drosera_filiformis(_settings)
+    _make_blechnum_spicant(_settings)
 }
 
 pub fn main() {
