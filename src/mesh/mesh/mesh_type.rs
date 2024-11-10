@@ -4,9 +4,8 @@ use crate::{
         Vector2D, Vector3D, Vector4D,
     },
     mesh::{
-        DefaultEdgePayload, DefaultFacePayload, Edge, EdgePayload, Face, Face3d, FacePayload,
-        HalfEdge, HalfEdgeMesh, HalfEdgeVertex, MeshBuilder, MeshHalfEdgeBuilder, MeshPayload,
-        MeshTrait, Vertex, VertexPayload,
+        Edge, EdgePayload, Face, Face3d, FacePayload, HalfEdge, HalfEdgeMesh, HalfEdgeVertex,
+        MeshBuilder, MeshHalfEdgeBuilder, MeshPayload, MeshTrait, Vertex, VertexPayload,
     },
 };
 
@@ -101,63 +100,3 @@ pub trait MeshType3D:
 >
 {
 }
-
-/*
-/// This trait extends `MeshType` to enforce the existence of HalfEdgeBasics traits
-pub trait HalfEdgeMeshType: MeshType {
-    type EP: DefaultEdgePayload;
-    type FP: DefaultFacePayload;
-    type Mesh: MeshTrait<T = Self>
-        + MeshBuilder<Self>
-        + HalfEdgeMesh<Self>
-        + MeshHalfEdgeBuilder<Self>;
-    type Edge: Edge<T = Self> + HalfEdge<Self>;
-    type Vertex: Vertex<T = Self> + HalfEdgeVertex<Self>;
-
-    // Relate the Mesh type from `MeshType` to `HalfEdgeMeshType`
-    fn assert_mesh_type() where
-        Self::Mesh: MeshTrait<T = Self> + MeshBuilder<Self>,
-        Self::Mesh == <Self as MeshType>::Mesh;
-}*/
-
-/*
-/// This trait extends `MeshType` to enforce the existence of HalfEdgeBasics traits
-pub trait HalfEdgeMeshType: MeshType
-where
-    Self::EP: DefaultEdgePayload,
-    Self::FP: DefaultFacePayload,
-    Self::Mesh:
-        MeshTrait<T = Self> + MeshBuilder<Self> + HalfEdgeMesh<Self> + MeshHalfEdgeBuilder<Self>,
-    Self::Edge: Edge<T = Self> + HalfEdge<Self>,
-    Self::Vertex: Vertex<T = Self> + HalfEdgeVertex<Self>,
-{
-}
-
-impl<T: MeshType> HalfEdgeMeshType for T
-where
-    T::EP: DefaultEdgePayload,
-    T::FP: DefaultFacePayload,
-    T::Mesh:
-        MeshTrait<T = Self> + MeshBuilder<Self> + HalfEdgeMesh<Self> + MeshHalfEdgeBuilder<Self>,
-    T::Edge: Edge<T = Self> + HalfEdge<Self>,
-    T::Vertex: Vertex<T = Self> + HalfEdgeVertex<Self>,
-{
-}
-*/
-
-/*
-macro_rules! half_edge_mesh_constraints {
-    ($T:ty) => {
-        where
-            $T: MeshType,
-            <$T as MeshType>::EP: DefaultEdgePayload,
-            <$T as MeshType>::FP: DefaultFacePayload,
-            <$T as MeshType>::Mesh: MeshTrait<T = $T>
-                + MeshBuilder<$T>
-                + HalfEdgeMesh<$T>
-                + MeshHalfEdgeBuilder<$T>,
-            <$T as MeshType>::Edge: Edge<T = $T> + HalfEdge<$T>,
-            <$T as MeshType>::Vertex: Vertex<T = $T> + HalfEdgeVertex<$T>,
-    };
-}
-*/

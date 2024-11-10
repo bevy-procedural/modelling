@@ -11,7 +11,7 @@ pub use face::*;
 pub use mesh::*;
 pub use vertex::*;
 
-use crate::mesh::{HalfEdgeMeshType, MeshType};
+use crate::mesh::MeshType;
 
 /// This trait defines the associated types used in this half-edge mesh implementation and puts them into relation.
 pub trait HalfEdgeImplMeshType:
