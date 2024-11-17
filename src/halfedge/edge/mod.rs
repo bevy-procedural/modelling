@@ -15,7 +15,7 @@ use crate::{
 // TODO: include a way to explicitly access faces around vertex/face? https://en.wikipedia.org/wiki/Polygon_mesh
 
 /// Half-edge inspired data structure
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct HalfEdgeImpl<T: HalfEdgeImplMeshType> {
     /// the index of the half-edge
     id: T::E,

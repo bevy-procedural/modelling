@@ -9,7 +9,7 @@ use crate::{
 
 /// Vertex Payload for Bevy with 3d position, normal, and uv.
 #[derive(Clone, PartialEq, Default, Copy)]
-pub struct BevyVertexPayload {
+pub struct BevyVertexPayload3d {
     /// The position of the vertex.
     position: Vec3,
 
@@ -20,7 +20,7 @@ pub struct BevyVertexPayload {
     uv: Vec2,
 }
 
-impl VertexPayload for BevyVertexPayload {
+impl VertexPayload for BevyVertexPayload3d {
     fn allocate() -> Self {
         Self {
             position: Vec3::ZERO,
@@ -31,7 +31,7 @@ impl VertexPayload for BevyVertexPayload {
     }
 }
 
-impl Transformable for BevyVertexPayload {
+impl Transformable for BevyVertexPayload3d {
     type S = f32;
     type Vec = Vec3;
     type Trans = bevy::transform::components::Transform;
@@ -76,7 +76,7 @@ impl Transformable for BevyVertexPayload {
     }
 }
 
-impl HasPosition<Vec3> for BevyVertexPayload {
+impl HasPosition<Vec3> for BevyVertexPayload3d {
     type S = f32;
 
     #[inline(always)]
@@ -99,7 +99,7 @@ impl HasPosition<Vec3> for BevyVertexPayload {
     }
 }
 
-impl HasNormal<Vec3> for BevyVertexPayload {
+impl HasNormal<Vec3> for BevyVertexPayload3d {
     type S = f32;
 
     #[inline(always)]
@@ -113,7 +113,7 @@ impl HasNormal<Vec3> for BevyVertexPayload {
     }
 }
 
-impl std::fmt::Debug for BevyVertexPayload {
+impl std::fmt::Debug for BevyVertexPayload3d {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,

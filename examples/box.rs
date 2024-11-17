@@ -9,7 +9,7 @@ use bevy::{
     render::render_asset::RenderAssetUsages,
 };
 use procedural_modelling::{
-    bevy::{BevyMesh3d, BevyMeshType3d32, BevyVertexPayload},
+    bevy::{BevyMesh3d, BevyMeshType3d32, BevyVertexPayload3d},
     math::{HasPosition, Scalar, Vector, Vector3D},
     mesh::{
         DefaultEdgePayload, DefaultFacePayload, EdgeBasics, MeshBasics, MeshBuilder,
@@ -22,8 +22,8 @@ use procedural_modelling::{
 use std::f32::consts::PI;
 
 /// A tiny helper function to create a bevy-compatible vertex payload
-fn vp(x: f32, y: f32, z: f32) -> BevyVertexPayload {
-    BevyVertexPayload::from_pos(Vec3::new(x, y, z))
+fn vp(x: f32, y: f32, z: f32) -> BevyVertexPayload3d {
+    BevyVertexPayload3d::from_pos(Vec3::new(x, y, z))
 }
 
 /// Creates a cuboid with a given `size`.

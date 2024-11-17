@@ -1,11 +1,12 @@
 use crate::{
     halfedge::{
-        HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeMeshImpl, HalfEdgeImplMeshType, HalfEdgeVertexImpl,
+        HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeImplMeshType, HalfEdgeMeshImpl, HalfEdgeVertexImpl,
     },
     math::IndexType,
     mesh::{
-        DefaultEdgePayload, DefaultFacePayload, EdgeBasics, HalfEdge, HalfEdgeSemiBuilder,
-        HalfEdgeVertex, MeshBasics, MeshHalfEdgeBuilder, MeshTopology, VertexBasics,
+        DefaultEdgePayload, DefaultFacePayload, EdgeBasics, FaceBasics, HalfEdge,
+        HalfEdgeSemiBuilder, HalfEdgeVertex, MeshBasics, MeshHalfEdgeBuilder, MeshTopology,
+        MeshType, VertexBasics,
     },
 };
 use itertools::Itertools;
@@ -47,7 +48,7 @@ impl<T: HalfEdgeImplMeshType> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T> {
         ep2: T::EP,
     ) -> (T::V, T::E, T::E) {
         let (input, output) = if self.vertex(v).has_only_one_edge(self) {
-            let e = self.vertex(v).edge(self);
+            let e = self.vertex(v).edge(self).unwrap();
             (e.twin_id(), e.id())
         } else {
             let Some(boundary) = self
@@ -299,5 +300,73 @@ impl<T: HalfEdgeImplMeshType> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T> {
             Default::default(),
             curved,
         )
+    }
+}
+
+impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
+    pub(crate) fn import_mesh<FE, FV, FF, T2: MeshType>(
+        mesh: &T2::Mesh,
+        fv: FV,
+        fe: FE,
+        ff: FF,
+    ) -> Self
+    where
+        FE: Fn(&T2::EP) -> T::EP,
+        FV: Fn(&T2::VP) -> T::VP,
+        FF: Fn(&T2::FP) -> T::FP,
+        T2::Edge: HalfEdge<T2>,
+    {
+        let mut res = Self::default();
+        let mut vertex_map = std::collections::HashMap::new();
+        for vertex in MeshBasics::vertices(mesh) {
+            let v = res.vertices.allocate();
+            vertex_map.insert(vertex.id(), v);
+        }
+        let mut face_map = std::collections::HashMap::new();
+        face_map.insert(IndexType::max(), IndexType::max());
+        for face in MeshBasics::faces(mesh) {
+            let f = res.faces.allocate();
+            face_map.insert(face.id(), f);
+        }
+        let mut edge_map = std::collections::HashMap::new();
+        for edge in MeshBasics::edges(mesh) {
+            let e = res.halfedges.allocate();
+            edge_map.insert(edge.id(), e);
+        }
+
+        for vertex in MeshBasics::vertices(mesh) {
+            res.vertices.set(
+                vertex_map[&vertex.id()],
+                HalfEdgeVertexImpl::new(
+                    edge_map[&VertexBasics::edge_id(vertex, mesh)],
+                    fv(vertex.payload()),
+                ),
+            );
+        }
+
+        for face in MeshBasics::faces(mesh) {
+            res.faces.set(
+                face_map[&face.id()],
+                HalfEdgeFaceImpl::new(
+                    edge_map[&FaceBasics::edge_id(face)],
+                    false,
+                    ff(face.payload()),
+                ),
+            );
+        }
+
+        for edge in MeshBasics::edges(mesh) {
+            res.insert_halfedge_no_update_no_check(
+                edge_map[&edge.id()],
+                vertex_map[&edge.origin_id()],
+                face_map[&edge.face_id()],
+                edge_map[&edge.prev_id()],
+                edge_map[&edge.twin_id()],
+                edge_map[&edge.next_id()],
+                fe(&edge.payload()),
+            );
+        }
+
+        res
     }
 }

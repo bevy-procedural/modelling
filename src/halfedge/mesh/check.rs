@@ -60,12 +60,18 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     }
 
     fn check_vertex_invariants(&self) -> Result<(), String> {
-        if let Some(bad_vertex) = self.vertices().find(|v| v.edge(self).origin_id() != v.id()) {
+        if let Some(bad_vertex) = self.vertices().find(|v| {
+            if let Some(e) = v.edge(self) {
+                e.origin_id() != v.id()
+            } else {
+                false
+            }
+        }) {
             return Err(format!(
                 "Vertex {} has edge {} with origin {}",
                 bad_vertex.id(),
-                bad_vertex.edge(self).id(),
-                bad_vertex.edge(self).origin_id()
+                bad_vertex.edge(self).unwrap().id(),
+                bad_vertex.edge(self).unwrap().origin_id()
             ));
         }
 

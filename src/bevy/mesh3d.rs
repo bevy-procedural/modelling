@@ -1,10 +1,13 @@
-//! This module implements bevy specific mesh handling
-
-use super::{Bevy2DPolygon, BevyVertexPayload};
+use super::{Bevy2DPolygon, BevyVertexPayload3d};
 use crate::{
-    halfedge::{HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeImplMeshType, HalfEdgeMeshImpl, HalfEdgeVertexImpl},
+    halfedge::{
+        HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeImplMeshType, HalfEdgeMeshImpl, HalfEdgeVertexImpl,
+    },
     math::{HasNormal, HasPosition, IndexType},
-    mesh::{EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, MeshTypeHalfEdge, MeshType, MeshType3D, Triangulateable},
+    mesh::{
+        EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, MeshType, MeshType3D,
+        MeshTypeHalfEdge, Triangulateable,
+    },
     tesselate::{TesselationMeta, TriangulationAlgorithm},
 };
 use bevy::{
@@ -16,7 +19,7 @@ use bevy::{
 };
 
 /// A mesh type for bevy with 3D vertices, 32 bit indices, 32 bit floats, and no face or edge payload (no normals etc.)
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
 pub struct BevyMeshType3d32;
 
 impl MeshType for BevyMeshType3d32 {
@@ -24,7 +27,7 @@ impl MeshType for BevyMeshType3d32 {
     type V = u32;
     type F = u32;
     type EP = EmptyEdgePayload;
-    type VP = BevyVertexPayload;
+    type VP = BevyVertexPayload3d;
     type FP = EmptyFacePayload;
     type MP = EmptyMeshPayload;
     type S = f32;
@@ -40,7 +43,6 @@ impl MeshType for BevyMeshType3d32 {
     type Edge = HalfEdgeImpl<Self>;
     type Vertex = HalfEdgeVertexImpl<Self>;
 }
-
 impl HalfEdgeImplMeshType for BevyMeshType3d32 {}
 impl MeshTypeHalfEdge for BevyMeshType3d32 {}
 impl MeshType3D for BevyMeshType3d32 {}
@@ -48,7 +50,7 @@ impl MeshType3D for BevyMeshType3d32 {}
 /// A mesh with bevy 3D vertices
 pub type BevyMesh3d = HalfEdgeMeshImpl<BevyMeshType3d32>;
 
-impl<T: HalfEdgeImplMeshType<VP = BevyVertexPayload, Vec = Vec3, S = f32>> HalfEdgeMeshImpl<T> {
+impl<T: HalfEdgeImplMeshType<VP = BevyVertexPayload3d, Vec = Vec3, S = f32>> HalfEdgeMeshImpl<T> {
     fn bevy_indices(&self, indices: &Vec<T::V>) -> bevy::render::mesh::Indices {
         if std::mem::size_of::<T::V>() == std::mem::size_of::<u32>() {
             bevy::render::mesh::Indices::U32(
@@ -122,7 +124,7 @@ impl<T: HalfEdgeImplMeshType<VP = BevyVertexPayload, Vec = Vec3, S = f32>> HalfE
             bevy::render::mesh::Mesh::ATTRIBUTE_NORMAL,
             VertexAttributeValues::Float32x3(
                 vs.iter()
-                    .map(|vp| (vp as &BevyVertexPayload).normal().to_array())
+                    .map(|vp| (vp as &BevyVertexPayload3d).normal().to_array())
                     .collect(),
             ),
         );

@@ -33,7 +33,7 @@ pub struct HalfEdgeVertexImpl<T: HalfEdgeImplMeshType> {
 impl<T: HalfEdgeImplMeshType> HalfEdgeVertexImpl<T> {
     /// Creates a new vertex
     pub fn new(edge: T::E, payload: T::VP) -> Self {
-        assert!(edge != IndexType::max());
+        //assert!(edge != IndexType::max());
         Self {
             id: IndexType::max(),
             edge,

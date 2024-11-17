@@ -14,7 +14,7 @@ use criterion::{
     Throughput,
 };
 use procedural_modelling::{
-    bevy::{BevyMesh3d, BevyVertexPayload},
+    bevy::{BevyMesh3d, BevyVertexPayload3d},
     math::HasPosition,
     mesh::MeshTrait,
     primitives::{generate_zigzag, Make2dShape},
@@ -40,7 +40,7 @@ fn _make_spiral() -> BevyMesh3d {
 
 fn zigzag(n: usize) -> BevyMesh3d {
     BevyMesh3d::polygon(
-        generate_zigzag::<Vec2>(n).map(|v| BevyVertexPayload::from_pos(Vec3::new(v.x, v.y, 0.0))),
+        generate_zigzag::<Vec2>(n).map(|v| BevyVertexPayload3d::from_pos(Vec3::new(v.x, v.y, 0.0))),
     )
 }
 

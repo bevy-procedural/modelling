@@ -37,7 +37,7 @@ where
 impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
     #[inline(always)]
     fn edge(&self, mesh: &T::Mesh) -> T::Edge {
-        *mesh.edge(self.edge)
+        mesh.edge(self.edge).clone()
     }
 
     #[inline(always)]

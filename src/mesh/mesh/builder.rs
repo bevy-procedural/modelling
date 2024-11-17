@@ -68,6 +68,25 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     where
         T::EP: DefaultEdgePayload,
         T::FP: DefaultFacePayload;
+
+    /// Remove the edge (or pair of halfedges) and replace it with multiple edges to fit new vertices with vs between the end points
+    /// Returns the (half)edge starting in the previous origin
+    fn insert_vertices_into_edge<I: Iterator<Item = (T::EP, T::EP, T::VP)>>(
+        &mut self,
+        e: T::E,
+        vs: I,
+    ) -> T::E;
+
+    /*
+    /// Remove the edge resp. the halfedge and its twin.
+    /// Adjacent faces are joined if there are any.
+    /// Returns the id of the face that is kept.
+    fn remove_edge(&mut self, e: T::E) -> T::F;
+    */
+
+    /// add a new vertex and return it's id
+    fn add_vertex(&mut self, vp: T::VP) -> T::V;
+    
 }
 
 // TODO: These need to be simplified
@@ -176,7 +195,7 @@ pub trait MeshHalfEdgeBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
 }
 
 /// Some basic operations to build meshes with halfedges.
-/// 
+///
 /// TODO: These are kinda edgy. Avoid exposing them in the public API.
 pub trait HalfEdgeSemiBuilder<T: MeshType> {
     /// Provided two edges that point to the start and end vertex of the new edge, insert that new edge.

@@ -4,7 +4,7 @@ use crate::{
 };
 
 /// Basic edge traits for a mesh. Can be directed or undirected.
-pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone + Copy + PartialEq {
+pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone + PartialEq {
     /// Returns the identifier of the edge
     fn id(&self) -> T::E;
 

@@ -14,12 +14,15 @@ use procedural_modelling::{
     bevy::{
         show_edges, show_faces, show_tesselation_meta, show_vertex_indices,
         text::{Text3dGizmos, Text3dGizmosPlugin},
-        BevyMesh3d, BevyVertexPayload,
+        BevyMesh2d, BevyMesh3d, BevyVertexPayload2d, BevyVertexPayload3d,
     },
     math::{HasPosition, Vector3DIteratorExt},
-    mesh::{TransformableMesh, WithNormals},
-    operations::MeshLoft,
-    primitives::{generate_zigzag, random_star, Make2dShape},
+    mesh::{
+        CurvedEdge, MeshBasics, MeshHalfEdgeBuilder, MeshPathBuilder, TransformableMesh,
+        WithNormals,
+    },
+    operations::{MeshExtrude, MeshLoft},
+    primitives::{generate_zigzag, random_star, Make2dShape, MakeSphere},
     tesselate::{TesselationMeta, TriangulationAlgorithm},
 };
 use std::{env, f32::consts::PI};
@@ -144,7 +147,7 @@ fn _make_2d_merge_join() -> BevyMesh3d {
             (1.0, 1.0),
         ]
         .iter()
-        .map(|(x, z)| BevyVertexPayload::from_pos(Vec3::new(*x, 0.0, *z))),
+        .map(|(x, z)| BevyVertexPayload3d::from_pos(Vec3::new(*x, 0.0, *z))),
     );
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh
@@ -160,7 +163,7 @@ fn _make_hell_8() -> BevyMesh3d {
             (-0.835097, -7.30065e-8),
         ]
         .iter()
-        .map(|(x, z)| BevyVertexPayload::from_pos(Vec3::new(*x, 0.0, *z))),
+        .map(|(x, z)| BevyVertexPayload3d::from_pos(Vec3::new(*x, 0.0, *z))),
     );
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh
@@ -179,7 +182,7 @@ fn _make_hell_10() -> BevyMesh3d {
             [0.28799793, -0.28799775],
         ]
         .iter()
-        .map(|[x, z]| BevyVertexPayload::from_pos(Vec3::new(*x, 0.0, *z))),
+        .map(|[x, z]| BevyVertexPayload3d::from_pos(Vec3::new(*x, 0.0, *z))),
     );
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh
@@ -194,7 +197,7 @@ fn _make_2d_star(_settings: &MeshSettings) -> BevyMesh3d {
 fn _make_2d_random_star() -> BevyMesh3d {
     let mut mesh = BevyMesh3d::polygon(
         random_star::<Vec2>(5, 6, 0.1, 1.0)
-            .map(|v| BevyVertexPayload::from_pos(Vec3::new(v.x, 0.0, v.y))),
+            .map(|v| BevyVertexPayload3d::from_pos(Vec3::new(v.x, 0.0, v.y))),
     );
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh
@@ -203,7 +206,7 @@ fn _make_2d_random_star() -> BevyMesh3d {
 fn _make_2d_zigzag() -> BevyMesh3d {
     let n = 50;
     let mut mesh = BevyMesh3d::polygon(
-        generate_zigzag::<Vec2>(n).map(|v| BevyVertexPayload::from_pos(Vec3::new(v.x, 0.0, v.y))),
+        generate_zigzag::<Vec2>(n).map(|v| BevyVertexPayload3d::from_pos(Vec3::new(v.x, 0.0, v.y))),
     );
     mesh.transform(&Transform::from_translation(Vec3::new(0.0, -0.99, 0.0)));
     mesh
@@ -283,7 +286,7 @@ fn _make_prism() -> BevyMesh3d {
 fn _make_blechnum_spicant(settings: &GlobalSettings) -> BevyMesh3d {
     // leaf strength
     let r1 = 0.1;
-    let r1b = r1 * 1.1;
+    // let r1b = r1 * 1.1;
     // strength at the tip
     let r2 = 0.03;
 
@@ -293,6 +296,7 @@ fn _make_blechnum_spicant(settings: &GlobalSettings) -> BevyMesh3d {
     // number of spiral segments
     let m = 80;
 
+    /*
     // log spiral radius
     let a = 4.0;
 
@@ -310,7 +314,7 @@ fn _make_blechnum_spicant(settings: &GlobalSettings) -> BevyMesh3d {
     let archimedean_spiral = |a: f32, phi: f32| {
         let r = a * phi;
         Vec3::new(r * phi.cos(), r * phi.sin(), 0.0)
-    };
+    };*/
 
     let circle = |r: f32, i: i32, n: i32| {
         let phi = PI * ((2 * i) as f32) / n as f32;
@@ -395,6 +399,7 @@ fn _make_blechnum_spicant(settings: &GlobalSettings) -> BevyMesh3d {
 
     let archimedeanness = 1.0; // 1.0 - p*p*0.5;
 
+    // TODO: The archimedean part should have the opposite curvature of the log part, i.e., the spiral comes from the top!
     let arch_a = r2 / PI;
     for i in 1..m {
         let step = smoothstep(
@@ -425,8 +430,10 @@ fn _make_blechnum_spicant(settings: &GlobalSettings) -> BevyMesh3d {
     let mut mesh = BevyMesh3d::new();
     let base: Vec<Vec3> = (0..n).map(|i| circle(r1, -i, n)).collect();
     let first = curve[0];
-    let mut edge =
-        mesh.insert_polygon(base.iter().map(|v| BevyVertexPayload::from_pos(*v + first)));
+    let mut edge = mesh.insert_polygon(
+        base.iter()
+            .map(|v| BevyVertexPayload3d::from_pos(*v + first)),
+    );
 
     let normal = base.iter().cloned().normal().normalize();
 
@@ -444,7 +451,7 @@ fn _make_blechnum_spicant(settings: &GlobalSettings) -> BevyMesh3d {
         edge = mesh.loft_tri_closed(
             edge,
             base.iter()
-                .map(|v| BevyVertexPayload::from_pos(cur + q.mul_vec3(*v * scale))),
+                .map(|v| BevyVertexPayload3d::from_pos(cur + q.mul_vec3(*v * scale))),
         );
 
         // TODO: make the smoothstep a more general concept. Also, investigate different overshoot and offset systems
@@ -492,7 +499,7 @@ fn _make_blechnum_spicant(settings: &GlobalSettings) -> BevyMesh3d {
                 ps.reverse();
             }
             mesh.insert_polygon(ps.iter().map(|v| {
-                BevyVertexPayload::from_pos(
+                BevyVertexPayload3d::from_pos(
                     cur + qq.mul_vec3(*v * scale) + sign * Vec3::X * scale * r1,
                 )
             }));
@@ -501,6 +508,23 @@ fn _make_blechnum_spicant(settings: &GlobalSettings) -> BevyMesh3d {
 
     mesh.translate(&(Vec3::new(0.0, -2.0, 0.0) - first));
     mesh
+}
+
+fn _make_bezier() -> BevyMesh3d {
+    let mut mesh2d = BevyMesh2d::new();
+    mesh2d.insert_regular_star(1.0, 1.0, 3);
+    let e = mesh2d.edge_mut(0);
+    e.set_curve_type(procedural_modelling::mesh::CurvedEdgeType::CubicBezier(
+        Vec2::new(0.2, 0.0),
+        Vec2::new(0.9, 0.5),
+    ));
+
+    let mut mesh3d = mesh2d.to_3d(0.01);
+
+    println!("{:?}", mesh3d);
+
+    mesh3d.extrude(0, Transform::from_translation(Vec3::new(0.0, 0.0, -1.0)));
+    mesh3d
 }
 
 fn make_mesh(_settings: &GlobalSettings) -> BevyMesh3d {
@@ -532,7 +556,9 @@ fn make_mesh(_settings: &GlobalSettings) -> BevyMesh3d {
 
     //_make_hell_10()
 
-    _make_blechnum_spicant(_settings)
+    //_make_blechnum_spicant(_settings)
+
+    _make_bezier()
 }
 
 pub fn main() {
@@ -614,8 +640,8 @@ fn update_meshes(
         mesh.generate_smooth_normals();
         mesh.bevy_set_ex(
             assets.get_mut(handle).unwrap(),
-            TriangulationAlgorithm::MinWeight,
-            false,
+            TriangulationAlgorithm::Delaunay,
+            true,
             &mut meta,
         );
 

@@ -107,7 +107,7 @@ pub fn ear_clipping_direct<Vec2: Vector2D, V: IndexType>(
 mod tests {
     use super::*;
     use crate::{
-        bevy::{Bevy2DPolygon, BevyMesh3d, BevyMeshType3d32, BevyVertexPayload},
+        bevy::{Bevy2DPolygon, BevyMesh3d, BevyMeshType3d32, BevyVertexPayload3d},
         math::Polygon,
         mesh::{IndexedVertex2D, MeshBasics},
         primitives::Make2dShape,
@@ -125,7 +125,7 @@ mod tests {
         let m = BevyMesh3d::polygon(
             vec2s
                 .iter()
-                .map(|v| BevyVertexPayload::from_pos(Vec3::new(v.vec.x, 0.0, v.vec.y))),
+                .map(|v| BevyVertexPayload3d::from_pos(Vec3::new(v.vec.x, 0.0, v.vec.y))),
         );
         ear_clipping::<BevyMeshType3d32>(m.face(0), &m, &mut tri, false);
         tri.verify_full::<Vec2, Bevy2DPolygon>(vec2s);

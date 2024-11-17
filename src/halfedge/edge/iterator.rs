@@ -4,18 +4,17 @@ use crate::{
     mesh::{EdgeBasics, HalfEdge, MeshBasics},
 };
 
-
 impl<T: HalfEdgeImplMeshType> HalfEdgeImpl<T> {
     /// Iterates all half-edges incident to the same face (counter-clockwise)
     #[inline(always)]
     pub fn edges_face<'a>(&'a self, mesh: &'a T::Mesh) -> IncidentToFaceIterator<'a, T> {
-        IncidentToFaceIterator::new(*self, mesh)
+        IncidentToFaceIterator::new(self.clone(), mesh)
     }
 
     /// Iterates all half-edges incident to the same face (clockwise)
     #[inline(always)]
     pub fn edges_face_back<'a>(&'a self, mesh: &'a T::Mesh) -> IncidentToFaceBackIterator<'a, T> {
-        IncidentToFaceBackIterator::new(*self, mesh)
+        IncidentToFaceBackIterator::new(self.clone(), mesh)
     }
 
     /// Iterates all half-edges incident to the same face
@@ -27,7 +26,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeImpl<T> {
 }
 
 /// Iterator over all half-edges incident to the same face (counter-clockwise)
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct IncidentToFaceIterator<'a, T: HalfEdgeImplMeshType + 'a> {
     is_first: bool,
     first: T::E,
@@ -54,20 +53,20 @@ impl<'a, T: HalfEdgeImplMeshType> Iterator for IncidentToFaceIterator<'a, T> {
     fn next(&mut self) -> Option<Self::Item> {
         if self.is_first {
             self.is_first = false;
-            return Some(self.current);
+            return Some(self.current.clone());
         }
         let next = self.current.next(self.mesh);
         if next.id() == self.first {
             return None;
         } else {
-            self.current = next;
+            self.current = next.clone();
             return Some(next);
         }
     }
 
     #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let mut curr = self.current;
+        let mut curr = self.current.clone();
         let mut len = 1;
         while curr.next(self.mesh).id() != self.first {
             len += 1;
@@ -106,13 +105,13 @@ impl<'a, T: HalfEdgeImplMeshType> Iterator for IncidentToFaceBackIterator<'a, T>
     fn next(&mut self) -> Option<Self::Item> {
         if self.is_first {
             self.is_first = false;
-            return Some(self.current);
+            return Some(self.current.clone());
         }
         let prev = self.current.prev(self.mesh);
         if prev.id() == self.first {
             return None;
         } else {
-            self.current = prev;
+            self.current = prev.clone();
             return Some(prev);
         }
     }

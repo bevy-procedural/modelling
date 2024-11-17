@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use crate::{
     math::{
         HasPosition, IndexType, Polygon, Rotator, Scalar, TransformTrait, Transformable, Vector,
@@ -14,7 +16,7 @@ use super::{MeshPathBuilder, MeshPosition};
 // TODO: The `Copy` here is weird. Should probably remove it.
 
 /// This trait defines all the associated types used in a mesh and puts them into relation.
-pub trait MeshType: Copy + Eq {
+pub trait MeshType: Copy + Default + Debug + Eq {
     /// The type of the index used for edge.
     type E: IndexType;
 
@@ -58,7 +60,7 @@ pub trait MeshType: Copy + Eq {
     type S: Scalar;
 
     /// The type of the transformation used for vertices.
-    type Trans: TransformTrait<S = Self::S, Vec = Self::Vec>;
+    type Trans: TransformTrait<S = Self::S, Vec = Self::Vec, Rot = Self::Rot>;
 
     /// The type of the rotation data used for vertices.
     type Rot: Rotator<Self::Vec>;

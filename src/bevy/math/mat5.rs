@@ -94,6 +94,7 @@ impl<S: Scalar> Default for Mat5<S> {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct Vec4Rotator {}
 
 impl Rotator<Vec4> for Vec4Rotator {}

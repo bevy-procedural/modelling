@@ -1,6 +1,6 @@
 use super::HalfEdgeImpl;
 use crate::{
-    halfedge::{HalfEdgeMeshImpl, HalfEdgeImplMeshType},
+    halfedge::{HalfEdgeImplMeshType, HalfEdgeMeshImpl},
     math::IndexType,
     mesh::{HalfEdge, HalfEdgeVertex, MeshBasics},
 };
@@ -43,9 +43,14 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
         self.twin = twin;
     }
 
+    fn set_origin(&mut self, origin: T::V) {
+        self.origin_id = origin;
+    }
+
     #[inline(always)]
     fn next(&self, mesh: &HalfEdgeMeshImpl<T>) -> HalfEdgeImpl<T> {
-        *mesh.edge(self.next)
+        // TODO: avoid clone
+        mesh.edge(self.next).clone()
     }
 
     #[inline(always)]
@@ -56,7 +61,8 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
     #[inline(always)]
     fn twin(&self, mesh: &HalfEdgeMeshImpl<T>) -> HalfEdgeImpl<T> {
         // TODO: Make this return a reference?
-        *mesh.edge(self.twin)
+        // TODO: avoid clone
+        mesh.edge(self.twin).clone()
     }
 
     #[inline(always)]
@@ -66,7 +72,8 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
 
     #[inline(always)]
     fn prev(&self, mesh: &HalfEdgeMeshImpl<T>) -> HalfEdgeImpl<T> {
-        *mesh.edge(self.prev)
+        // TODO: avoid clone
+        mesh.edge(self.prev).clone()
     }
 
     #[inline(always)]

@@ -1,4 +1,4 @@
-use crate::math::{HasZero, Scalar, TransformTrait, Vector, Vector2D};
+use crate::math::{HasZero, Scalar, TransformTrait, Transformable, Vector, Vector2D};
 use bevy::math::{Affine2, Vec2, Vec3, Vec4};
 
 impl HasZero for Vec2 {
@@ -163,5 +163,21 @@ impl TransformTrait for Affine2 {
     #[inline(always)]
     fn apply_vec(&self, v: Vec2) -> Vec2 {
         bevy::math::Affine2::transform_vector2(self, v)
+    }
+}
+
+impl Transformable for Vec2 {
+    type S = f32;
+    type Rot = f32;
+    type Trans = Affine2;
+    type Vec = Vec2;
+    fn transform(&mut self, t: &Self::Trans) -> &mut Self {
+        *self = t.apply(*self);
+        self
+    }
+
+    fn lerp(&mut self, other: &Self, t: Self::S) -> &mut Self {
+        *self = bevy::math::Vec2::lerp(*self, *other, t);
+        self
     }
 }
