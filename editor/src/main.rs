@@ -529,6 +529,8 @@ fn _make_bezier() -> BevyMesh3d {
     .close(Default::default());*/
 
     // TODO: allow multiple edges between vertices when they are curved!
+    // TODO: Make a little SVG parser
+    // TODO: Add much more tests and examples
     let circle_len = 4.0 / 3.0 * (2.0f32.sqrt() - 1.0);
     PathBuilder::<BevyMeshType2d32>::start(&mut mesh2d, Vec2::new(1.0, 0.0))
         .cubic_bezier(

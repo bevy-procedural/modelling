@@ -19,7 +19,7 @@ This crate is still in a _very_ early stage of development. Expect frequent API 
 
 ## Usage
 
-<img src="assets/demo.png" alt="drawing" width="300"/>
+<img src="doc/images/demo.png" alt="drawing" width="300"/>
 
 Install using `cargo add procedural_modelling`. Generate the above mesh using the following code for rendering with bevy:
 
@@ -50,6 +50,12 @@ For package development, we recommend using the `editor`-subcrate. This example 
 
 When developing tests, we recommend `cargo watch -w editor/src -w src -x "test --profile fast-dev"`.
 
+## Tutorial
+
+We are currently working on a little tutorial for the most important features. 
+
+ - [Getting started](doc/start.md)
+
 ## Feature Progress
 
 -   Attributes
@@ -64,13 +70,14 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
 -   Mesh Types
 
     -   [x] Open PL 2-Manifold in 2d and 3d Space
+    -   [x] Bezier Curves for 2d Meshes
     -   [ ] Open PL 2-Manifold in $n$d Space
     -   [ ] Open PL $n$-Manifold in $m$d Space <!-- e.g., https://youtu.be/piJkuavhV50?si=1IZdm1PYnA2dvdAL&t=1135 -->
     -   [ ] Pseudomanifold (with singularities)
     -   [ ] Non-Manifold (with branching surfaces)
     -   [ ] Non-Euclidean
     -   [ ] Combinatorial (purely topological)
-    -   [ ] NURBS <!-- Bezier Surfaces / Parametric Surfaces / Spline Networks...? -->
+    -   [ ] NURBS / T-Splines <!-- Bezier Surfaces / Parametric Surfaces / Spline Networks...? -->
 
 -   Triangulation
 
@@ -153,6 +160,7 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
     -   [ ] wgpu
     -   [ ] STL export/import
     -   [ ] OBJ export/import
+    -   [ ] SVG import
 
 ## Features
 
