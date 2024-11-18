@@ -1,5 +1,5 @@
 use super::VertexBasics;
-use crate::mesh::{EdgeBasics, EdgePayload, HalfEdge, MeshType};
+use crate::mesh::{EdgeBasics, HalfEdge, MeshType};
 use itertools::Itertools;
 
 /// Basic vertex functionality for a mesh

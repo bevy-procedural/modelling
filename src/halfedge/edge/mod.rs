@@ -53,9 +53,14 @@ impl<T: HalfEdgeImplMeshType> Edge for HalfEdgeImpl<T> {
 
 impl<T: HalfEdgeImplMeshType> std::fmt::Debug for HalfEdgeImpl<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let payload = if self.payload.is_empty() {
+            "".to_string()
+        } else {
+            format!(", payload: {:?}", self.payload)
+        };
         write!(
             f,
-            "{} --{}--> ; twin: {}, face: {} [{}] {}",
+            "{} --{}--> ; twin: {}, face: {} [{}] {} {}",
             self.origin_id.index(),
             self.id().index(),
             self.twin.index(),
@@ -66,6 +71,7 @@ impl<T: HalfEdgeImplMeshType> std::fmt::Debug for HalfEdgeImpl<T> {
                 self.face.index().to_string()
             },
             self.next.index(),
+            payload
         )?;
         if !self.payload.is_empty() {
             write!(f, ", payload: {:?}", self.payload)?;

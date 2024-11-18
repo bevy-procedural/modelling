@@ -51,6 +51,7 @@ impl<T: MeshType> CurvedEdgePayload<T> {
 }
 
 // TODO: somehow make sure the twin is never curved or has the same curve type
+// TODO: make sure edge payloads are printed even for winged edges
 impl<T: MeshType> EdgePayload for CurvedEdgePayload<T> {
     fn allocate() -> Self {
         Default::default()

@@ -1,7 +1,7 @@
 use crate::{
-    math::{HasPosition, IndexType, Transformable},
+    math::{HasPosition, IndexType},
     mesh::{
-        CurvedEdge, DefaultEdgePayload, DefaultFacePayload, EdgeBasics, HalfEdge, MeshBasics,
+        CurvedEdge, CurvedEdgeType, DefaultEdgePayload, EdgeBasics, HalfEdge, MeshBasics,
         MeshBuilder, MeshHalfEdgeBuilder, MeshType, VertexBasics,
     },
 };
@@ -150,7 +150,7 @@ where
             self.line_to(self.start_vertex());
         }
 
-        // TODO: is this necessary or not?
+        // TODO: is this necessary or not? Generally, is the correction above correct? Or is the winding in the opposite direction?
         /*debug_assert!(self
         .mesh()
         .edge(current_inner)
@@ -192,22 +192,28 @@ where
 
     /// Draws a quadratic bezier curve from the current vertex to a new vertex with the given payload.
     #[inline(always)]
-    pub fn quadratic_bezier(&mut self, control: T::Vec, end: T::VP) -> &mut Self
+    pub fn quadratic_bezier(&mut self, control: T::Vec, end: T::Vec) -> &mut Self
     where
-        T::Edge: CurvedEdge<T>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
+        T::Edge: HalfEdge<T> + CurvedEdge<T>,
+        T::Mesh: MeshHalfEdgeBuilder<T>,
+        T::EP: DefaultEdgePayload,
     {
-        let v = self.mesh().add_vertex(end);
+        let v = self.mesh().add_vertex(T::VP::from_pos(end));
         self.quadratic_bezier_to(control, v);
         self
     }
 
     /// Draws a cubic bezier curve from the current vertex to a new vertex with the given payload.
     #[inline(always)]
-    pub fn cubic_bezier(&mut self, control1: T::Vec, control2: T::Vec, end: T::VP) -> &mut Self
+    pub fn cubic_bezier(&mut self, control1: T::Vec, control2: T::Vec, end: T::Vec) -> &mut Self
     where
-        T::Edge: CurvedEdge<T>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
+        T::Edge: HalfEdge<T> + CurvedEdge<T>,
+        T::Mesh: MeshHalfEdgeBuilder<T>,
+        T::EP: DefaultEdgePayload,
     {
-        let v = self.mesh().add_vertex(end);
+        let v = self.mesh().add_vertex(T::VP::from_pos(end));
         self.cubic_bezier_to(control1, control2, v);
         self
     }
@@ -225,6 +231,8 @@ where
         self.line_to_ex(v, Default::default(), Default::default())
     }
 
+    /// Draws a straight line from the current vertex to the given vertex.
+    /// The vertex must have no edges at all or must only be adjacent to one "outside".
     pub fn line_to_ex(&mut self, v: T::V, ep0: T::EP, ep1: T::EP) -> &mut Self
     where
         T::Edge: HalfEdge<T>,
@@ -257,17 +265,31 @@ where
     /// The vertex must have no edges at all or must only be adjacent to one "outside".
     pub fn quadratic_bezier_to(&mut self, control: T::Vec, end: T::V) -> &mut Self
     where
-        T::Edge: CurvedEdge<T>,
+        T::Edge: HalfEdge<T> + CurvedEdge<T>,
+        T::Mesh: MeshHalfEdgeBuilder<T>,
+        T::EP: DefaultEdgePayload,
     {
-        todo!("Implement this method.")
+        self.line_to(end);
+        let (edge, _twin) = self.current_edges().unwrap();
+        self.mesh()
+            .edge_mut(edge)
+            .set_curve_type(CurvedEdgeType::QuadraticBezier(control));
+        self
     }
 
     /// Draws a cubic bezier curve from the current vertex to the given vertex.
     /// The vertex must have no edges at all or must only be adjacent to one "outside".
     pub fn cubic_bezier_to(&mut self, control1: T::Vec, control2: T::Vec, end: T::V) -> &mut Self
     where
-        T::Edge: CurvedEdge<T>,
+        T::Edge: HalfEdge<T> + CurvedEdge<T>,
+        T::Mesh: MeshHalfEdgeBuilder<T>,
+        T::EP: DefaultEdgePayload,
     {
-        todo!("Implement this method.")
+        self.line_to(end);
+        let (edge, _twin) = self.current_edges().unwrap();
+        self.mesh()
+            .edge_mut(edge)
+            .set_curve_type(CurvedEdgeType::CubicBezier(control1, control2));
+        self
     }
 }

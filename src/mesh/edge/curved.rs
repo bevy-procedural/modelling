@@ -100,15 +100,6 @@ where
             }
         }
 
-        println!(
-            "num_segments_low: {}, num_segments_high: {} {} {} {:?}",
-            num_segments_low,
-            num_segments_high,
-            self.mse_uniform(num_segments_low, mesh),
-            self.mse_uniform(num_segments_high, mesh),
-            self.to_lines(num_segments_high, mesh)
-        );
-
         if self.mse_uniform(num_segments_low, mesh) < mse {
             self.to_lines(num_segments_low, mesh)
         } else {

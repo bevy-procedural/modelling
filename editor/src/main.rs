@@ -518,17 +518,39 @@ fn _make_bezier() -> BevyMesh3d {
         Vec2::new(0.9, 0.5),
     ));*/
 
-    PathBuilder::<BevyMeshType2d32>::start(&mut mesh2d, Vec2::new(0.0, 0.0))
-        .line(Vec2::new(1.0, 0.0))
-        .line(Vec2::new(0.0, 1.0))
+    /*PathBuilder::<BevyMeshType2d32>::start(&mut mesh2d, Vec2::new(0.0, 0.0))
+    .line(Vec2::new(1.0, 0.0))
+    .line(Vec2::new(0.0, -2.0))
+    .cubic_bezier(
+        Vec2::new(-1.0, -1.0),
+        Vec2::new(-1.0, -1.0),
+        Vec2::new(-1.0, 0.5),
+    )
+    .close(Default::default());*/
+
+    // TODO: allow multiple edges between vertices when they are curved!
+    let circle_len = 4.0 / 3.0 * (2.0f32.sqrt() - 1.0);
+    PathBuilder::<BevyMeshType2d32>::start(&mut mesh2d, Vec2::new(1.0, 0.0))
+        .cubic_bezier(
+            Vec2::new(1.0, -circle_len),
+            Vec2::new(circle_len, -1.0),
+            Vec2::new(0.0, -1.0),
+        )
+        .cubic_bezier(
+            Vec2::new(-circle_len, -1.0),
+            Vec2::new(-1.0, -circle_len),
+            Vec2::new(-1.0, 0.0),
+        )
+        .cubic_bezier(
+            Vec2::new(-1.0, circle_len),
+            Vec2::new(-circle_len, 1.0),
+            Vec2::new(0.0, 1.0),
+        )
         .close(Default::default());
 
     println!("{:?}", mesh2d);
 
-    let mut mesh3d = mesh2d.to_3d(0.0001);
-
-    println!("{:?}", mesh3d);
-
+    let mut mesh3d = mesh2d.to_3d(0.001);
     mesh3d.extrude(0, Transform::from_translation(Vec3::new(0.0, 0.0, -1.0)));
     mesh3d
 }

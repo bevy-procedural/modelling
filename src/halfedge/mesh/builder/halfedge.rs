@@ -5,7 +5,7 @@ use crate::{
     math::IndexType,
     mesh::{
         DefaultEdgePayload, DefaultFacePayload, EdgeBasics, FaceBasics, HalfEdge,
-        HalfEdgeSemiBuilder, HalfEdgeVertex, MeshBasics, MeshHalfEdgeBuilder, MeshTopology,
+        HalfEdgeSemiBuilder, HalfEdgeVertex, MeshBasics, MeshHalfEdgeBuilder,
         MeshType, VertexBasics,
     },
 };
