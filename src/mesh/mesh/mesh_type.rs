@@ -11,9 +11,10 @@ use crate::{
     },
 };
 
-use super::{MeshPathBuilder, MeshPosition};
+use super::MeshPosition;
 
 // TODO: The `Copy` here is weird. Should probably remove it.
+// TODO: The Vec / Rot / S parts shouldn't be part of the default MeshType but only for HasPosition or something like that
 
 /// This trait defines all the associated types used in a mesh and puts them into relation.
 pub trait MeshType: Copy + Default + Debug + Eq {
@@ -40,12 +41,12 @@ pub trait MeshType: Copy + Default + Debug + Eq {
 
     /// The type of the vector used for vertices.
     type Vec: Vector<
-        Self::S,
-        Vec2 = Self::Vec2,
-        Vec3 = Self::Vec3,
-        Vec4 = Self::Vec4,
-        Trans = Self::Trans,
-    >;
+            Self::S,
+            Vec2 = Self::Vec2,
+            Vec3 = Self::Vec3,
+            Vec4 = Self::Vec4,
+            Trans = Self::Trans,
+        > + Transformable<Trans = Self::Trans, Rot = Self::Rot, Vec = Self::Vec, S = Self::S>;
 
     /// The 2d vector type derived from the default vector
     type Vec2: Vector2D<S = Self::S>;
@@ -69,7 +70,7 @@ pub trait MeshType: Copy + Default + Debug + Eq {
     type Poly: Polygon<Self::Vec2>;
 
     /// The type of the mesh.
-    type Mesh: MeshTrait<T = Self> + MeshBuilder<Self> + MeshPathBuilder<Self>;
+    type Mesh: MeshTrait<T = Self> + MeshBuilder<Self>;
 
     /// The type of the (half-)edge or arc.
     type Edge: Edge<T = Self>;

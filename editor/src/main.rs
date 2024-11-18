@@ -14,12 +14,11 @@ use procedural_modelling::{
     bevy::{
         show_edges, show_faces, show_tesselation_meta, show_vertex_indices,
         text::{Text3dGizmos, Text3dGizmosPlugin},
-        BevyMesh2d, BevyMesh3d, BevyVertexPayload2d, BevyVertexPayload3d,
+        BevyMesh2d, BevyMesh3d, BevyMeshType2d32, BevyVertexPayload2d, BevyVertexPayload3d,
     },
     math::{HasPosition, Vector3DIteratorExt},
     mesh::{
-        CurvedEdge, MeshBasics, MeshHalfEdgeBuilder, MeshPathBuilder, TransformableMesh,
-        WithNormals,
+        CurvedEdge, MeshBasics, MeshHalfEdgeBuilder, PathBuilder, TransformableMesh, WithNormals,
     },
     operations::{MeshExtrude, MeshLoft},
     primitives::{generate_zigzag, random_star, Make2dShape, MakeSphere},
@@ -512,14 +511,21 @@ fn _make_blechnum_spicant(settings: &GlobalSettings) -> BevyMesh3d {
 
 fn _make_bezier() -> BevyMesh3d {
     let mut mesh2d = BevyMesh2d::new();
-    mesh2d.insert_regular_star(1.0, 1.0, 3);
+    /*mesh2d.insert_regular_star(1.0, 1.0, 3);
     let e = mesh2d.edge_mut(0);
     e.set_curve_type(procedural_modelling::mesh::CurvedEdgeType::CubicBezier(
         Vec2::new(0.2, 0.0),
         Vec2::new(0.9, 0.5),
-    ));
+    ));*/
 
-    let mut mesh3d = mesh2d.to_3d(0.01);
+    PathBuilder::<BevyMeshType2d32>::start(&mut mesh2d, Vec2::new(0.0, 0.0))
+        .line(Vec2::new(1.0, 0.0))
+        .line(Vec2::new(0.0, 1.0))
+        .close(Default::default());
+
+    println!("{:?}", mesh2d);
+
+    let mut mesh3d = mesh2d.to_3d(0.0001);
 
     println!("{:?}", mesh3d);
 

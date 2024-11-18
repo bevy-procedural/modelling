@@ -1,4 +1,4 @@
-use super::{HalfEdgeImpl, HalfEdgeImplMeshType};
+use super::{BackwardEdgeIterator, ForwardEdgeIterator, HalfEdgeImpl, HalfEdgeImplMeshType};
 use crate::mesh::{EdgeBasics, HalfEdge, MeshBasics};
 
 impl<T: HalfEdgeImplMeshType> EdgeBasics<T> for HalfEdgeImpl<T> {
@@ -36,5 +36,19 @@ impl<T: HalfEdgeImplMeshType> EdgeBasics<T> for HalfEdgeImpl<T> {
     #[inline(always)]
     fn payload_mut(&mut self) -> &mut T::EP {
         &mut self.payload
+    }
+
+    /// Iterates all half-edges incident to the same face (counter-clockwise)
+    #[inline(always)]
+    #[allow(refining_impl_trait)]
+    fn edges_face<'a>(&'a self, mesh: &'a T::Mesh) -> ForwardEdgeIterator<'a, T> {
+        ForwardEdgeIterator::new(self.clone(), mesh)
+    }
+
+    /// Iterates all half-edges incident to the same face (clockwise)
+    #[inline(always)]
+    #[allow(refining_impl_trait)]
+    fn edges_face_back<'a>(&'a self, mesh: &'a T::Mesh) -> BackwardEdgeIterator<'a, T> {
+        BackwardEdgeIterator::new(self.clone(), mesh)
     }
 }

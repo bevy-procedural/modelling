@@ -68,4 +68,5 @@ pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
 
     /// Flips the direction of the edge and its twin
     fn flip(e: T::E, mesh: &mut T::Mesh);
+
 }

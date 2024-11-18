@@ -13,7 +13,7 @@ use procedural_modelling::{
     math::{HasPosition, Scalar, Vector, Vector3D},
     mesh::{
         DefaultEdgePayload, DefaultFacePayload, EdgeBasics, MeshBasics, MeshBuilder,
-        MeshPathBuilder, MeshType3D, MeshTypeHalfEdge,
+        PathBuilder, MeshType3D, MeshTypeHalfEdge,
     },
     operations::MeshLoft,
     primitives::{Make2dShape, MakePrismatoid},

@@ -1,5 +1,5 @@
 use super::VertexBasics;
-use crate::mesh::{EdgeBasics, HalfEdge, MeshType};
+use crate::mesh::{EdgeBasics, EdgePayload, HalfEdge, MeshType};
 use itertools::Itertools;
 
 /// Basic vertex functionality for a mesh
@@ -14,12 +14,15 @@ where
     fn outgoing_boundary_edge(&self, mesh: &T::Mesh) -> Option<T::E> {
         // TODO: Assumes a manifold vertex. Otherwise, there can be multiple boundary edges!
         debug_assert!(
-            self.edges_out(mesh)
-                .filter(|e| e.is_boundary_self())
-                .exactly_one()
-                .is_ok(),
-            "Vertex {} is not manifold",
-            self.id()
+            self.edges_out(mesh).count() == 0
+                || self
+                    .edges_out(mesh)
+                    .filter(|e| e.is_boundary_self())
+                    .exactly_one()
+                    .is_ok(),
+            "Vertex {} is not manifold, edges are: {:?}",
+            self.id(),
+            self.edges_out(mesh).map(|e| e.id()).collect_vec()
         );
 
         self.edges_out(mesh).find_map(|e| {

@@ -128,45 +128,64 @@ impl<T: HalfEdgeImplMeshType> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T> {
             origin1,
             origin0
         );
-        debug_assert!(
+        // TODO: is this necessary or not?
+        /*debug_assert!(
             self.shortest_path(origin0, origin1).is_none(),
             "Vertices {} and {} must be in different connected components",
             origin0,
             origin1
-        );
+        );*/
 
         // We are connecting two vertices at the boundary of two connected components.
         // Hence, the edge from v0 to v1 will come from the ingoing boundary
         // edge of v0 and go to the outgoing boundary edge of v1.
 
-        // TODO: When allowing non-manifold meshes, they vertices might not be at boundary and in the same component, e.g., we could allow an edge from one interior point to another.
+        // TODO: When allowing non-manifold meshes, their vertices might not be at boundary and in the same component, e.g., we could allow an edge from one interior point to another.
 
-        let next0 = self
-            .vertex(origin1)
-            .outgoing_boundary_edge(self)
-            .expect("There must be an outgoing boundary edge at vertex v0");
-        let prev0 = self
-            .vertex(origin0)
-            .ingoing_boundary_edge(self)
-            .expect("There must be an ingoing boundary edge at vertex v1");
-        let next1 = self
-            .vertex(origin0)
-            .outgoing_boundary_edge(self)
-            .expect("There must be an outgoing boundary edge at vertex v1");
-        let prev1 = self
-            .vertex(origin1)
-            .ingoing_boundary_edge(self)
-            .expect("There must be an ingoing boundary edge at vertex v0");
+        let inserter = |inwards: bool, origin: T::V| {
+            if self.vertex(origin).edge_id(self) == IndexType::max() {
+                // if the vertex doesn't have edges the edges should refer to their twins
+                IndexType::max()
+            } else if inwards {
+                self.vertex(origin)
+                    .ingoing_boundary_edge(self)
+                    .expect("There must be an intgoing boundary edge")
+            } else {
+                self.vertex(origin)
+                    .outgoing_boundary_edge(self)
+                    .expect("There must be an outgoing boundary edge")
+            }
+        };
+
+        let next0 = inserter(false, origin1);
+        let prev0 = inserter(true, origin0);
+        let next1 = inserter(false, origin0);
+        let prev1 = inserter(true, origin1);
 
         let (e0, e1) = self.insert_edge_no_update_no_check(
             (next0, prev0, origin0, IndexType::max(), ep0),
             (next1, prev1, origin1, IndexType::max(), ep1),
         );
 
-        self.edge_mut(next0).set_prev(e0);
-        self.edge_mut(prev0).set_next(e0);
-        self.edge_mut(next1).set_prev(e1);
-        self.edge_mut(prev1).set_next(e1);
+        if next0 != IndexType::max() {
+            self.edge_mut(next0).set_prev(e0);
+        } else {
+            self.vertex_mut(origin1).set_edge(e1);
+        }
+
+        if prev0 != IndexType::max() {
+            self.edge_mut(prev0).set_next(e0);
+        }
+
+        if next1 != IndexType::max() {
+            self.edge_mut(next1).set_prev(e1);
+        } else {
+            self.vertex_mut(origin0).set_edge(e0);
+        }
+
+        if prev1 != IndexType::max() {
+            self.edge_mut(prev1).set_next(e1);
+        }
 
         (e0, e1)
     }

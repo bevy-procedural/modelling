@@ -1,4 +1,4 @@
-use super::{HalfEdgeImplMeshType, IncidentToFaceIterator};
+use super::{HalfEdgeImplMeshType, ForwardEdgeIterator};
 use crate::{
     math::{HasPosition, IndexType, Vector3D},
     mesh::{
@@ -86,8 +86,8 @@ impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
 
     #[inline(always)]
     #[allow(refining_impl_trait)]
-    fn edges<'a>(&'a self, mesh: &'a T::Mesh) -> IncidentToFaceIterator<'a, T> {
-        IncidentToFaceIterator::new(self.edge(mesh), mesh)
+    fn edges<'a>(&'a self, mesh: &'a T::Mesh) -> ForwardEdgeIterator<'a, T> {
+        ForwardEdgeIterator::new(self.edge(mesh), mesh)
     }
 
 }

@@ -32,4 +32,10 @@ pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone + Partia
         let v2 = self.target(mesh).pos().clone();
         (v1 + v2) * T::S::HALF
     }
+
+    /// Iterates all (half)edges incident to the same face (counter-clockwise)
+    fn edges_face<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Edge>;
+
+    /// Iterates all (half)edges incident to the same face (clockwise)
+    fn edges_face_back<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Edge>;
 }

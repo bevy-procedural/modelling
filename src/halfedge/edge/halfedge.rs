@@ -2,7 +2,7 @@ use super::HalfEdgeImpl;
 use crate::{
     halfedge::{HalfEdgeImplMeshType, HalfEdgeMeshImpl},
     math::IndexType,
-    mesh::{HalfEdge, HalfEdgeVertex, MeshBasics},
+    mesh::{EdgeBasics, HalfEdge, HalfEdgeVertex, MeshBasics},
 };
 
 impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {

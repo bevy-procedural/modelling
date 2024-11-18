@@ -3,8 +3,7 @@ use crate::{
     math::{HasPosition, TransformTrait, Transformable, Vector3D},
     mesh::{
         DefaultEdgePayload, DefaultFacePayload, EdgeBasics, Face3d, FaceBasics, HalfEdge,
-        MeshTypeHalfEdge, MeshBasics, MeshBuilder, MeshPathBuilder, MeshPosition,
-        MeshType3D,
+        MeshBasics, MeshBuilder, MeshPosition, MeshType3D, MeshTypeHalfEdge,
     },
     operations::{MeshExtrude, MeshLoft, MeshSubdivision},
     primitives::{Make2dShape, MakePlane, MakePrismatoid, MakeSphere},
