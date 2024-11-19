@@ -56,7 +56,7 @@ impl<T: HalfEdgeImplMeshType> VertexBasics<T> for HalfEdgeVertexImpl<T> {
     /// Returns an outgoing half-edge incident to the vertex
     #[inline(always)]
     fn edge(&self, mesh: &T::Mesh) -> Option<T::Edge> {
-        // TODO: avoid clone
+        // PERF: avoid clone
         if self.edge == IndexType::max() {
             None
         } else {

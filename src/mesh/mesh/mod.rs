@@ -11,7 +11,6 @@ mod position;
 mod topology;
 mod transform;
 mod triangulate;
-
 pub use basics::*;
 pub use builder::*;
 pub use check::*;
@@ -24,6 +23,13 @@ pub use position::*;
 pub use topology::*;
 pub use transform::*;
 pub use triangulate::*;
+
+
+#[cfg(feature = "fonts")]
+mod fonts;
+
+#[cfg(feature = "fonts")]
+pub use fonts::*;
 
 /// The `MeshTrait` doesn't assume any specific data structure or topology,
 /// i.e., could be a manifold half-edge mesh, a topological directed graph, etc.

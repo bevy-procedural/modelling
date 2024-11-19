@@ -18,7 +18,8 @@ use procedural_modelling::{
     },
     math::{HasPosition, Vector3DIteratorExt},
     mesh::{
-        CurvedEdge, MeshBasics, MeshHalfEdgeBuilder, PathBuilder, TransformableMesh, WithNormals,
+        CurvedEdge, Font, MeshBasics, MeshHalfEdgeBuilder, PathBuilder, TransformableMesh,
+        WithNormals,
     },
     operations::{MeshExtrude, MeshLoft},
     primitives::{generate_zigzag, random_star, Make2dShape, MakeSphere},
@@ -518,6 +519,13 @@ fn _make_bezier() -> BevyMesh3d {
         Vec2::new(0.9, 0.5),
     ));*/
 
+    Font::new(
+        include_bytes!("../../assets/Cochineal-Roman.otf"),
+        0.004,
+    )
+    .layout_text::<BevyMeshType2d32>("sFä", &mut mesh2d);
+
+    /*
     PathBuilder::<BevyMeshType2d32>::start(&mut mesh2d, Vec2::new(0.0, 0.0))
         .line(Vec2::new(1.0, 0.0))
         .line(Vec2::new(0.0, -2.0))
@@ -527,10 +535,8 @@ fn _make_bezier() -> BevyMesh3d {
             Vec2::new(-1.0, 0.5),
         )
         .close(Default::default());
+    */
 
-    // TODO: allow multiple edges between vertices when they are curved!
-    // TODO: Make a little SVG parser
-    // TODO: Add much more tests and examples
 
     /*let circle_len = 4.0 / 3.0 * (2.0f32.sqrt() - 1.0);
     PathBuilder::<BevyMeshType2d32>::start(&mut mesh2d, Vec2::new(1.0, 0.0))
@@ -554,8 +560,8 @@ fn _make_bezier() -> BevyMesh3d {
 
     println!("{:?}", mesh2d);
 
-    let mut mesh3d = mesh2d.to_3d(0.01);
-    mesh3d.extrude(0, Transform::from_translation(Vec3::new(0.0, 0.0, -1.0)));
+    let mut mesh3d = mesh2d.to_3d(0.001);
+    mesh3d.extrude(1, Transform::from_translation(Vec3::new(0.0, 0.0, -1.0)));
     mesh3d
 }
 

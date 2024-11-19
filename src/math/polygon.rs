@@ -1,4 +1,4 @@
-use super::{HasZero, LineSegment2D, Scalar, Vector2D};
+use super::{HasZero, LineSegment2D, Scalar, Vector2D, VectorIteratorExt};
 
 /// Trait for a polygon in n-dimensional space.
 pub trait Polygon<Vec2: Vector2D>: Clone + PartialEq + std::fmt::Debug + 'static {
@@ -11,6 +11,11 @@ pub trait Polygon<Vec2: Vector2D>: Clone + PartialEq + std::fmt::Debug + 'static
     /// Returns a polygon from an iterator of points.
     fn from_iter(iter: impl IntoIterator<Item = Vec2>) -> Self {
         Self::from_points(&iter.into_iter().collect::<Vec<_>>())
+    }
+
+    /// Returns the average of the points of the polygon.
+    fn centroid(&self) -> Vec2 {
+        VectorIteratorExt::stable_mean(self.points().iter().copied())
     }
 
     /// Returns the points of the polygon.

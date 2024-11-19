@@ -8,7 +8,7 @@ pub use face3d::*;
 pub use payload::*;
 
 use super::{MeshType, VertexBasics};
-use crate::math::{HasPosition, VectorIteratorExt};
+use crate::math::{HasPosition, Vector3D, VectorIteratorExt};
 
 // TODO: Remove methods in trait Face
 

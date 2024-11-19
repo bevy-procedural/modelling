@@ -7,6 +7,8 @@ use crate::{
 };
 use itertools::Itertools;
 
+// TODO: Many Face3d functions should be part of n dimensions, not just 3d.
+
 /// A face with vertices that have 3d positions.
 pub trait Face3d<T: MeshType<Face = Self>>: FaceBasics<T>
 where

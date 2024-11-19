@@ -1,6 +1,6 @@
 use super::Triangulation;
 use crate::{
-    math::{HasPosition, Scalar, Vector, Vector3D},
+    math::{HasPosition, Polygon, Scalar, Vector, Vector3D},
     mesh::{Face, Face3d, FaceBasics, MeshType},
 };
 use spade::{ConstrainedDelaunayTriangulation, Point2, Triangulation as _};
@@ -47,7 +47,26 @@ pub fn delaunay_triangulation<T: MeshType>(
         let v2 = i2v[p2.index()];
         let r = face.triangle_touches_boundary(mesh, v0, v1, v2);
         if r.is_none() || r.unwrap() {
-            tri.insert_triangle(v0, v1, v2);
+            if r.is_some() {
+                tri.insert_triangle(v0, v1, v2);
+                return;
+            }
+
+            // TODO: is there a better way? this is inefficient
+
+            let v2d = face.vertices_2d(mesh).collect::<Vec<_>>();
+            let mut triangle: Vec<T::Vec2> = Vec::new();
+            for (v, i) in &v2d {
+                if *i == v0 || *i == v1 || *i == v2 {
+                    triangle.push(*v);
+                }
+            }
+            let triangle = T::Poly::from_iter(triangle);
+            let poly = T::Poly::from_iter(v2d.iter().map(|(v, _)| v.clone()));
+
+            if poly.contains(&triangle.centroid()) {
+                tri.insert_triangle(v0, v1, v2);
+            }
         }
     });
 

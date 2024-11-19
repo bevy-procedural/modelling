@@ -49,7 +49,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
 
     #[inline(always)]
     fn next(&self, mesh: &HalfEdgeMeshImpl<T>) -> HalfEdgeImpl<T> {
-        // TODO: avoid clone
+        // PERF: avoid clone
         mesh.edge(self.next).clone()
     }
 
@@ -61,7 +61,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
     #[inline(always)]
     fn twin(&self, mesh: &HalfEdgeMeshImpl<T>) -> HalfEdgeImpl<T> {
         // TODO: Make this return a reference?
-        // TODO: avoid clone
+        // PERF: avoid clone
         mesh.edge(self.twin).clone()
     }
 
@@ -72,7 +72,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
 
     #[inline(always)]
     fn prev(&self, mesh: &HalfEdgeMeshImpl<T>) -> HalfEdgeImpl<T> {
-        // TODO: avoid clone
+        // PERF: avoid clone
         mesh.edge(self.prev).clone()
     }
 

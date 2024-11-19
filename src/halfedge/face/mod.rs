@@ -1,8 +1,9 @@
-use super::{HalfEdgeImplMeshType, ForwardEdgeIterator};
+use super::{ForwardEdgeIterator, HalfEdgeImplMeshType};
 use crate::{
-    math::{HasPosition, IndexType, Vector3D},
+    math::{HasPosition, IndexType, Polygon, TransformTrait, Vector3D},
     mesh::{
-        DefaultFacePayload, EdgeBasics, Face, Face3d, FaceBasics, FacePayload, HalfEdge, MeshBasics,
+        DefaultFacePayload, EdgeBasics, Face, Face3d, FaceBasics, FacePayload, HalfEdge,
+        MeshBasics, VertexBasics,
     },
     util::Deletable,
 };
@@ -89,7 +90,6 @@ impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
     fn edges<'a>(&'a self, mesh: &'a T::Mesh) -> ForwardEdgeIterator<'a, T> {
         ForwardEdgeIterator::new(self.edge(mesh), mesh)
     }
-
 }
 
 impl<T: HalfEdgeImplMeshType> Face for HalfEdgeFaceImpl<T> {

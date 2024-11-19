@@ -3172,6 +3172,7 @@ dependencies = [
 name = "procedural_modelling"
 version = "0.2.1"
 dependencies = [
+ "ab_glyph",
  "bevy",
  "bevy-inspector-egui",
  "criterion",

@@ -56,15 +56,17 @@ rand = "^0.8.5"
 spade = "^2.12.1"
 criterion = { version = "0.5.1", features = ["html_reports"], optional = true }
 lazy_static = "1.5.0"
+ab_glyph = { version = "0.2.29", optional = true }
 
 [features]
-default = ["bevy"]
+default = ["bevy", "fonts"]
 bevy = [
     "dep:bevy",
     "dep:bevy-inspector-egui",
     "bevy/bevy_gizmos",
     "bevy/default_font",
 ]
+fonts = ["dep:ab_glyph"]
 dynamic = ["bevy/dynamic_linking"]
 meshopt = ["dep:meshopt"]
 benchmarks = ["dep:criterion"]

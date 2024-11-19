@@ -93,7 +93,7 @@ impl<'a, T: HalfEdgeMeshType> Iterator for NonmanifoldVertexIterator<'a, T> {
             if self.current.next == self.first {
                 return None;
             }
-            // TODO: avoid clone?
+            // PERF: avoid clone?
             self.current = self.mesh.vertex(self.current.next).clone();
             Some(self.current.clone())
         }
