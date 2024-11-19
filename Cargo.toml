@@ -11,7 +11,7 @@ readme = "README.md"
 repository = "https://github.com/bevy-procedural/modelling"
 documentation = "https://docs.rs/procedural_modelling"
 rust-version = "1.81.0"
-include = ["src/**/*", "doc/**/*", "README.md", "Cargo.toml"]
+include = ["src/**/*", "doc/**/*", "examples/**/*", "README.md", "Cargo.toml"]
 
 [lib]
 name = "procedural_modelling"

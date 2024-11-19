@@ -62,7 +62,7 @@ impl HalfEdgeMeshImpl<BevyMeshType2d32> {
         // Convert curved edges
         for edge in mesh.edges().cloned().collect::<Vec<_>>().iter() {
             if edge.curve_type() != CurvedEdgeType::Linear {
-                let vs = edge.to_lines_mse(tol, &mesh);
+                let vs = edge.flatten_casteljau(tol, &mesh);
                 if vs.len() == 0 {
                     continue;
                 }

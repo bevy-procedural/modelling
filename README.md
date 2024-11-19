@@ -52,9 +52,9 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
 
 ## Tutorial
 
-We are currently working on a little tutorial for the most important features. 
+We are currently working on some tutorials for the most important features. 
 
- - [Getting started](doc/start.md)
+ - [Getting started](https://docs.rs/procedural_modelling/latest/procedural_modelling/)
 
 ## Feature Progress
 

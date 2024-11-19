@@ -1,5 +1,5 @@
 use crate::{
-    math::{HasPosition, Scalar, Transformable, Vector},
+    math::{HasPosition, HasZero, Scalar, Transformable, Vector},
     mesh::{EdgeBasics, MeshType, VertexBasics},
 };
 
@@ -61,23 +61,67 @@ where
     /// Overwrites the curve type of the edge
     fn set_curve_type(&mut self, curve_type: CurvedEdgeType<T>);
 
-    /// Converts the curved edge to a sequence of line segments
-    fn to_lines(&self, num_segments: usize, mesh: &T::Mesh) -> Vec<T::Vec> {
-        assert!(num_segments > 0);
-        return (0..num_segments - 1)
+    /// Converts the curved edge to a uniformly spaced sequence of `n` line segments
+    fn flatten_uniform(&self, n: usize, mesh: &T::Mesh) -> Vec<T::Vec> {
+        assert!(n > 0);
+        return (0..n - 1)
             .into_iter()
             .map(|i| {
                 self.curve_type().point_at(
                     self,
                     mesh,
-                    T::S::from_usize(i + 1) / T::S::from_usize(num_segments),
+                    T::S::from_usize(i + 1) / T::S::from_usize(n),
                 )
             })
             .collect();
     }
 
+    /// Converts the curved edge to a sequence of line segments with a specific error using De Casteljau's algorithm
+    fn flatten_casteljau(&self, error: T::S, mesh: &T::Mesh) -> Vec<T::Vec> {
+        fn recursive_flatten<T: MeshType>(
+            curve: &CurvedEdgeType<T>,
+            edge: &T::Edge,
+            mesh: &T::Mesh,
+            t0: T::S,
+            t1: T::S,
+            error: T::S,
+            lines: &mut Vec<T::Vec>,
+        ) where
+            T::Edge: CurvedEdge<T>,
+            T::VP: HasPosition<T::Vec, S = T::S>,
+            T::Vec: Transformable<S = T::S>,
+        {
+            let p0 = curve.point_at(edge, mesh, t0);
+            let p1 = curve.point_at(edge, mesh, t1);
+            let tm = (t0 + t1) / T::S::TWO;
+            let pm = curve.point_at(edge, mesh, tm);
+            let pline = p0.lerped(&p1, T::S::HALF);
+            let deviation = pm.distance(&pline);
+
+            if deviation <= error {
+                // The segment is acceptable; push p1
+                lines.push(p1);
+            } else {
+                // Subdivide further
+                recursive_flatten(curve, edge, mesh, tm, t1, error, lines);
+                recursive_flatten(curve, edge, mesh, t0, tm, error, lines);
+            }
+        }
+
+        let mut lines = Vec::new();
+        // Start by adding the target point
+        let curve = self.curve_type();
+        recursive_flatten(&curve, self, mesh, T::S::ZERO, T::S::ONE, error, &mut lines);
+        // Reverse the points to get them in the correct order
+        lines.reverse();
+        lines.pop();
+        return lines;
+    }
+
+    // TODO: Add analytic version for quad bezier https://raphlinus.github.io/graphics/curves/2019/12/23/flatten-quadbez.html
+
     /// Converts the curved edge to a sequence of line segments with a specific mean squared error at the midpoints of the generated segments
-    fn to_lines_mse(&self, mse: T::S, mesh: &T::Mesh) -> Vec<T::Vec> {
+    fn flatten_uniform_mse(&self, mse: T::S, mesh: &T::Mesh) -> Vec<T::Vec> {
         // TODO: This is not very efficient, but it works for now
 
         // We start with doubling the number of segments until the mse is below the threshold and then do a binary search
@@ -101,16 +145,14 @@ where
         }
 
         if self.mse_uniform(num_segments_low, mesh) < mse {
-            self.to_lines(num_segments_low, mesh)
+            self.flatten_uniform(num_segments_low, mesh)
         } else {
-            self.to_lines(num_segments_high, mesh)
+            self.flatten_uniform(num_segments_high, mesh)
         }
     }
 
     /// Returns the mean squared error of the midpoints of the line segments
     fn mse(&self, lines: &Vec<T::Vec>, mesh: &T::Mesh) -> T::S {
-        // TODO: Inefficient
-        // TODO: Technically not correct. It might significantly underestimate the error if the curve intersects the straight line between the endpoints
         let mut lines2 = Vec::new();
         lines2.push(self.origin(mesh).pos());
         lines2.extend(lines.iter().cloned());
@@ -132,6 +174,6 @@ where
         if num_segments == 0 {
             return T::S::INFINITY;
         }
-        self.mse(&self.to_lines(num_segments, mesh), mesh)
+        self.mse(&self.flatten_uniform(num_segments, mesh), mesh)
     }
 }
