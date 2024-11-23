@@ -16,6 +16,22 @@ where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
 {
+    /// Extrudes all boundary edges using the given transformation.
+    ///
+    /// Uses one row of quad faces.
+    fn extrude_boundary(&mut self, transform: T::Trans)
+    where
+        T::VP: Transformable<Trans = T::Trans, S = T::S>,
+    {
+        let faces = self.face_ids().collect_vec();
+        for f in faces {
+            let e = self.face(f).edge(self).twin_id();
+            if self.edge(e).is_boundary_self() {
+                self.extrude(e, transform);
+            }
+        }
+    }
+
     /// Extrudes the given edge using the given transformation.
     /// Returns an edge on the boundary of the extrusion.
     ///

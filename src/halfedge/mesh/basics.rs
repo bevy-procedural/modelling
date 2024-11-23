@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::{HalfEdgeMeshImpl, HalfEdgeImplMeshType};
+use super::{HalfEdgeImplMeshType, HalfEdgeMeshImpl};
 use crate::{
     math::IndexType,
     mesh::{
@@ -98,7 +98,7 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     {
         self.faces.iter()
     }
-
+    
     /// Returns an iterator over all non-deleted halfedges
     fn edges<'a>(&'a self) -> impl Iterator<Item = &'a T::Edge>
     where

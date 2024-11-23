@@ -1,4 +1,4 @@
-use super::MeshType;
+use crate::mesh::{EdgeBasics, FaceBasics, MeshType, VertexBasics};
 
 /// Some basic operations to retrieve information about the mesh.
 pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clone {
@@ -57,6 +57,15 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     where
         T: 'a;
 
+    /// Returns an iterator over all non-deleted vertice's ids
+    fn vertex_ids<'a>(&'a self) -> impl Iterator<Item = T::V>
+    where
+        T: 'a,
+        T::Face: 'a,
+    {
+        self.vertices().map(|v| v.id())
+    }
+
     /// Returns an mutable iterator over all non-deleted vertices
     fn vertices_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T::Vertex>
     where
@@ -67,10 +76,28 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     where
         T: 'a;
 
+    /// Returns an iterator over all non-deleted edge's ids
+    fn edge_ids<'a>(&'a self) -> impl Iterator<Item = T::E>
+    where
+        T: 'a,
+        T::Face: 'a,
+    {
+        self.edges().map(|e| e.id())
+    }
+
     /// Returns an iterator over all non-deleted faces
     fn faces<'a>(&'a self) -> impl Iterator<Item = &'a T::Face>
     where
         T: 'a;
+
+    /// Returns an iterator over all non-deleted face's ids
+    fn face_ids<'a>(&'a self) -> impl Iterator<Item = T::F>
+    where
+        T: 'a,
+        T::Face: 'a,
+    {
+        self.faces().map(|f| f.id())
+    }
 
     /// Returns the id of the (half)edge from `v` to `w` or `None` if they are not neighbors.
     fn shared_edge(&self, v: T::V, w: T::V) -> Option<T::Edge>;

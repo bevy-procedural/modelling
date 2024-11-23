@@ -1,10 +1,9 @@
-use ab_glyph::{Font as AbFont, FontRef, Glyph, GlyphId, Point, PxScale, PxScaleFont, ScaleFont};
+use ab_glyph::{Font as AbFont, FontRef, GlyphId, ScaleFont};
 
 use crate::{
-    math::{HasPosition, HasZero, IndexType, Scalar, Transformable, Vector},
+    math::{HasPosition, IndexType, Transformable, Vector},
     mesh::{
-        CurvedEdge, CurvedEdgePayload, CurvedEdgeType, DefaultEdgePayload, DefaultFacePayload,
-        EdgeBasics, MeshBasics, MeshBuilder, VertexBasics,
+        CurvedEdge, CurvedEdgeType, DefaultEdgePayload, DefaultFacePayload, MeshBasics, MeshBuilder,
     },
 };
 
@@ -29,8 +28,7 @@ impl<'a> Font<'a> {
     }
 
     fn font_scale(&self) -> f32 {
-        // TODO: How to determine scale for the spacings?
-        self.scale * 800.0
+        self.scale //* self.font.pt_to_px_scale(1.0).map(|x| x.x).unwrap_or(1.0)
     }
 
     /// Get the advance of the given character.
@@ -84,12 +82,20 @@ impl<'a> Font<'a> {
         T::EP: DefaultEdgePayload,
         T::FP: DefaultFacePayload,
     {
+        // TODO: Improve stability. Detect when to close and when to insert holes
+
         let Some(outline) = self.font.outline(glyph) else {
             println!("No outline found for glyph");
             return;
         };
-        // TODO: How to determine scale?
-        let scale = T::S::from(self.scale);
+
+        let scale = T::S::from(
+            self.font
+                .pt_to_px_scale(self.scale)
+                .map(|x| x.x)
+                .unwrap_or(self.scale)
+                / self.font.height_unscaled(),
+        );
         let mut first = None;
         let mut cur = None;
         let mut cur_v = IndexType::max();
@@ -122,7 +128,7 @@ impl<'a> Font<'a> {
                 return;
             }
 
-            println!("Adding edge from {:?} to {:?} {:?} {:?}", p0, p1, c0, c1);
+            //println!("Adding edge from {:?} to {:?} {:?} {:?}", p0, p1, c0, c1);
 
             let mut cur_e = IndexType::max();
 
@@ -130,9 +136,6 @@ impl<'a> Font<'a> {
             if let Some(p) = cur {
                 // TODO: don't use eq but similarity
                 if first.unwrap() == p1 {
-                    println!("Closing hole");
-                    //mesh.add_vertex
-                    //mesh.close_hole_default(mesh.vertex(prev_v).edge_id(mesh));
                     let (_, _, e) = mesh.close_face_vertices(
                         prev_v,
                         Default::default(),
