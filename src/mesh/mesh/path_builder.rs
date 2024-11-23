@@ -14,6 +14,9 @@ where
     /// Whether the path is closed
     closed: bool,
 
+    /// Whether the path is closed and has a face
+    has_face: bool,
+
     mesh: &'a mut T::Mesh,
     start_vertex: T::V,
     current_vertex: T::V,
@@ -31,6 +34,7 @@ where
     pub fn new(mesh: &'a mut T::Mesh) -> Self {
         Self {
             closed: false,
+            has_face: false,
             mesh,
             // TODO: make sure to carefully handle cases where the start_vertex is undefined
             start_vertex: IndexType::max(),
@@ -72,6 +76,7 @@ where
         } else {
             Self {
                 closed: false,
+                has_face: false,
                 mesh,
                 start_vertex: v,
                 current_vertex: v,
@@ -94,6 +99,7 @@ where
         let start_vertex = edge.target_id(mesh);
         Self {
             closed: false,
+            has_face: false,
             mesh,
             start_vertex,
             current_vertex: start_vertex,
@@ -105,6 +111,12 @@ where
     /// Returns whether the path is closed or empty. Doesn't check whether the path has a face.
     pub fn is_closed(&self) -> bool {
         self.closed
+    }
+
+    /// Returns whether the path is closed and has a face.
+    pub fn has_face(&self) -> bool {
+        assert!(!self.has_face || self.is_closed());
+        self.has_face
     }
 
     /// Returns the current vertex.
@@ -146,10 +158,14 @@ where
         T::Mesh: MeshHalfEdgeBuilder<T>,
         T::EP: DefaultEdgePayload,
     {
+        self.has_face = true;
+
         if self.is_closed() {
             let start_inner = self.start_edges().expect("The path is empty.").0;
             return self.mesh().close_hole(start_inner, fp, false);
         }
+
+        self.closed = true;
 
         let Some((current_inner, current_outer)) = self.current_edges() else {
             // The current vertex doesn't have any edges yet.

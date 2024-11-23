@@ -82,6 +82,10 @@ where
         }
         is_first = false;
     }
+
+    if !pb.has_face() {
+        pb.close(Default::default());
+    }
 }
 
 pub(crate) fn import_svg<T: MeshType>(mesh: &mut T::Mesh, svg: &str)
