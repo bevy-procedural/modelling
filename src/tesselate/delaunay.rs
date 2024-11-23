@@ -30,6 +30,7 @@ pub fn delaunay_triangulation<T: MeshType>(
         let i = cdt
             .insert(Point2::new(vec2.x().to_f64(), vec2.y().to_f64()))
             .unwrap();
+        // TODO: Handle meshes with vertices with the same position
         assert!(i.index() == i2);
         if let Some(j) = last {
             assert!(cdt.add_constraint(j, i));

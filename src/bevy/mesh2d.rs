@@ -10,6 +10,7 @@ use crate::{
     },
 };
 use bevy::math::{Affine2, Vec2, Vec3, Vec4};
+use itertools::Itertools;
 
 /// A mesh type for bevy with 2D vertices, 32 bit indices, 32 bit floats, and no face or edge payload (no normals etc.)
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
@@ -60,14 +61,15 @@ impl HalfEdgeMeshImpl<BevyMeshType2d32> {
         let mut mesh = self.clone();
 
         // Convert curved edges
-        for edge in mesh.edges().cloned().collect::<Vec<_>>().iter() {
+        for e in mesh.edge_ids().collect::<Vec<_>>().iter() {
+            let edge = mesh.edge(*e);
             if edge.curve_type() != CurvedEdgeType::Linear {
                 let vs = edge.flatten_casteljau(tol, &mesh);
                 if vs.len() == 0 {
                     continue;
                 }
                 mesh.insert_vertices_into_edge(
-                    edge.id(),
+                    *e,
                     vs.iter().map(|v| {
                         (
                             CurvedEdgePayload::default(),
@@ -76,8 +78,7 @@ impl HalfEdgeMeshImpl<BevyMeshType2d32> {
                         )
                     }),
                 );
-                mesh.edge_mut(edge.id())
-                    .set_curve_type(CurvedEdgeType::Linear);
+                mesh.edge_mut(*e).set_curve_type(CurvedEdgeType::Linear);
             }
         }
 

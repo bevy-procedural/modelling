@@ -1,7 +1,42 @@
-use crate::mesh::{EdgeBasics, FaceBasics, MeshType, VertexBasics};
+use crate::{
+    math::HasPosition,
+    mesh::{
+        CurvedEdge, DefaultEdgePayload, DefaultFacePayload, EdgeBasics, FaceBasics, HalfEdge,
+        MeshHalfEdgeBuilder, MeshType, VertexBasics,
+    },
+};
 
 /// Some basic operations to retrieve information about the mesh.
 pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clone {
+    /// Import an SVG string into the mesh.
+    #[cfg(feature = "svg")]
+    fn import_svg(&mut self, svg: &str) -> &mut Self
+    where
+        T::Edge: CurvedEdge<T> + HalfEdge<T>,
+        T::Mesh: MeshHalfEdgeBuilder<T>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
+        T::FP: DefaultFacePayload,
+        T::EP: DefaultEdgePayload,
+    {
+        super::svg::import_svg::<T>(self, svg);
+        self
+    }
+
+    /// Create a new mesh from an SVG string.
+    #[cfg(feature = "svg")]
+    fn from_svg(svg: &str) -> Self
+    where
+        T::Edge: CurvedEdge<T> + HalfEdge<T>,
+        T::Mesh: MeshHalfEdgeBuilder<T>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
+        T::FP: DefaultFacePayload,
+        T::EP: DefaultEdgePayload,
+    {
+        let mut mesh = Self::default();
+        mesh.import_svg(svg);
+        mesh
+    }
+
     /// Returns whether the vertex exists and is not deleted
     fn has_vertex(&self, index: T::V) -> bool;
 

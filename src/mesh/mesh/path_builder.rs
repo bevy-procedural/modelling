@@ -11,6 +11,9 @@ where
     T::Mesh: MeshBuilder<T> + 'a,
     T::VP: HasPosition<T::Vec, S = T::S>,
 {
+    /// Whether the path is closed
+    closed: bool,
+
     mesh: &'a mut T::Mesh,
     start_vertex: T::V,
     current_vertex: T::V,
@@ -24,6 +27,19 @@ where
     T::Mesh: MeshBuilder<T> + 'a,
     T::VP: HasPosition<T::Vec, S = T::S>,
 {
+    /// Create a new empty MeshPathBuilder.
+    pub fn new(mesh: &'a mut T::Mesh) -> Self {
+        Self {
+            closed: false,
+            mesh,
+            // TODO: make sure to carefully handle cases where the start_vertex is undefined
+            start_vertex: IndexType::max(),
+            current_vertex: IndexType::max(),
+            start_edges: None,
+            current_edges: None,
+        }
+    }
+
     /// Create a new MeshPathBuilder starting a new connected component.
     pub fn start(mesh: &'a mut T::Mesh, pos: T::Vec) -> Self
     where
@@ -55,6 +71,7 @@ where
             Self::start_at_edge(mesh, edge.prev_id())
         } else {
             Self {
+                closed: false,
                 mesh,
                 start_vertex: v,
                 current_vertex: v,
@@ -76,12 +93,18 @@ where
         let start_edges = Some((e, edge.prev_id()));
         let start_vertex = edge.target_id(mesh);
         Self {
+            closed: false,
             mesh,
             start_vertex,
             current_vertex: start_vertex,
             start_edges,
             current_edges: start_edges,
         }
+    }
+
+    /// Returns whether the path is closed or empty. Doesn't check whether the path has a face.
+    pub fn is_closed(&self) -> bool {
+        self.closed
     }
 
     /// Returns the current vertex.
@@ -123,11 +146,15 @@ where
         T::Mesh: MeshHalfEdgeBuilder<T>,
         T::EP: DefaultEdgePayload,
     {
+        if self.is_closed() {
+            let start_inner = self.start_edges().expect("The path is empty.").0;
+            return self.mesh().close_hole(start_inner, fp, false);
+        }
+
         let Some((current_inner, current_outer)) = self.current_edges() else {
             // The current vertex doesn't have any edges yet.
             assert!(self.start_edges().is_none());
             assert!(self.start_vertex() == self.current_vertex());
-            println!("start_vertex: {:?}", self.start_vertex());
             return IndexType::max();
         };
         let Some((start_inner, _start_outer)) = self.start_edges() else {
@@ -159,9 +186,21 @@ where
         .find(|e| e.id() == start_inner)
         .is_some());*/
 
-        println!("start_inner: {:?}", start_inner);
-
         self.mesh().close_hole(start_inner, fp, false)
+    }
+
+    /// Add a vertex or return the index of the start vertex if the position is the same.
+    #[inline(always)]
+    pub fn add_vertex_autoclose(&mut self, v: T::Vec) -> T::V {
+        assert!(!self.is_closed());
+
+        let sv = self.start_vertex();
+        if self.mesh().vertex(sv).pos() == v {
+            return self.start_vertex;
+        }
+
+        let v = self.mesh().add_vertex(T::VP::from_pos(v));
+        return v;
     }
 
     /// Draws a straight line from the current vertex to a new vertex with the given position.
@@ -175,6 +214,26 @@ where
     {
         let v = self.mesh().add_vertex(T::VP::from_pos(pos));
         self.line_to(v);
+        self
+    }
+
+    /// Moves to the given vertex.
+    /// Assumes the path is currently empty or closed to begin a new path.
+    pub fn move_to(&mut self, pos: T::V) -> &mut Self {
+        todo!()
+    }
+
+    /// Creates a new vertex at the given position and moves to it.
+    /// Assumes the path is currently empty or closed to begin a new path.
+    pub fn move_to_new(&mut self, pos: T::Vec) -> &mut Self {
+        assert!(self.start_vertex() == IndexType::max());
+        assert!(self.start_edges().is_none());
+        assert!(self.current_vertex() == IndexType::max());
+
+        let v = self.mesh().add_vertex(T::VP::from_pos(pos));
+        self.start_vertex = v;
+        self.current_vertex = v;
+        self.closed = false;
         self
     }
 
@@ -192,7 +251,7 @@ where
 
     /// Draws a quadratic bezier curve from the current vertex to a new vertex with the given payload.
     #[inline(always)]
-    pub fn quadratic_bezier(&mut self, control: T::Vec, end: T::Vec) -> &mut Self
+    pub fn quad(&mut self, control: T::Vec, end: T::Vec) -> &mut Self
     where
         T::VP: HasPosition<T::Vec, S = T::S>,
         T::Edge: HalfEdge<T> + CurvedEdge<T>,
@@ -200,13 +259,13 @@ where
         T::EP: DefaultEdgePayload,
     {
         let v = self.mesh().add_vertex(T::VP::from_pos(end));
-        self.quadratic_bezier_to(control, v);
+        self.quad_to(control, v);
         self
     }
 
     /// Draws a cubic bezier curve from the current vertex to a new vertex with the given payload.
     #[inline(always)]
-    pub fn cubic_bezier(&mut self, control1: T::Vec, control2: T::Vec, end: T::Vec) -> &mut Self
+    pub fn cubic(&mut self, control1: T::Vec, control2: T::Vec, end: T::Vec) -> &mut Self
     where
         T::VP: HasPosition<T::Vec, S = T::S>,
         T::Edge: HalfEdge<T> + CurvedEdge<T>,
@@ -214,7 +273,7 @@ where
         T::EP: DefaultEdgePayload,
     {
         let v = self.mesh().add_vertex(T::VP::from_pos(end));
-        self.cubic_bezier_to(control1, control2, v);
+        self.cubic_to(control1, control2, v);
         self
     }
 
@@ -227,7 +286,6 @@ where
         T::EP: DefaultEdgePayload,
     {
         // TODO: Avoid these requirements! Also, only take the position. Make a "line_ex" version that takes payloads.
-
         self.line_to_ex(v, Default::default(), Default::default())
     }
 
@@ -240,9 +298,14 @@ where
     {
         // TODO: Avoid these requirements! Also, only take the position.
 
+        assert!(!self.is_closed(), "The path is already closed.");
+        if v == self.start_vertex() {
+            // The path is closed.
+            self.closed = true;
+        }
+
         // TODO: It seems to constructs the face in the wrong direction (flipped)
         if let Some((_inside, _)) = self.current_edges {
-            println!("{:?}", self.mesh);
             //let edges = self.mesh().insert_edge(inside, ep0, outside, ep1);
             let origin = self.current_vertex();
             let edges = self.mesh().insert_edge_between(origin, ep0, v, ep1);
@@ -263,7 +326,7 @@ where
 
     /// Draws a quadratic bezier curve from the current vertex to the given vertex.
     /// The vertex must have no edges at all or must only be adjacent to one "outside".
-    pub fn quadratic_bezier_to(&mut self, control: T::Vec, end: T::V) -> &mut Self
+    pub fn quad_to(&mut self, control: T::Vec, end: T::V) -> &mut Self
     where
         T::Edge: HalfEdge<T> + CurvedEdge<T>,
         T::Mesh: MeshHalfEdgeBuilder<T>,
@@ -279,7 +342,7 @@ where
 
     /// Draws a cubic bezier curve from the current vertex to the given vertex.
     /// The vertex must have no edges at all or must only be adjacent to one "outside".
-    pub fn cubic_bezier_to(&mut self, control1: T::Vec, control2: T::Vec, end: T::V) -> &mut Self
+    pub fn cubic_to(&mut self, control1: T::Vec, control2: T::Vec, end: T::V) -> &mut Self
     where
         T::Edge: HalfEdge<T> + CurvedEdge<T>,
         T::Mesh: MeshHalfEdgeBuilder<T>,

@@ -1,6 +1,6 @@
 use crate::{
     math::{HasPosition, HasZero, Scalar, Transformable, Vector},
-    mesh::{EdgeBasics, MeshType, VertexBasics},
+    mesh::{EdgeBasics, MeshBasics, MeshType, VertexBasics},
 };
 
 /// The type of curve that the edge represents.

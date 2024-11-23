@@ -561,6 +561,29 @@ fn _make_bezier() -> BevyMesh3d {
     mesh3d
 }
 
+fn _read_svg() -> BevyMesh3d {
+    let svg = "
+    <svg xmlns='http://www.w3.org/2000/svg' width='320' height='320'>
+        <ellipse cx='144.931' cy='229.512' rx='36' ry='60' fill='transparent' stroke='blue'/>
+        <ellipse cx='115.779' cy='155.778' rx='36' ry='60' fill='transparent' stroke='blue'/>
+        <!--<path d='M 10 315
+                L 110 215
+                A 36 60 0 0 1 150.71 170.29
+                L 172.55 152.45
+                A 30 50 -45 0 1 215.1 109.9
+                L 315 10' stroke='black' fill='green' stroke-width='2' fill-opacity='0.5'/>
+        <circle cx='150.71' cy='170.29' r='2' fill='red'/>
+        <circle cx='110' cy='215' r='2' fill='red'/>
+        <ellipse cx='144.931' cy='229.512' rx='36' ry='60' fill='transparent' stroke='blue'/>
+        <ellipse cx='115.779' cy='155.778' rx='36' ry='60' fill='transparent' stroke='blue'/>-->
+    </svg>";
+
+    let m2d = BevyMesh2d::from_svg(svg);
+    println!("{:?}", m2d);
+
+    m2d.to_3d(0.01)
+}
+
 fn make_mesh(_settings: &GlobalSettings) -> BevyMesh3d {
     //_make_hell_8()
     //BevyMesh3d::regular_polygon(1.0, 10)
@@ -592,7 +615,8 @@ fn make_mesh(_settings: &GlobalSettings) -> BevyMesh3d {
 
     //_make_blechnum_spicant(_settings)
 
-    _make_bezier()
+    //_make_bezier()
+    _read_svg()
 }
 
 pub fn main() {
