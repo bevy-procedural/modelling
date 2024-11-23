@@ -128,6 +128,7 @@ impl<'a> Font<'a> {
 
             let trans = T::Vec::from_x(T::S::from(x_pos));
             if let Some(p) = cur {
+                // TODO: don't use eq but similarity
                 if first.unwrap() == p1 {
                     println!("Closing hole");
                     //mesh.add_vertex

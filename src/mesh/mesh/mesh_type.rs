@@ -67,7 +67,7 @@ pub trait MeshType: Copy + Default + Debug + Eq {
     type Rot: Rotator<Self::Vec>;
 
     /// The implementation of 2d polygons.
-    type Poly: Polygon<Self::Vec2>;
+    type Poly: Polygon<Self::Vec2, S = Self::S>;
 
     /// The type of the mesh.
     type Mesh: MeshTrait<T = Self> + MeshBuilder<Self>;

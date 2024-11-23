@@ -678,7 +678,7 @@ fn update_meshes(
         mesh.generate_smooth_normals();
         mesh.bevy_set_ex(
             assets.get_mut(handle).unwrap(),
-            TriangulationAlgorithm::Delaunay,
+            TriangulationAlgorithm::Sweep,
             true,
             &mut meta,
         );
