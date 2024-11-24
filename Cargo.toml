@@ -64,9 +64,6 @@ bevy = [
 ]
 example_deps = [
     "bevy",
-    "bevy/bevy_pbr",
-    "bevy/bevy_winit",
-    "bevy/tonemapping_luts",
 ]
 svg = ["dep:usvg"]
 fonts = ["dep:ab_glyph"]
