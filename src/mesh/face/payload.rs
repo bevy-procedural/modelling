@@ -1,7 +1,10 @@
-use std::hash::Hash;
+use crate::{
+    math::Transformable,
+    mesh::MeshType,
+};
 
 /// A trait that defines what data you can store in a face.
-pub trait FacePayload: Clone + Copy + PartialEq + Eq + Hash + std::fmt::Debug {
+pub trait FacePayload: Clone + Copy + PartialEq + Eq + std::fmt::Debug {
     /// Returns a new default instance without any meaningful data.
     fn allocate() -> Self;
 }
@@ -11,13 +14,32 @@ pub trait FacePayload: Clone + Copy + PartialEq + Eq + Hash + std::fmt::Debug {
 pub trait DefaultFacePayload: FacePayload + Default {}
 
 /// An empty face payload if you don't need any additional information.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-pub struct EmptyFacePayload;
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct EmptyFacePayload<T: MeshType> {
+    _phantom: std::marker::PhantomData<T>,
+}
 
-impl FacePayload for EmptyFacePayload {
+impl<T: MeshType> FacePayload for EmptyFacePayload<T> {
     fn allocate() -> Self {
-        Self
+        Self {
+            _phantom: std::marker::PhantomData,
+        }
     }
 }
 
-impl DefaultFacePayload for EmptyFacePayload {}
+impl<T: MeshType> DefaultFacePayload for EmptyFacePayload<T> {}
+
+impl<T: MeshType> Transformable for EmptyFacePayload<T> {
+    type Rot = T::Rot;
+    type S = T::S;
+    type Trans = T::Trans;
+    type Vec = T::Vec;
+
+    fn transform(&mut self, _: &T::Trans) -> &mut Self {
+        self
+    }
+
+    fn lerp(&mut self, _: &Self, _: Self::S) -> &mut Self {
+        self
+    }
+}

@@ -1,4 +1,4 @@
-use crate::math::{HasZero, Scalar, Spherical3d, TransformTrait, Vector, Vector3D};
+use crate::math::{HasZero, Scalar, Spherical3d, TransformTrait, Transformable, Vector, Vector3D};
 use bevy::{
     math::{Quat, Vec2, Vec3, Vec4},
     transform::components::Transform as TransformBevy,
@@ -91,7 +91,9 @@ impl Vector<f32> for Vec3 {
 
     #[inline(always)]
     fn is_about(&self, other: &Self, epsilon: f32) -> bool {
-        self.x.is_about(other.x, epsilon) && self.y.is_about(other.y, epsilon) && self.z.is_about(other.z, epsilon)
+        self.x.is_about(other.x, epsilon)
+            && self.y.is_about(other.y, epsilon)
+            && self.z.is_about(other.z, epsilon)
     }
 }
 
@@ -170,5 +172,23 @@ impl TransformTrait for TransformBevy {
     #[inline(always)]
     fn apply_vec(&self, v: Vec3) -> Vec3 {
         self.apply(v)
+    }
+}
+
+// TODO: implement more methods to improve performance
+impl Transformable for Vec3 {
+    type Rot = Quat;
+    type S = f32;
+    type Trans = TransformBevy;
+    type Vec = Vec3;
+
+    fn transform(&mut self, t: &Self::Trans) -> &mut Self {
+        *self = t.apply(*self);
+        self
+    }
+
+    fn lerp(&mut self, other: &Self, t: Self::S) -> &mut Self {
+        *self = Vec3::lerp(*self, *other, t);
+        self
     }
 }

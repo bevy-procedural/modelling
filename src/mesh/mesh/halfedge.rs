@@ -5,7 +5,7 @@ use super::{MeshBasics, MeshType};
 /// Some basic operations to retrieve information about the mesh.
 pub trait HalfEdgeMesh<T: MeshType<Mesh = Self>>: MeshBasics<T>
 where
-    T::Edge: HalfEdge<T> + EdgeBasics<T>,
+    T::Edge: HalfEdge<T>,
 {
     /// Returns an iterator over all non-deleted halfedge pairs without duplicates
     fn twin_edges<'a>(&'a self) -> impl Iterator<Item = (&'a T::Edge, &'a T::Edge)>

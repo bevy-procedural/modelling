@@ -1,6 +1,6 @@
 use crate::mesh::{
-    DefaultEdgePayload, EdgeBasics, FaceBasics, HalfEdge, HalfEdgeSemiBuilder, MeshBasics,
-    MeshBuilder, MeshHalfEdgeBuilder, MeshType, VertexInterpolator,
+    DefaultEdgePayload, EdgeBasics, FaceBasics, HalfEdge, HalfEdgeSemiBuilder, MeshTypeHalfEdge,
+    VertexInterpolator,
 };
 
 /// Describes how to subdivide a mesh.
@@ -41,19 +41,19 @@ impl SubdivisionDescription {
 /// TODO
 
 /// A trait for subdividing meshes.
-pub trait MeshSubdivision<T: MeshType<Mesh = Self>>:
-    MeshBasics<T> + HalfEdgeSemiBuilder<T> + MeshHalfEdgeBuilder<T> + MeshBuilder<T>
+pub trait MeshSubdivision<T: MeshTypeHalfEdge<Mesh = Self>>
 where
     T::EP: DefaultEdgePayload,
-    T::Face: FaceBasics<T>,
-    T::Edge: HalfEdge<T> + EdgeBasics<T>,
 {
     /// Subdivides the mesh with frequency (2,0).
     /// Uses the `vp_builder` to create the new vertex payloads.
     /// Returns a new mesh.
     ///
     /// based on an algorithm developed by Charles Loop in 1987
-    fn loop_subdivision(&mut self, vp_builder: &impl VertexInterpolator<3, T>) -> &mut Self {
+    fn loop_subdivision(&mut self, vp_builder: &impl VertexInterpolator<3, T>) -> &mut Self
+    where
+        T::Mesh: HalfEdgeSemiBuilder<T>,
+    {
         // TODO: See https://github.com/OptimisticPeach/hexasphere
         let fs = self.faces().map(|f| f.id()).collect::<Vec<_>>();
         for face in &fs {
@@ -132,7 +132,10 @@ where
         &mut self,
         des: SubdivisionDescription,
         vp_builder: impl VertexInterpolator<3, T>,
-    ) -> &mut Self {
+    ) -> &mut Self
+    where
+        T::Mesh: HalfEdgeSemiBuilder<T>,
+    {
         // TODO: for c != 0 we have to shift the triangle. This means we have to build a completely new graph and things become much more complicated
         assert!(des.c == 0);
 

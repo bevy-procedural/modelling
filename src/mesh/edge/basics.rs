@@ -4,10 +4,10 @@ use crate::{
 };
 
 /// Basic edge traits for a mesh. Can be directed or undirected.
-pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone + Copy + PartialEq {
-    /// Returns the index of the edge
+pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone + PartialEq {
+    /// Returns the identifier of the edge
     fn id(&self) -> T::E;
-    
+
     /// Returns the face payload.
     fn payload(&self) -> &T::EP;
 
@@ -32,4 +32,10 @@ pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone + Copy +
         let v2 = self.target(mesh).pos().clone();
         (v1 + v2) * T::S::HALF
     }
+
+    /// Iterates all (half)edges incident to the same face (counter-clockwise)
+    fn edges_face<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Edge>;
+
+    /// Iterates all (half)edges incident to the same face (clockwise)
+    fn edges_face_back<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Edge>;
 }

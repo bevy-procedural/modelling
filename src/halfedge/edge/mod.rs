@@ -4,7 +4,7 @@ mod iterator;
 
 pub use iterator::*;
 
-use super::HalfEdgeMeshType;
+use super::HalfEdgeImplMeshType;
 use crate::{
     math::IndexType,
     mesh::{DefaultEdgePayload, Edge, EdgeBasics, EdgePayload},
@@ -15,8 +15,8 @@ use crate::{
 // TODO: include a way to explicitly access faces around vertex/face? https://en.wikipedia.org/wiki/Polygon_mesh
 
 /// Half-edge inspired data structure
-#[derive(Clone, Copy, PartialEq)]
-pub struct HalfEdgeImpl<T: HalfEdgeMeshType> {
+#[derive(Clone, PartialEq)]
+pub struct HalfEdgeImpl<T: HalfEdgeImplMeshType> {
     /// the index of the half-edge
     id: T::E,
 
@@ -47,15 +47,20 @@ pub struct HalfEdgeImpl<T: HalfEdgeMeshType> {
     payload: T::EP,
 }
 
-impl<T: HalfEdgeMeshType> Edge for HalfEdgeImpl<T> {
+impl<T: HalfEdgeImplMeshType> Edge for HalfEdgeImpl<T> {
     type T = T;
 }
 
-impl<T: HalfEdgeMeshType> std::fmt::Debug for HalfEdgeImpl<T> {
+impl<T: HalfEdgeImplMeshType> std::fmt::Debug for HalfEdgeImpl<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let payload = if self.payload.is_empty() {
+            "".to_string()
+        } else {
+            format!(", payload: {:?}", self.payload)
+        };
         write!(
             f,
-            "{} --{}--> ; twin: {}, face: {} [{}] {}",
+            "{} --{}--> ; twin: {}, face: {} [{}] {} {}",
             self.origin_id.index(),
             self.id().index(),
             self.twin.index(),
@@ -66,6 +71,7 @@ impl<T: HalfEdgeMeshType> std::fmt::Debug for HalfEdgeImpl<T> {
                 self.face.index().to_string()
             },
             self.next.index(),
+            payload
         )?;
         if !self.payload.is_empty() {
             write!(f, ", payload: {:?}", self.payload)?;
@@ -74,7 +80,7 @@ impl<T: HalfEdgeMeshType> std::fmt::Debug for HalfEdgeImpl<T> {
     }
 }
 
-impl<T: HalfEdgeMeshType> Deletable<T::E> for HalfEdgeImpl<T> {
+impl<T: HalfEdgeImplMeshType> Deletable<T::E> for HalfEdgeImpl<T> {
     fn delete(&mut self) {
         assert!(self.id != IndexType::max());
         self.id = IndexType::max();
@@ -105,7 +111,7 @@ impl<T: HalfEdgeMeshType> Deletable<T::E> for HalfEdgeImpl<T> {
     }
 }
 
-impl<T: HalfEdgeMeshType> Default for HalfEdgeImpl<T>
+impl<T: HalfEdgeImplMeshType> Default for HalfEdgeImpl<T>
 where
     T::EP: DefaultEdgePayload,
 {

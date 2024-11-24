@@ -1,41 +1,28 @@
 use super::HalfEdgeImpl;
 use crate::{
-    halfedge::HalfEdgeMeshType,
+    halfedge::HalfEdgeImplMeshType,
     mesh::{EdgeBasics, HalfEdge, MeshBasics},
 };
 
-
-impl<T: HalfEdgeMeshType> HalfEdgeImpl<T> {
-    /// Iterates all half-edges incident to the same face (counter-clockwise)
-    #[inline(always)]
-    pub fn edges_face<'a>(&'a self, mesh: &'a T::Mesh) -> IncidentToFaceIterator<'a, T> {
-        IncidentToFaceIterator::new(*self, mesh)
-    }
-
-    /// Iterates all half-edges incident to the same face (clockwise)
-    #[inline(always)]
-    pub fn edges_face_back<'a>(&'a self, mesh: &'a T::Mesh) -> IncidentToFaceBackIterator<'a, T> {
-        IncidentToFaceBackIterator::new(*self, mesh)
-    }
-
+impl<T: HalfEdgeImplMeshType> HalfEdgeImpl<T> {
     /// Iterates all half-edges incident to the same face
     /// WARNING: This method is unsafe because it allows mutable access to the mesh! Be careful!
     #[inline(always)]
-    pub fn edges_face_mut<'a>(&'a self, mesh: &'a mut T::Mesh) -> IncidentToFaceIteratorMut<'a, T> {
-        IncidentToFaceIteratorMut::new(self.id(), mesh)
+    pub fn edges_face_mut<'a>(&'a self, mesh: &'a mut T::Mesh) -> ForwardEdgeIteratorMut<'a, T> {
+        ForwardEdgeIteratorMut::new(self.id(), mesh)
     }
 }
 
-/// Iterator over all half-edges incident to the same face (counter-clockwise)
-#[derive(Clone, Copy)]
-pub struct IncidentToFaceIterator<'a, T: HalfEdgeMeshType + 'a> {
+/// Follows a chain of half-edges forwards (counter-clockwise) until reaching the start again
+#[derive(Clone)]
+pub struct ForwardEdgeIterator<'a, T: HalfEdgeImplMeshType + 'a> {
     is_first: bool,
     first: T::E,
     current: HalfEdgeImpl<T>,
     mesh: &'a T::Mesh,
 }
 
-impl<'a, T: HalfEdgeMeshType> IncidentToFaceIterator<'a, T> {
+impl<'a, T: HalfEdgeImplMeshType> ForwardEdgeIterator<'a, T> {
     /// Creates a new iterator
     pub fn new(first: HalfEdgeImpl<T>, mesh: &'a T::Mesh) -> Self {
         Self {
@@ -47,27 +34,27 @@ impl<'a, T: HalfEdgeMeshType> IncidentToFaceIterator<'a, T> {
     }
 }
 
-impl<'a, T: HalfEdgeMeshType> Iterator for IncidentToFaceIterator<'a, T> {
+impl<'a, T: HalfEdgeImplMeshType> Iterator for ForwardEdgeIterator<'a, T> {
     type Item = T::Edge;
 
     #[inline(always)]
     fn next(&mut self) -> Option<Self::Item> {
         if self.is_first {
             self.is_first = false;
-            return Some(self.current);
+            return Some(self.current.clone());
         }
         let next = self.current.next(self.mesh);
         if next.id() == self.first {
             return None;
         } else {
-            self.current = next;
+            self.current = next.clone();
             return Some(next);
         }
     }
 
     #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let mut curr = self.current;
+        let mut curr = self.current.clone();
         let mut len = 1;
         while curr.next(self.mesh).id() != self.first {
             len += 1;
@@ -77,17 +64,17 @@ impl<'a, T: HalfEdgeMeshType> Iterator for IncidentToFaceIterator<'a, T> {
     }
 }
 
-impl<'a, T: HalfEdgeMeshType> ExactSizeIterator for IncidentToFaceIterator<'a, T> {}
+impl<'a, T: HalfEdgeImplMeshType> ExactSizeIterator for ForwardEdgeIterator<'a, T> {}
 
-/// Iterator over all half-edges incident to the same face (clockwise)
-pub struct IncidentToFaceBackIterator<'a, T: HalfEdgeMeshType + 'a> {
+/// Follows a chain of half-edges backwards (clockwise) until reaching the start again
+pub struct BackwardEdgeIterator<'a, T: HalfEdgeImplMeshType + 'a> {
     is_first: bool,
     first: T::E,
     current: HalfEdgeImpl<T>,
     mesh: &'a T::Mesh,
 }
 
-impl<'a, T: HalfEdgeMeshType> IncidentToFaceBackIterator<'a, T> {
+impl<'a, T: HalfEdgeImplMeshType> BackwardEdgeIterator<'a, T> {
     /// Creates a new iterator
     pub fn new(first: HalfEdgeImpl<T>, mesh: &'a T::Mesh) -> Self {
         Self {
@@ -99,34 +86,34 @@ impl<'a, T: HalfEdgeMeshType> IncidentToFaceBackIterator<'a, T> {
     }
 }
 
-impl<'a, T: HalfEdgeMeshType> Iterator for IncidentToFaceBackIterator<'a, T> {
+impl<'a, T: HalfEdgeImplMeshType> Iterator for BackwardEdgeIterator<'a, T> {
     type Item = HalfEdgeImpl<T>;
 
     #[inline(always)]
     fn next(&mut self) -> Option<Self::Item> {
         if self.is_first {
             self.is_first = false;
-            return Some(self.current);
+            return Some(self.current.clone());
         }
         let prev = self.current.prev(self.mesh);
         if prev.id() == self.first {
             return None;
         } else {
-            self.current = prev;
+            self.current = prev.clone();
             return Some(prev);
         }
     }
 }
 
-/// Iterator over all half-edges incident to the same face (counter-clockwise)
-pub struct IncidentToFaceIteratorMut<'a, T: HalfEdgeMeshType + 'a> {
+/// Follows a chain of half-edges forwards (counter-clockwise) until reaching the start again
+pub struct ForwardEdgeIteratorMut<'a, T: HalfEdgeImplMeshType + 'a> {
     is_first: bool,
     first: T::E,
     current: T::E,
     mesh: &'a mut T::Mesh,
 }
 
-impl<'a, T: HalfEdgeMeshType> IncidentToFaceIteratorMut<'a, T> {
+impl<'a, T: HalfEdgeImplMeshType> ForwardEdgeIteratorMut<'a, T> {
     /// Creates a new iterator
     pub fn new(first: T::E, mesh: &'a mut T::Mesh) -> Self {
         Self {
@@ -138,7 +125,7 @@ impl<'a, T: HalfEdgeMeshType> IncidentToFaceIteratorMut<'a, T> {
     }
 }
 
-impl<'a, T: HalfEdgeMeshType> Iterator for IncidentToFaceIteratorMut<'a, T> {
+impl<'a, T: HalfEdgeImplMeshType> Iterator for ForwardEdgeIteratorMut<'a, T> {
     type Item = &'a mut HalfEdgeImpl<T>;
 
     fn next(&mut self) -> Option<Self::Item> {

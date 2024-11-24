@@ -1,7 +1,10 @@
-use super::{HalfEdgeMeshType, HalfEdgeVertexImpl, IncidentToVertexIterator};
-use crate::mesh::{EdgeBasics, HalfEdge, MeshBasics, VertexBasics};
+use super::{HalfEdgeImplMeshType, HalfEdgeVertexImpl, IncidentToVertexIterator};
+use crate::{
+    math::IndexType,
+    mesh::{EdgeBasics, HalfEdge, MeshBasics, VertexBasics},
+};
 
-impl<T: HalfEdgeMeshType> VertexBasics<T> for HalfEdgeVertexImpl<T> {
+impl<T: HalfEdgeImplMeshType> VertexBasics<T> for HalfEdgeVertexImpl<T> {
     /// Returns the index of the vertex
     #[inline(always)]
     fn id(&self) -> T::V {
@@ -37,14 +40,28 @@ impl<T: HalfEdgeMeshType> VertexBasics<T> for HalfEdgeVertexImpl<T> {
     #[inline(always)]
     fn has_only_one_edge(&self, mesh: &T::Mesh) -> bool {
         // self.edges(mesh).count() == 1
-        let e = self.edge(mesh);
-        e.prev_id() == e.twin_id()
+        if let Some(e) = self.edge(mesh) {
+            e.prev_id() == e.twin_id()
+        } else {
+            false
+        }
     }
 
     /// Returns an outgoing half-edge incident to the vertex
     #[inline(always)]
-    fn edge(&self, mesh: &T::Mesh) -> T::Edge {
-        *mesh.edge(self.edge)
+    fn edge_id(&self, _mesh: &T::Mesh) -> T::E {
+        self.edge
+    }
+
+    /// Returns an outgoing half-edge incident to the vertex
+    #[inline(always)]
+    fn edge(&self, mesh: &T::Mesh) -> Option<T::Edge> {
+        // PERF: avoid clone
+        if self.edge == IndexType::max() {
+            None
+        } else {
+            Some(mesh.edge(self.edge).clone())
+        }
     }
 
     /// Iterates all vertices adjacent to the vertex in the same manifold edge wheel (clockwise)
@@ -65,12 +82,20 @@ impl<T: HalfEdgeMeshType> VertexBasics<T> for HalfEdgeVertexImpl<T> {
 
     #[inline(always)]
     fn edges_out<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Edge> + 'a {
-        IncidentToVertexIterator::<T>::new(self.edge(mesh), mesh)
+        if let Some(e) = self.edge(mesh) {
+            IncidentToVertexIterator::<T>::new(e, mesh)
+        } else {
+            return IncidentToVertexIterator::<T>::empty(mesh);
+        }
     }
 
     #[inline(always)]
     fn edges_in<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Edge> + 'a {
-        IncidentToVertexIterator::<T>::new(self.edge(mesh), mesh).map(|e| e.twin(mesh))
+        (if let Some(e) = self.edge(mesh) {
+            IncidentToVertexIterator::<T>::new(e, mesh)
+        } else {
+            IncidentToVertexIterator::<T>::empty(mesh)
+        })
+        .map(|e| e.twin(mesh))
     }
 }
-

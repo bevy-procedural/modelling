@@ -25,7 +25,10 @@ pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone + PartialEq {
     fn payload_mut(&mut self) -> &mut T::VP;
 
     /// Returns an outgoing edge incident to the vertex
-    fn edge(&self, mesh: &T::Mesh) -> T::Edge;
+    fn edge_id(&self, mesh: &T::Mesh) -> T::E;
+
+    /// Returns an outgoing edge incident to the vertex
+    fn edge(&self, mesh: &T::Mesh) -> Option<T::Edge>;
 
     /// Returns whether the vertex is a boundary vertex
     fn is_boundary(&self, mesh: &T::Mesh) -> bool;

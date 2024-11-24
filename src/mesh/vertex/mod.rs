@@ -2,12 +2,11 @@ mod basics;
 mod halfedge;
 mod interpolator;
 mod payload;
-mod transform;
 
 pub use basics::*;
+pub use halfedge::*;
 pub use interpolator::*;
 pub use payload::*;
-pub use halfedge::*;
 
 use super::MeshType;
 use crate::math::HasPosition;

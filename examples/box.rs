@@ -9,11 +9,11 @@ use bevy::{
     render::render_asset::RenderAssetUsages,
 };
 use procedural_modelling::{
-    bevy::{BevyMesh3d, BevyMeshType3d32, BevyVertexPayload},
-    math::{HasPosition, Transformable, Vector, Vector3D},
+    bevy::{BevyMesh3d, BevyMeshType3d32, BevyVertexPayload3d},
+    math::{HasPosition, Scalar, Vector, Vector3D},
     mesh::{
         DefaultEdgePayload, DefaultFacePayload, EdgeBasics, MeshBasics, MeshBuilder,
-        MeshPathBuilder, MeshType,
+        PathBuilder, MeshType3D, MeshTypeHalfEdge,
     },
     operations::MeshLoft,
     primitives::{Make2dShape, MakePrismatoid},
@@ -22,8 +22,8 @@ use procedural_modelling::{
 use std::f32::consts::PI;
 
 /// A tiny helper function to create a bevy-compatible vertex payload
-fn vp(x: f32, y: f32, z: f32) -> BevyVertexPayload {
-    BevyVertexPayload::from_pos(Vec3::new(x, y, z))
+fn vp(x: f32, y: f32, z: f32) -> BevyVertexPayload3d {
+    BevyVertexPayload3d::from_pos(Vec3::new(x, y, z))
 }
 
 /// Creates a cuboid with a given `size`.
@@ -113,11 +113,17 @@ fn cuboid_from_prism(size: Vec3) -> BevyMesh3d {
 /// vertices with positions in 3D space. This method demonstrates
 /// which traits are necessary to create a cuboid.
 ///
-/// - The `MeshType` trait collects the many types needed by a `Mesh`.
-///   When handling meshes, most types can be derived from the `MeshType`.
 /// - The `EP` and `FP` are the edge and face payloads, respectively. Since
 ///   we are not planning to initialize special payloads here, we will restrict
 ///   the mesh to payloads that can be safely initialized with `Default::default()`.
+/// - `MakePrismatoid` is a trait that provides the `prism` method.
+///
+/// The `MeshType` trait collects the many types needed by a `Mesh`.
+/// When handling meshes, most types can be derived from the `MeshType`.
+/// The `HalfEdgeMeshType` and `MeshType3D` further restrict the mesh to
+/// half-edge meshes and meshes with 3D position data and enable additional methods.
+/// Some restrictions they imply include:
+///
 /// - The `Vec` is the default vector type used for vertices. Since we are creating
 ///   a cuboid in 3D space, we will use the `Vector3D` type.
 /// - The `VP` is the vertex payload. We will use the `HasPosition` trait to
@@ -126,16 +132,13 @@ fn cuboid_from_prism(size: Vec3) -> BevyMesh3d {
 ///   that the payload can be transformed in 3D space.
 /// - The `S` is the scalar type used in the vector. This is usually implemented
 ///   as a `f32` or `f64`, though, other types like fixed-point numbers are also possible.
-fn cuboid_from_prism_generic<T: MeshType>(_size: T::Vec) -> T::Mesh
+fn cuboid_from_prism_generic<T: MeshTypeHalfEdge + MeshType3D>(size: T::Vec) -> T::Mesh
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
-    T::Vec: Vector3D<S = T::S>,
-    T::VP: HasPosition<T::Vec, S = T::S>
-        + Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
+    T::Mesh: MakePrismatoid<T>,
 {
-    todo!("cuboid_from_prism_generic")
-    /*let p = size * T::S::HALF;
+    let p = size * T::S::HALF;
     let make = |x, y, z| T::VP::from_pos(T::Vec::from_xyz(x, y, z));
     T::Mesh::prism(
         [
@@ -145,7 +148,7 @@ where
             make(-p.x(), p.y(), -p.z()),
         ],
         p.z() * T::S::TWO,
-    )*/
+    )
 }
 
 /// Creates a cuboid with a given `size`.
@@ -180,7 +183,7 @@ fn setup_meshes(
         //cuboid_from_edges(size),
         cuboid_from_loft(size),
         cuboid_from_prism(size),
-        //cuboid_from_prism_generic::<BevyMeshType3d32>(size),
+        cuboid_from_prism_generic::<BevyMeshType3d32>(size),
         cuboid_from_cuboid(size),
     ];
 

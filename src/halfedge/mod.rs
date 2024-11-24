@@ -13,10 +13,10 @@ pub use vertex::*;
 
 use crate::mesh::MeshType;
 
-/// This trait defines the associated types used in a half-edge mesh and puts them into relation.
-pub trait HalfEdgeMeshType:
+/// This trait defines the associated types used in this half-edge mesh implementation and puts them into relation.
+pub trait HalfEdgeImplMeshType:
     MeshType<
-    Mesh = HalfEdgeMeshImpl<Self>, // Self
+    Mesh = HalfEdgeMeshImpl<Self>,
     Vertex = HalfEdgeVertexImpl<Self>,
     Edge = HalfEdgeImpl<Self>,
     Face = HalfEdgeFaceImpl<Self>,

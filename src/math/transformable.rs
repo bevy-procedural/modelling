@@ -3,7 +3,7 @@ use super::{Rotator, Scalar, TransformTrait, Vector};
 /// A trait that defines how a vertex payload can be linearly transformed.
 pub trait Transformable: Sized + Clone {
     /// The transformation type used in the payload.
-    type Trans: TransformTrait<S = Self::S, Vec = Self::Vec>;
+    type Trans: TransformTrait<S = Self::S, Vec = Self::Vec, Rot = Self::Rot>;
 
     /// The rotation type used in the payload.
     type Rot: Rotator<Self::Vec>;
@@ -53,13 +53,19 @@ pub trait Transformable: Sized + Clone {
     fn transform(&mut self, t: &Self::Trans) -> &mut Self;
 
     /// Returns a translated clone of the payload.
-    fn translate(&mut self, v: &Self::Vec) -> &mut Self;
+    fn translate(&mut self, v: &Self::Vec) -> &mut Self {
+        self.transform(&Self::Trans::from_translation(*v))
+    }
 
     /// Returns the scaled clone of the payload.
-    fn scale(&mut self, s: &Self::Vec) -> &mut Self;
+    fn scale(&mut self, s: &Self::Vec) -> &mut Self {
+        self.transform(&Self::Trans::from_scale(*s))
+    }
 
     /// Returns the rotated clone of the payload.
-    fn rotate(&mut self, r: &Self::Rot) -> &mut Self;
+    fn rotate(&mut self, r: &Self::Rot) -> &mut Self {
+        self.transform(&Self::Trans::from_rotation(r.clone()))
+    }
 
     /// Interpolates between two payloads.
     fn lerp(&mut self, other: &Self, t: Self::S) -> &mut Self;

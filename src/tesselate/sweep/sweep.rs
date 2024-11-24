@@ -395,7 +395,7 @@ mod tests {
         bevy::Bevy2DPolygon,
         math::Polygon,
         primitives::generate_zigzag,
-        tesselate::sweep::{monotone::LinearMonoTriangulator, DynamicMonoTriangulator},
+        tesselate::sweep::monotone::LinearMonoTriangulator,
     };
 
     use super::*;

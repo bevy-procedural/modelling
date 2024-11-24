@@ -1,8 +1,8 @@
 use crate::{
     math::{Scalar, Transformable},
     mesh::{
-        DefaultEdgePayload, DefaultFacePayload, EdgeBasics, FaceBasics, HalfEdge, HalfEdgeMesh,
-        MeshBasics, MeshBuilder, MeshType, VertexBasics,
+        DefaultEdgePayload, DefaultFacePayload, EdgeBasics, FaceBasics, HalfEdge, MeshTypeHalfEdge,
+        VertexBasics,
     },
     operations::MeshLoft,
 };
@@ -11,19 +11,35 @@ use itertools::Itertools;
 // TODO: Adjust this to not be halfedge-specific
 
 /// Extrude operations for meshes.
-pub trait MeshExtrude<T: MeshType<Mesh = Self>>:
-    MeshBasics<T> + HalfEdgeMesh<T> + MeshBuilder<T> + MeshLoft<T>
+pub trait MeshExtrude<T: MeshTypeHalfEdge<Mesh = Self>>: MeshLoft<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
-    T::VP: Transformable<Trans = T::Trans, S = T::S>,
-    T::Edge: HalfEdge<T> + EdgeBasics<T>,
 {
+    /// Extrudes all boundary edges using the given transformation.
+    ///
+    /// Uses one row of quad faces.
+    fn extrude_boundary(&mut self, transform: T::Trans)
+    where
+        T::VP: Transformable<Trans = T::Trans, S = T::S>,
+    {
+        let faces = self.face_ids().collect_vec();
+        for f in faces {
+            let e = self.face(f).edge(self).twin_id();
+            if self.edge(e).is_boundary_self() {
+                self.extrude(e, transform);
+            }
+        }
+    }
+
     /// Extrudes the given edge using the given transformation.
     /// Returns an edge on the boundary of the extrusion.
     ///
     /// Uses one row of quad faces.
-    fn extrude(&mut self, e: T::E, transform: T::Trans) -> T::E {
+    fn extrude(&mut self, e: T::E, transform: T::Trans) -> T::E
+    where
+        T::VP: Transformable<Trans = T::Trans, S = T::S>,
+    {
         assert!(self.edge(e).is_boundary_self());
         // TODO: avoid collecting
         let vps: Vec<_> = self
@@ -36,14 +52,20 @@ where
     }
 
     /// Remove the given face and extrude the boundary using the given transformation.
-    fn extrude_face(&mut self, f: T::F, transform: T::Trans) -> T::E {
+    fn extrude_face(&mut self, f: T::F, transform: T::Trans) -> T::E
+    where
+        T::VP: Transformable<Trans = T::Trans, S = T::S>,
+    {
         let e = self.face(f).edge_id();
         self.remove_face(f);
         return self.extrude(e, transform);
     }
 
     /// Remove the given face and extrude the boundary using the given transformation.
-    fn extrude_tri_face(&mut self, f: T::F, transform: T::Trans) -> T::E {
+    fn extrude_tri_face(&mut self, f: T::F, transform: T::Trans) -> T::E
+    where
+        T::VP: Transformable<Trans = T::Trans, S = T::S>,
+    {
         let e = self.face(f).edge_id();
         self.remove_face(f);
         return self.extrude_tri(e, transform);
@@ -53,7 +75,10 @@ where
     /// Returns an edge on the boundary of the extrusion.
     ///
     /// Uses two rows of triangle faces.
-    fn extrude_tri(&mut self, e: T::E, transform: T::Trans) -> T::E {
+    fn extrude_tri(&mut self, e: T::E, transform: T::Trans) -> T::E
+    where
+        T::VP: Transformable<Trans = T::Trans, S = T::S>,
+    {
         assert!(self.edge(e).is_boundary_self());
         // TODO: avoid collecting
         let vps: Vec<_> = self
@@ -71,8 +96,7 @@ where
     /// Uses two rows of triangle faces.
     fn extrude_tri2(&mut self, e: T::E, transform: T::Trans) -> T::E
     where
-        T::Edge: Clone,
-        T::EP: Clone,
+        T::VP: Transformable<Trans = T::Trans, S = T::S>,
     {
         assert!(self.edge(e).is_boundary_self());
         // TODO: avoid collecting

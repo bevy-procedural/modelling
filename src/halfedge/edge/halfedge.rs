@@ -1,11 +1,11 @@
 use super::HalfEdgeImpl;
 use crate::{
-    halfedge::{HalfEdgeMeshImpl, HalfEdgeMeshType},
+    halfedge::{HalfEdgeImplMeshType, HalfEdgeMeshImpl},
     math::IndexType,
-    mesh::{HalfEdge, HalfEdgeVertex, MeshBasics},
+    mesh::{EdgeBasics, HalfEdge, HalfEdgeVertex, MeshBasics},
 };
 
-impl<T: HalfEdgeMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
+impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
     fn new(next: T::E, twin: T::E, prev: T::E, origin: T::V, face: T::F, payload: T::EP) -> Self {
         assert!(next != IndexType::max());
         assert!(prev != IndexType::max());
@@ -43,9 +43,14 @@ impl<T: HalfEdgeMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
         self.twin = twin;
     }
 
+    fn set_origin(&mut self, origin: T::V) {
+        self.origin_id = origin;
+    }
+
     #[inline(always)]
     fn next(&self, mesh: &HalfEdgeMeshImpl<T>) -> HalfEdgeImpl<T> {
-        *mesh.edge(self.next)
+        // PERF: avoid clone
+        mesh.edge(self.next).clone()
     }
 
     #[inline(always)]
@@ -56,7 +61,8 @@ impl<T: HalfEdgeMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
     #[inline(always)]
     fn twin(&self, mesh: &HalfEdgeMeshImpl<T>) -> HalfEdgeImpl<T> {
         // TODO: Make this return a reference?
-        *mesh.edge(self.twin)
+        // PERF: avoid clone
+        mesh.edge(self.twin).clone()
     }
 
     #[inline(always)]
@@ -66,7 +72,8 @@ impl<T: HalfEdgeMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
 
     #[inline(always)]
     fn prev(&self, mesh: &HalfEdgeMeshImpl<T>) -> HalfEdgeImpl<T> {
-        *mesh.edge(self.prev)
+        // PERF: avoid clone
+        mesh.edge(self.prev).clone()
     }
 
     #[inline(always)]

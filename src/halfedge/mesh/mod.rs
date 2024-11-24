@@ -4,7 +4,7 @@ mod check;
 mod halfedge;
 mod pseudo_winged;
 
-use super::HalfEdgeMeshType;
+use super::HalfEdgeImplMeshType;
 use crate::{
     mesh::{MeshTopology, MeshTrait, TransformableMesh, Triangulateable, WithNormals},
     util::DeletableVector,
@@ -22,7 +22,7 @@ use crate::{
 ///
 /// Currently only euclidean geometry is supported.
 #[derive(Clone)]
-pub struct HalfEdgeMeshImpl<T: HalfEdgeMeshType> {
+pub struct HalfEdgeMeshImpl<T: HalfEdgeImplMeshType> {
     // TODO: to import non-manifold edges, we could use the "tufted cover" https://www.cs.cmu.edu/~kmcrane/Projects/NonmanifoldLaplace/index.html
     // TODO: non-euclidean geometry
     vertices: DeletableVector<T::Vertex, T::V>,
@@ -31,7 +31,7 @@ pub struct HalfEdgeMeshImpl<T: HalfEdgeMeshType> {
     payload: T::MP,
 }
 
-impl<T: HalfEdgeMeshType> HalfEdgeMeshImpl<T> {
+impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     /// Creates a new empty halfedge mesh
     pub fn new() -> Self {
         Self {
@@ -43,16 +43,16 @@ impl<T: HalfEdgeMeshType> HalfEdgeMeshImpl<T> {
     }
 }
 
-impl<T: HalfEdgeMeshType> Default for HalfEdgeMeshImpl<T> {
+impl<T: HalfEdgeImplMeshType> Default for HalfEdgeMeshImpl<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T: HalfEdgeMeshType> TransformableMesh<T> for HalfEdgeMeshImpl<T> {}
-impl<T: HalfEdgeMeshType> WithNormals<T> for HalfEdgeMeshImpl<T> {}
-impl<T: HalfEdgeMeshType> MeshTopology<T> for HalfEdgeMeshImpl<T> {}
-impl<T: HalfEdgeMeshType> Triangulateable<T> for HalfEdgeMeshImpl<T> {}
-impl<T: HalfEdgeMeshType> MeshTrait for HalfEdgeMeshImpl<T> {
+impl<T: HalfEdgeImplMeshType> TransformableMesh<T> for HalfEdgeMeshImpl<T> {}
+impl<T: HalfEdgeImplMeshType> WithNormals<T> for HalfEdgeMeshImpl<T> {}
+impl<T: HalfEdgeImplMeshType> MeshTopology<T> for HalfEdgeMeshImpl<T> {}
+impl<T: HalfEdgeImplMeshType> Triangulateable<T> for HalfEdgeMeshImpl<T> {}
+impl<T: HalfEdgeImplMeshType> MeshTrait for HalfEdgeMeshImpl<T> {
     type T = T;
 }

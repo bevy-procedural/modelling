@@ -1,11 +1,8 @@
 use crate::{
-    math::{
-        HasPosition, HasZero, IndexType, Scalar, TransformTrait, Transformable, Vector, Vector3D,
-    },
+    math::{HasPosition, HasZero, IndexType, Scalar, Vector},
     mesh::{
-        DefaultEdgePayload, DefaultFacePayload, EdgeBasics, Face3d, HalfEdge, MeshBuilder,
-        MeshHalfEdgeBuilder, MeshPathBuilder, MeshPosition, MeshTrait, MeshType,
-        SlerpVertexInterpolator,
+        DefaultEdgePayload, DefaultFacePayload, HalfEdge, HalfEdgeSemiBuilder, MeshType3D,
+        MeshTypeHalfEdge, SlerpVertexInterpolator,
     },
     operations::{MeshExtrude, MeshLoft, MeshSubdivision, SubdivisionDescription},
     primitives::{Make2dShape, MakePrismatoid},
@@ -23,30 +20,12 @@ pub fn icosahedron_a2r<S: Scalar>(a: S) -> S {
 
 // TODO: Reduce type requirements
 
-
 /// A trait for creating sphere approximations.
-pub trait MakeSphere<T: MeshType<Mesh = Self>>:
-    MeshTrait<T = T>
-    + Make2dShape<T>
-    + MeshBuilder<T>
-    + MeshHalfEdgeBuilder<T>
-    + MeshPathBuilder<T>
-    + MeshExtrude<T>
-    + MeshBuilder<T>
-    + MeshLoft<T>
-    + MeshPosition<T>
-    + MeshSubdivision<T>
-    + MakePrismatoid<T>
+pub trait MakeSphere<T: MeshTypeHalfEdge<Mesh = Self> + MeshType3D<Mesh = Self>>:
+    MeshLoft<T> + MeshExtrude<T> + MeshSubdivision<T> + MakePrismatoid<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
-    T::Vec: Vector3D<S = T::S>,
-    T::VP: Transformable<Vec = T::Vec, Rot = T::Rot, Trans = T::Trans, S = T::S>
-        + HasPosition<T::Vec, S = T::S>,
-    Self: Make2dShape<T>,
-    T::Edge: HalfEdge<T> + EdgeBasics<T>,
-    T::Trans: TransformTrait<S = T::S>,
-    T::Face: Face3d<T>,
 {
     /// Create a uv sphere with a given `radius`.
     /// `n` is the number of rings (including the two made of triangular faces).
@@ -194,12 +173,18 @@ where
     }*/
 
     /// An alias for `geodesic_icosahedron`.
-    fn icosphere(radius: T::S, n: usize) {
+    fn icosphere(radius: T::S, n: usize)
+    where
+        T::Mesh: HalfEdgeSemiBuilder<T>,
+    {
         Self::geodesic_icosahedron(radius, n);
     }
 
     /// Create a geodesic icosahedron (aka icosphere) with a given `radius` and `n` subdivisions.
-    fn geodesic_icosahedron(radius: T::S, n: usize) -> Self {
+    fn geodesic_icosahedron(radius: T::S, n: usize) -> Self
+    where
+        T::Mesh: HalfEdgeSemiBuilder<T>,
+    {
         let mut mesh = Self::regular_icosahedron(icosahedron_r2a(radius));
         debug_assert!(mesh.centroid().is_about(&T::Vec::ZERO, T::S::EPS));
         mesh.subdivision_frequency(
@@ -210,7 +195,10 @@ where
     }
 
     /// Create a geodesic tetrahedron with a given `radius` and `n` subdivisions.
-    fn geodesic_tetrahedron(radius: T::S, n: usize) -> Self {
+    fn geodesic_tetrahedron(radius: T::S, n: usize) -> Self
+    where
+        T::Mesh: HalfEdgeSemiBuilder<T>,
+    {
         let mut mesh = Self::regular_tetrahedron(radius);
         debug_assert!(mesh.centroid().is_about(&T::Vec::ZERO, T::S::EPS));
         mesh.subdivision_frequency(
@@ -221,7 +209,10 @@ where
     }
 
     /// Create a geodesic octahedron with a given `radius` and `n` subdivisions.
-    fn geodesic_octahedron(radius: T::S, n: usize) -> Self {
+    fn geodesic_octahedron(radius: T::S, n: usize) -> Self
+    where
+        T::Mesh: HalfEdgeSemiBuilder<T>,
+    {
         let mut mesh = Self::regular_octahedron(radius);
         debug_assert!(mesh.centroid().is_about(&T::Vec::ZERO, T::S::EPS));
         mesh.subdivision_frequency(

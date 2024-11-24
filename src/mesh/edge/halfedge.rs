@@ -21,6 +21,9 @@ pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
     /// Sets the twin half-edge
     fn set_twin(&mut self, twin: T::E);
 
+    /// Sets the origin vertex of the half-edge
+    fn set_origin(&mut self, origin: T::V);
+
     /// Returns the next half-edge incident to the same face or boundary
     fn next(&self, mesh: &T::Mesh) -> T::Edge;
 
@@ -65,4 +68,5 @@ pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
 
     /// Flips the direction of the edge and its twin
     fn flip(e: T::E, mesh: &mut T::Mesh);
+
 }

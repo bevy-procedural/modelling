@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::{HalfEdgeMeshImpl, HalfEdgeMeshType};
+use super::{HalfEdgeImplMeshType, HalfEdgeMeshImpl};
 use crate::{
     math::IndexType,
     mesh::{
@@ -9,7 +9,7 @@ use crate::{
     util::Deletable,
 };
 
-impl<T: HalfEdgeMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
+impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     fn has_vertex(&self, index: T::V) -> bool {
         self.vertices.has(index)
     }
@@ -99,12 +99,30 @@ impl<T: HalfEdgeMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         self.faces.iter()
     }
 
+    /// Returns an mutable iterator over all non-deleted faces
+    fn faces_mut<'a>(
+        &'a mut self,
+    ) -> impl Iterator<Item = &'a mut <T as crate::prelude::MeshType>::Face>
+    where
+        T: 'a,
+    {
+        self.faces.iter_mut()
+    }
+
     /// Returns an iterator over all non-deleted halfedges
     fn edges<'a>(&'a self) -> impl Iterator<Item = &'a T::Edge>
     where
         T::Edge: 'a,
     {
         self.halfedges.iter()
+    }
+
+    /// Returns an mutable iterator over all non-deleted halfedges
+    fn edges_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T::Edge>
+    where
+        T::Edge: 'a,
+    {
+        self.halfedges.iter_mut()
     }
 
     /// Since the vertex payloads in the `Deletable` can be sparse,

@@ -1,8 +1,9 @@
-use super::{HalfEdgeMeshType, IncidentToFaceIterator};
+use super::{ForwardEdgeIterator, HalfEdgeImplMeshType};
 use crate::{
     math::{HasPosition, IndexType, Vector3D},
     mesh::{
-        DefaultFacePayload, EdgeBasics, Face, Face3d, FaceBasics, FacePayload, HalfEdge, MeshBasics,
+        DefaultFacePayload, EdgeBasics, Face, Face3d, FaceBasics, FacePayload, HalfEdge,
+        MeshBasics, VertexBasics,
     },
     util::Deletable,
 };
@@ -13,7 +14,7 @@ use crate::{
 ///
 /// Also, if you have inner components, you have to use multiple faces!
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub struct HalfEdgeFaceImpl<T: HalfEdgeMeshType> {
+pub struct HalfEdgeFaceImpl<T: HalfEdgeImplMeshType> {
     /// the index of the face
     id: T::F,
 
@@ -27,17 +28,17 @@ pub struct HalfEdgeFaceImpl<T: HalfEdgeMeshType> {
     payload: T::FP,
 }
 
-impl<T: HalfEdgeMeshType> Face3d<T> for HalfEdgeFaceImpl<T>
+impl<T: HalfEdgeImplMeshType> Face3d<T> for HalfEdgeFaceImpl<T>
 where
     T::Vec: Vector3D<S = T::S>,
     T::VP: HasPosition<T::Vec, S = T::S>,
 {
 }
 
-impl<T: HalfEdgeMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
+impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
     #[inline(always)]
     fn edge(&self, mesh: &T::Mesh) -> T::Edge {
-        *mesh.edge(self.edge)
+        mesh.edge(self.edge).clone()
     }
 
     #[inline(always)]
@@ -86,13 +87,12 @@ impl<T: HalfEdgeMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
 
     #[inline(always)]
     #[allow(refining_impl_trait)]
-    fn edges<'a>(&'a self, mesh: &'a T::Mesh) -> IncidentToFaceIterator<'a, T> {
-        IncidentToFaceIterator::new(self.edge(mesh), mesh)
+    fn edges<'a>(&'a self, mesh: &'a T::Mesh) -> ForwardEdgeIterator<'a, T> {
+        ForwardEdgeIterator::new(self.edge(mesh), mesh)
     }
-
 }
 
-impl<T: HalfEdgeMeshType> Face for HalfEdgeFaceImpl<T> {
+impl<T: HalfEdgeImplMeshType> Face for HalfEdgeFaceImpl<T> {
     type T = T;
 
     fn triangle_touches_boundary(
@@ -126,7 +126,7 @@ impl<T: HalfEdgeMeshType> Face for HalfEdgeFaceImpl<T> {
     }
 }
 
-impl<T: HalfEdgeMeshType> HalfEdgeFaceImpl<T> {
+impl<T: HalfEdgeImplMeshType> HalfEdgeFaceImpl<T> {
     /// Creates a new face.
     pub fn new(edge: T::E, curved: bool, payload: T::FP) -> Self {
         assert!(edge != IndexType::max());
@@ -139,7 +139,7 @@ impl<T: HalfEdgeMeshType> HalfEdgeFaceImpl<T> {
     }
 }
 
-impl<T: HalfEdgeMeshType> std::fmt::Debug for HalfEdgeFaceImpl<T> {
+impl<T: HalfEdgeImplMeshType> std::fmt::Debug for HalfEdgeFaceImpl<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -151,7 +151,7 @@ impl<T: HalfEdgeMeshType> std::fmt::Debug for HalfEdgeFaceImpl<T> {
     }
 }
 
-impl<T: HalfEdgeMeshType> Deletable<T::F> for HalfEdgeFaceImpl<T> {
+impl<T: HalfEdgeImplMeshType> Deletable<T::F> for HalfEdgeFaceImpl<T> {
     fn delete(&mut self) {
         assert!(self.id != IndexType::max(), "Face is already deleted");
         self.id = IndexType::max();
@@ -177,7 +177,7 @@ impl<T: HalfEdgeMeshType> Deletable<T::F> for HalfEdgeFaceImpl<T> {
     }
 }
 
-impl<T: HalfEdgeMeshType> Default for HalfEdgeFaceImpl<T>
+impl<T: HalfEdgeImplMeshType> Default for HalfEdgeFaceImpl<T>
 where
     T::FP: DefaultFacePayload,
 {

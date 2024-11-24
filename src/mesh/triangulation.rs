@@ -140,6 +140,7 @@ impl<'a, V: IndexType> Triangulation<'a, V> {
         // Check that the triangulation returns the correct number of triangles
         let num_vertices = vec_hm.len();
         let num_triangles = self.len();
+
         assert!(
             num_triangles == num_vertices - 2,
             "Expected {} triangles but found {}",

@@ -1,7 +1,44 @@
-use super::MeshType;
+use crate::{
+    math::{HasPosition, Transformable},
+    mesh::{
+        CurvedEdge, DefaultEdgePayload, DefaultFacePayload, EdgeBasics, FaceBasics, HalfEdge,
+        MeshHalfEdgeBuilder, MeshType, VertexBasics,
+    },
+};
 
 /// Some basic operations to retrieve information about the mesh.
 pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clone {
+    /// Import an SVG string into the mesh.
+    #[cfg(feature = "svg")]
+    fn import_svg(&mut self, svg: &str) -> &mut Self
+    where
+        T::Edge: CurvedEdge<T> + HalfEdge<T>,
+        T::Mesh: MeshHalfEdgeBuilder<T>,
+        T::VP: HasPosition<T::Vec, S = T::S>
+            + Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
+        T::FP: DefaultFacePayload,
+        T::EP: DefaultEdgePayload,
+    {
+        super::svg::import_svg::<T>(self, svg);
+        self
+    }
+
+    /// Create a new mesh from an SVG string.
+    #[cfg(feature = "svg")]
+    fn from_svg(svg: &str) -> Self
+    where
+        T::Edge: CurvedEdge<T> + HalfEdge<T>,
+        T::Mesh: MeshHalfEdgeBuilder<T>,
+        T::VP: HasPosition<T::Vec, S = T::S>
+            + Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
+        T::FP: DefaultFacePayload,
+        T::EP: DefaultEdgePayload,
+    {
+        let mut mesh = Self::default();
+        mesh.import_svg(svg);
+        mesh
+    }
+
     /// Returns whether the vertex exists and is not deleted
     fn has_vertex(&self, index: T::V) -> bool;
 
@@ -57,6 +94,15 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     where
         T: 'a;
 
+    /// Returns an iterator over all non-deleted vertice's ids
+    fn vertex_ids<'a>(&'a self) -> impl Iterator<Item = T::V>
+    where
+        T: 'a,
+        T::Face: 'a,
+    {
+        self.vertices().map(|v| v.id())
+    }
+
     /// Returns an mutable iterator over all non-deleted vertices
     fn vertices_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T::Vertex>
     where
@@ -67,8 +113,36 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     where
         T: 'a;
 
+    /// Returns an iterator over all non-deleted edge's ids
+    fn edge_ids<'a>(&'a self) -> impl Iterator<Item = T::E>
+    where
+        T: 'a,
+        T::Face: 'a,
+    {
+        self.edges().map(|e| e.id())
+    }
+
+    /// Returns an mutable iterator over all non-deleted vertices
+    fn edges_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T::Edge>
+    where
+        T: 'a;
+
     /// Returns an iterator over all non-deleted faces
     fn faces<'a>(&'a self) -> impl Iterator<Item = &'a T::Face>
+    where
+        T: 'a;
+
+    /// Returns an iterator over all non-deleted face's ids
+    fn face_ids<'a>(&'a self) -> impl Iterator<Item = T::F>
+    where
+        T: 'a,
+        T::Face: 'a,
+    {
+        self.faces().map(|f| f.id())
+    }
+
+    /// Returns an mutable iterator over all non-deleted vertices
+    fn faces_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T::Face>
     where
         T: 'a;
 

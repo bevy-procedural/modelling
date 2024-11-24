@@ -5,6 +5,7 @@ mod check;
 mod halfedge;
 mod mesh_type;
 mod normals;
+mod path_builder;
 mod payload;
 mod position;
 mod topology;
@@ -17,11 +18,22 @@ pub use check::*;
 pub use halfedge::*;
 pub use mesh_type::*;
 pub use normals::*;
+pub use path_builder::*;
 pub use payload::*;
 pub use position::*;
 pub use topology::*;
 pub use transform::*;
 pub use triangulate::*;
+
+
+#[cfg(feature = "fonts")]
+mod fonts;
+
+#[cfg(feature = "fonts")]
+pub use fonts::*;
+
+#[cfg(feature = "svg")]
+mod svg;
 
 /// The `MeshTrait` doesn't assume any specific data structure or topology,
 /// i.e., could be a manifold half-edge mesh, a topological directed graph, etc.

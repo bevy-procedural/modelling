@@ -12,8 +12,8 @@ bevy = { version = "^0.14.2", default-features = false, features = [
     "bevy_winit",
     "tonemapping_luts",
 ] }
-bevy-inspector-egui = "^0.25.2"
-bevy_panorbit_camera = { version = "^0.19.3", features = [] }
+bevy-inspector-egui = "^0.27.0"
+bevy_panorbit_camera = { version = "^0.20.0", features = ["bevy_egui"] }
 
 [dependencies.procedural_modelling]
 path = "../"

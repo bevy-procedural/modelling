@@ -1,37 +1,52 @@
 use crate::{
-    halfedge::HalfEdgeMeshType,
+    halfedge::HalfEdgeImplMeshType,
+    math::IndexType,
     mesh::{EdgeBasics, HalfEdge, MeshBasics},
 };
 
 /// Iterator over all half-edges incident to the same vertex (clockwise)
-pub struct IncidentToVertexIterator<'a, T: HalfEdgeMeshType + 'a> {
+pub struct IncidentToVertexIterator<'a, T: HalfEdgeImplMeshType + 'a> {
     is_first: bool,
     first: T::E,
-    current: T::Edge,
+    current: T::E,
     mesh: &'a T::Mesh,
 }
 
-impl<'a, T: HalfEdgeMeshType> IncidentToVertexIterator<'a, T> {
+impl<'a, T: HalfEdgeImplMeshType> IncidentToVertexIterator<'a, T> {
     /// Creates a new iterator
     pub fn new(first: T::Edge, mesh: &'a T::Mesh) -> Self {
         Self {
             first: first.id(),
-            current: first,
+            current: first.id(),
+            mesh,
+            is_first: true,
+        }
+    }
+
+    /// Creates an empty iterator
+    pub fn empty(mesh: &'a T::Mesh) -> Self {
+        Self {
+            first: IndexType::max(),
+            current: IndexType::max(),
             mesh,
             is_first: true,
         }
     }
 }
 
-impl<'a, T: HalfEdgeMeshType> Iterator for IncidentToVertexIterator<'a, T> {
+impl<'a, T: HalfEdgeImplMeshType> Iterator for IncidentToVertexIterator<'a, T> {
     type Item = T::Edge;
 
     fn next(&mut self) -> Option<Self::Item> {
+        if self.current == IndexType::max() {
+            return None;
+        }
+        let current = self.mesh.edge(self.current);
         if self.is_first {
             self.is_first = false;
-            return Some(self.current);
+            return Some(current.clone());
         }
-        let next = self.current.twin(self.mesh).next(self.mesh);
+        let next = current.twin(self.mesh).next(self.mesh);
         debug_assert!(
             next.origin_id() == self.mesh.edge(self.first).origin_id(),
             "The edge wheel around vertex {} is not closed. The mesh is invalid.",
@@ -40,7 +55,7 @@ impl<'a, T: HalfEdgeMeshType> Iterator for IncidentToVertexIterator<'a, T> {
         if next.id() == self.first {
             return None;
         } else {
-            self.current = next;
+            self.current = next.id();
             return Some(next);
         }
     }
@@ -78,7 +93,7 @@ impl<'a, T: HalfEdgeMeshType> Iterator for NonmanifoldVertexIterator<'a, T> {
             if self.current.next == self.first {
                 return None;
             }
-            // TODO: avoid clone?
+            // PERF: avoid clone?
             self.current = self.mesh.vertex(self.current.next).clone();
             Some(self.current.clone())
         }

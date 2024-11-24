@@ -1,4 +1,5 @@
-use super::{HasZero, Scalar, Vector};
+use super::{HasZero, Scalar, Vector, VectorIteratorExt};
+use itertools::Itertools;
 
 /// Trait for spherical coordinates in 3d space.
 pub trait Spherical3d: Vector<Self::S> {
@@ -145,3 +146,29 @@ pub trait Vector3D: Vector<Self::S> {
         *self * st1 + *other * st2
     }
 }
+
+/// Additional methods for vector iterators.
+pub trait Vector3DIteratorExt<S: Scalar, V: Vector3D<S = S>>: Iterator<Item = V> {
+    /// Calculate the normal of an iterator of vectors.
+    fn normal(self) -> Self::Item
+    where
+        Self: Sized + ExactSizeIterator + Clone,
+    {
+        // TODO: debug_assert is flat and non-degenerate
+
+        let normal = self
+            .circular_tuple_windows::<(_, _)>()
+            .map(|(a, b)| {
+                V::new(
+                    (a.z() + b.z()) * (b.y() - a.y()),
+                    (a.x() + b.x()) * (b.z() - a.z()),
+                    (a.y() + b.y()) * (b.x() - a.x()),
+                )
+            })
+            .stable_sum();
+
+        normal * V::splat(S::from(-0.5))
+    }
+}
+
+impl<I: Iterator<Item = V>, S: Scalar, V: Vector3D<S = S>> Vector3DIteratorExt<S, V> for I {}

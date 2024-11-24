@@ -1,12 +1,57 @@
 use crate::{
-    halfedge::{HalfEdgeFaceImpl, HalfEdgeMeshImpl, HalfEdgeMeshType},
+    halfedge::{HalfEdgeFaceImpl, HalfEdgeImplMeshType, HalfEdgeMeshImpl},
+    math::IndexType,
     mesh::{
-        DefaultEdgePayload, DefaultFacePayload, EdgeBasics, FaceBasics, HalfEdge, MeshBasics,
-        MeshBuilder, MeshHalfEdgeBuilder,
+        DefaultEdgePayload, DefaultFacePayload, EdgeBasics, FaceBasics, HalfEdge, HalfEdgeVertex,
+        MeshBasics, MeshBuilder, MeshHalfEdgeBuilder,
     },
 };
 
-impl<T: HalfEdgeMeshType> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
+/*
+impl<T:HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
+    fn remove_halfedge_unsafe(&mut self, e:T::E) {
+        let edge = self.edge(e);
+
+        // the origin might point to this edge: find a different representative
+        if edge.origin(self).edge_id(self) == edge.id() {
+            let mut alt = edge.prev(self).twin_id();
+            if alt == edge.id() {
+                // it was the only edge at this vertex
+               alt = IndexType::max();
+            }
+            self.vertex_mut(edge.origin_id()).set_edge(alt);
+        }
+
+        // it is the next of the previous
+
+        todo!("");
+
+        // it is the previous of the next
+
+        todo!("");
+
+        // remove from the datastructure
+
+        todo!("");
+    }
+
+    /// Remove the halfedge and its twin.
+    /// Adjacent faces are kept. Hence, the graph might be invalid after this operation.
+    fn remove_edge_unsafe(&mut self, e: T::E) -> T::F {
+        let edge = self.edge(e).clone();
+        let twin = edge.twin(self).clone();
+        let target = edge.target(self).clone();
+
+       self.remove_halfedge_unsafe(e);
+       self.remove_halfedge_unsafe(edge.twin_id());
+
+
+        0
+    }
+
+}*/
+
+impl<T: HalfEdgeImplMeshType> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     fn add_vertex_via_vertex_default(&mut self, v: T::V, vp: T::VP) -> (T::V, T::E, T::E)
     where
         T::EP: DefaultEdgePayload,
@@ -71,5 +116,84 @@ impl<T: HalfEdgeMeshType> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         )
     }
 
-    
+    fn insert_vertices_into_edge<I: Iterator<Item = (T::EP, T::EP, T::VP)>>(
+        &mut self,
+        e: T::E,
+        ps: I,
+    ) -> T::E {
+        let twin_id = self.edge(e).twin_id();
+        let mut current = self.edge(e).prev_id();
+        let mut current_twin = self.edge(twin_id).next_id();
+        let f1 = self.edge(e).face_id();
+        let f2 = self.edge(twin_id).face_id();
+        let mut last_v = self.edge(e).origin_id();
+        let mut first = true;
+        for (ep1, ep2, vp) in ps {
+            let (v, e1, e2) =
+                self.add_vertex_via_edge(current, self.edge(current).twin_id(), vp, ep1, ep2);
+            current = e1;
+            current_twin = e2;
+            last_v = v;
+            self.edge_mut(current).set_face(f1);
+            self.edge_mut(current_twin).set_face(f2);
+            if first {
+                self.vertex_mut(self.edge(e).origin_id()).set_edge(e1);
+                first = false;
+            }
+        }
+
+        self.edge_mut(current).set_next(e);
+        self.edge_mut(e).set_prev(current);
+        self.edge_mut(current_twin).set_prev(twin_id);
+        self.edge_mut(twin_id).set_next(current_twin);
+        self.edge_mut(e).set_origin(last_v);
+
+        return e;
+    }
+
+    fn add_vertex(&mut self, vp: T::VP) -> T::V {
+        let new = self.vertices.allocate();
+        self.vertices.set(new, T::Vertex::new(IndexType::max(), vp));
+        new
+    }
+
+    /// Generate a path from the finite iterator of positions and return the halfedges pointing to the first and last vertex.
+    fn insert_path(&mut self, vp: impl IntoIterator<Item = T::VP>) -> (T::E, T::E)
+    where
+        T::EP: DefaultEdgePayload,
+    {
+        // TODO: create this directly without the builder functions
+
+        let mut iter = vp.into_iter();
+        let p0 = iter.next().expect("Path must have at least one vertex");
+        let p1 = iter.next().expect("Path must have at least two vertices");
+        let (v0, v) = self.add_isolated_edge_default(p0, p1);
+        let first = self.shared_edge(v0, v).unwrap();
+        let mut input = first.id();
+        let mut output = first.twin_id();
+        for pos in iter {
+            self.add_vertex_via_edge_default(input, output, pos);
+            let n = self.edge(input).next(self);
+            input = n.id();
+            output = n.twin_id();
+        }
+
+        (first.twin_id(), input)
+    }
+
+    fn add_isolated_edge_default(&mut self, a: T::VP, b: T::VP) -> (T::V, T::V)
+    where
+        T::EP: DefaultEdgePayload,
+    {
+        self.add_isolated_edge(a, T::EP::default(), b, T::EP::default())
+    }
+
+    fn insert_loop(&mut self, vp: impl IntoIterator<Item = T::VP>) -> T::E
+    where
+        T::EP: DefaultEdgePayload,
+    {
+        let (first, last) = self.insert_path(vp);
+        self.insert_edge(first, Default::default(), last, Default::default());
+        return first;
+    }
 }

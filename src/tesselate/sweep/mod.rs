@@ -145,3 +145,42 @@ pub fn sweep_greedy<T: MeshType>(
 
     todo!("sweep greedy");
 }
+
+
+
+#[cfg(test)]
+mod tests {
+    
+
+    use crate::prelude::*;
+
+    fn verify_triangulation<T: MeshType>(mesh: &T::Mesh, f: T::F)
+    where
+        T::Face: Face3d<T>,
+        T::Vec: Vector3D<S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S>,
+    {
+        let face = mesh.face(f);
+        let vec2s = face.vec2s(mesh);
+        assert!(
+            T::Poly::from_iter(vec2s.iter().map(|v| v.vec)).is_ccw(),
+            "Polygon must be counterclockwise"
+        );
+        let mut indices = Vec::new();
+        let mut tri = Triangulation::new(&mut indices);
+        let mut meta = TesselationMeta::default();
+        sweep_line::<T>(face, &mesh, &mut tri, &mut meta);
+        tri.verify_full::<T::Vec2, T::Poly>(&vec2s);
+    }
+
+    /*
+    #[test]
+    #[cfg(feature = "bevy")]
+    fn test_font() {
+        let mut mesh2d = BevyMesh2d::new();
+        Font::new(include_bytes!("../../../assets/Cochineal-Roman.otf"), 1.0)
+            .layout_text::<BevyMeshType2d32>("F", &mut mesh2d);
+        let mesh3d = mesh2d.to_3d(0.01);
+        self::verify_triangulation::<BevyMeshType3d32>(&mesh3d, 0);
+    }*/
+}

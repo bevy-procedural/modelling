@@ -6,7 +6,7 @@ use bevy::{
     window::{PresentMode, WindowMode, WindowResolution},
 };
 use procedural_modelling::{
-    bevy::{BevyMesh3d, BevyVertexPayload},
+    bevy::{BevyMesh3d, BevyVertexPayload3d},
     math::HasPosition,
     primitives::{generate_zigzag, Make2dShape},
     tesselate::TriangulationAlgorithm,
@@ -60,7 +60,7 @@ fn main() {
 
 fn zigzag(n: usize) -> BevyMesh3d {
     BevyMesh3d::polygon(
-        generate_zigzag::<Vec2>(n).map(|v| BevyVertexPayload::from_pos(Vec3::new(v.x, 0.0, v.y))),
+        generate_zigzag::<Vec2>(n).map(|v| BevyVertexPayload3d::from_pos(Vec3::new(v.x, 0.0, v.y))),
     )
 }
 

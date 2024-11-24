@@ -1,12 +1,12 @@
 use crate::{
-    halfedge::{HalfEdgeMeshImpl, HalfEdgeMeshType},
+    halfedge::{HalfEdgeMeshImpl, HalfEdgeImplMeshType},
     math::{HasPosition, Vector3D},
     mesh::{MeshBasics, VertexBasics},
 };
 
 // TODO: Where to place this function?
 
-impl<T: HalfEdgeMeshType> HalfEdgeMeshImpl<T>
+impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T>
 where
     T::Vec: Vector3D<S = T::S>,
     T::VP: HasPosition<T::Vec, S = T::S>,

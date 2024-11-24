@@ -192,8 +192,6 @@ fn find_valid_diagonals<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2>>(
     n: usize,
     vs: &Vec<IndexedVertex2D<V, Vec2>>,
 ) -> TriangularStore<bool> {
-    let now = Instant::now();
-
     let mut valid_diagonal = TriangularStore::<bool>::new(n, true);
     let poly = Poly::from_iter(vs.iter().map(|v| v.vec));
     for i in 0..n {
@@ -203,7 +201,6 @@ fn find_valid_diagonals<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2>>(
         }
     }
 
-    println!("Valid diagonals: {:?}", now.elapsed());
     valid_diagonal
 }
 
@@ -278,7 +275,7 @@ pub fn minweight_dynamic_direct2<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec
     );
 
     traceback(n, 0, n - 1, &s, indices, &vs);
-    
+
     todo!("Needs fixing!");
 }
 
