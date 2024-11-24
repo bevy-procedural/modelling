@@ -1,5 +1,5 @@
 use crate::{
-    math::{Scalar, Transformable},
+    math::Transformable,
     mesh::MeshType,
 };
 

@@ -1,6 +1,6 @@
 use super::{ForwardEdgeIterator, HalfEdgeImplMeshType};
 use crate::{
-    math::{HasPosition, IndexType, Polygon, TransformTrait, Vector3D},
+    math::{HasPosition, IndexType, Vector3D},
     mesh::{
         DefaultFacePayload, EdgeBasics, Face, Face3d, FaceBasics, FacePayload, HalfEdge,
         MeshBasics, VertexBasics,

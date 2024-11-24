@@ -150,7 +150,7 @@ pub fn sweep_greedy<T: MeshType>(
 
 #[cfg(test)]
 mod tests {
-    use bevy::asset::meta;
+    
 
     use crate::prelude::*;
 

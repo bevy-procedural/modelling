@@ -10,7 +10,6 @@ use crate::{
     },
 };
 use bevy::math::{Affine2, Vec2, Vec3, Vec4};
-use itertools::Itertools;
 
 /// A mesh type for bevy with 2D vertices, 32 bit indices, 32 bit floats, and no face or edge payload (no normals etc.)
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
