@@ -67,6 +67,12 @@ bevy = [
     "bevy/bevy_gizmos",
     "bevy/default_font",
 ]
+example_deps = [
+    "bevy",
+    "bevy/bevy_pbr",
+    "bevy/bevy_winit",
+    "bevy/tonemapping_luts",
+]
 svg = ["dep:usvg"]
 fonts = ["dep:ab_glyph"]
 dynamic = ["bevy/dynamic_linking"]
@@ -79,34 +85,19 @@ sweep_debug_print = ["sweep_debug"]
 name = "box"
 path = "examples/box.rs"
 doc-scrape-examples = true
-required-features = [
-    "bevy",
-    "bevy/bevy_pbr",
-    "bevy/bevy_winit",
-    "bevy/tonemapping_luts",
-]
+required-features = ["example_deps"]
 
 [[example]]
 name = "fps_bench"
 path = "examples/fps_bench.rs"
 doc-scrape-examples = true
-required-features = [
-    "bevy",
-    "bevy/bevy_pbr",
-    "bevy/bevy_winit",
-    "bevy/tonemapping_luts",
-]
+required-features = ["example_deps"]
 
 [[example]]
 name = "spiral"
 path = "examples/spiral.rs"
 doc-scrape-examples = true
-required-features = [
-    "bevy",
-    "bevy/bevy_pbr",
-    "bevy/bevy_winit",
-    "bevy/tonemapping_luts",
-]
+required-features = ["example_deps"]
 
 [[bench]]
 name = "triangulation"
