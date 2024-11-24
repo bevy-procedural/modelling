@@ -55,17 +55,10 @@ lazy_static = "1.5.0"
 ab_glyph = { version = "0.2.29", optional = true }
 
 [features]
-default = ["bevy", "fonts", "svg"]
-bevy = [
-    "dep:bevy",
-    "dep:bevy-inspector-egui",
-    "bevy/bevy_text",
-    "bevy/bevy_ui",
-]
-example_deps = [
-    "bevy",
-    "bevy/default"
-]
+default = ["bevy", "gizmo", "fonts", "svg"]
+bevy = ["dep:bevy", "dep:bevy-inspector-egui", "bevy/bevy_core_pipeline"]
+gizmo = ["bevy", "bevy/bevy_text", "bevy/bevy_ui"]
+example_deps = ["bevy", "bevy/default"]
 svg = ["dep:usvg"]
 fonts = ["dep:ab_glyph"]
 dynamic = ["bevy/dynamic_linking"]
