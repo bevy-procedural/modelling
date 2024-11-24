@@ -18,7 +18,7 @@ jobs:
             - name: Install Dependencies
               # alsa-sys deps: https://github.com/Spotifyd/spotifyd/issues/183#issuecomment-476384541
               # libudev-sys: https://github.com/hecrj/coffee/issues/119
-              run: sudo apt-get update && sudo apt-get install -y libasound2-dev portaudio19-dev build-essential libpulse-dev libdbus-1-dev libudev-dev
+              run: sudo apt-get update && sudo apt-get install -y libasound2-dev portaudio19-dev build-essential libpulse-dev libdbus-1-dev libudev-dev xorg-dev libglu1-mesa libgl1-mesa-dev xvfb libxinerama1 libxcursor1
             - name: Build
               run: cargo build --verbose
             - name: Run tests

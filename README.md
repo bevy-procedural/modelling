@@ -87,7 +87,7 @@ We are currently working on some tutorials for the most important features.
     -   [x] Constrained Delaunay (using [Spade](https://github.com/Stoeoef/spade))
     -   [ ] Constrained Delaunay (using Monotone Sweep-Line)
     -   [x] Min-Weight Triangulation (using Dynamic Programming)
-    -   [ ] Min-Weight Heuristic in $ \mathcal{O}(n \log n) $
+    -   [ ] Min-Weight Heuristic in $\mathcal{O}(n \log n)$
     -   [ ] Steiner Points
 
 -   Primitives
