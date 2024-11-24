@@ -107,6 +107,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "bevy")]
+    #[cfg(feature = "fonts")]
     fn test_font() {
         let mut mesh2d = BevyMesh2d::new();
         Font::new(include_bytes!("../../assets/Cochineal-Roman.otf"), 1.0)

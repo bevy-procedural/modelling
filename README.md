@@ -204,7 +204,11 @@ The package supports different triangulation algorithms. The robustness and rend
 | Auto         | Simple       | $n \log n$ |                  |                    |                   |                   |                    |
 
 -   ¹) Time for the triangulation on a Intel i7-12700K (single threaded). Run the benchmarks using `cargo bench --features benchmarks`.
--   ²) FPS when rendering 100 large, transparent instances with the bevy 0.14.2 pbr shader on a Nvidia GeForce RTX 4060 Ti in Full HD. See `cargo run --example fps_bench --profile release --features="bevy bevy/bevy_pbr bevy/bevy_winit bevy/tonemapping_luts"`. For the non-Delaunay algorithms, the rendering time deteriorates for the larger circles since the edge length is not minimized causing significant overdraw.
+-   ²) FPS when rendering 100 large, transparent instances with the bevy 0.14.2 pbr shader on a Nvidia GeForce RTX 4060 Ti in Full HD. See `cargo run --example fps_bench --profile release --features="example_deps"`. For the non-Delaunay algorithms, the rendering time deteriorates for the larger circles since the edge length is not minimized causing significant overdraw.
+
+## Hierarchy of Traits
+
+The availability of algorithms and operations for different mesh data structures is represented by traits. For example, the `Transformable` trait implements methods such as `translate` and `rotate` and the `MakePrismatoid` trait implements methods such as `insert_pyramid` or `insert_cube`. There are also supertraits such as `Open2Manifold` that combine multiple traits for easier use. For a full list of traits and their implementations, see the [documentation](https://docs.rs/procedural_modelling).
 
 ## Hierarchy of Traits
 
