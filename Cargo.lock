@@ -3704,7 +3704,6 @@ version = "0.2.1"
 dependencies = [
  "ab_glyph",
  "bevy",
- "bevy-inspector-egui",
  "criterion",
  "itertools 0.13.0",
  "lazy_static",
