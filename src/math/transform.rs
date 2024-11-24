@@ -6,7 +6,9 @@ pub trait Rotator<V>: Clone {}
 /// Trait for tansformations in nd space. We call it `TransformTrait` to avoid
 /// collisions with the `Transform` struct in Bevy.
 
-pub trait TransformTrait: Clone + Copy + Default + std::fmt::Debug + 'static {
+pub trait TransformTrait:
+    Clone + Copy + Default + std::fmt::Debug + std::ops::Mul<Self, Output = Self> + 'static
+{
     /// The scalar type of the coordinates and angles used in the rotation.
     type S: Scalar;
 

@@ -1,5 +1,5 @@
 use crate::{
-    math::HasPosition,
+    math::{HasPosition, Transformable},
     mesh::{
         CurvedEdge, DefaultEdgePayload, DefaultFacePayload, EdgeBasics, FaceBasics, HalfEdge,
         MeshHalfEdgeBuilder, MeshType, VertexBasics,
@@ -14,7 +14,8 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     where
         T::Edge: CurvedEdge<T> + HalfEdge<T>,
         T::Mesh: MeshHalfEdgeBuilder<T>,
-        T::VP: HasPosition<T::Vec, S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S>
+            + Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
         T::FP: DefaultFacePayload,
         T::EP: DefaultEdgePayload,
     {
@@ -28,7 +29,8 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     where
         T::Edge: CurvedEdge<T> + HalfEdge<T>,
         T::Mesh: MeshHalfEdgeBuilder<T>,
-        T::VP: HasPosition<T::Vec, S = T::S>,
+        T::VP: HasPosition<T::Vec, S = T::S>
+            + Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
         T::FP: DefaultFacePayload,
         T::EP: DefaultEdgePayload,
     {
@@ -120,6 +122,11 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
         self.edges().map(|e| e.id())
     }
 
+    /// Returns an mutable iterator over all non-deleted vertices
+    fn edges_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T::Edge>
+    where
+        T: 'a;
+
     /// Returns an iterator over all non-deleted faces
     fn faces<'a>(&'a self) -> impl Iterator<Item = &'a T::Face>
     where
@@ -133,6 +140,11 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     {
         self.faces().map(|f| f.id())
     }
+
+    /// Returns an mutable iterator over all non-deleted vertices
+    fn faces_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T::Face>
+    where
+        T: 'a;
 
     /// Returns the id of the (half)edge from `v` to `w` or `None` if they are not neighbors.
     fn shared_edge(&self, v: T::V, w: T::V) -> Option<T::Edge>;

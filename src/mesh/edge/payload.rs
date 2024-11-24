@@ -1,6 +1,6 @@
 use std::hash::Hash;
 
-use crate::mesh::MeshType;
+use crate::{math::Transformable, mesh::MeshType};
 
 use super::CurvedEdgeType;
 
@@ -19,18 +19,37 @@ pub trait DefaultEdgePayload: EdgePayload + Default {}
 
 /// An empty edge payload if you don't need any additional information.
 #[derive(Debug, Clone, Copy, PartialEq, Default, Hash)]
-pub struct EmptyEdgePayload;
+pub struct EmptyEdgePayload<T: MeshType> {
+    _phantom: std::marker::PhantomData<T>,
+}
 
-impl EdgePayload for EmptyEdgePayload {
+impl<T: MeshType> EdgePayload for EmptyEdgePayload<T> {
     fn allocate() -> Self {
-        Self
+        Self {
+            _phantom: std::marker::PhantomData,
+        }
     }
     fn is_empty(&self) -> bool {
         true
     }
 }
 
-impl DefaultEdgePayload for EmptyEdgePayload {}
+impl<T: MeshType> DefaultEdgePayload for EmptyEdgePayload<T> {}
+
+impl<T: MeshType> Transformable for EmptyEdgePayload<T> {
+    type Rot = T::Rot;
+    type S = T::S;
+    type Trans = T::Trans;
+    type Vec = T::Vec;
+
+    fn transform(&mut self, _: &Self::Trans) -> &mut Self {
+        self
+    }
+
+    fn lerp(&mut self, _: &Self, _: Self::S) -> &mut Self {
+        self
+    }
+}
 
 /// A curved edge payload with nothing else
 #[derive(Debug, Default, Clone, PartialEq)]
@@ -65,3 +84,37 @@ impl<T: MeshType> EdgePayload for CurvedEdgePayload<T> {
 }
 
 impl<T: MeshType> DefaultEdgePayload for CurvedEdgePayload<T> {}
+
+impl<T: MeshType> Transformable for CurvedEdgePayload<T> {
+    type Rot = T::Rot;
+    type S = T::S;
+    type Trans = T::Trans;
+    type Vec = T::Vec;
+
+    fn transform(&mut self, t: &Self::Trans) -> &mut Self {
+        match &mut self.curve {
+            CurvedEdgeType::Linear => {}
+            CurvedEdgeType::QuadraticBezier(control_point) => {
+                control_point.transform(t);
+            }
+            CurvedEdgeType::CubicBezier(control_point1, control_point2) => {
+                control_point1.transform(t);
+                control_point2.transform(t);
+            }
+        }
+        self
+    }
+
+    fn lerp(&mut self, _other: &Self, _t: Self::S) -> &mut Self {
+        match &mut self.curve {
+            CurvedEdgeType::Linear => {}
+            CurvedEdgeType::QuadraticBezier(_cp) => {
+                todo!();
+            }
+            CurvedEdgeType::CubicBezier(_cp1, _cp2) => {
+                todo!();
+            }
+        }
+        self
+    }
+}

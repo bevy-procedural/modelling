@@ -53,7 +53,7 @@ struct GlobalSettings {
 impl Default for GlobalSettings {
     fn default() -> Self {
         GlobalSettings {
-            tol: -4.0,
+            tol: 0.01,
             px: 0.0,
             py: 0.0,
             prog: 50.0,
@@ -510,7 +510,7 @@ fn _make_blechnum_spicant(settings: &GlobalSettings) -> BevyMesh3d {
     mesh
 }
 
-fn _make_bezier() -> BevyMesh3d {
+fn _make_bezier(_settings: &GlobalSettings) -> BevyMesh3d {
     let mut mesh2d = BevyMesh2d::new();
     /*mesh2d.insert_regular_star(1.0, 1.0, 3);
     let e = mesh2d.edge_mut(0);
@@ -561,7 +561,7 @@ fn _make_bezier() -> BevyMesh3d {
     mesh3d
 }
 
-fn _read_svg() -> BevyMesh3d {
+fn _read_svg(settings: &GlobalSettings) -> BevyMesh3d {
     // TODO: Handle self-intersecting svg paths etc
     /*let svg = "
     <svg xmlns='http://www.w3.org/2000/svg' width='320' height='320'>
@@ -577,16 +577,14 @@ fn _read_svg() -> BevyMesh3d {
         <ellipse cx='115.779' cy='155.778' rx='36' ry='60' fill='transparent' stroke='blue'/>
     </svg>";*/
 
-    let svg = "
-    <svg width='800px' height='800px' viewBox='0 0 1024 1024' class='icon' version='1.1' xmlns='http://www.w3.org/2000/svg'>
-    <path d='M913.88 548.4c-66.14 35.43-141.83-7.68-141.83-7.68-112.76-53.91-246.31-55.82-246.31-55.82-34.09-2.34-25.47-17.51-20.69-25.88 0.73-1.27 1.74-2.36 2.59-3.56a187.06 187.06 0 0 0 34.17-108.08c0-103.78-84.13-187.92-187.92-187.92C251 159.47 167.37 242.24 166 344.87c-1 3.81-42.28 9.32-73-5.06-40-18.71-25.08 73.65 42.35 95.45l-2.31-0.1c-28.06-1.52-30.8 7.68-30.8 7.68s-16.14 29.75 83.13 38.37c31.39 2.72 35.71 8.11 42 16.64 11.92 16.14 3.57 39.25-12.15 59-44.53 55.77-71.84 180.68 49.78 270.85 103.12 76.47 377.65 79.95 497.37-15.13 108-85.76 156.72-170.47 185.79-241.14 3.9-9.54 31.84-58.43-34.28-23.03z' fill='#DFEDFF'/>
-    </svg>
-    ";
+    let svg = "<path d='M913.88 548.4c-66.14 35.43-141.83-7.68-141.83-7.68-112.76-53.91-246.31-55.82-246.31-55.82-34.09-2.34-25.47-17.51-20.69-25.88 0.73-1.27 1.74-2.36 2.59-3.56a187.06 187.06 0 0 0 34.17-108.08c0-103.78-84.13-187.92-187.92-187.92C251 159.47 167.37 242.24 166 344.87c-1 3.81-42.28 9.32-73-5.06-40-18.71-25.08 73.65 42.35 95.45l-2.31-0.1c-28.06-1.52-30.8 7.68-30.8 7.68s-16.14 29.75 83.13 38.37c31.39 2.72 35.71 8.11 42 16.64 11.92 16.14 3.57 39.25-12.15 59-44.53 55.77-71.84 180.68 49.78 270.85 103.12 76.47 377.65 79.95 497.37-15.13 108-85.76 156.72-170.47 185.79-241.14 3.9-9.54 31.84-58.43-34.28-23.03z' fill='#DFEDFF'/>";
 
-    let m2d = BevyMesh2d::from_svg(svg);
+    let mut m2d = BevyMesh2d::from_svg(svg);
     println!("{:?}", m2d);
 
-    m2d.to_3d(0.01)
+    m2d.scale(&Vec2::splat(-0.004))
+        .translate(&Vec2::new(2.0, 2.0))
+        .to_3d(settings.tol)
 }
 
 fn make_mesh(_settings: &GlobalSettings) -> BevyMesh3d {
@@ -620,8 +618,8 @@ fn make_mesh(_settings: &GlobalSettings) -> BevyMesh3d {
 
     //_make_blechnum_spicant(_settings)
 
-    //_make_bezier()
-    _read_svg()
+    //_make_bezier(_settings)
+    _read_svg(_settings)
 }
 
 pub fn main() {

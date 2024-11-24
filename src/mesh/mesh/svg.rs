@@ -1,6 +1,6 @@
 use super::{MeshHalfEdgeBuilder, MeshType, PathBuilder};
 use crate::{
-    math::{HasPosition, Vector},
+    math::{HasPosition, Transformable, Vector},
     mesh::{CurvedEdge, DefaultEdgePayload, DefaultFacePayload, HalfEdge},
 };
 
@@ -8,7 +8,8 @@ fn import_group<T: MeshType>(mesh: &mut T::Mesh, group: &usvg::Group)
 where
     T::Edge: CurvedEdge<T> + HalfEdge<T>,
     T::Mesh: MeshHalfEdgeBuilder<T>,
-    T::VP: HasPosition<T::Vec, S = T::S>,
+    T::VP: HasPosition<T::Vec, S = T::S>
+        + Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
 {
@@ -36,7 +37,8 @@ fn import_path<T: MeshType>(mesh: &mut T::Mesh, path: &usvg::Path)
 where
     T::Edge: CurvedEdge<T> + HalfEdge<T>,
     T::Mesh: MeshHalfEdgeBuilder<T>,
-    T::VP: HasPosition<T::Vec, S = T::S>,
+    T::VP: HasPosition<T::Vec, S = T::S>
+        + Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
 {
@@ -49,9 +51,7 @@ where
     // let po = path.paint_order();
     // let transform = path.abs_transform();
 
-    let v = |p: usvg::tiny_skia_path::Point| {
-        T::Vec::from_xy(T::S::from(p.x * 0.01), T::S::from(p.y * 0.01))
-    };
+    let v = |p: usvg::tiny_skia_path::Point| T::Vec::from_xy(T::S::from(p.x), T::S::from(p.y));
 
     let mut pb = PathBuilder::<T>::new(mesh);
 
@@ -92,10 +92,32 @@ pub(crate) fn import_svg<T: MeshType>(mesh: &mut T::Mesh, svg: &str)
 where
     T::Edge: CurvedEdge<T> + HalfEdge<T>,
     T::Mesh: MeshHalfEdgeBuilder<T>,
-    T::VP: HasPosition<T::Vec, S = T::S>,
+    T::VP: HasPosition<T::Vec, S = T::S>
+        + Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
     T::FP: DefaultFacePayload,
     T::EP: DefaultEdgePayload,
 {
-    let tree = usvg::Tree::from_str(&svg, &usvg::Options::default()).expect("Failed to parse SVG");
+    let res = usvg::Tree::from_str(&svg, &usvg::Options::default());
+    if let Err(e) = res {
+        match e {
+            usvg::Error::ParsingFailed(reason) => match reason {
+                usvg::roxmltree::Error::NoRootNode => {
+                    import_svg::<T>(
+                        mesh,
+                        ("<svg xmlns='http://www.w3.org/2000/svg'>".to_string() + svg + "</svg>")
+                            .as_str(),
+                    );
+                    return;
+                }
+                _ => {
+                    panic!("Failed to parse SVG: {:#?}", reason);
+                }
+            },
+            _ => {
+                panic!("Failed to parse SVG: {:#?}", e);
+            }
+        }
+    }
+    let tree = res.expect("Failed to parse SVG");
     import_group::<T>(mesh, tree.root());
 }

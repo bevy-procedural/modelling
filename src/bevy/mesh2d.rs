@@ -22,8 +22,8 @@ impl MeshType for BevyMeshType2d32 {
     type F = u32;
     type EP = CurvedEdgePayload<Self>;
     type VP = BevyVertexPayload2d;
-    type FP = EmptyFacePayload;
-    type MP = EmptyMeshPayload;
+    type FP = EmptyFacePayload<Self>;
+    type MP = EmptyMeshPayload<Self>;
     type S = f32;
     type Vec = Vec2;
     type Vec2 = Vec2;

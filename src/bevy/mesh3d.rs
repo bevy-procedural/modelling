@@ -26,10 +26,10 @@ impl MeshType for BevyMeshType3d32 {
     type E = u32;
     type V = u32;
     type F = u32;
-    type EP = EmptyEdgePayload;
+    type EP = EmptyEdgePayload<Self>;
     type VP = BevyVertexPayload3d;
-    type FP = EmptyFacePayload;
-    type MP = EmptyMeshPayload;
+    type FP = EmptyFacePayload<Self>;
+    type MP = EmptyMeshPayload<Self>;
     type S = f32;
     type Vec = Vec3;
     type Vec2 = Vec2;

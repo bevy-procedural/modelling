@@ -1,10 +1,11 @@
 use crate::{
-    math::{HasPosition, IndexType},
+    math::{HasPosition, IndexType, TransformTrait, Transformable},
     mesh::{
         CurvedEdge, CurvedEdgeType, DefaultEdgePayload, EdgeBasics, HalfEdge, MeshBasics,
         MeshBuilder, MeshHalfEdgeBuilder, MeshType, VertexBasics,
     },
 };
+
 /// Some basic operations to build a single face.
 pub struct PathBuilder<'a, T: MeshType>
 where
@@ -22,13 +23,16 @@ where
     current_vertex: T::V,
     start_edges: Option<(T::E, T::E)>,
     current_edges: Option<(T::E, T::E)>,
+
+    transform: T::Trans,
 }
 
 /// Some basic operations to build meshes.
 impl<'a, T: MeshType> PathBuilder<'a, T>
 where
     T::Mesh: MeshBuilder<T> + 'a,
-    T::VP: HasPosition<T::Vec, S = T::S>,
+    T::VP: HasPosition<T::Vec, S = T::S>
+        + Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
 {
     /// Create a new empty MeshPathBuilder.
     pub fn new(mesh: &'a mut T::Mesh) -> Self {
@@ -41,6 +45,7 @@ where
             current_vertex: IndexType::max(),
             start_edges: None,
             current_edges: None,
+            transform: T::Trans::identity(),
         }
     }
 
@@ -82,8 +87,43 @@ where
                 current_vertex: v,
                 start_edges: None,
                 current_edges: None,
+                transform: T::Trans::identity(),
             }
         }
+    }
+
+    /// Apply a transformation to the transformation applied to new vertices.
+    fn transform(&mut self, t: &T::Trans) -> &mut Self {
+        self.transform = self.transform * *t;
+        self
+    }
+
+    /// Reset the transformation applied to new vertices.
+    fn reset_transform(&mut self) -> &mut Self {
+        self.transform = T::Trans::identity();
+        self
+    }
+
+    /// Rotate the transformation applied to new vertices.
+    fn rotate(&mut self, _r: T::Rot) -> &mut Self {
+        todo!()
+    }
+
+    /// Translate the transformation applied to new vertices.
+    fn translate(&mut self, v: T::Vec) -> &mut Self {
+        self.transform = self.transform.with_translation(v);
+        self
+    }
+
+    /// Scale the transformation applied to new vertices.
+    fn scale(&mut self, v: T::Vec) -> &mut Self {
+        self.transform = self.transform.with_scale(v);
+        self
+    }
+
+    /// Return the current transformation applied to new vertices.
+    fn get_transform(&self) -> T::Trans {
+        self.transform
     }
 
     /// Create a new MeshPathBuilder starting at the target of the given
@@ -105,6 +145,7 @@ where
             current_vertex: start_vertex,
             start_edges,
             current_edges: start_edges,
+            transform: T::Trans::identity(),
         }
     }
 
@@ -215,8 +256,7 @@ where
             return self.start_vertex;
         }
 
-        let v = self.mesh().add_vertex(T::VP::from_pos(v));
-        return v;
+        self.add_transformed_pos(v)
     }
 
     /// Draws a straight line from the current vertex to a new vertex with the given position.
@@ -228,7 +268,8 @@ where
         T::EP: DefaultEdgePayload,
         T::VP: HasPosition<T::Vec, S = T::S>,
     {
-        let v = self.mesh().add_vertex(T::VP::from_pos(pos));
+        let w = self.transform.apply(pos);
+        let v = self.mesh().add_vertex(T::VP::from_pos(w));
         self.line_to(v);
         self
     }
@@ -239,6 +280,11 @@ where
         todo!()
     }
 
+    fn add_transformed_pos(&mut self, pos: T::Vec) -> T::V {
+        let w = self.transform.apply(pos);
+        self.mesh().add_vertex(T::VP::from_pos(w))
+    }
+
     /// Creates a new vertex at the given position and moves to it.
     /// Assumes the path is currently empty or closed to begin a new path.
     pub fn move_to_new(&mut self, pos: T::Vec) -> &mut Self {
@@ -246,7 +292,7 @@ where
         assert!(self.start_edges().is_none());
         assert!(self.current_vertex() == IndexType::max());
 
-        let v = self.mesh().add_vertex(T::VP::from_pos(pos));
+        let v = self.add_transformed_pos(pos);
         self.start_vertex = v;
         self.current_vertex = v;
         self.closed = false;
@@ -260,7 +306,8 @@ where
         T::Edge: HalfEdge<T>,
         T::Mesh: MeshHalfEdgeBuilder<T>,
     {
-        let v = self.mesh().add_vertex(vp);
+        let vp2 = vp.transformed(&self.transform);
+        let v = self.mesh().add_vertex(vp2);
         self.line_to_ex(v, ep0, ep1);
         self
     }
@@ -274,7 +321,7 @@ where
         T::Mesh: MeshHalfEdgeBuilder<T>,
         T::EP: DefaultEdgePayload,
     {
-        let v = self.mesh().add_vertex(T::VP::from_pos(end));
+        let v = self.add_transformed_pos(end);
         self.quad_to(control, v);
         self
     }
@@ -288,7 +335,7 @@ where
         T::Mesh: MeshHalfEdgeBuilder<T>,
         T::EP: DefaultEdgePayload,
     {
-        let v = self.mesh().add_vertex(T::VP::from_pos(end));
+        let v = self.add_transformed_pos(end);
         self.cubic_to(control1, control2, v);
         self
     }
@@ -301,7 +348,6 @@ where
         T::Mesh: MeshHalfEdgeBuilder<T>,
         T::EP: DefaultEdgePayload,
     {
-        // TODO: Avoid these requirements! Also, only take the position. Make a "line_ex" version that takes payloads.
         self.line_to_ex(v, Default::default(), Default::default())
     }
 
@@ -348,11 +394,12 @@ where
         T::Mesh: MeshHalfEdgeBuilder<T>,
         T::EP: DefaultEdgePayload,
     {
+        let ct = self.transform.apply(control);
         self.line_to(end);
         let (edge, _twin) = self.current_edges().unwrap();
         self.mesh()
             .edge_mut(edge)
-            .set_curve_type(CurvedEdgeType::QuadraticBezier(control));
+            .set_curve_type(CurvedEdgeType::QuadraticBezier(ct));
         self
     }
 
@@ -364,11 +411,13 @@ where
         T::Mesh: MeshHalfEdgeBuilder<T>,
         T::EP: DefaultEdgePayload,
     {
+        let ct1 = self.transform.apply(control1);
+        let ct2 = self.transform.apply(control2);
         self.line_to(end);
         let (edge, _twin) = self.current_edges().unwrap();
         self.mesh()
             .edge_mut(edge)
-            .set_curve_type(CurvedEdgeType::CubicBezier(control1, control2));
+            .set_curve_type(CurvedEdgeType::CubicBezier(ct1, ct2));
         self
     }
 }
