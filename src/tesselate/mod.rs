@@ -124,3 +124,55 @@ pub fn triangulate_face<T: MeshType>(
         }
     }
 }
+
+/*
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use super::*;
+    use crate::{
+        bevy::{Bevy2DPolygon, BevyMesh2d, BevyMesh3d, BevyMeshType3d32},
+        mesh::{MeshBasics, TransformableMesh},
+    };
+    use bevy::math::{Vec2, Vec3};
+
+    #[test]
+    fn test_edge_length() {
+        let svg = "<path d='M913.88 548.4c-66.14 35.43-141.83-7.68-141.83-7.68-112.76-53.91-246.31-55.82-246.31-55.82-34.09-2.34-25.47-17.51-20.69-25.88 0.73-1.27 1.74-2.36 2.59-3.56a187.06 187.06 0 0 0 34.17-108.08c0-103.78-84.13-187.92-187.92-187.92C251 159.47 167.37 242.24 166 344.87c-1 3.81-42.28 9.32-73-5.06-40-18.71-25.08 73.65 42.35 95.45l-2.31-0.1c-28.06-1.52-30.8 7.68-30.8 7.68s-16.14 29.75 83.13 38.37c31.39 2.72 35.71 8.11 42 16.64 11.92 16.14 3.57 39.25-12.15 59-44.53 55.77-71.84 180.68 49.78 270.85 103.12 76.47 377.65 79.95 497.37-15.13 108-85.76 156.72-170.47 185.79-241.14 3.9-9.54 31.84-58.43-34.28-23.03z' fill='#DFEDFF'/>";
+        let mut m2d = BevyMesh2d::from_svg(svg);
+        let mesh = m2d
+            .scale(&Vec2::splat(-0.004))
+            .translate(&Vec2::new(2.0, 2.0))
+            .to_3d(0.001);
+
+        let mut meta = TesselationMeta::default();
+        let mut indices = Vec::new();
+        let mut tri = Triangulation::new(&mut indices);
+        triangulate_face::<BevyMeshType3d32>(
+            mesh.face(0),
+            &mesh,
+            &mut tri,
+            TriangulationAlgorithm::MinWeight,
+            &mut meta,
+        );
+        let vec2s = mesh.face(0).vec2s(&mesh);
+        let vec_hm: HashMap<u32, Vec2> = vec2s.iter().map(|v| (v.index, v.vec)).collect();
+        tri.verify_full::<Vec2, Bevy2DPolygon>(&vec2s);
+        let w = tri.total_edge_weight(&vec_hm);
+
+        let mut indices3 = Vec::new();
+        let mut tri3 = Triangulation::new(&mut indices3);
+        delaunay_triangulation::<BevyMeshType3d32>(mesh.face(0), &mesh, &mut tri3);
+        let w3 = tri3.total_edge_weight(&vec_hm);
+
+        let mut indices4 = Vec::new();
+        let mut tri4 = Triangulation::new(&mut indices4);
+        let mut meta = TesselationMeta::default();
+        sweep_line::<BevyMeshType3d32>(mesh.face(0), &mesh, &mut tri4, &mut meta);
+        let w4 = tri4.total_edge_weight(&vec_hm);
+
+        assert!(false, "Edge w: {} delaunay: {} Sweep: {}", w, w3, w4);
+    }
+}
+*/

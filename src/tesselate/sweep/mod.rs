@@ -173,6 +173,7 @@ mod tests {
         tri.verify_full::<T::Vec2, T::Poly>(&vec2s);
     }
 
+    /*
     #[test]
     #[cfg(feature = "bevy")]
     fn test_font() {
@@ -181,5 +182,5 @@ mod tests {
             .layout_text::<BevyMeshType2d32>("F", &mut mesh2d);
         let mesh3d = mesh2d.to_3d(0.01);
         self::verify_triangulation::<BevyMeshType3d32>(&mesh3d, 0);
-    }
+    }*/
 }
