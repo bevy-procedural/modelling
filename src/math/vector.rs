@@ -1,4 +1,4 @@
-use super::{kahan_summation, HasZero, Scalar, TransformTrait, Vector2D, Vector3D, Vector4D};
+use super::{kahan_summation, HasZero, Scalar, TransformTrait, Vector2D};
 
 /// Trait for coordinates in n-dimensional space.
 pub trait Vector<S: Scalar, const D: usize>:
@@ -9,9 +9,9 @@ pub trait Vector<S: Scalar, const D: usize>:
     + std::ops::AddAssign
     + std::ops::Sub<Output = Self>
     + std::ops::SubAssign
-    + std::ops::Mul<Self, Output = Self>
+    //+ std::ops::Mul<Self, Output = Self>
     + std::ops::Mul<S, Output = Self>
-    + std::ops::MulAssign
+    //+ std::ops::MulAssign
     + std::ops::Div<S, Output = Self>
     + std::ops::Neg<Output = Self>
     + HasZero
@@ -19,12 +19,6 @@ pub trait Vector<S: Scalar, const D: usize>:
 {
     /// The associated 2d vector type
     type Vec2: Vector2D<S = S>;
-
-    /// The associated 3d vector type
-    type Vec3: Vector3D<S = S>;
-
-    /// The associated 4d vector type
-    type Vec4: Vector4D<S = S>;
 
     /// The data structure used for linear transformations of this vector.
     type Trans: TransformTrait<S, D, Vec = Self>;
@@ -61,11 +55,6 @@ pub trait Vector<S: Scalar, const D: usize>:
         <Self::Vec2 as Vector2D>::new(self.x(), self.y())
     }
 
-    /// Returns the coordinates as a tuple.
-    fn vec3(&self) -> Self::Vec3 {
-        <Self::Vec3 as Vector3D>::new(self.x(), self.y(), self.z())
-    }
-
     /// Create a vector from one coordinate
     fn from_x(x: S) -> Self;
 
@@ -92,8 +81,29 @@ pub trait Vector<S: Scalar, const D: usize>:
         sum / S::from_usize(count)
     }
 
+    /// Returns the angle between two vectors.
+    fn angle_between(&self, other: Self) -> S {
+        let len_self = self.length();
+        let len_other = other.length();
+
+        if len_self.is_zero() || len_other.is_zero() {
+            // Angle is undefined for zero-length vectors; handle as needed
+            return S::ZERO;
+        }
+
+        let cos_theta = self.dot(&other) / (len_self * len_other);
+
+        // Clamp cos_theta to [-1, 1] to handle numerical inaccuracies
+        cos_theta.clamp(-S::ONE, S::ONE).acos()
+    }
+
     /// Check if two vectors are approximately equal.
     fn is_about(&self, other: &Self, epsilon: S) -> bool;
+
+    /// Returns the zero vector.
+    fn zero() -> Self {
+        Self::splat(S::ZERO)
+    }
 }
 
 /// Additional methods for vector iterators.

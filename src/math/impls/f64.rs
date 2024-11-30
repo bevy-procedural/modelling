@@ -1,14 +1,11 @@
 //! Plain f64 implementation of the mathematical traits.
 
-use crate::math::{HasZero, Rotator, Scalar, Vector2D};
-
-impl HasZero for f64 {
-    const ZERO: Self = 0.0;
-}
+use crate::math::{Rotator, Scalar, Vector2D};
 
 impl Scalar for f64 {
     const PI: Self = std::f64::consts::PI;
     const EPS: Self = std::f64::EPSILON;
+    const ZERO: Self = 0.0;
     const ONE: Self = 1.0;
     const TWO: Self = 2.0;
     const THREE: Self = 3.0;
@@ -24,7 +21,7 @@ impl Scalar for f64 {
     fn is_zero(self) -> bool {
         self == 0.0
     }
-    
+
     #[inline(always)]
     fn is_positive(self) -> bool {
         self.is_sign_positive()

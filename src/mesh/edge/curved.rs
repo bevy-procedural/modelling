@@ -1,5 +1,5 @@
 use crate::{
-    math::{HasZero, Scalar, Transformable, Vector},
+    math::{Scalar, Transformable, Vector},
     mesh::{EdgeBasics, EuclideanMeshType, VertexBasics},
 };
 

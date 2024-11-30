@@ -1,6 +1,6 @@
 use super::{ChainDirection, MonotoneTriangulator};
 use crate::{
-    math::{HasZero, IndexType, Vector2D},
+    math::{IndexType, Vector2D, Scalar},
     mesh::{IndexedVertex2D, Triangulation},
 };
 

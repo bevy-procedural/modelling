@@ -1,15 +1,14 @@
 use crate::math::{HasZero, Scalar, TransformTrait, Transformable, Vector, Vector2D};
-use bevy::math::{Affine2, Vec2, Vec3, Vec4};
-
-impl HasZero for Vec2 {
-    const ZERO: Self = Vec2::ZERO;
-}
+use bevy::math::{Affine2, Vec2};
 
 impl Vector<f32, 2> for Vec2 {
     type Vec2 = Vec2;
-    type Vec3 = Vec3;
-    type Vec4 = Vec4;
     type Trans = Affine2;
+
+    #[inline(always)]
+    fn angle_between(&self, other: Self) -> f32 {
+        Vec2::angle_between(*self, other)
+    }
 
     #[inline(always)]
     fn distance(&self, other: &Self) -> f32 {
@@ -88,6 +87,18 @@ impl Vector<f32, 2> for Vec2 {
     }
 }
 
+impl HasZero for Vec2 {
+    #[inline(always)]
+    fn zero() -> Self {
+        Vec2::ZERO
+    }
+
+    #[inline(always)]
+    fn is_zero(&self) -> bool {
+        *self == Vec2::ZERO
+    }
+}
+
 impl Vector2D for Vec2 {
     type S = f32;
 
@@ -157,6 +168,11 @@ impl TransformTrait<f32, 2> for Affine2 {
     #[inline(always)]
     fn apply_vec(&self, v: Vec2) -> Vec2 {
         bevy::math::Affine2::transform_vector2(self, v)
+    }
+
+    #[inline(always)]
+    fn chain(&self, other: &Self) -> Self {
+        *self * *other
     }
 }
 

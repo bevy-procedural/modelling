@@ -1,5 +1,5 @@
 use crate::{
-    math::{HasPosition, HasZero, Scalar, TransformTrait, Vector},
+    math::{HasPosition, Scalar, TransformTrait, Vector},
     mesh::{
         DefaultEdgePayload, DefaultFacePayload, Face3d, HalfEdge, MeshType3D, MeshTypeHalfEdge,
         VertexPayload,

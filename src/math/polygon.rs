@@ -1,4 +1,4 @@
-use super::{HasZero, LineSegment2D, Scalar, Vector2D, VectorIteratorExt};
+use super::{LineSegment2D, Scalar, Vector2D, VectorIteratorExt};
 
 /// Trait for a polygon in n-dimensional space.
 pub trait Polygon<Vec2: Vector2D>: Clone + PartialEq + std::fmt::Debug + 'static {

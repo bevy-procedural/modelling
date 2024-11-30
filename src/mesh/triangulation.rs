@@ -1,6 +1,4 @@
-use crate::math::{
-    HasZero, IndexType, LineSegment2D, Polygon, Scalar, ScalarIteratorExt, Vector2D,
-};
+use crate::math::{IndexType, LineSegment2D, Polygon, Scalar, ScalarIteratorExt, Vector2D};
 use std::collections::{HashMap, HashSet};
 
 /// A vertex with its index in the global structure

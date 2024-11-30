@@ -7,7 +7,7 @@ pub trait Rotator<V>: Clone {}
 /// collisions with the `Transform` struct in Bevy.
 
 pub trait TransformTrait<S: Scalar, const D: usize>:
-    Clone + Copy + Default + std::fmt::Debug + std::ops::Mul<Self, Output = Self> + 'static
+    Clone + Copy + Default + std::fmt::Debug + 'static
 {
     /// The vector type used in the transformatiom.
     type Vec: Vector<S, D>;
@@ -30,7 +30,7 @@ pub trait TransformTrait<S: Scalar, const D: usize>:
     /// Constructs a transform from a scale.
     fn from_scale(v: Self::Vec) -> Self;
 
-    /// Adds scale.
+    /// Adds scale (everything is scaled - also previous translations).
     fn with_scale(&self, v: Self::Vec) -> Self;
 
     /// Adds translation.
@@ -41,4 +41,7 @@ pub trait TransformTrait<S: Scalar, const D: usize>:
 
     /// Applies the rotation/scale/sheer to a vector.
     fn apply_vec(&self, v: Self::Vec) -> Self::Vec;
+
+    /// Chains two transformations.
+    fn chain(&self, other: &Self) -> Self;
 }

@@ -1,10 +1,6 @@
-/// A trait for types that have a zero value.
-pub trait HasZero {
-    /// A value of zero.
-    const ZERO: Self;
+use super::HasZero;
 
-    // TODO: remove this. Switch to num_traits
-}
+/// A trait for types that have a zero value.
 
 /// To be used as a scalar in n-dimensional space.
 pub trait Scalar:
@@ -26,7 +22,6 @@ pub trait Scalar:
     + num_traits::identities::Zero
     + num_traits::One
     + From<f32>
-    + HasZero
     + 'static
 {
     /// The value of Ludolph's number.
@@ -34,6 +29,9 @@ pub trait Scalar:
 
     /// The value of the machine epsilon.
     const EPS: Self;
+
+    /// A value of zero.
+    const ZERO: Self;
 
     /// A value of one.
     const ONE: Self;
@@ -119,6 +117,11 @@ pub trait Scalar:
     /// Whether the scalar is NaN.
     fn is_nan(self) -> bool;
 
+    /// linearly interpolate between two scalars.
+    fn lerp(&self, other: Self, t: Self) -> Self {
+        *self + (other - *self) * t
+    }
+
     /// Returns the determinant of a 3x3 matrix.
     fn det3(
         a: Self,
@@ -168,7 +171,7 @@ pub trait ScalarIteratorExt<S: Scalar>: Iterator<Item = S> {
     fn stable_sum(self) -> Self::Item
     where
         Self: Sized,
-        Self::Item: std::ops::Add<Output = Self::Item> + HasZero,
+        Self::Item: std::ops::Add<Output = Self::Item>,
     {
         Scalar::stable_sum(self)
     }
@@ -177,7 +180,7 @@ pub trait ScalarIteratorExt<S: Scalar>: Iterator<Item = S> {
     fn stable_mean(self) -> Self::Item
     where
         Self: Sized,
-        Self::Item: std::ops::Add<Output = Self::Item> + HasZero,
+        Self::Item: std::ops::Add<Output = Self::Item>,
     {
         Scalar::stable_mean(self)
     }
@@ -233,13 +236,13 @@ pub fn neumaier_summation<S: Scalar, I: Iterator<Item = S>>(iter: I) -> (S, usiz
 /// This is a more numerically stable way to sum up a list of scalars.
 /// It can be overloaded with a very broad range of floating point types including most vectors.
 pub fn kahan_summation<
-    X: std::ops::Add<Output = X> + HasZero + std::ops::Sub<Output = X> + Copy,
+    X: std::ops::Add<Output = X> + std::ops::Sub<Output = X> + Copy + HasZero,
     I: Iterator<Item = X>,
 >(
     iter: I,
 ) -> (X, usize) {
-    let mut sum = X::ZERO;
-    let mut c = X::ZERO;
+    let mut sum = X::zero();
+    let mut c = X::zero();
     let mut count = 0;
     for value in iter {
         count += 1;

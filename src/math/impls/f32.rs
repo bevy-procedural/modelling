@@ -1,14 +1,11 @@
 //! Plain f32 implementation of the mathematical traits.
 
-use crate::math::{HasZero, Rotator, Scalar, Vector2D};
-
-impl HasZero for f32 {
-    const ZERO: Self = 0.0;
-}
+use crate::math::{Rotator, Scalar, Vector2D};
 
 impl Scalar for f32 {
     const PI: Self = std::f32::consts::PI;
     const EPS: Self = std::f32::EPSILON;
+    const ZERO: Self = 0.0;
     const ONE: Self = 1.0;
     const TWO: Self = 2.0;
     const THREE: Self = 3.0;

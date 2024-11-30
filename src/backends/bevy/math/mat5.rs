@@ -1,23 +1,29 @@
 use bevy::math::Vec4;
 
-use crate::math::{HasZero, Rotator, Scalar, TransformTrait, Vector4D};
+use crate::math::{Rotator, Scalar, TransformTrait, Vector4D};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Mat5<S: Scalar> {
     data: [S; 25],
 }
 
-impl<S: Scalar> HasZero for Mat5<S> {
-    const ZERO: Self = Mat5 {
-        data: [S::ZERO; 25],
-    };
+impl<S: Scalar> num_traits::Zero for Mat5<S> {
+    fn zero() -> Self {
+        Mat5 {
+            data: [S::ZERO; 25],
+        }
+    }
+
+    fn is_zero(&self) -> bool {
+        self.data.iter().all(|&x| x.is_zero())
+    }
 }
 
 impl<S: Scalar> std::ops::Mul<Mat5<S>> for Mat5<S> {
     type Output = Mat5<S>;
 
     fn mul(self, rhs: Mat5<S>) -> Mat5<S> {
-        let mut m = Mat5::ZERO;
+        let mut m: Mat5<S> = num_traits::Zero::zero();
         for i in 0..5 {
             for j in 0..5 {
                 for k in 0..5 {
@@ -33,7 +39,7 @@ impl<S: Scalar> std::ops::Add<Mat5<S>> for Mat5<S> {
     type Output = Mat5<S>;
 
     fn add(self, rhs: Mat5<S>) -> Mat5<S> {
-        let mut m = Mat5::ZERO;
+        let mut m: Mat5<S> = num_traits::Zero::zero();
         for i in 0..25 {
             m.data[i] = self.data[i] + rhs.data[i];
         }
@@ -166,5 +172,10 @@ impl TransformTrait<f32, 4> for Mat5<f32> {
             }
         }
         res
+    }
+
+    #[inline(always)]
+    fn chain(&self, other: &Self) -> Self {
+        *self * *other
     }
 }

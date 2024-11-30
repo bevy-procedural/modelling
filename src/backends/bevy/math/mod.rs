@@ -1,4 +1,4 @@
-//! Bevy f32 implementation of the mathematical traits.
+//! Bevy/GLAM f32 implementation of the mathematical traits.
 
 mod mat5;
 mod polygon;

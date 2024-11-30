@@ -1,14 +1,17 @@
 //! Bevy f32 implementation of the mathematical traits.
 
-/*
-mod mat5;
-mod polygon;*/
-mod vec2;
-mod vec_n;
+mod polygon;
+mod rotate;
 mod transform_n;
-/*mod vec3;
+mod vec2;
+mod vec3;
 mod vec4;
-mod quat;
+mod vec_n;
 
 pub use polygon::*;
-*/
+pub use rotate::*;
+pub use transform_n::*;
+pub use vec2::*;
+pub use vec3::*;
+pub use vec4::*;
+pub use vec_n::*;

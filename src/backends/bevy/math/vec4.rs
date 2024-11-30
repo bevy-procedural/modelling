@@ -1,15 +1,21 @@
 use super::mat5::Mat5;
 use crate::math::{HasZero, Scalar, Vector, Vector4D};
-use bevy::math::{Vec2, Vec3, Vec4};
+use bevy::math::{Vec2, Vec4};
 
 impl HasZero for Vec4 {
-    const ZERO: Self = Vec4::ZERO;
+    #[inline(always)]
+    fn zero() -> Self {
+        Vec4::ZERO
+    }
+
+    #[inline(always)]
+    fn is_zero(&self) -> bool {
+        *self == Vec4::ZERO
+    }
 }
 
 impl Vector<f32, 4> for Vec4 {
     type Vec2 = Vec2;
-    type Vec3 = Vec3;
-    type Vec4 = Vec4;
     type Trans = Mat5<f32>;
 
     #[inline(always)]

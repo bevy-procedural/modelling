@@ -97,7 +97,7 @@ where
         T: EuclideanMeshType<D, Trans = Transform>,
         Transform: TransformTrait<T::S, D, Vec = T::Vec>,
     {
-        self.transform = self.transform * *t;
+        self.transform = self.transform.chain(t);
         self
     }
 

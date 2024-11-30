@@ -1,94 +1,28 @@
-use crate::math::{HasZero, Scalar, TransformTrait, Transformable, Vector, Vector2D};
+use super::VecN;
+use crate::math::{Scalar, Vector, Vector2D};
 
-type Vec2<T: Scalar> = super::vec_n::VecN<2, T>;
+/// A 2D vector.
+pub type Vec2<S> = VecN<S, 2>;
 
-impl<T: Scalar> Vector2D for Vec2<T> {
-    type S = T;
+impl<S: Scalar> Vector2D for Vec2<S> {
+    type S = S;
 
     #[inline(always)]
-    fn new(x: T, y: T) -> Self {
-        Self::new([x, y])
+    fn new(x: S, y: S) -> Self {
+        Self::from([x, y])
     }
 
     /// Magnitude of the vector.
-    fn magnitude(&self) -> T {
+    fn magnitude(&self) -> S {
         self.length()
     }
 
     /// Angle between two vectors.
-    fn angle(&self, a: Self, b: Self) -> T {
+    fn angle(&self, a: Self, b: Self) -> S {
         (a - *self).angle_between(b - *self)
     }
 
-    fn perp_dot(&self, other: &Self) -> T {
+    fn perp_dot(&self, other: &Self) -> S {
         self.x() * other.y() - self.y() * other.x()
     }
 }
-
-/*
-impl TransformTrait for Affine2 {
-    type S = f32;
-    type Vec = Vec2;
-    type Rot = f32;
-
-    #[inline(always)]
-    fn identity() -> Self {
-        Affine2::IDENTITY
-    }
-
-    fn from_rotation(angle: f32) -> Self {
-        bevy::math::Affine2::from_angle(angle)
-    }
-
-    #[inline(always)]
-    fn from_rotation_arc(from: Vec2, to: Vec2) -> Self {
-        bevy::math::Affine2::from_angle(from.angle_between(to))
-    }
-
-    #[inline(always)]
-    fn from_translation(v: Vec2) -> Self {
-        bevy::math::Affine2::from_translation(v)
-    }
-
-    #[inline(always)]
-    fn from_scale(v: Vec2) -> Self {
-        bevy::math::Affine2::from_scale(v)
-    }
-
-    #[inline(always)]
-    fn with_scale(&self, scale: Self::Vec) -> Self {
-        bevy::math::Affine2::from_scale(scale) * *self
-    }
-
-    #[inline(always)]
-    fn with_translation(&self, v: Self::Vec) -> Self {
-        bevy::math::Affine2::from_translation(v) * *self
-    }
-
-    #[inline(always)]
-    fn apply(&self, v: Vec2) -> Vec2 {
-        bevy::math::Affine2::transform_point2(self, v)
-    }
-
-    #[inline(always)]
-    fn apply_vec(&self, v: Vec2) -> Vec2 {
-        bevy::math::Affine2::transform_vector2(self, v)
-    }
-}
-
-impl Transformable for Vec2 {
-    type S = f32;
-    type Rot = f32;
-    type Trans = Affine2;
-    type Vec = Vec2;
-    fn transform(&mut self, t: &Self::Trans) -> &mut Self {
-        *self = t.apply(*self);
-        self
-    }
-
-    fn lerp(&mut self, other: &Self, t: Self::S) -> &mut Self {
-        *self = bevy::math::Vec2::lerp(*self, *other, t);
-        self
-    }
-}
-*/

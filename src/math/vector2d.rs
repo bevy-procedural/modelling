@@ -26,7 +26,7 @@ pub trait Vector2D: Vector<Self::S, 2> {
     /// Magnitude of the vector.
     fn magnitude(&self) -> Self::S;
 
-    /// Angle between two vectors.
+    /// Angle between the segment from self to a and the segment from self to b.
     fn angle(&self, a: Self, b: Self) -> Self::S;
 
     /// Returns the barycentric sign of a point in a triangle.
