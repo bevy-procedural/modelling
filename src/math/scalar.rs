@@ -3,7 +3,7 @@ pub trait HasZero {
     /// A value of zero.
     const ZERO: Self;
 
-    // TODO: remove this
+    // TODO: remove this. Switch to num_traits
 }
 
 /// To be used as a scalar in n-dimensional space.
@@ -23,6 +23,8 @@ pub trait Scalar:
     + std::ops::Sub<Output = Self>
     + std::ops::SubAssign
     + std::ops::Neg<Output = Self>
+    + num_traits::identities::Zero
+    + num_traits::One
     + From<f32>
     + HasZero
     + 'static

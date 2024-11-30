@@ -25,15 +25,11 @@ pub use topology::*;
 pub use transform::*;
 pub use triangulate::*;
 
-
 #[cfg(feature = "fonts")]
 mod fonts;
 
 #[cfg(feature = "fonts")]
 pub use fonts::*;
-
-#[cfg(feature = "svg")]
-mod svg;
 
 /// The `MeshTrait` doesn't assume any specific data structure or topology,
 /// i.e., could be a manifold half-edge mesh, a topological directed graph, etc.

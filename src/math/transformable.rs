@@ -1,15 +1,15 @@
 use super::{Rotator, Scalar, TransformTrait, Vector};
 
 /// A trait that defines how a vertex payload can be linearly transformed.
-pub trait Transformable: Sized + Clone {
+pub trait Transformable<const D: usize>: Sized + Clone {
     /// The transformation type used in the payload.
-    type Trans: TransformTrait<S = Self::S, Vec = Self::Vec, Rot = Self::Rot>;
+    type Trans: TransformTrait<Self::S, D, Vec = Self::Vec, Rot = Self::Rot>;
 
     /// The rotation type used in the payload.
     type Rot: Rotator<Self::Vec>;
 
     /// The vector type used in the payload.
-    type Vec: Vector<Self::S, Trans = Self::Trans>;
+    type Vec: Vector<Self::S, D, Trans = Self::Trans>;
 
     /// The scalar type of the coordinates used in the payload. Mainly to choose between f32 and f64. But could also work with integers etc...
     type S: Scalar;

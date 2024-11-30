@@ -5,16 +5,11 @@ impl HasZero for Vec2 {
     const ZERO: Self = Vec2::ZERO;
 }
 
-impl Vector<f32> for Vec2 {
+impl Vector<f32, 2> for Vec2 {
     type Vec2 = Vec2;
     type Vec3 = Vec3;
     type Vec4 = Vec4;
     type Trans = Affine2;
-
-    #[inline(always)]
-    fn dimensions() -> usize {
-        2
-    }
 
     #[inline(always)]
     fn distance(&self, other: &Self) -> f32 {

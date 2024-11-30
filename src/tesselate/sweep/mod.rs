@@ -12,8 +12,8 @@ pub use vertex_type::VertexType;
 
 use super::TesselationMeta;
 use crate::{
-    math::{HasPosition, IndexType, Vector3D},
-    mesh::{Face3d, FaceBasics, IndexedVertex2D, MeshType, Triangulation},
+    math::IndexType,
+    mesh::{Face3d, FaceBasics, IndexedVertex2D, MeshType3D, Triangulation},
 };
 
 /// Meta information for debuggin the sweep algorithm
@@ -50,16 +50,12 @@ impl<V: IndexType> SweepMeta<V> {
 }
 
 /// Uses the sweep line triangulation
-pub fn sweep_line<T: MeshType>(
+pub fn sweep_line<T: MeshType3D>(
     face: &T::Face,
     mesh: &T::Mesh,
     indices: &mut Triangulation<T::V>,
     meta: &mut TesselationMeta<T::V>,
-) where
-    T::Vec: Vector3D<S = T::S>,
-    T::VP: HasPosition<T::Vec, S = T::S>,
-    T::Face: Face3d<T>,
-{
+) {
     debug_assert!(face.may_be_curved() || face.is_planar2(mesh));
 
     // TODO: Improve performance by directly using the nd-vertices instead of converting to 2d
@@ -83,16 +79,12 @@ pub fn sweep_line<T: MeshType>(
 ///
 /// For the quality of the approximation it is generally beneficial to rotate the mesh
 /// such that the mesh can be decomposed in a large number of y-monotone components.
-pub fn sweep_dynamic<T: MeshType>(
+pub fn sweep_dynamic<T: MeshType3D>(
     face: &T::Face,
     mesh: &T::Mesh,
     indices: &mut Triangulation<T::V>,
     _k: usize,
-) where
-    T::Vec: Vector3D<S = T::S>,
-    T::VP: HasPosition<T::Vec, S = T::S>,
-    T::Face: Face3d<T>,
-{
+) {
     debug_assert!(face.may_be_curved() || face.is_planar2(mesh));
 
     // TODO: Improve performance by directly using the nd-vertices instead of converting to 2d
@@ -102,21 +94,19 @@ pub fn sweep_dynamic<T: MeshType>(
         .collect();
 
     let mut sweep = SweepMeta::default();
-    sweep_line_triangulation::<DynamicMonoTriangulator<T::V, T::Vec2, T::Poly>>(indices, &vec2s, &mut sweep);
+    sweep_line_triangulation::<DynamicMonoTriangulator<T::V, T::Vec2, T::Poly>>(
+        indices, &vec2s, &mut sweep,
+    );
 }
 
 /// A variant of the sweep-line algorithm that greedily approximates the min-weight triangulation for each
 /// monotone sub-polygon, leading to an overall O(n log n) time complexity.
-pub fn sweep_greedy<T: MeshType>(
+pub fn sweep_greedy<T: MeshType3D>(
     _face: &T::Face,
     _mesh: &T::Mesh,
     _indices: &mut Triangulation<T::V>,
     _k: usize,
-) where
-    T::Vec: Vector3D<S = T::S>,
-    T::VP: HasPosition<T::Vec, S = T::S>,
-    T::Face: Face3d<T>,
-{
+) {
     // TODO: Use the fact that we can greedily approximate the min-weight triangulation of a x-monotone polygon in O(n log n) time:
 
     /*
@@ -146,20 +136,12 @@ pub fn sweep_greedy<T: MeshType>(
     todo!("sweep greedy");
 }
 
-
-
 #[cfg(test)]
 mod tests {
-    
 
     use crate::prelude::*;
 
-    fn verify_triangulation<T: MeshType>(mesh: &T::Mesh, f: T::F)
-    where
-        T::Face: Face3d<T>,
-        T::Vec: Vector3D<S = T::S>,
-        T::VP: HasPosition<T::Vec, S = T::S>,
-    {
+    fn verify_triangulation<T: MeshType3D>(mesh: &T::Mesh, f: T::F) {
         let face = mesh.face(f);
         let vec2s = face.vec2s(mesh);
         assert!(

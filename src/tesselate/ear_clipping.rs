@@ -1,6 +1,6 @@
 use crate::{
-    math::{HasPosition, IndexType, Scalar, Vector2D, Vector3D},
-    mesh::{Face3d, FaceBasics, MeshType, Triangulation},
+    math::{IndexType, Scalar, Vector2D},
+    mesh::{Face3d, FaceBasics, MeshType3D, Triangulation},
 };
 
 /// Use ear-clipping to triangulate the face.
@@ -8,16 +8,12 @@ use crate::{
 ///
 /// Optionally randomize the start position to search the next ear.
 /// This is slightly slower but can generate more versatile results.
-pub fn ear_clipping<T: MeshType>(
+pub fn ear_clipping<T: MeshType3D>(
     face: &T::Face,
     mesh: &T::Mesh,
     indices: &mut Triangulation<T::V>,
     randomize: bool,
-) where
-    T::Vec: Vector3D<S = T::S>,
-    T::VP: HasPosition<T::Vec, S = T::S>,
-    T::Face: Face3d<T>,
-{
+) {
     debug_assert!(face.may_be_curved() || face.is_planar2(mesh));
     debug_assert!(face.is_simple(mesh));
 
@@ -107,7 +103,7 @@ pub fn ear_clipping_direct<Vec2: Vector2D, V: IndexType>(
 #[cfg(feature = "bevy")]
 mod tests {
     use super::*;
-    use crate::prelude::{*, bevy::*};
+    use crate::prelude::{bevy::*, *};
     use bevy::math::{Vec2, Vec3};
 
     fn verify_triangulation(vec2s: &Vec<IndexedVertex2D<u32, Vec2>>) {

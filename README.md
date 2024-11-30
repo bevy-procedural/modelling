@@ -159,7 +159,7 @@ We are currently working on some tutorials for the most important features.
 
     -   [x] Bevy
     -   [ ] wgpu
-    -   [x] native/headless
+    -   [x] nalgebra (for use without rendering)
     -   [x] SVG import
     -   [ ] STL import/export
     -   [ ] OBJ import/export

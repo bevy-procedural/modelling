@@ -1,21 +1,23 @@
 use super::{HasPosition, VertexBasics};
 use crate::{
     math::{Scalar, Vector, Vector3D},
-    mesh::{MeshBasics, MeshType},
+    mesh::{EuclideanMeshType, MeshBasics, MeshType},
 };
 
 /// A trait that defines how vertex interpolators should behave.
-/// As you might expect, vertex interpolators are used to interpolate vertices resp. their positions.
+/// They interpolate vertices resp. their positions.
 pub trait VertexInterpolator<const N: usize, T: MeshType> {
     /// Interpolates the vertex positions based on the given vertices.
     fn call(&self, mesh: &T::Mesh, vertices: [(usize, T::V); N]) -> T::VP;
 }
 
 /// Vertex interpolator that performs linear interpolation.
-pub struct LinearVertexInterpolator {}
-impl<T: MeshType> VertexInterpolator<3, T> for LinearVertexInterpolator
+pub struct LinearVertexInterpolator<const D: usize> {}
+
+impl<const D: usize, T: EuclideanMeshType<D>> VertexInterpolator<3, T>
+    for LinearVertexInterpolator<D>
 where
-    T::VP: HasPosition<T::Vec, S = T::S>,
+    T::VP: HasPosition<D, T::Vec, S = T::S>,
 {
     /// Subdivides by linear interpolation of the positions of the vertices.
     fn call(&self, mesh: &T::Mesh, [(i, vi), (j, vj), (k, vk)]: [(usize, T::V); 3]) -> T::VP {
@@ -30,12 +32,12 @@ where
 }
 
 /// Vertex interpolator that performs spherical linear interpolation (slerp).
-pub struct SlerpVertexInterpolator<T: MeshType> {
+pub struct SlerpVertexInterpolator<const D: usize, T: EuclideanMeshType<D>> {
     center: T::Vec,
     radius: T::S,
 }
 
-impl<T: MeshType> SlerpVertexInterpolator<T> {
+impl<const D: usize, T: EuclideanMeshType<D>> SlerpVertexInterpolator<D, T> {
     /// Creates a new SlerpVertexInterpolator with the given center and radius.
     /// Theoretically the radius could be inferred from the vertices, but to
     /// enforce a consistent radius and improve numerical stability, you should
@@ -45,9 +47,9 @@ impl<T: MeshType> SlerpVertexInterpolator<T> {
     }
 }
 
-impl<T: MeshType> VertexInterpolator<3, T> for SlerpVertexInterpolator<T>
+impl<const D: usize, T: EuclideanMeshType<D>> VertexInterpolator<3, T>
+    for SlerpVertexInterpolator<D, T>
 where
-    T::VP: HasPosition<T::Vec, S = T::S>,
     T::Vec: Vector3D<S = T::S>,
 {
     /// Subdivides by linear interpolation of the positions of the vertices.

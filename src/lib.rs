@@ -26,7 +26,7 @@ pub mod prelude {
 #[cfg(test)]
 #[cfg(feature = "bevy")]
 mod tests {
-    use crate::prelude::{*, bevy::*};
+    use crate::prelude::{bevy::*, *};
 
     #[test]
     fn test_library() {

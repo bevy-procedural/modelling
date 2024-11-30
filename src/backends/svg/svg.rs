@@ -1,15 +1,14 @@
-use super::{MeshHalfEdgeBuilder, MeshType, PathBuilder};
 use crate::{
-    math::{HasPosition, Transformable, Vector},
-    mesh::{CurvedEdge, DefaultEdgePayload, DefaultFacePayload, HalfEdge},
+    math::Vector,
+    mesh::{
+        CurvedEdge, DefaultEdgePayload, DefaultFacePayload, EuclideanMeshType, MeshTypeHalfEdge,
+        PathBuilder,
+    },
 };
 
-fn import_group<T: MeshType>(mesh: &mut T::Mesh, group: &usvg::Group)
+fn import_group<T: EuclideanMeshType<2> + MeshTypeHalfEdge>(mesh: &mut T::Mesh, group: &usvg::Group)
 where
-    T::Edge: CurvedEdge<T> + HalfEdge<T>,
-    T::Mesh: MeshHalfEdgeBuilder<T>,
-    T::VP: HasPosition<T::Vec, S = T::S>
-        + Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
+    T::Edge: CurvedEdge<2, T>,
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
 {
@@ -33,12 +32,9 @@ where
     }
 }
 
-fn import_path<T: MeshType>(mesh: &mut T::Mesh, path: &usvg::Path)
+fn import_path<T: EuclideanMeshType<2> + MeshTypeHalfEdge>(mesh: &mut T::Mesh, path: &usvg::Path)
 where
-    T::Edge: CurvedEdge<T> + HalfEdge<T>,
-    T::Mesh: MeshHalfEdgeBuilder<T>,
-    T::VP: HasPosition<T::Vec, S = T::S>
-        + Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
+    T::Edge: CurvedEdge<2, T>,
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
 {
@@ -53,7 +49,7 @@ where
 
     let v = |p: usvg::tiny_skia_path::Point| T::Vec::from_xy(T::S::from(p.x), T::S::from(p.y));
 
-    let mut pb = PathBuilder::<T>::new(mesh);
+    let mut pb = PathBuilder::<T, T::Trans>::new(mesh);
 
     let mut is_first = true;
     for s in path.data().segments() {
@@ -88,14 +84,11 @@ where
     }
 }
 
-pub(crate) fn import_svg<T: MeshType>(mesh: &mut T::Mesh, svg: &str)
+pub(crate) fn import_svg<T: EuclideanMeshType<2> + MeshTypeHalfEdge>(mesh: &mut T::Mesh, svg: &str)
 where
-    T::Edge: CurvedEdge<T> + HalfEdge<T>,
-    T::Mesh: MeshHalfEdgeBuilder<T>,
-    T::VP: HasPosition<T::Vec, S = T::S>
-        + Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
-    T::FP: DefaultFacePayload,
+    T::Edge: CurvedEdge<2, T>,
     T::EP: DefaultEdgePayload,
+    T::FP: DefaultFacePayload,
 {
     let res = usvg::Tree::from_str(&svg, &usvg::Options::default());
     if let Err(e) = res {

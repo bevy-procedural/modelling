@@ -392,8 +392,11 @@ impl<'a, 'b, MT: MonotoneTriangulator> SweepContext<'a, 'b, MT> {
 #[cfg(test)]
 #[cfg(feature = "bevy")]
 mod tests {
-    use crate::prelude::{bevy::*, *};
     use super::*;
+    use crate::{
+        prelude::{bevy::*, *},
+        tesselate::sweep::LinearMonoTriangulator,
+    };
     use bevy::math::Vec2;
 
     fn verify_triangulation_i<MT: MonotoneTriangulator<V = usize, Vec2 = Vec2>>(
@@ -412,7 +415,7 @@ mod tests {
 
     fn verify_triangulation(vec2s: &Vec<IndexedVertex2D<usize, Vec2>>) {
         //println!("LINEAR");
-        verify_triangulation_i::<LinearMonoTriangulator<usize, Vec2>>(vec2s);
+        verify_triangulation_i::<LinearMonoTriangulator<2, usize, Vec2>>(vec2s);
         //println!("DYNAMIC");
         //verify_triangulation_i::<DynamicMonoTriangulator<usize, Vec2, Bevy2DPolygon>>(vec2s);
     }

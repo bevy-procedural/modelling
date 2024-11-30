@@ -2,7 +2,7 @@ use super::{HasZero, Scalar, Vector, VectorIteratorExt};
 use itertools::Itertools;
 
 /// Trait for spherical coordinates in 3d space.
-pub trait Spherical3d: Vector<Self::S> {
+pub trait Spherical3d: Vector<Self::S, 3> {
     /// The scalar type of the coordinates used in the vector
     type S: Scalar;
 
@@ -41,7 +41,7 @@ pub trait Spherical3d: Vector<Self::S> {
 }
 
 /// Trait for coordinates in 3d space.
-pub trait Vector3D: Vector<Self::S> {
+pub trait Vector3D: Vector<Self::S, 3> {
     /// The scalar type of the coordinates used in the vector
     type S: Scalar;
 

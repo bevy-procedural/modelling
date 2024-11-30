@@ -14,9 +14,9 @@ pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone + PartialEq {
     fn payload(&self) -> &T::VP;
 
     /// Returns the vertex coordinates of the payload
-    fn pos<Vec: Vector<S>, S: Scalar>(&self) -> Vec
+    fn pos<S: Scalar, const D: usize, Vec: Vector<S, D>>(&self) -> Vec
     where
-        T::VP: HasPosition<Vec, S = S>,
+        T::VP: HasPosition<D, Vec, S = S>,
     {
         *self.payload().pos()
     }

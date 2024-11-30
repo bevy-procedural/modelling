@@ -1,13 +1,13 @@
 use ab_glyph::{Font as AbFont, FontRef, GlyphId, ScaleFont};
 
 use crate::{
-    math::{HasPosition, IndexType, Transformable, Vector},
+    math::{HasPosition, IndexType, Vector},
     mesh::{
         CurvedEdge, CurvedEdgeType, DefaultEdgePayload, DefaultFacePayload, MeshBasics, MeshBuilder,
     },
 };
 
-use super::{MeshHalfEdgeBuilder, MeshType};
+use super::{EuclideanMeshType, MeshHalfEdgeBuilder, MeshType, MeshTypeHalfEdge};
 
 /// A font that can be used to render text.
 pub struct Font<'a> {
@@ -39,12 +39,10 @@ impl<'a> Font<'a> {
     }
 
     /// Layout the given text.
-    pub fn layout_text<T: MeshType>(&self, text: &str, mesh: &mut T::Mesh)
+    pub fn layout_text<const D: usize, T: MeshType>(&self, text: &str, mesh: &mut T::Mesh)
     where
-        T::Edge: CurvedEdge<T>,
-        T::VP: HasPosition<T::Vec, S = T::S>,
-        T::Vec: Transformable<S = T::S>,
-        T::Mesh: MeshHalfEdgeBuilder<T>,
+        T::Edge: CurvedEdge<D, T>,
+        T: EuclideanMeshType<D> + MeshTypeHalfEdge,
         T::EP: DefaultEdgePayload,
         T::FP: DefaultFacePayload,
     {
@@ -66,19 +64,21 @@ impl<'a> Font<'a> {
                 scale: PxScale::from(self.scale),
             };*/
 
-            self.draw_glyph_outlines::<T>(glyph_id, x_pos, mesh);
+            self.draw_glyph_outlines::<D, T>(glyph_id, x_pos, mesh);
 
             x_pos += scaled_font.h_advance(glyph_id);
             last_glyph_id = Some(glyph_id);
         }
     }
 
-    fn draw_glyph_outlines<T: MeshType>(&self, glyph: GlyphId, x_pos: f32, mesh: &mut T::Mesh)
-    where
-        T::Edge: CurvedEdge<T>,
-        T::VP: HasPosition<T::Vec, S = T::S>,
-        T::Vec: Transformable<S = T::S>,
-        T::Mesh: MeshHalfEdgeBuilder<T>,
+    fn draw_glyph_outlines<const D: usize, T: EuclideanMeshType<D>>(
+        &self,
+        glyph: GlyphId,
+        x_pos: f32,
+        mesh: &mut T::Mesh,
+    ) where
+        T::Edge: CurvedEdge<D, T>,
+        T: EuclideanMeshType<D> + MeshTypeHalfEdge,
         T::EP: DefaultEdgePayload,
         T::FP: DefaultFacePayload,
     {

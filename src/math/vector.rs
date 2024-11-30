@@ -1,11 +1,8 @@
-use super::{
-    kahan_summation, HasZero, Scalar, TransformTrait, Vector2D, Vector3D, Vector4D,
-};
+use super::{kahan_summation, HasZero, Scalar, TransformTrait, Vector2D, Vector3D, Vector4D};
 
 /// Trait for coordinates in n-dimensional space.
-pub trait Vector<S: Scalar>:
+pub trait Vector<S: Scalar, const D: usize>:
     Copy
-    + Default
     + PartialEq
     + std::fmt::Debug
     + std::ops::Add<Output = Self>
@@ -15,7 +12,6 @@ pub trait Vector<S: Scalar>:
     + std::ops::Mul<Self, Output = Self>
     + std::ops::Mul<S, Output = Self>
     + std::ops::MulAssign
-    + std::ops::Div<Self, Output = Self>
     + std::ops::Div<S, Output = Self>
     + std::ops::Neg<Output = Self>
     + HasZero
@@ -31,10 +27,7 @@ pub trait Vector<S: Scalar>:
     type Vec4: Vector4D<S = S>;
 
     /// The data structure used for linear transformations of this vector.
-    type Trans: TransformTrait<S = S, Vec = Self>;
-
-    /// Returns the number of dimensions.
-    fn dimensions() -> usize;
+    type Trans: TransformTrait<S, D, Vec = Self>;
 
     /// Returns the distance between two points.
     fn distance(&self, other: &Self) -> S;
@@ -96,7 +89,7 @@ pub trait Vector<S: Scalar>:
     /// Calculate the mean of an iterator of vectors using some numerically stable algorithm.
     fn stable_mean<I: Iterator<Item = Self>>(iter: I) -> Self {
         let (sum, count) = kahan_summation(iter);
-        sum / Self::splat(S::from_usize(count))
+        sum / S::from_usize(count)
     }
 
     /// Check if two vectors are approximately equal.
@@ -104,7 +97,9 @@ pub trait Vector<S: Scalar>:
 }
 
 /// Additional methods for vector iterators.
-pub trait VectorIteratorExt<S: Scalar, V: Vector<S>>: Iterator<Item = V> {
+pub trait VectorIteratorExt<S: Scalar, const D: usize, V: Vector<S, D>>:
+    Iterator<Item = V>
+{
     /// Calculate the sum of an iterator of vectors using some numerically stable algorithm.
     fn stable_sum(self) -> Self::Item
     where
@@ -122,4 +117,7 @@ pub trait VectorIteratorExt<S: Scalar, V: Vector<S>>: Iterator<Item = V> {
     }
 }
 
-impl<I: Iterator<Item = V>, S: Scalar, V: Vector<S>> VectorIteratorExt<S, V> for I {}
+impl<I: Iterator<Item = V>, S: Scalar, const D: usize, V: Vector<S, D>> VectorIteratorExt<S, D, V>
+    for I
+{
+}

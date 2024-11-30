@@ -1,7 +1,7 @@
 use super::{Scalar, Vector};
 
 /// Indicates that the vertex payload has a position vector.
-pub trait HasPosition<Vec: Vector<Self::S>> {
+pub trait HasPosition<const D: usize, Vec: Vector<Self::S, D>> {
     /// The scalar type of the coordinates used in the payload. Mainly to choose between f32 and f64. But could also work with integers etc...
     type S: Scalar;
 
@@ -16,7 +16,7 @@ pub trait HasPosition<Vec: Vector<Self::S>> {
 }
 
 /// Indicates that the vertex payload has a normal vector.
-pub trait HasNormal<Vec: Vector<Self::S>> {
+pub trait HasNormal<const D: usize, Vec: Vector<Self::S, D>> {
     /// The scalar type of the coordinates used in the payload. Mainly to choose between f32 and f64. But could also work with integers etc...
     type S: Scalar;
 

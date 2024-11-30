@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use super::{basics::MeshBasics, MeshType};
+use super::{basics::MeshBasics, MeshType, MeshType3D};
 use crate::{
-    math::{HasNormal, HasPosition, IndexType, Vector, Vector3D},
+    math::{HasNormal, IndexType, Vector},
     mesh::{Face3d, FaceBasics, Triangulation, VertexBasics},
     tesselate::{triangulate_face, TesselationMeta, TriangulationAlgorithm},
 };
@@ -17,9 +17,7 @@ pub trait Triangulateable<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         meta: &mut TesselationMeta<T::V>,
     ) -> (Vec<T::V>, Vec<T::VP>)
     where
-        T::Vec: Vector3D<S = T::S>,
-        T::VP: HasPosition<T::Vec, S = T::S>,
-        T::Face: Face3d<T>,
+        T: MeshType3D,
     {
         let mut indices = Vec::new();
         for f in self.faces() {
@@ -41,9 +39,8 @@ pub trait Triangulateable<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         meta: &mut TesselationMeta<T::V>,
     ) -> (Vec<T::V>, Vec<T::VP>)
     where
-        T::Vec: Vector3D<S = T::S>,
-        T::VP: HasPosition<T::Vec, S = T::S> + HasNormal<T::Vec, S = T::S>,
-        T::Face: Face3d<T>,
+        T: MeshType3D,
+        T::VP: HasNormal<3, T::Vec, S = T::S>,
     {
         let mut vertices = Vec::new();
         let mut indices = Vec::new();

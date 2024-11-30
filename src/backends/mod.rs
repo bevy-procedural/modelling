@@ -9,4 +9,5 @@ pub mod wgpu;
 #[cfg(feature = "svg")]
 pub mod svg;
 
-pub mod native;
+#[cfg(feature = "nalgebra")]
+pub mod nalgebra;

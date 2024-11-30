@@ -1,6 +1,6 @@
 use crate::{
-    math::{HasPosition, Scalar},
-    mesh::{MeshType, VertexBasics},
+    math::Scalar,
+    mesh::{EuclideanMeshType, MeshType, VertexBasics},
 };
 
 /// Basic edge traits for a mesh. Can be directed or undirected.
@@ -24,9 +24,9 @@ pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone + Partia
     fn is_boundary(&self, mesh: &T::Mesh) -> bool;
 
     /// Returns the centroid of the edge.
-    fn centroid(&self, mesh: &T::Mesh) -> T::Vec
+    fn centroid<const D: usize>(&self, mesh: &T::Mesh) -> T::Vec
     where
-        T::VP: HasPosition<T::Vec, S = T::S>,
+        T: EuclideanMeshType<D>,
     {
         let v1 = self.origin(mesh).pos().clone();
         let v2 = self.target(mesh).pos().clone();

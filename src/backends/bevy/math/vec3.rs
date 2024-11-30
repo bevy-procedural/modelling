@@ -8,16 +8,11 @@ impl HasZero for Vec3 {
     const ZERO: Self = Vec3::ZERO;
 }
 
-impl Vector<f32> for Vec3 {
+impl Vector<f32, 3> for Vec3 {
     type Vec2 = Vec2;
     type Vec3 = Vec3;
     type Vec4 = Vec4;
     type Trans = TransformBevy;
-
-    #[inline(always)]
-    fn dimensions() -> usize {
-        3
-    }
 
     #[inline(always)]
     fn distance(&self, other: &Self) -> f32 {

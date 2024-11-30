@@ -1,6 +1,9 @@
 use std::hash::Hash;
 
-use crate::{math::Transformable, mesh::MeshType};
+use crate::{
+    math::Transformable,
+    mesh::{EuclideanMeshType, MeshType},
+};
 
 use super::CurvedEdgeType;
 
@@ -36,7 +39,7 @@ impl<T: MeshType> EdgePayload for EmptyEdgePayload<T> {
 
 impl<T: MeshType> DefaultEdgePayload for EmptyEdgePayload<T> {}
 
-impl<T: MeshType> Transformable for EmptyEdgePayload<T> {
+impl<const D: usize, T: EuclideanMeshType<D>> Transformable<D> for EmptyEdgePayload<T> {
     type Rot = T::Rot;
     type S = T::S;
     type Trans = T::Trans;
@@ -53,25 +56,25 @@ impl<T: MeshType> Transformable for EmptyEdgePayload<T> {
 
 /// A curved edge payload with nothing else
 #[derive(Debug, Default, Clone, PartialEq)]
-pub struct CurvedEdgePayload<T: MeshType> {
-    curve: CurvedEdgeType<T>,
+pub struct CurvedEdgePayload<const D: usize, T: EuclideanMeshType<D>> {
+    curve: CurvedEdgeType<D, T>,
 }
 
-impl<T: MeshType> CurvedEdgePayload<T> {
+impl<const D: usize, T: EuclideanMeshType<D>> CurvedEdgePayload<D, T> {
     /// Returns the curve type of the edge
-    pub fn curve_type(&self) -> CurvedEdgeType<T> {
+    pub fn curve_type(&self) -> CurvedEdgeType<D, T> {
         self.curve
     }
 
     /// Sets the curve type of the edge
-    pub fn set_curve_type(&mut self, curve_type: CurvedEdgeType<T>) {
+    pub fn set_curve_type(&mut self, curve_type: CurvedEdgeType<D, T>) {
         self.curve = curve_type;
     }
 }
 
 // TODO: somehow make sure the twin is never curved or has the same curve type
 // TODO: make sure edge payloads are printed even for winged edges
-impl<T: MeshType> EdgePayload for CurvedEdgePayload<T> {
+impl<const D: usize, T: EuclideanMeshType<D>> EdgePayload for CurvedEdgePayload<D, T> {
     fn allocate() -> Self {
         Default::default()
     }
@@ -83,9 +86,9 @@ impl<T: MeshType> EdgePayload for CurvedEdgePayload<T> {
     }
 }
 
-impl<T: MeshType> DefaultEdgePayload for CurvedEdgePayload<T> {}
+impl<const D: usize, T: EuclideanMeshType<D>> DefaultEdgePayload for CurvedEdgePayload<D, T> {}
 
-impl<T: MeshType> Transformable for CurvedEdgePayload<T> {
+impl<const D: usize, T: EuclideanMeshType<D>> Transformable<D> for CurvedEdgePayload<D, T> {
     type Rot = T::Rot;
     type S = T::S;
     type Trans = T::Trans;

@@ -1,6 +1,6 @@
 use crate::{
     math::Transformable,
-    mesh::MeshType,
+    mesh::{EuclideanMeshType, MeshType},
 };
 
 /// A trait that defines what data you can store in a face.
@@ -29,7 +29,7 @@ impl<T: MeshType> FacePayload for EmptyFacePayload<T> {
 
 impl<T: MeshType> DefaultFacePayload for EmptyFacePayload<T> {}
 
-impl<T: MeshType> Transformable for EmptyFacePayload<T> {
+impl<const D: usize, T: EuclideanMeshType<D>> Transformable<D> for EmptyFacePayload<T> {
     type Rot = T::Rot;
     type S = T::S;
     type Trans = T::Trans;

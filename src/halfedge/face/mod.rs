@@ -1,8 +1,9 @@
 use super::{ForwardEdgeIterator, HalfEdgeImplMeshType};
 use crate::{
-    math::{HasPosition, IndexType, Vector3D},
+    math::IndexType,
     mesh::{
-        DefaultFacePayload, EdgeBasics, Face, Face3d, FaceBasics, FacePayload, HalfEdge, MeshBasics,
+        DefaultFacePayload, EdgeBasics, Face, Face3d, FaceBasics, FacePayload, HalfEdge,
+        MeshBasics, MeshType3D,
     },
     util::Deletable,
 };
@@ -27,12 +28,7 @@ pub struct HalfEdgeFaceImpl<T: HalfEdgeImplMeshType> {
     payload: T::FP,
 }
 
-impl<T: HalfEdgeImplMeshType> Face3d<T> for HalfEdgeFaceImpl<T>
-where
-    T::Vec: Vector3D<S = T::S>,
-    T::VP: HasPosition<T::Vec, S = T::S>,
-{
-}
+impl<T: HalfEdgeImplMeshType + MeshType3D> Face3d<T> for HalfEdgeFaceImpl<T> {}
 
 impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
     #[inline(always)]

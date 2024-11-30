@@ -1,7 +1,7 @@
 use super::{Scalar, Vector};
 
 /// Trait for coordinates in 3d space.
-pub trait Vector4D: Vector<Self::S> {
+pub trait Vector4D: Vector<Self::S, 4> {
     /// The scalar type of the coordinates used in the vector
     type S: Scalar;
 
