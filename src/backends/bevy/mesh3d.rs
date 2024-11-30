@@ -5,13 +5,13 @@ use crate::{
     },
     math::{HasNormal, HasPosition, IndexType},
     mesh::{
-        EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, MeshType, MeshType3D,
-        MeshTypeHalfEdge, Triangulateable,
+        EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshType,
+        MeshType3D, MeshTypeHalfEdge, Triangulateable,
     },
     tesselate::{TesselationMeta, TriangulationAlgorithm},
 };
 use bevy::{
-    math::{Quat, Vec2, Vec3, Vec4},
+    math::{Quat, Vec2, Vec3},
     render::{
         mesh::{PrimitiveTopology, VertexAttributeValues},
         render_asset::RenderAssetUsages,
@@ -30,18 +30,18 @@ impl MeshType for BevyMeshType3d32 {
     type VP = BevyVertexPayload3d;
     type FP = EmptyFacePayload<Self>;
     type MP = EmptyMeshPayload<Self>;
-    type S = f32;
-    type Vec = Vec3;
-    type Vec2 = Vec2;
-    type Vec3 = Vec3;
-    type Vec4 = Vec4;
-    type Trans = bevy::transform::components::Transform;
-    type Rot = Quat;
-    type Poly = Bevy2DPolygon;
     type Mesh = BevyMesh3d;
     type Face = HalfEdgeFaceImpl<Self>;
     type Edge = HalfEdgeImpl<Self>;
     type Vertex = HalfEdgeVertexImpl<Self>;
+}
+impl EuclideanMeshType<3> for BevyMeshType3d32 {
+    type S = f32;
+    type Vec = Vec3;
+    type Vec2 = Vec2;
+    type Trans = bevy::transform::components::Transform;
+    type Rot = Quat;
+    type Poly = Bevy2DPolygon;
 }
 impl HalfEdgeImplMeshType for BevyMeshType3d32 {}
 impl MeshTypeHalfEdge for BevyMeshType3d32 {}
@@ -50,7 +50,9 @@ impl MeshType3D for BevyMeshType3d32 {}
 /// A mesh with bevy 3D vertices
 pub type BevyMesh3d = HalfEdgeMeshImpl<BevyMeshType3d32>;
 
-impl<T: HalfEdgeImplMeshType<VP = BevyVertexPayload3d, Vec = Vec3, S = f32>> HalfEdgeMeshImpl<T> {
+impl<T: HalfEdgeImplMeshType<VP = BevyVertexPayload3d> + MeshType3D<Vec = Vec3, S = f32>>
+    HalfEdgeMeshImpl<T>
+{
     fn bevy_indices(&self, indices: &Vec<T::V>) -> bevy::render::mesh::Indices {
         if std::mem::size_of::<T::V>() == std::mem::size_of::<u32>() {
             bevy::render::mesh::Indices::U32(

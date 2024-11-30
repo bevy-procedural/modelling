@@ -6,10 +6,11 @@ use crate::{
     math::HasPosition,
     mesh::{
         CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EdgeBasics, EmptyEdgePayload,
-        EmptyFacePayload, EmptyMeshPayload, MeshBasics, MeshBuilder, MeshType, MeshTypeHalfEdge,
+        EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshBuilder, MeshType,
+        MeshTypeHalfEdge,
     },
 };
-use bevy::math::{Affine2, Vec2, Vec3, Vec4};
+use bevy::math::{Affine2, Vec2, Vec3};
 
 /// A mesh type for bevy with 2D vertices, 32 bit indices, 32 bit floats, and no face or edge payload (no normals etc.)
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
@@ -19,32 +20,34 @@ impl MeshType for BevyMeshType2d32 {
     type E = u32;
     type V = u32;
     type F = u32;
-    type EP = CurvedEdgePayload<Self>;
+    type EP = CurvedEdgePayload<2, Self>;
     type VP = BevyVertexPayload2d;
     type FP = EmptyFacePayload<Self>;
     type MP = EmptyMeshPayload<Self>;
-    type S = f32;
-    type Vec = Vec2;
-    type Vec2 = Vec2;
-    type Vec3 = Vec3;
-    type Vec4 = Vec4;
-    type Trans = Affine2;
-    type Rot = f32;
-    type Poly = Bevy2DPolygon;
     type Mesh = BevyMesh2d;
     type Face = HalfEdgeFaceImpl<Self>;
     type Edge = HalfEdgeImpl<Self>;
     type Vertex = HalfEdgeVertexImpl<Self>;
 }
+
+impl EuclideanMeshType<2> for BevyMeshType2d32 {
+    type S = f32;
+    type Vec = Vec2;
+    type Vec2 = Vec2;
+    type Trans = Affine2;
+    type Rot = f32;
+    type Poly = Bevy2DPolygon;
+}
+
 impl HalfEdgeImplMeshType for BevyMeshType2d32 {}
 impl MeshTypeHalfEdge for BevyMeshType2d32 {}
 
-impl CurvedEdge<BevyMeshType2d32> for HalfEdgeImpl<BevyMeshType2d32> {
-    fn curve_type(&self) -> CurvedEdgeType<BevyMeshType2d32> {
+impl CurvedEdge<2, BevyMeshType2d32> for HalfEdgeImpl<BevyMeshType2d32> {
+    fn curve_type(&self) -> CurvedEdgeType<2, BevyMeshType2d32> {
         self.payload().curve_type()
     }
 
-    fn set_curve_type(&mut self, curve_type: CurvedEdgeType<BevyMeshType2d32>) {
+    fn set_curve_type(&mut self, curve_type: CurvedEdgeType<2, BevyMeshType2d32>) {
         self.payload_mut().set_curve_type(curve_type);
     }
 }

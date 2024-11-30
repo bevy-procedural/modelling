@@ -1,14 +1,13 @@
 //! This module contains the svg-specific implementations
 
 use crate::mesh::{
-    CurvedEdge, DefaultEdgePayload, DefaultFacePayload, EuclideanMeshType,
-    MeshTypeHalfEdge,
+    CurvedEdge, DefaultEdgePayload, DefaultFacePayload, EuclideanMeshType, MeshTypeHalfEdge,
 };
 
 mod svg;
 
-pub trait BackendSVG<T: EuclideanMeshType<2, Mesh = Self>>:
-    Default + std::fmt::Debug + Clone
+/// Backend trait for SVG import/export.
+pub trait BackendSVG<T: EuclideanMeshType<2, Mesh = Self>>
 where
     T::Edge: CurvedEdge<2, T>,
     T::FP: DefaultFacePayload,
@@ -34,4 +33,12 @@ where
         mesh.import_svg(svg);
         mesh
     }
+}
+
+impl<T: EuclideanMeshType<2>> BackendSVG<T> for T::Mesh
+where
+    T::Edge: CurvedEdge<2, T>,
+    T::FP: DefaultFacePayload,
+    T::EP: DefaultEdgePayload,
+{
 }

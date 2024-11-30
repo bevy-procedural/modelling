@@ -27,7 +27,7 @@ impl VertexPayload for BevyVertexPayload2d {
     }
 }
 
-impl Transformable for BevyVertexPayload2d {
+impl Transformable<2> for BevyVertexPayload2d {
     type S = f32;
     type Vec = Vec2;
     type Trans = bevy::math::Affine2;
@@ -66,7 +66,7 @@ impl Transformable for BevyVertexPayload2d {
     }
 }
 
-impl HasPosition<Vec2> for BevyVertexPayload2d {
+impl HasPosition<2,Vec2> for BevyVertexPayload2d {
     type S = f32;
 
     #[inline(always)]

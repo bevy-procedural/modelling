@@ -112,8 +112,7 @@ impl Spherical3d for Vec3 {
 }
 
 // TODO: Switch to Affine3
-impl TransformTrait for TransformBevy {
-    type S = f32;
+impl TransformTrait<f32, 3> for TransformBevy {
     type Vec = Vec3;
     type Rot = Quat;
 
@@ -171,7 +170,7 @@ impl TransformTrait for TransformBevy {
 }
 
 // TODO: implement more methods to improve performance
-impl Transformable for Vec3 {
+impl Transformable<3> for Vec3 {
     type Rot = Quat;
     type S = f32;
     type Trans = TransformBevy;

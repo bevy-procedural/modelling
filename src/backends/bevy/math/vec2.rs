@@ -111,8 +111,7 @@ impl Vector2D for Vec2 {
     }
 }
 
-impl TransformTrait for Affine2 {
-    type S = f32;
+impl TransformTrait<f32, 2> for Affine2 {
     type Vec = Vec2;
     type Rot = f32;
 
@@ -161,7 +160,7 @@ impl TransformTrait for Affine2 {
     }
 }
 
-impl Transformable for Vec2 {
+impl Transformable<2> for Vec2 {
     type S = f32;
     type Rot = f32;
     type Trans = Affine2;

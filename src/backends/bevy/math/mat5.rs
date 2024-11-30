@@ -99,9 +99,8 @@ pub struct Vec4Rotator {}
 
 impl Rotator<Vec4> for Vec4Rotator {}
 
-impl TransformTrait for Mat5<f32> {
+impl TransformTrait<f32, 4> for Mat5<f32> {
     type Vec = Vec4;
-    type S = f32;
     type Rot = Vec4Rotator;
 
     fn identity() -> Self {

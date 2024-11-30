@@ -31,7 +31,7 @@ impl VertexPayload for BevyVertexPayload3d {
     }
 }
 
-impl Transformable for BevyVertexPayload3d {
+impl Transformable<3> for BevyVertexPayload3d {
     type S = f32;
     type Vec = Vec3;
     type Trans = bevy::transform::components::Transform;
@@ -76,7 +76,7 @@ impl Transformable for BevyVertexPayload3d {
     }
 }
 
-impl HasPosition<Vec3> for BevyVertexPayload3d {
+impl HasPosition<3, Vec3> for BevyVertexPayload3d {
     type S = f32;
 
     #[inline(always)]
@@ -99,7 +99,7 @@ impl HasPosition<Vec3> for BevyVertexPayload3d {
     }
 }
 
-impl HasNormal<Vec3> for BevyVertexPayload3d {
+impl HasNormal<3, Vec3> for BevyVertexPayload3d {
     type S = f32;
 
     #[inline(always)]

@@ -13,7 +13,6 @@ pub mod util;
 
 /// A prelude for easy importing of commonly used types and traits.
 pub mod prelude {
-    pub use crate::backends::*;
     pub use crate::halfedge::*;
     pub use crate::math::*;
     pub use crate::mesh::*;
