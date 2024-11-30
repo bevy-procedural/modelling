@@ -104,15 +104,10 @@ pub fn ear_clipping_direct<Vec2: Vector2D, V: IndexType>(
 }
 
 #[cfg(test)]
+#[cfg(feature = "bevy")]
 mod tests {
     use super::*;
-    use crate::{
-        bevy::{Bevy2DPolygon, BevyMesh3d, BevyMeshType3d32, BevyVertexPayload3d},
-        math::Polygon,
-        mesh::{IndexedVertex2D, MeshBasics},
-        primitives::Make2dShape,
-        tesselate::Triangulation,
-    };
+    use crate::prelude::{*, bevy::*};
     use bevy::math::{Vec2, Vec3};
 
     fn verify_triangulation(vec2s: &Vec<IndexedVertex2D<u32, Vec2>>) {

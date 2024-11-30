@@ -19,7 +19,7 @@ path = "src/lib.rs"
 crate-type = ["rlib"]
 
 [workspace]
-members = ["editor"]
+members = ["playground/bevy", "playground/wgpu"]
 
 [workspace.lints.clippy]
 type_complexity = "allow"
@@ -43,7 +43,7 @@ missing_docs = "warn"
 workspace = true
 
 [dependencies]
-bevy = { version = "^0.14.0", default-features = false, optional = true }
+bevy = { version = "^0.14.2", default-features = false, optional = true }
 itertools = "^0.13.0"
 meshopt = { version = "^0.3.0", optional = true }
 rand = "^0.8.5"
@@ -52,15 +52,18 @@ usvg = { version = "0.44.0", optional = true }
 criterion = { version = "0.5.1", features = ["html_reports"], optional = true }
 lazy_static = "1.5.0"
 ab_glyph = { version = "0.2.29", optional = true }
+wgpu = { version = "23.0.1", optional = true }
 
 [features]
-default = ["bevy", "gizmo", "fonts", "svg"]
+default = ["wgpu", "native"]
+wgpu = ["dep:wgpu"]
 bevy = ["dep:bevy", "bevy/bevy_core_pipeline"]
 gizmo = ["bevy", "bevy/bevy_text", "bevy/bevy_ui"]
 example_deps = ["bevy", "bevy/default"]
 svg = ["dep:usvg"]
+native = []
 fonts = ["dep:ab_glyph"]
-dynamic = ["bevy/dynamic_linking"]
+bevy_dynamic = ["bevy/dynamic_linking"]
 meshopt = ["dep:meshopt"]
 benchmarks = ["dep:criterion"]
 sweep_debug = []

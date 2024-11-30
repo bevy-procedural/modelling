@@ -130,10 +130,10 @@ impl<'a> Font<'a> {
 
             //println!("Adding edge from {:?} to {:?} {:?} {:?}", p0, p1, c0, c1);
 
-            let mut cur_e = IndexType::max();
+            let cur_e;
 
             let trans = T::Vec::from_x(T::S::from(x_pos));
-            if let Some(p) = cur {
+            if let Some(_p) = cur {
                 // TODO: don't use eq but similarity
                 if first.unwrap() == p1 {
                     let (_, _, e) = mesh.close_face_vertices(

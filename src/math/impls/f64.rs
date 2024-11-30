@@ -21,6 +21,11 @@ impl Scalar for f64 {
     const NEG_INFINITY: Self = std::f64::NEG_INFINITY;
 
     #[inline(always)]
+    fn is_zero(self) -> bool {
+        self == 0.0
+    }
+    
+    #[inline(always)]
     fn is_positive(self) -> bool {
         self.is_sign_positive()
     }

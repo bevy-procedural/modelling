@@ -21,6 +21,11 @@ impl Scalar for f32 {
     const NEG_INFINITY: Self = std::f32::NEG_INFINITY;
 
     #[inline(always)]
+    fn is_zero(self) -> bool {
+        self == 0.0
+    }
+
+    #[inline(always)]
     fn is_positive(self) -> bool {
         self.is_sign_positive()
     }

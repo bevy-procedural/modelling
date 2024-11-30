@@ -97,6 +97,7 @@ impl VertexType {
 }
 
 #[cfg(test)]
+#[cfg(feature = "bevy")]
 mod tests {
     use bevy::math::Vec2;
 

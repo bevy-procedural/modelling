@@ -276,7 +276,7 @@ where
 
     /// Moves to the given vertex.
     /// Assumes the path is currently empty or closed to begin a new path.
-    pub fn move_to(&mut self, pos: T::V) -> &mut Self {
+    pub fn move_to(&mut self, _pos: T::V) -> &mut Self {
         todo!()
     }
 

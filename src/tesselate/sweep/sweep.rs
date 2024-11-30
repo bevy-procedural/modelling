@@ -390,14 +390,9 @@ impl<'a, 'b, MT: MonotoneTriangulator> SweepContext<'a, 'b, MT> {
 }
 
 #[cfg(test)]
+#[cfg(feature = "bevy")]
 mod tests {
-    use crate::{
-        bevy::Bevy2DPolygon,
-        math::Polygon,
-        primitives::generate_zigzag,
-        tesselate::sweep::monotone::LinearMonoTriangulator,
-    };
-
+    use crate::prelude::{bevy::*, *};
     use super::*;
     use bevy::math::Vec2;
 

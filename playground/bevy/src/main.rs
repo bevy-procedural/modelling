@@ -10,21 +10,8 @@ use bevy_inspector_egui::{
     InspectorOptions,
 };
 use bevy_panorbit_camera::*;
-use procedural_modelling::{
-    bevy::{
-        show_edges, show_faces, show_tesselation_meta, show_vertex_indices,
-        text::{Text3dGizmos, Text3dGizmosPlugin},
-        BevyMesh2d, BevyMesh3d, BevyMeshType2d32, BevyVertexPayload2d, BevyVertexPayload3d,
-    },
-    math::{HasPosition, Vector3DIteratorExt},
-    mesh::{
-        CurvedEdge, Font, MeshBasics, MeshHalfEdgeBuilder, PathBuilder, TransformableMesh,
-        WithNormals,
-    },
-    operations::{MeshExtrude, MeshLoft},
-    primitives::{generate_zigzag, random_star, Make2dShape, MakeSphere},
-    tesselate::{TesselationMeta, TriangulationAlgorithm},
-};
+use procedural_modelling::prelude::*;
+use text::{Text3dGizmos, Text3dGizmosPlugin};
 use std::{env, f32::consts::PI};
 
 #[derive(Reflect, Resource, InspectorOptions)]
@@ -519,7 +506,7 @@ fn _make_bezier(_settings: &GlobalSettings) -> BevyMesh3d {
         Vec2::new(0.9, 0.5),
     ));*/
 
-    Font::new(include_bytes!("../../assets/Cochineal-Roman.otf"), 2.0)
+    procedural_modelling::mesh::Font::new(include_bytes!("../../../assets/Cochineal-Roman.otf"), 2.0)
         .layout_text::<BevyMeshType2d32>("sFä", &mut mesh2d);
 
     /*

@@ -84,8 +84,9 @@ pub fn delaunay_triangulation<T: MeshType>(
 }
 
 #[cfg(test)]
+#[cfg(feature = "bevy")]
 mod tests {
-    use crate::prelude::*;
+    use crate::prelude::{*, bevy::*};
 
     fn verify_triangulation<T: MeshType>(mesh: &T::Mesh, f: T::F)
     where
@@ -106,7 +107,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "bevy")]
     #[cfg(feature = "fonts")]
     fn test_font() {
         let mut mesh2d = BevyMesh2d::new();

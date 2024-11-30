@@ -2,6 +2,8 @@
 pub trait HasZero {
     /// A value of zero.
     const ZERO: Self;
+
+    // TODO: remove this
 }
 
 /// To be used as a scalar in n-dimensional space.
@@ -17,7 +19,9 @@ pub trait Scalar:
     + std::ops::Mul<Output = Self>
     + std::ops::MulAssign
     + std::ops::Div<Output = Self>
+    + std::ops::DivAssign
     + std::ops::Sub<Output = Self>
+    + std::ops::SubAssign
     + std::ops::Neg<Output = Self>
     + From<f32>
     + HasZero
@@ -52,12 +56,15 @@ pub trait Scalar:
 
     /// The golden ratio.
     const PHI: Self;
-    
+
     /// Positive infinity.
     const INFINITY: Self;
 
     /// Negative infinity.
     const NEG_INFINITY: Self;
+
+    /// Returns whether the scalar is zero.
+    fn is_zero(self) -> bool;
 
     /// Returns whether the scalar is strictly positive.
     fn is_positive(self) -> bool;
