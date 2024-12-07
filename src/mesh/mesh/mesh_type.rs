@@ -61,7 +61,7 @@ pub trait EuclideanMeshType<const D: usize>:
 >
 {
     /// The type of the vector used for vertices.
-    type Vec: Vector<Self::S, D, Vec2 = Self::Vec2, Trans = Self::Trans>
+    type Vec: Vector<Self::S, D>
         + Transformable<D, Trans = Self::Trans, Rot = Self::Rot, Vec = Self::Vec, S = Self::S>;
 
     /// The 2d vector type derived from the default vector

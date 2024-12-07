@@ -1,4 +1,4 @@
-use super::{rotate::NdRotate, transform_n::NdAffine};
+use super::{rotate::NdRotate, transform_n::NdAffine, ScalarPlus};
 use crate::math::{HasZero, Scalar, TransformTrait, Transformable, Vector};
 use nalgebra::SVector;
 
@@ -18,9 +18,6 @@ impl<S: Scalar, const D: usize> HasZero for VecN<S, D> {
 }
 
 impl<S: Scalar, const D: usize> Vector<S, D> for VecN<S, D> {
-    type Vec2 = SVector<S, 2>;
-    type Trans = NdAffine<S, D>;
-
     #[inline(always)]
     fn distance(&self, other: &Self) -> S {
         self.distance_squared(other).sqrt()
@@ -146,7 +143,7 @@ impl<S: Scalar, const D: usize> Vector<S, D> for VecN<S, D> {
     }
 }
 
-impl<S: Scalar, const D: usize> Transformable<D> for VecN<S, D> {
+impl<S: ScalarPlus, const D: usize> Transformable<D> for VecN<S, D> {
     type S = S;
     type Rot = NdRotate<S, D>;
     type Trans = NdAffine<S, D>;
@@ -176,4 +173,3 @@ impl<S: Scalar, const D: usize> Transformable<D> for VecN<S, D> {
         self
     }
 }
-

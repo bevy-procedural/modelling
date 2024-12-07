@@ -2,9 +2,6 @@ use crate::math::{HasZero, Scalar, TransformTrait, Transformable, Vector, Vector
 use bevy::math::{Affine2, Vec2};
 
 impl Vector<f32, 2> for Vec2 {
-    type Vec2 = Vec2;
-    type Trans = Affine2;
-
     #[inline(always)]
     fn angle_between(&self, other: Self) -> f32 {
         Vec2::angle_between(*self, other)

@@ -9,7 +9,7 @@ pub trait Transformable<const D: usize>: Sized + Clone {
     type Rot: Rotator<Self::Vec>;
 
     /// The vector type used in the payload.
-    type Vec: Vector<Self::S, D, Trans = Self::Trans>;
+    type Vec: Vector<Self::S, D>;
 
     /// The scalar type of the coordinates used in the payload. Mainly to choose between f32 and f64. But could also work with integers etc...
     type S: Scalar;

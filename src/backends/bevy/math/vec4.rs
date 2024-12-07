@@ -1,6 +1,6 @@
-use super::mat5::Mat5;
-use crate::math::{HasZero, Scalar, Vector, Vector4D};
-use bevy::math::{Vec2, Vec4};
+use super::mat5::{Mat5, Vec4Rotator};
+use crate::math::{HasZero, Scalar, TransformTrait, Transformable, Vector, Vector4D};
+use bevy::math::Vec4;
 
 impl HasZero for Vec4 {
     #[inline(always)]
@@ -15,9 +15,6 @@ impl HasZero for Vec4 {
 }
 
 impl Vector<f32, 4> for Vec4 {
-    type Vec2 = Vec2;
-    type Trans = Mat5<f32>;
-
     #[inline(always)]
     fn distance(&self, other: &Self) -> f32 {
         Vec4::distance(*self, *other)
@@ -103,5 +100,23 @@ impl Vector4D for Vec4 {
     #[inline(always)]
     fn new(x: f32, y: f32, z: f32, w: f32) -> Self {
         Vec4::new(x, y, z, w)
+    }
+}
+
+// TODO: implement more methods to improve performance
+impl Transformable<4> for Vec4 {
+    type Rot = Vec4Rotator;
+    type S = f32;
+    type Trans = Mat5<f32>;
+    type Vec = Vec4;
+
+    fn transform(&mut self, t: &Self::Trans) -> &mut Self {
+        *self = t.apply(*self);
+        self
+    }
+
+    fn lerp(&mut self, other: &Self, t: Self::S) -> &mut Self {
+        *self = Vec4::lerp(*self, *other, t);
+        self
     }
 }

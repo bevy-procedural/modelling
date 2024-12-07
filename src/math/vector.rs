@@ -17,12 +17,6 @@ pub trait Vector<S: Scalar, const D: usize>:
     + HasZero
     + 'static
 {
-    /// The associated 2d vector type
-    type Vec2: Vector2D<S = S>;
-
-    /// The data structure used for linear transformations of this vector.
-    //type Trans: TransformTrait<S, D, Vec = Self>;
-
     /// Returns the distance between two points.
     fn distance(&self, other: &Self) -> S;
 
@@ -51,8 +45,8 @@ pub trait Vector<S: Scalar, const D: usize>:
     fn w(&self) -> S;
 
     /// Returns the coordinates as a tuple.
-    fn vec2(&self) -> Self::Vec2 {
-        <Self::Vec2 as Vector2D>::new(self.x(), self.y())
+    fn vec2<Vec2: Vector2D<S=S>>(&self) -> Vec2 {
+        Vec2::new(self.x(), self.y())
     }
 
     /// Create a vector from one coordinate

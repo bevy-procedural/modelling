@@ -100,6 +100,7 @@ impl<S: Scalar> Default for Mat5<S> {
     }
 }
 
+// TODO: dummy implementation
 #[derive(Clone, Debug, PartialEq)]
 pub struct Vec4Rotator {}
 

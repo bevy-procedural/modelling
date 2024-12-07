@@ -1,6 +1,6 @@
 use crate::math::{HasZero, Scalar, Spherical3d, TransformTrait, Transformable, Vector, Vector3D};
 use bevy::{
-    math::{Quat, Vec2, Vec3},
+    math::{Quat, Vec3},
     transform::components::Transform as TransformBevy,
 };
 
@@ -17,9 +17,6 @@ impl HasZero for Vec3 {
 }
 
 impl Vector<f32, 3> for Vec3 {
-    type Vec2 = Vec2;
-    type Trans = TransformBevy;
-
     #[inline(always)]
     fn angle_between(&self, other: Self) -> f32 {
         Vec3::angle_between(*self, other)

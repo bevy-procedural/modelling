@@ -71,11 +71,13 @@ impl<S: Scalar, const D: usize> NdRotate<S, D> {
                 rot: None,
             }
         } else if D == 3 {
+            todo!();
+            /*
             Self {
                 rot2: None,
                 rot3: Some(nalgebra::Rotation3::rotation_between(&from, &to)),
                 rot: None,
-            }
+            }*/
         } else {
             todo!();
         }
