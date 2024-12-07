@@ -67,3 +67,6 @@ impl<T: HalfEdgeImplMeshType> Triangulateable<T> for HalfEdgeMeshImpl<T> {}
 impl<T: HalfEdgeImplMeshType> MeshTrait for HalfEdgeMeshImpl<T> {
     type T = T;
 }
+
+#[cfg(feature = "netsci")]
+impl<T: HalfEdgeImplMeshType> crate::mesh::NetworkScience<T> for HalfEdgeMeshImpl<T> {}

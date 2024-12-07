@@ -5,7 +5,8 @@ use nalgebra::SMatrix;
 /// Rotation in D-dimensional space.
 #[derive(Clone, Debug, Copy)]
 pub struct NdRotate<S: Scalar, const D: usize> {
-    // TODO: this is clumsy
+    // TODO: this is clumsy. But nd-rotation is extremely hard to implement. We should probably update the traits to not include the hard to implement rotation methods!
+
     /// rotation in 2D space
     rot2: Option<nalgebra::Rotation2<S>>,
 
@@ -57,6 +58,7 @@ impl<S: Scalar, const D: usize> NdRotate<S, D> {
         }
     }
 
+    /// Creates a new rotation from a rotation arc.
     pub fn from_rotation_arc(from: VecN<S, D>, to: VecN<S, D>) -> Self
     where
         S: ScalarPlus,
@@ -71,36 +73,21 @@ impl<S: Scalar, const D: usize> NdRotate<S, D> {
                 rot: None,
             }
         } else if D == 3 {
-            todo!();
-            /*
             Self {
                 rot2: None,
-                rot3: Some(nalgebra::Rotation3::rotation_between(&from, &to)),
+                rot3: Some(
+                    nalgebra::Rotation3::rotation_between(
+                        &from.fixed_rows::<3>(0).into_owned(),
+                        &to.fixed_rows::<3>(0).into_owned(),
+                    )
+                    .expect("Failed to create rotation"),
+                ),
                 rot: None,
-            }*/
+            }
         } else {
             todo!();
         }
     }
 }
-/*
-
-pub trait NdRotateTrait<S: Scalar, const D: usize> {
-    /// Creates a new rotation from a matrix.
-    fn new(matrix: SMatrix<S, D, D>) -> Self;
-
-    /// Checks whether the rotation matrix is orthogonal and has a determinant of +1.
-    fn is_valid(&self, _eps: S) -> bool {
-        todo!();
-        //nalgebra::base::Matrix::is_orthogonal(&self.matrix, eps)
-        // && (self.matrix.determinant() - S::one()).abs() < eps
-    }
-
-    /// Returns the matrix representation of the rotation.
-    fn as_matrix(&self) -> &SMatrix<S, D, D>;
-
-    /// Creates a new rotation from a rotation arc.
-    fn from_rotation_arc(from: VecN<S, D>, to: VecN<S, D>) -> Self;
-}*/
 
 impl<S: Scalar, const D: usize> Rotator<VecN<S, D>> for NdRotate<S, D> {}

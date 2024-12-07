@@ -80,26 +80,34 @@ impl HalfEdgeMeshImpl<MeshType2d64PNUCurved> {
 
 #[cfg(test)]
 mod tests {
+    use core::f64;
+
     use crate::{
-        backends::nalgebra::Vec3, math::Polygon, mesh::{Face3d, MeshChecker}, prelude::Make2dShape
+        backends::nalgebra::Vec3,
+        math::Polygon,
+        mesh::{Face3d, MeshChecker},
+        prelude::{regular_polygon_area, Make2dShape},
     };
 
     use super::*;
 
     #[test]
     fn test_mesh2d64curved_construction() {
+        let n = 100;
+        let radius = 1.0;
+
         let mut mesh = Mesh2d64Curved::new();
-        mesh.insert_regular_star(1.0, 1.0, 20);
-        assert_eq!(mesh.num_vertices(), 20);
-        assert_eq!(mesh.num_edges(), 40);
+        mesh.insert_regular_star(radius, radius, n);
+        assert_eq!(mesh.num_vertices(), n);
+        assert_eq!(mesh.num_edges(), 2 * n);
         assert_eq!(mesh.num_faces(), 1);
         assert!(mesh.has_consecutive_vertex_ids());
         assert!(mesh.is_open());
         assert!(mesh.check().is_ok());
 
         let m3d = mesh.to_nd::<3>(1.0);
-        assert_eq!(m3d.num_vertices(), 20);
-        assert_eq!(m3d.num_edges(), 40);
+        assert_eq!(m3d.num_vertices(), n);
+        assert_eq!(m3d.num_edges(), 2 * n);
         assert_eq!(m3d.num_faces(), 1);
         assert!(m3d.has_consecutive_vertex_ids());
         assert!(m3d.is_open());
@@ -111,7 +119,10 @@ mod tests {
         //assert!(f.is_simple(&m3d));
         assert_eq!(f.normal(&m3d).normalize(), Vec3::from_xyz(0.0, 0.0, 1.0));
         let p = f.as_polygon(&m3d);
-        assert!(p.signed_area() > 0.0);
+        assert!(
+            (p.signed_area().abs() - (regular_polygon_area(radius, n))).abs()
+                <= f64::EPSILON.sqrt()
+        );
 
         let m10d = mesh.to_nd::<10>(1.0);
         assert!(m10d.check().is_ok());

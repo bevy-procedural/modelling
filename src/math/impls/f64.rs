@@ -51,6 +51,11 @@ impl Scalar for f64 {
     fn tan(&self) -> Self {
         f64::tan(*self)
     }
+    
+    #[inline(always)]
+    fn cot(&self) -> Self {
+        self.tan().recip()
+    }
 
     #[inline(always)]
     fn atan2(&self, other: Self) -> Self {

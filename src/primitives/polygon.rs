@@ -8,6 +8,11 @@ pub fn regular_polygon_sidelength<S: Scalar>(radius: S, n: usize) -> S {
     S::TWO * radius * (S::PI / S::from_usize(n)).sin()
 }
 
+/// Calculate the area of a regular polygon with `n` sides and a given `radius`.
+pub fn regular_polygon_area<S: Scalar>(radius: S, n: usize) -> S {
+    S::HALF * S::from_usize(n) * radius * radius * (S::TWO * S::PI / S::from_usize(n)).sin()
+}
+
 /// Methods to insert 2D shapes into a mesh.
 pub trait Make2dShape<T: MeshType<Mesh = Self>>: MeshTrait<T = T>
 where

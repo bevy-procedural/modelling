@@ -97,6 +97,9 @@ pub trait Scalar:
     /// Returns the tangent of the scalar.
     fn tan(&self) -> Self;
 
+    /// Returns the cotangent of the scalar.
+    fn cot(&self) -> Self;
+
     /// Returns the atan2 of the scalar.
     fn atan2(&self, x: Self) -> Self;
 

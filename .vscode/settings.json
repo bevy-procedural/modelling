@@ -2,9 +2,11 @@
     "cSpell.words": [
         "casteljau",
         "delaunay",
+        "kahan",
         "laplacian",
         "nalgebra",
         "perp",
+        "recip",
         "Simd",
         "undecisive"
     ],

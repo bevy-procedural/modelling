@@ -1,34 +1,51 @@
 use crate::{
-    math::IndexType,
+    math::{IndexType, Scalar, Vector},
     mesh::{EdgeBasics, MeshBasics, MeshType, VertexBasics},
 };
 use std::collections::HashMap;
 
+use super::EuclideanMeshType;
+
 /// Basic Network science functionality for a mesh
 pub trait NetworkScience<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Returns the adjacency matrix of the mesh.
-    ///
-    /// If `with_weights` is true, the matrix will contain the weights of the edges. panics if the mesh is not weighted.
-    ///
-    /// If `directed` is true, the matrix will not be symmetric. panics if the mesh is not directed.
-    fn adjacency_matrix(&self, with_weights: bool, directed: bool) -> nalgebra::DMatrix<f64> {
-        // TODO: detect weighted edges and directed edges
-        // TODO: sparse matrix
-
-        assert!(!with_weights, "weighted edges are not supported yet");
-        assert!(!directed, "directed edges are not supported yet");
+    /// All weights will be 1 and the graph will be treated as undirected.
+    fn adjacency_matrix<S: Scalar>(&self) -> nalgebra::DMatrix<S> {
         assert!(
             self.has_consecutive_vertex_ids(),
             "vertex ids must be consecutive"
         );
 
         let n = self.num_vertices();
-        let mut adj = nalgebra::DMatrix::from_element(n, n, 0.0);
+        let mut adj = nalgebra::DMatrix::from_element(n, n, S::ZERO);
         for e in self.edges() {
             let i = e.origin(self).id().index();
             let j = e.target(self).id().index();
-            adj[(i, j)] = 1.0;
-            adj[(j, i)] = 1.0;
+            adj[(i, j)] = S::ONE;
+            adj[(j, i)] = S::ONE;
+        }
+        adj
+    }
+
+    /// Returns the adjacency matrix of the mesh.
+    /// Euclidean distance will be used as weight. The graph will be treated as undirected.
+    fn adjacency_matrix_euclidean<const D: usize>(&self) -> nalgebra::DMatrix<T::S>
+    where
+        T: EuclideanMeshType<D>,
+    {
+        assert!(
+            self.has_consecutive_vertex_ids(),
+            "vertex ids must be consecutive"
+        );
+
+        let n = self.num_vertices();
+        let mut adj = nalgebra::DMatrix::from_element(n, n, Scalar::ZERO);
+        for e in self.edges() {
+            let i = e.origin(self).id().index();
+            let j = e.target(self).id().index();
+            let d: T::S = e.origin(self).pos().distance(&e.target(self).pos());
+            adj[(i, j)] = d;
+            adj[(j, i)] = d;
         }
         adj
     }
@@ -49,29 +66,80 @@ pub trait NetworkScience<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     }
 
     /// Returns the degree matrix
-    fn degree_matrix(&self) -> nalgebra::DMatrix<f64> {
+    fn degree_matrix<S: Scalar>(&self) -> nalgebra::DMatrix<S> {
         let n = self.num_vertices();
-        let mut deg = nalgebra::DMatrix::from_element(n, n, 0.0);
+        let mut deg = nalgebra::DMatrix::from_element(n, n, S::ZERO);
         for (i, d) in self.degrees() {
-            deg[(i.index(), i.index())] = d as f64;
+            deg[(i.index(), i.index())] = S::from_usize(d);
         }
         deg
     }
 
-    /// Returns the Laplacian matrix
-    fn laplacian_matrix(&self, with_weights: bool, directed: bool) -> nalgebra::DMatrix<f64> {
-        self.degree_matrix() - self.adjacency_matrix(with_weights, directed)
+    /// Returns the Laplacian matrix. All weights will be 1 and the graph will be treated as undirected.
+    fn laplacian<S: Scalar>(&self) -> nalgebra::DMatrix<S> {
+        self.degree_matrix::<S>() - self.adjacency_matrix::<S>()
+    }
+
+    /// Returns the Laplacian matrix. Euclidean distance will be used as weight. The graph will be treated as undirected.
+    fn laplacian_euclidean<const D: usize>(&self) -> nalgebra::DMatrix<T::S>
+    where
+        T: EuclideanMeshType<D>,
+    {
+        self.degree_matrix() - self.adjacency_matrix_euclidean::<D>()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::mesh::HalfEdgeMesh;
-    use nalgebra::DMatrix;
+    use crate::{backends::nalgebra::MeshNd64, math::Scalar, prelude::MakePrismatoid};
+    use itertools::Itertools;
 
     #[test]
     fn test_adjacency_matrix() {
-       // todo!();
+        let mesh = MeshNd64::<3>::cube(1.0);
+        let adj = mesh.adjacency_matrix::<f64>();
+        let eig = adj
+            .eigenvalues()
+            .expect("Should have eigenvalues")
+            .iter()
+            .sorted_by(|a, b| a.partial_cmp(b).unwrap())
+            .cloned()
+            .collect_vec();
+
+        println!("adjacency matrix:\n{}", adj);
+        println!("eigenvalues: {:?}", eig);
+
+        // 3, 1 (with multiplicity 3), -1 (with multiplicity 3), and -3.
+        assert!(eig[0].is_about(-3.0, 1e-10));
+        assert!(eig[1].is_about(-1.0, 1e-10));
+        assert!(eig[2].is_about(-1.0, 1e-10));
+        assert!(eig[3].is_about(-1.0, 1e-10));
+        assert!(eig[4].is_about(1.0, 1e-10));
+        assert!(eig[5].is_about(1.0, 1e-10));
+        assert!(eig[6].is_about(1.0, 1e-10));
+        assert!(eig[7].is_about(3.0, 1e-10));
+    }
+
+    #[test]
+    fn test_laplacian_matrix() {
+        let mesh = MeshNd64::<3>::cube(1.0);
+        let lap = mesh.laplacian::<f64>();
+        let eig = lap
+            .eigenvalues()
+            .expect("Should have eigenvalues")
+            .iter()
+            .sorted_by(|a, b| a.partial_cmp(b).unwrap())
+            .cloned()
+            .collect_vec();
+
+        println!("laplacian matrix:\n{}", lap);
+        println!("eigenvalues: {:?}", eig);
+
+        // smallest one should always be 0 since there is exactly one connected component
+        assert!(eig[0].is_about(0.0, 1e-10));
+
+        let algebraic_connectivity = eig[1];
+        assert!(algebraic_connectivity.is_about(2.0, 1e-10));
     }
 }

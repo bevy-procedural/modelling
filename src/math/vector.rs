@@ -1,4 +1,4 @@
-use super::{kahan_summation, HasZero, Scalar, TransformTrait, Vector2D};
+use super::{kahan_summation, HasZero, Scalar, Vector2D};
 
 /// Trait for coordinates in n-dimensional space.
 pub trait Vector<S: Scalar, const D: usize>:

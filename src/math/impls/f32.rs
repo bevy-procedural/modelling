@@ -53,6 +53,11 @@ impl Scalar for f32 {
     }
 
     #[inline(always)]
+    fn cot(&self) -> Self {
+        self.tan().recip()
+    }
+
+    #[inline(always)]
     fn atan2(&self, other: Self) -> Self {
         f32::atan2(*self, other)
     }
