@@ -176,3 +176,4 @@ impl<S: Scalar, const D: usize> Transformable<D> for VecN<S, D> {
         self
     }
 }
+

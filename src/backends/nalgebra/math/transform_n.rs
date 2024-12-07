@@ -1,4 +1,4 @@
-use super::{NdRotate, VecN};
+use super::{NdRotate, ScalarPlus, VecN};
 use crate::math::{Scalar, TransformTrait};
 use nalgebra::{DMatrix, SMatrix, SVector};
 
@@ -42,7 +42,7 @@ impl<S: Scalar, const D: usize> Default for NdAffine<S, D> {
     }
 }
 
-impl<S: Scalar, const D: usize> TransformTrait<S, D> for NdAffine<S, D> {
+impl<S: ScalarPlus, const D: usize> TransformTrait<S, D> for NdAffine<S, D> {
     type Vec = VecN<S, D>;
     type Rot = NdRotate<S, D>;
 
@@ -58,12 +58,15 @@ impl<S: Scalar, const D: usize> TransformTrait<S, D> for NdAffine<S, D> {
         self.matrix * v
     }
 
-    fn from_rotation(_r: Self::Rot) -> Self {
-        todo!();
+    fn from_rotation(r: Self::Rot) -> Self {
+        Self {
+            matrix: r.to_matrix().clone(),
+            translation: VecN::zeros(),
+        }
     }
 
-    fn from_rotation_arc(_from: Self::Vec, _to: Self::Vec) -> Self {
-        todo!();
+    fn from_rotation_arc(from: Self::Vec, to: Self::Vec) -> Self {
+        Self::from_rotation(NdRotate::from_rotation_arc(from, to))
     }
 
     fn from_scale(v: Self::Vec) -> Self {

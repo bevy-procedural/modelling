@@ -21,7 +21,7 @@ pub trait Vector<S: Scalar, const D: usize>:
     type Vec2: Vector2D<S = S>;
 
     /// The data structure used for linear transformations of this vector.
-    type Trans: TransformTrait<S, D, Vec = Self>;
+    //type Trans: TransformTrait<S, D, Vec = Self>;
 
     /// Returns the distance between two points.
     fn distance(&self, other: &Self) -> S;

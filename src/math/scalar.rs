@@ -1,7 +1,5 @@
 use super::HasZero;
 
-/// A trait for types that have a zero value.
-
 /// To be used as a scalar in n-dimensional space.
 pub trait Scalar:
     Copy

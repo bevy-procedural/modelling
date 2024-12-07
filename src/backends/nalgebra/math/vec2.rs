@@ -1,4 +1,4 @@
-use super::VecN;
+use super::{ScalarPlus, VecN};
 use crate::math::{Scalar, Vector, Vector2D};
 
 /// A 2D vector.

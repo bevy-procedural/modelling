@@ -48,7 +48,7 @@ Or run the [examples](https://github.com/bevy-procedural/modelling/tree/main/exa
 
 For package development, we recommend using the `playground_bevy`- resp. `playground_wgpu`-subcrate. This example has a little [egui](https://github.com/jakobhellermann/bevy-inspector-egui/)-editor. Run it using `cargo watch -w playground -w src -x "run -p playground_bevy --profile fast-dev"`. The `fast-dev` profile will enable optimizations for the dependencies, but not for the package itself. This will slow down the first build _significantly_, but incremental builds are slightly faster and bevy's performance (bevy is used as the renderer in the examples) improves a lot.
 
-When developing tests, we recommend `cargo watch -w editor/src -w src -x "test --profile fast-dev"`.
+When developing tests, we recommend `cargo watch -w src -x "test --profile fast-dev"`.
 
 ## Tutorial
 
@@ -165,6 +165,19 @@ We are currently working on some tutorials for the most important features.
     -   [ ] STL import/export
     -   [ ] OBJ import/export
 
+## Customization via Traits
+
+The availability of algorithms and operations for different mesh data structures is represented by traits. Some examples:
+
+-   The `Transformable` trait indicates that you can apply affine transformation to a mesh and implements methods such as `translate` and `rotate`.
+-   The `EuclideanMeshType` indicates that the mesh has vertex positions and lives in an Euclidean space and associates the mesh data type with a `Scalar` and `Vector` type etc.
+-   The `MakePrismatoid` trait implements methods such as `insert_pyramid` or `insert_cube`.
+-   The `MeshTypeHalfEdge` trait indicates that the mesh is based on a half-edge data structure (or can be treated as if) and makes sure that the mesh uses edge implementations that implement half-edge related methods like `twin_id`. It also enables the use of many algorithms that are currently only implemented for half-edge meshes.
+
+For a full list of traits see the [documentation](https://docs.rs/procedural_modelling).
+
+When using this trait-based library, you need to define your own type of `Mesh` and implement all traits you need. For most traits all methods have reasonable default implementations. This allows you to quickly implement meshes backed by a custom data structure or using custom vertex, face, edge, or mesh payloads. If you don't need anything special, you can use one of our default implementations such as `Bevy3dMesh` or the generic backend-agnostic `MeshNd<d>`. See `backends/bevy/mesh3d.rs` or `backends/nalgebra/mesh_nd.rs` for the exemplary default implementations.
+
 ## Features
 
 The following cargo features are available:
@@ -214,14 +227,6 @@ The package supports different triangulation algorithms. The robustness and rend
 
 -   ¹) Time for the triangulation on a Intel i7-12700K (single threaded). Run the benchmarks using `cargo bench --features benchmarks`.
 -   ²) FPS when rendering 100 large, transparent instances with the bevy 0.14.2 pbr shader on a Nvidia GeForce RTX 4060 Ti in Full HD. See `cargo run --example fps_bench --profile release --features="example_deps"`. For the non-Delaunay algorithms, the rendering time deteriorates for the larger circles since the edge length is not minimized causing significant overdraw.
-
-## Hierarchy of Traits
-
-The availability of algorithms and operations for different mesh data structures is represented by traits. For example, the `Transformable` trait implements methods such as `translate` and `rotate` and the `MakePrismatoid` trait implements methods such as `insert_pyramid` or `insert_cube`. There are also supertraits such as `Open2Manifold` that combine multiple traits for easier use. For a full list of traits and their implementations, see the [documentation](https://docs.rs/procedural_modelling).
-
-## Hierarchy of Traits
-
-The availability of algorithms and operations for different mesh data structures is represented by traits. For example, the `Transformable` trait implements methods such as `translate` and `rotate` and the `MakePrismatoid` trait implements methods such as `insert_pyramid` or `insert_cube`. There are also supertraits such as `Open2Manifold` that combine multiple traits for easier use. For a full list of traits and their implementations, see the [documentation](https://docs.rs/procedural_modelling).
 
 ## Supported Bevy Versions
 

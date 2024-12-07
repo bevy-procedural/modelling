@@ -18,7 +18,11 @@ use bevy::{
     },
 };
 
-/// A mesh type for bevy with 3D vertices, 32 bit indices, 32 bit floats, and no face or edge payload (no normals etc.)
+/// A mesh type for bevy with
+/// - 3D vertices,
+/// - 32 bit indices,
+/// - no face or edge payload,
+/// - f32 vertex positions, normals, and uv coordinates
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
 pub struct BevyMeshType3d32;
 

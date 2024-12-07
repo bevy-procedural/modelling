@@ -6,13 +6,18 @@ use crate::{
     math::HasPosition,
     mesh::{
         CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EdgeBasics, EmptyEdgePayload,
-        EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshBuilder, MeshType,
+        EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshType,
         MeshTypeHalfEdge,
     },
 };
 use bevy::math::{Affine2, Vec2, Vec3};
 
-/// A mesh type for bevy with 2D vertices, 32 bit indices, 32 bit floats, and no face or edge payload (no normals etc.)
+/// A mesh type for bevy with
+/// - 2D vertices,
+/// - 32 bit indices,
+/// - no face payloads,
+/// - f32 vertex positions and uv coordinates,
+/// - but no vertex normals
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
 pub struct BevyMeshType2d32;
 
@@ -59,37 +64,16 @@ impl HalfEdgeMeshImpl<BevyMeshType2d32> {
     /// Convert a BevyMesh2d to a 3d mesh.
     /// If there are curved edges they will be converted with the given tolerance.
     pub fn to_3d(&self, tol: f32) -> BevyMesh3d {
-        // TODO: optimize this
-        let mut mesh = self.clone();
-
-        // Convert curved edges
-        for e in mesh.edge_ids().collect::<Vec<_>>().iter() {
-            let edge = mesh.edge(*e);
-            if edge.curve_type() != CurvedEdgeType::Linear {
-                let vs = edge.flatten_casteljau(tol, &mesh);
-                if vs.len() == 0 {
-                    continue;
-                }
-                mesh.insert_vertices_into_edge(
-                    *e,
-                    vs.iter().map(|v| {
-                        (
-                            CurvedEdgePayload::default(),
-                            CurvedEdgePayload::default(),
-                            BevyVertexPayload2d::from_pos(*v),
-                        )
-                    }),
-                );
-                mesh.edge_mut(*e).set_curve_type(CurvedEdgeType::Linear);
-            }
-        }
-
         BevyMesh3d::import_mesh::<_, _, _, BevyMeshType2d32>(
-            &mesh,
+            self.clone().flatten_curved_edges(tol),
             |vp: &BevyVertexPayload2d| {
                 BevyVertexPayload3d::from_pos(Vec3::new(vp.pos().x, vp.pos().y, 0.0))
             },
-            |_ep| EmptyEdgePayload::default(),
+            |_ep| {
+                // TODO: flatten_curved_edges seems to miss some edges?
+                //assert!(ep.is_empty()); // no curves or anything
+                EmptyEdgePayload::default()
+            },
             |_fp| EmptyFacePayload::default(),
         )
     }

@@ -1,7 +1,12 @@
 use crate::{
-    math::IndexType,
-    mesh::{EdgeBasics, FaceBasics, MeshType, VertexBasics},
+    math::{HasPosition, IndexType},
+    mesh::{
+        CurvedEdge, CurvedEdgeType, DefaultEdgePayload, EdgeBasics, FaceBasics, MeshType,
+        VertexBasics,
+    },
 };
+
+use super::{EuclideanMeshType, MeshBuilder};
 
 /// Some basic operations to retrieve information about the mesh.
 pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clone {
@@ -133,4 +138,35 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     /// Returns the face shared by the two vertices or `None`.
     /// TODO: Currently cannot distinguish between holes and "the outside"
     fn shared_face(&self, v0: T::V, v1: T::V) -> Option<T::F>;
+
+    /// Converts the mesh to a mesh without curved edges
+    fn flatten_curved_edges<const D: usize>(&mut self, tol: T::S) -> &mut Self
+    where
+        T::Edge: CurvedEdge<D, T>,
+        T::EP: DefaultEdgePayload,
+        T: EuclideanMeshType<D>,
+        T::VP: HasPosition<D, T::Vec>,
+        T::Mesh: MeshBuilder<T>,
+    {
+        // TODO: assert that T::EP::default() is a linear edge
+        
+        // Convert curved edges
+        for e in self.edge_ids().collect::<Vec<_>>().iter() {
+            let edge = self.edge(*e);
+            if edge.curve_type() != CurvedEdgeType::Linear {
+                let vs = edge.flatten_casteljau(tol, self);
+                if vs.len() == 0 {
+                    continue;
+                }
+                self.insert_vertices_into_edge(
+                    *e,
+                    vs.iter()
+                        .map(|v| (T::EP::default(), T::EP::default(), T::VP::from_pos(*v))),
+                );
+                self.edge_mut(*e).set_curve_type(CurvedEdgeType::Linear);
+            }
+        }
+
+        self
+    }
 }

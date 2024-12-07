@@ -1,15 +1,11 @@
 //! This module contains backend-independent nalgebra implementations
 
+mod default_vertex_payload;
 mod math;
-mod vertex_payload_2d;
-/*mod mesh2d;
-mod mesh3d;
-mod vertex_payload_3d;
-*/
+mod mesh2d;
+mod mesh_nd;
 
+pub use default_vertex_payload::*;
 pub use math::*;
-pub use vertex_payload_2d::*;
-/*pub use mesh2d::*;
-pub use mesh3d::*;
-pub use vertex_payload_3d::*;
-*/
+pub use mesh2d::*;
+pub use mesh_nd::*;
