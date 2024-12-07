@@ -7,7 +7,7 @@ use crate::{
 
 /// Vertex Payload for Bevy with 2d position, and uv.
 #[derive(Clone, PartialEq, Default, Copy)]
-pub struct BevyVertexPayload2d {
+pub struct VertexPayload2d {
     /// The position of the vertex.
     position: Vec2,
 
@@ -15,7 +15,7 @@ pub struct BevyVertexPayload2d {
     uv: Vec2,
 }
 
-impl VertexPayload for BevyVertexPayload2d {
+impl VertexPayload for VertexPayload2d {
     fn allocate() -> Self {
         Self {
             position: Vec2::ZERO,
@@ -25,7 +25,7 @@ impl VertexPayload for BevyVertexPayload2d {
     }
 }
 
-impl Transformable<2> for BevyVertexPayload2d {
+impl Transformable<2> for VertexPayload2d {
     type S = f32;
     type Vec = Vec2;
     type Trans = bevy::math::Affine2;
@@ -64,7 +64,7 @@ impl Transformable<2> for BevyVertexPayload2d {
     }
 }
 
-impl HasPosition<2, Vec2> for BevyVertexPayload2d {
+impl HasPosition<2, Vec2> for VertexPayload2d {
     type S = f32;
 
     #[inline(always)]
@@ -86,7 +86,7 @@ impl HasPosition<2, Vec2> for BevyVertexPayload2d {
     }
 }
 
-impl std::fmt::Debug for BevyVertexPayload2d {
+impl std::fmt::Debug for VertexPayload2d {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:+05.3}, {:+05.3}", self.position.x, self.position.y,)
     }

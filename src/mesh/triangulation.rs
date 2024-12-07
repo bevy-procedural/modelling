@@ -243,7 +243,7 @@ impl<'a, V: IndexType> Triangulation<'a, V> {
     }
 
     /// Calculate the area of the polygon and check if it is the same as the sum of the areas of the triangles
-    pub fn verify_area<Vec2: Vector2D, Poly: Polygon<Vec2, S = Vec2::S>>(
+    pub fn verify_area<Vec2: Vector2D, Poly: Polygon<Vec2>>(
         &self,
         vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
         vec_hm: &HashMap<V, Vec2>,
@@ -284,7 +284,7 @@ impl<'a, V: IndexType> Triangulation<'a, V> {
     }
 
     /// Runs a large number of tests on the triangulation to verify that it is well-formed
-    pub fn verify_full<Vec2: Vector2D, Poly: Polygon<Vec2, S = Vec2::S>>(
+    pub fn verify_full<Vec2: Vector2D, Poly: Polygon<Vec2>>(
         &self,
         vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
     ) {

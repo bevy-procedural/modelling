@@ -52,9 +52,9 @@ When developing tests, we recommend `cargo watch -w editor/src -w src -x "test -
 
 ## Tutorial
 
-We are currently working on some tutorials for the most important features. 
+We are currently working on some tutorials for the most important features.
 
- - [Getting started](https://docs.rs/procedural_modelling/latest/procedural_modelling/)
+-   [Getting started](https://docs.rs/procedural_modelling/latest/procedural_modelling/)
 
 ## Feature Progress
 
@@ -76,7 +76,7 @@ We are currently working on some tutorials for the most important features.
     -   [ ] Pseudomanifold (with singularities)
     -   [ ] Non-Manifold (with branching surfaces)
     -   [ ] Non-Euclidean
-    -   [ ] Combinatorial (purely topological)
+    -   [ ] Arbitrary Graphs
     -   [ ] NURBS / T-Splines <!-- Bezier Surfaces / Parametric Surfaces / Spline Networks...? -->
 
 -   Triangulation
@@ -141,6 +141,7 @@ We are currently working on some tutorials for the most important features.
 
 -   Tools
 
+    -   [ ] Basic Network Science Tools
     -   [ ] Geodesic Pathfinding
     -   [ ] Raycasting
     -   [ ] Topology Analysis
@@ -159,7 +160,7 @@ We are currently working on some tutorials for the most important features.
 
     -   [x] Bevy
     -   [ ] wgpu
-    -   [x] nalgebra (for use without rendering)
+    -   [x] nalgebra (for wgpu or use without a rendering backend)
     -   [x] SVG import
     -   [ ] STL import/export
     -   [ ] OBJ import/export
@@ -168,14 +169,21 @@ We are currently working on some tutorials for the most important features.
 
 The following cargo features are available:
 
--   `meshopt` -- Use [Meshopt](https://github.com/gwihlidal/meshopt-rs) to optimize the performance of generated meshes.
--   `bevy` -- Compiles with support for bevy. Necessary for the examples and the editor.
+-   `bevy` -- Compiles with support for bevy.
+-   `wgpu` -- Compiles with support for wgpu.
+-   `example_deps` -- Compiles with the dependencies necessary for the examples.
+-   `netsci` -- Enable network science tools.
+-   `svg` -- Enable SVG import. Adds [usvg](https://github.com/linebender/resvg) as a dependency.
+-   `fonts` -- Enable font rendering. Adds [ab_glyph](https://github.com/alexheretic/ab-glyph) as a dependency.
+-   `meshopt` -- Enable mesh optimization. Adds [meshopt](https://github.com/gwihlidal/meshopt-rs) as a dependency.
 -   `benchmarks` -- Enable [criterion](https://github.com/bheisler/criterion.rs) for the benchmarks.
+-   `nalgebra` -- Enable [nalgebra](https://nalgebra.org/) as a backend. This is usually required for anything but bevy.
 
 For development only:
 
 -   `sweep_debug` -- Collect debug information during the sweepline triangulation and enable visualizations in the bevy backend.
 -   `sweep_debug_print` -- Print debug information for the sweepline triangulation.
+-   `bevy_dynamic` -- Use dynamic linking for bevy. This is useful for faster incremental builds.
 
 ## Triangulation algorithms
 

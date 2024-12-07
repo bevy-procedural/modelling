@@ -1,4 +1,4 @@
-//! Bevy f32 implementation of the mathematical traits.
+//! Generic nalgebra implementation of the mathematical traits.
 
 mod polygon;
 mod rotate;

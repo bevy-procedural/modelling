@@ -49,6 +49,11 @@ pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone + PartialEq {
         self.vertices(mesh).map(|v| v.id())
     }
 
+    /// Returns the degree of the vertex
+    fn degree(&self, mesh: &T::Mesh) -> usize {
+        self.edges_out(mesh).count()
+    }
+
     /// Iterates all outgoing (half)edges (resp. all edges in outwards-direction
     /// if undirected) incident to this vertex (clockwise)
     fn edges_out<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Edge> + 'a;

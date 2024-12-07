@@ -1,3 +1,5 @@
+use super::HasZero;
+
 /// based on petgraph::csr::IndexType;
 
 /// Trait for the unsigned integer type used for node and edge indices.
@@ -12,6 +14,18 @@ pub trait IndexType:
 
     /// Return the maximum value of the index type.
     fn max() -> Self;
+}
+
+impl HasZero for usize {
+    #[inline(always)]
+    fn zero() -> Self {
+        0
+    }
+
+    #[inline(always)]
+    fn is_zero(&self) -> bool {
+        *self == 0
+    }
 }
 
 impl IndexType for usize {

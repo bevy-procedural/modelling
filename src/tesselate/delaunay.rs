@@ -102,7 +102,7 @@ mod tests {
     fn test_font() {
         let mut mesh2d = BevyMesh2d::new();
         Font::new(include_bytes!("../../assets/Cochineal-Roman.otf"), 1.0)
-            .layout_text::<BevyMeshType2d32>("F", &mut mesh2d);
+            .layout_text::<2, BevyMeshType2d32>("F", &mut mesh2d);
         let mesh3d = mesh2d.to_3d(0.01);
         self::verify_triangulation::<BevyMeshType3d32>(&mesh3d, 0);
     }

@@ -77,7 +77,7 @@ pub trait EuclideanMeshType<const D: usize>:
     type Rot: Rotator<Self::Vec>;
 
     /// The implementation of 2d polygons.
-    type Poly: Polygon<Self::Vec2, S = Self::S>;
+    type Poly: Polygon<Self::Vec2>;
 }
 
 /// A `MeshType` specialized for half-edge meshes

@@ -1,5 +1,3 @@
-//! Bevy specific implementations for the vertex payload and 3d rotation.
-
 use bevy::math::{Quat, Vec2, Vec3};
 
 use crate::{

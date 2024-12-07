@@ -1,6 +1,6 @@
-use crate::mesh::{
-    EdgeBasics, FaceBasics,
-    MeshType, VertexBasics,
+use crate::{
+    math::IndexType,
+    mesh::{EdgeBasics, FaceBasics, MeshType, VertexBasics},
 };
 
 /// Some basic operations to retrieve information about the mesh.
@@ -73,6 +73,18 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     fn vertices_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T::Vertex>
     where
         T: 'a;
+
+    /// Returns whether the vertex ids are consecutive, i.e., 0, 1, 2, 3, ...
+    fn has_consecutive_vertex_ids(&self) -> bool {
+        let mut last_id: usize = 0;
+        for v in self.vertices() {
+            if v.id() != IndexType::new(last_id) {
+                return false;
+            }
+            last_id += 1;
+        }
+        true
+    }
 
     /// Returns an iterator over all non-deleted halfedge pairs without duplicates
     fn edges<'a>(&'a self) -> impl Iterator<Item = &'a T::Edge>

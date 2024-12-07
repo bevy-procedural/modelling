@@ -25,6 +25,12 @@ pub use topology::*;
 pub use transform::*;
 pub use triangulate::*;
 
+#[cfg(feature = "netsci")]
+mod netsci;
+
+#[cfg(feature = "netsci")]
+pub use netsci::*;
+
 #[cfg(feature = "fonts")]
 mod fonts;
 

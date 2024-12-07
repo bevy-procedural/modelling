@@ -1,10 +1,7 @@
-use super::{LineSegment2D, Scalar, Vector2D, VectorIteratorExt};
+use super::{LineSegment2D, Scalar, ScalarIteratorExt, Vector2D, VectorIteratorExt};
 
 /// Trait for a polygon in n-dimensional space.
 pub trait Polygon<Vec2: Vector2D>: Clone + PartialEq + std::fmt::Debug + 'static {
-    /// The scalar type of the polygon.
-    type S: Scalar;
-
     /// Returns a polygon from a list of points.
     fn from_points(points: &[Vec2]) -> Self;
 
@@ -21,22 +18,36 @@ pub trait Polygon<Vec2: Vector2D>: Clone + PartialEq + std::fmt::Debug + 'static
     /// Returns the points of the polygon.
     fn points(&self) -> &[Vec2];
 
-    /// Returns the signed area of the polygon.
-    fn signed_area(&self) -> Self::S;
+    /// Returns the number of vertices of the polygon.
+    fn num_points(&self) -> usize;
+
+    /// Returns the signed area of the polygon.    
+    fn signed_area(&self) -> Vec2::S {
+        // PERF: This should directly run on a point iterator.
+        let points = self.points();
+        Vec2::S::HALF
+            * (0..points.len())
+                .into_iter()
+                .map(|i| {
+                    let j = (i + 1) % points.len();
+                    points[i].x() * points[j].y() - points[j].x() * points[i].y()
+                })
+                .stable_sum()
+    }
 
     /// Returns the area of the polygon.
-    fn area(&self) -> Self::S {
+    fn area(&self) -> Vec2::S {
         self.signed_area().abs()
     }
 
     /// Returns whether the polygon is counter-clockwise oriented or zero.
     fn is_ccw(&self) -> bool {
-        self.signed_area() >= Self::S::ZERO
+        self.signed_area() >= Vec2::S::ZERO
     }
 
     /// Returns whether the polygon is clockwise oriented or zero.
     fn is_cw(&self) -> bool {
-        self.signed_area() >= Self::S::ZERO
+        self.signed_area() >= Vec2::S::ZERO
     }
 
     /// Whether a point is inside the polygon
