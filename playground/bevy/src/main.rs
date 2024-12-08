@@ -601,7 +601,7 @@ fn make_mesh(_settings: &GlobalSettings) -> BevyMesh3d {
     mesh*/
 
     //BevyMesh3d::uv_sphere(3.0, 64, 64)
-    //BevyMesh3d::geodesic_icosahedron(3.0, 64)
+    BevyMesh3d::geodesic_icosahedron(3.0, 64)
     //BevyMesh3d::geodesic_tetrahedron(3.0, 128)
     //BevyMesh3d::geodesic_octahedron(3.0, 128)
 
@@ -613,7 +613,7 @@ fn make_mesh(_settings: &GlobalSettings) -> BevyMesh3d {
     //_make_blechnum_spicant(_settings)
 
     //_make_bezier(_settings)
-    _read_svg(_settings)
+    //_read_svg(_settings)
 }
 
 pub fn main() {
@@ -722,7 +722,7 @@ fn setup_meshes(
         Name::new("Generated Shape"),
     ));
 
-    if true {
+    if false {
         let mesh = make_mesh(&GlobalSettings::default());
         show_vertex_indices(&mut texts, &mesh);
         show_edges(&mut texts, &mesh, 0.1);
@@ -742,25 +742,22 @@ fn setup_meshes(
 
     commands.insert_resource(AmbientLight::default());
 
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
+    commands.spawn((
+        DirectionalLight {
             color: Color::WHITE,
-            shadows_enabled: false,
+            shadows_enabled: true,
             ..default()
         },
-        transform: Transform {
+        Transform {
             translation: Vec3::new(0.0, 2.0, 0.0),
             rotation: Quat::from_rotation_x(-PI / 4.),
             ..default()
         },
-        ..Default::default()
-    });
+    ));
 
     commands.spawn((
-        Camera3dBundle {
-            transform: Transform::from_xyz(3.0, 5.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
-            ..default()
-        },
+        Camera3d::default(),
+        Transform::from_xyz(3.0, 5.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
         PanOrbitCamera::default(),
     ));
 }

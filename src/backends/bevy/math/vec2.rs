@@ -4,7 +4,7 @@ use bevy::math::{Affine2, Vec2};
 impl Vector<f32, 2> for Vec2 {
     #[inline(always)]
     fn angle_between(&self, other: Self) -> f32 {
-        Vec2::angle_between(*self, other)
+        Vec2::angle_to(*self, other)
     }
 
     #[inline(always)]
@@ -111,7 +111,7 @@ impl Vector2D for Vec2 {
 
     /// Angle between two vectors.
     fn angle(&self, a: Self, b: Self) -> f32 {
-        Vec2::angle_between(a - *self, b - *self)
+        Vec2::angle_to(a - *self, b - *self)
     }
 
     fn perp_dot(&self, other: &Self) -> Self::S {
@@ -134,7 +134,7 @@ impl TransformTrait<f32, 2> for Affine2 {
 
     #[inline(always)]
     fn from_rotation_arc(from: Vec2, to: Vec2) -> Self {
-        bevy::math::Affine2::from_angle(from.angle_between(to))
+        bevy::math::Affine2::from_angle(from.angle_to(to))
     }
 
     #[inline(always)]
