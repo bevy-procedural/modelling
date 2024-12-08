@@ -6,13 +6,13 @@ use crate::{
 };
 
 /// Basic vertex functionality for a mesh
-pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone + PartialEq {
+pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone {
     /// Returns the index of the vertex
     fn id(&self) -> T::V;
 
     /// Returns the payload of the vertex
     fn payload(&self) -> &T::VP;
-
+    
     /// Returns the vertex coordinates of the payload
     fn pos<S: Scalar, const D: usize, Vec: Vector<S, D>>(&self) -> Vec
     where

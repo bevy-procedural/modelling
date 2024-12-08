@@ -48,7 +48,7 @@ Or run the [examples](https://github.com/bevy-procedural/modelling/tree/main/exa
 
 For package development, we recommend using the `playground_bevy`- resp. `playground_wgpu`-subcrate. This example has a little [egui](https://github.com/jakobhellermann/bevy-inspector-egui/)-editor. Run it using `cargo watch -w playground -w src -x "run -p playground_bevy --profile fast-dev"`. The `fast-dev` profile will enable optimizations for the dependencies, but not for the package itself. This will slow down the first build _significantly_, but incremental builds are slightly faster and bevy's performance (bevy is used as the renderer in the examples) improves a lot.
 
-When developing tests, we recommend `cargo watch -w src -x "test --profile fast-dev"`.
+When developing tests, we recommend `cargo watch -w src -x "test --profile fast-dev"` resp. `cargo llvm-cov --html` to generate a coverage report.
 
 ## Tutorial
 
@@ -141,7 +141,8 @@ We are currently working on some tutorials for the most important features.
 
 -   Tools
 
-    -   [ ] Basic Network Science Tools
+    -   [x] Basic Network Science Tools (Laplacian, Adjacency, Degree, Spectrum)
+    -   [x] Mesh Isomorphism (partial)
     -   [ ] Geodesic Pathfinding
     -   [ ] Raycasting
     -   [ ] Topology Analysis

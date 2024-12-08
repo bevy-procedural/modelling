@@ -11,7 +11,7 @@ use crate::{
 };
 
 /// A vertex in a mesh.
-#[derive(Clone, PartialEq)]
+#[derive(Clone)]
 pub struct HalfEdgeVertexImpl<T: HalfEdgeImplMeshType> {
     /// the index of the vertex
     id: T::V,

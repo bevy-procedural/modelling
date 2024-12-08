@@ -62,6 +62,15 @@ pub type Mesh3d64 = MeshNd64<3>;
 /// 4d variant of MeshNd64
 pub type Mesh4d64 = MeshNd64<4>;
 
+/// 64-bit 3d variant of the half-edge vertex
+pub type Mesh3d64Vertex = HalfEdgeVertexImpl<MeshTypeNd64PNU<3>>;
+
+/// 64-bit 3d variant of the half-edge edge
+pub type Mesh3d64Edge = HalfEdgeImpl<MeshTypeNd64PNU<3>>;
+
+/// 64-bit 3d variant of the half-edge face
+pub type Mesh3d64Face = HalfEdgeFaceImpl<MeshTypeNd64PNU<3>>;
+
 /*
 impl<T: HalfEdgeImplMeshType<VP = BevyVertexPayload3d> + MeshType3D<Vec = Vec3, S = f32>>
     HalfEdgeMeshImpl<T>

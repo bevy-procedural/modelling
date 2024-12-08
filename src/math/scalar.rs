@@ -1,6 +1,6 @@
 use super::HasZero;
 
-/// To be used as a scalar in n-dimensional space.
+/// scalar types. Usually f32 or f64, but could also be other precisions or arbitrary precision.
 pub trait Scalar:
     Copy
     + Default
@@ -17,8 +17,10 @@ pub trait Scalar:
     + std::ops::Sub<Output = Self>
     + std::ops::SubAssign
     + std::ops::Neg<Output = Self>
-    + num_traits::identities::Zero
+    + num_traits::Zero
     + num_traits::One
+    + num_traits::Inv
+    + num_traits::Signed
     + From<f32>
     + 'static
 {
@@ -60,9 +62,6 @@ pub trait Scalar:
 
     /// Negative infinity.
     const NEG_INFINITY: Self;
-
-    /// Returns whether the scalar is zero.
-    fn is_zero(self) -> bool;
 
     /// Returns whether the scalar is strictly positive.
     fn is_positive(self) -> bool;

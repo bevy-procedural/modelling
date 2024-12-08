@@ -1,10 +1,15 @@
-use super::HasZero;
-
 /// based on petgraph::csr::IndexType;
 
 /// Trait for the unsigned integer type used for node and edge indices.
 pub trait IndexType:
-    Copy + Default + std::hash::Hash + Ord + std::fmt::Debug + 'static + std::fmt::Display
+    Copy
+    + Default
+    + std::hash::Hash
+    + Ord
+    + std::fmt::Debug
+    + 'static
+    + std::fmt::Display
+    + num_traits::Zero
 {
     /// Create a new index from a usize. Panics if the usize is out of range.
     fn new(x: usize) -> Self;
@@ -14,18 +19,6 @@ pub trait IndexType:
 
     /// Return the maximum value of the index type.
     fn max() -> Self;
-}
-
-impl HasZero for usize {
-    #[inline(always)]
-    fn zero() -> Self {
-        0
-    }
-
-    #[inline(always)]
-    fn is_zero(&self) -> bool {
-        *self == 0
-    }
 }
 
 impl IndexType for usize {

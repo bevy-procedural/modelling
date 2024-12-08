@@ -43,6 +43,20 @@ impl<const D: usize, T: EuclideanMeshType<D>> CurvedEdgeType<D, T> {
         };
         return res;
     }
+
+    /// Returns if two curves are about equal (control point wise) within a certain epsilon
+    pub fn is_about(&self, other: &Self, epsilon: T::S) -> bool {
+        match (self, other) {
+            (CurvedEdgeType::Linear, CurvedEdgeType::Linear) => true,
+            (CurvedEdgeType::QuadraticBezier(c1), CurvedEdgeType::QuadraticBezier(c2)) => {
+                c1.is_about(c2, epsilon)
+            }
+            (CurvedEdgeType::CubicBezier(c1, c2), CurvedEdgeType::CubicBezier(c3, c4)) => {
+                c1.is_about(c3, epsilon) && c2.is_about(c4, epsilon)
+            }
+            _ => false,
+        }
+    }
 }
 
 /// Edge that can be a line or some type of curve.

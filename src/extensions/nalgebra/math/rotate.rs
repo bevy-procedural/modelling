@@ -6,7 +6,6 @@ use nalgebra::SMatrix;
 #[derive(Clone, Debug, Copy)]
 pub struct NdRotate<S: Scalar, const D: usize> {
     // TODO: this is clumsy. But nd-rotation is extremely hard to implement. We should probably update the traits to not include the hard to implement rotation methods!
-
     /// rotation in 2D space
     rot2: Option<nalgebra::Rotation2<S>>,
 
@@ -55,6 +54,32 @@ impl<S: Scalar, const D: usize> NdRotate<S, D> {
             rot3.matrix().fixed_resize::<D, D>(S::zero())
         } else {
             panic!("No rotation matrix found");
+        }
+    }
+
+    /// Creates a new rotation from an angle. Works only for 2D.
+    pub fn from_angle(angle: S) -> Self
+    where
+        S: ScalarPlus,
+    {
+        assert!(D == 2);
+        Self {
+            rot2: Some(nalgebra::Rotation2::new(angle)),
+            rot3: None,
+            rot: None,
+        }
+    }
+
+    /// Creates a new rotation from an axis and an angle. Works only for 3D.
+    pub fn from_axis_angle(axis: nalgebra::Unit<VecN<S, 3>>, angle: S) -> Self
+    where
+        S: ScalarPlus,
+    {
+        assert!(D == 3);
+        Self {
+            rot2: None,
+            rot3: Some(nalgebra::Rotation3::from_axis_angle(&axis, angle)),
+            rot: None,
         }
     }
 

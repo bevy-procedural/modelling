@@ -13,7 +13,7 @@ use crate::{
 /// If you want to handle a non-orientable mesh, you have to use double covering.
 ///
 /// Also, if you have inner components, you have to use multiple faces!
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Hash)]
 pub struct HalfEdgeFaceImpl<T: HalfEdgeImplMeshType> {
     /// the index of the face
     id: T::F,

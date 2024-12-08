@@ -4,7 +4,7 @@ use crate::{
 };
 
 /// Basic edge traits for a mesh. Can be directed or undirected.
-pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone + PartialEq {
+pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone {
     /// Returns the identifier of the edge
     fn id(&self) -> T::E;
 
@@ -38,4 +38,9 @@ pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone + Partia
 
     /// Iterates all (half)edges incident to the same face (clockwise)
     fn edges_face_back<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Edge>;
+
+    /// Iterates all face ids incident to the edge 
+    /// (even for half-edges, this will return both faces if there are two 
+    /// or more than that if the edge is non-manifold)
+    fn face_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::F>;
 }
