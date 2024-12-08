@@ -30,9 +30,6 @@ struct GlobalSettings {
     #[inspector(min = 0.0, max = 100.0)]
     prog: f32,
 
-    px: f32,
-    py: f32,
-
     curvature: f32,
     angle: f32,
     step_base: f32,
@@ -48,8 +45,6 @@ impl Default for GlobalSettings {
     fn default() -> Self {
         GlobalSettings {
             tol: 0.01,
-            px: 0.0,
-            py: 0.0,
             prog: 50.0,
 
             curvature: -1.5,
@@ -669,7 +664,7 @@ fn update_meshes(
     //query: Query<(&Handle<Mesh>, &MeshSettings), Changed<MeshSettings>>,
     query: Query<(&Mesh3d, &MeshSettings)>,
     mut assets: ResMut<Assets<Mesh>>,
-    mut global_settings: ResMut<GlobalSettings>,
+    global_settings: ResMut<GlobalSettings>,
     windows: Query<&Window>,
     camera_q: Query<(&Camera, &GlobalTransform)>,
     mut texts: ResMut<Text3dGizmos>,
@@ -683,11 +678,7 @@ fn update_meshes(
         let distance = ray
             .intersect_plane(Vec3::ZERO, InfinitePlane3d::new(Vec3::Y))
             .unwrap_or(0.0);
-        let world_position = ray.get_point(distance);
-        if global_settings.px != world_position.x || global_settings.py != world_position.z {
-            global_settings.px = world_position.x;
-            global_settings.py = world_position.z;
-        }
+        let _world_position = ray.get_point(distance);
     }
 
     if !global_settings.is_changed() {

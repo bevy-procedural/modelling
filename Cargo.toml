@@ -1,7 +1,7 @@
 [package]
 name = "procedural_modelling"
 description = "A framework-agnostic Procedural Modelling crate."
-version = "0.2.1"
+version = "0.3.0"
 edition = "2021"
 categories = ["graphics", "rendering", "game-development"]
 keywords = ["gamedev", "graphics", "procedural", "meshes", "modelling"]

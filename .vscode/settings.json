@@ -1,13 +1,20 @@
 {
     "cSpell.words": [
+        "cartesian",
         "casteljau",
         "delaunay",
         "kahan",
         "laplacian",
+        "lerped",
         "nalgebra",
+        "NURBS",
         "perp",
         "recip",
         "Simd",
-        "undecisive"
+        "undecisive",
+        "usvg",
+        "wgpu",
+        "winit",
+        "xyzw"
     ],
 }

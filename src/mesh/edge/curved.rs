@@ -99,8 +99,8 @@ pub trait CurvedEdge<const D: usize, T: EuclideanMeshType<D, Edge = Self>>: Edge
             let p1 = curve.point_at(edge, mesh, t1);
             let tm = (t0 + t1) / T::S::TWO;
             let pm = curve.point_at(edge, mesh, tm);
-            let pline = p0.lerped(&p1, T::S::HALF);
-            let deviation = pm.distance(&pline);
+            let p_line = p0.lerped(&p1, T::S::HALF);
+            let deviation = pm.distance(&p_line);
 
             if deviation <= error {
                 // The segment is acceptable; push p1

@@ -4120,7 +4120,7 @@ dependencies = [
 
 [[package]]
 name = "procedural_modelling"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "ab_glyph",
  "bevy",
