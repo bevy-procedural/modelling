@@ -77,7 +77,7 @@ impl<T: HalfEdgeImplMeshType<VP = BevyVertexPayload3d> + MeshType3D<Vec = Vec3, 
         mesh.remove_indices();
         let mut attributes_to_remove = Vec::new();
         for (attr, _) in mesh.attributes() {
-            attributes_to_remove.push(attr);
+            attributes_to_remove.push(attr.clone());
         }
         for attr in attributes_to_remove {
             mesh.remove_attribute(attr);

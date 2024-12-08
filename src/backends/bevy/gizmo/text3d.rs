@@ -30,19 +30,19 @@ impl Text3d {
 
 // System to update text entity positions based on their 3D world position
 fn update_text_positions(
-    mut text_3d_query: Query<(&mut Style, &Text3d)>,
+    mut text_3d_query: Query<(&mut Node, &Text3d)>,
     mut camera: Query<(&mut Camera, &mut Transform, &GlobalTransform), With<Camera3d>>,
 ) {
-    for (mut style, text_3d) in text_3d_query.iter_mut() {
+    for (mut node, text_3d) in text_3d_query.iter_mut() {
         let (camera, _, camera_global_transform) = camera.single_mut();
         let world_position = text_3d.world_position;
-        let Some(viewport_position) =
+        let Ok(viewport_position) =
             camera.world_to_viewport(camera_global_transform, world_position)
         else {
             continue;
         };
         
-        style.top = Val::Px(viewport_position.y - text_3d.font_size / 2.0);
-        style.left = Val::Px(viewport_position.x);
+        node.top = Val::Px(viewport_position.y - text_3d.font_size / 2.0);
+        node.left = Val::Px(viewport_position.x);
     }
 }

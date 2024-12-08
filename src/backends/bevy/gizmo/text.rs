@@ -84,22 +84,22 @@ fn create_or_delete_text(mut commands: Commands, mut texts: ResMut<Text3dGizmos>
         } else {
             text.entity = Some(
                 commands
-                    .spawn((
-                        TextBundle {
-                            text: Text::from_section(
-                                text.text.to_string(),
-                                TextStyle {
-                                    font_size: text.font_size,
-                                    color: text.color,
-                                    ..default()
-                                },
-                            )
-                            .with_justify(JustifyText::Center)
-                            .with_no_wrap(),
-                            ..default()
-                        },
-                        text3d::Text3d::new(text.world_position, text.font_size),
-                    ))
+                    .spawn((Node {
+                        position_type: PositionType::Absolute,
+                        justify_content: JustifyContent::Center,
+                        overflow: Overflow::visible(),
+                        max_width: Val::Px(0.0),
+                        ..default()
+                    },))
+                    .with_children(|builder| {
+                        builder.spawn((
+                            Text::new(text.text.to_string()),
+                            TextFont::from_font_size(text.font_size),
+                            TextLayout::new_with_justify(JustifyText::Center).with_no_wrap(),
+                            TextColor(text.color),
+                            text3d::Text3d::new(text.world_position, text.font_size),
+                        ));
+                    })
                     .id(),
             );
         }

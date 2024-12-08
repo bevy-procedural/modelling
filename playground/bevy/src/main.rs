@@ -661,7 +661,7 @@ fn exit_on_esc(
 
 fn update_meshes(
     //query: Query<(&Handle<Mesh>, &MeshSettings), Changed<MeshSettings>>,
-    query: Query<(&Handle<Mesh>, &MeshSettings)>,
+    query: Query<(&Mesh3d, &MeshSettings)>,
     mut assets: ResMut<Assets<Mesh>>,
     mut global_settings: ResMut<GlobalSettings>,
     windows: Query<&Window>,
@@ -672,7 +672,7 @@ fn update_meshes(
     let (camera, camera_transform) = camera_q.single();
     if let Some(ray) = window
         .cursor_position()
-        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
+        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor).ok())
     {
         let distance = ray
             .intersect_plane(Vec3::ZERO, InfinitePlane3d::new(Vec3::Y))
@@ -688,12 +688,12 @@ fn update_meshes(
         return;
     }
 
-    for (handle, _settings) in query.iter() {
+    for (bevy_mesh, _settings) in query.iter() {
         let mut mesh = make_mesh(&global_settings);
         let mut meta = TesselationMeta::default();
         mesh.generate_smooth_normals();
         mesh.bevy_set_ex(
-            assets.get_mut(handle).unwrap(),
+            assets.get_mut(bevy_mesh).unwrap(),
             TriangulationAlgorithm::MinWeight,
             true,
             &mut meta,
@@ -710,22 +710,19 @@ fn setup_meshes(
     mut texts: ResMut<Text3dGizmos>,
 ) {
     commands.spawn((
-        PbrBundle {
-            mesh: meshes.add(Mesh::from(Plane3d::new(Vec3::Y, Vec2::new(1.0, 1.0)))),
-            material: materials.add(StandardMaterial {
-                base_color: Color::srgba(0.9, 0.9, 0.9, 1.0),
-                //alpha_mode: AlphaMode::Blend,
-                double_sided: false,
-                cull_mode: None,
-                ..default()
-            }),
+        Mesh3d(meshes.add(Mesh::from(Plane3d::new(Vec3::Y, Vec2::new(1.0, 1.0))))),
+        MeshMaterial3d(materials.add(StandardMaterial {
+            base_color: Color::srgba(0.9, 0.9, 0.9, 1.0),
+            //alpha_mode: AlphaMode::Blend,
+            double_sided: false,
+            cull_mode: None,
             ..default()
-        },
+        })),
         MeshSettings::default(),
         Name::new("Generated Shape"),
     ));
 
-    if false {
+    if true {
         let mesh = make_mesh(&GlobalSettings::default());
         show_vertex_indices(&mut texts, &mesh);
         show_edges(&mut texts, &mesh, 0.1);
