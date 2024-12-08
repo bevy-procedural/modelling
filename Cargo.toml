@@ -57,7 +57,7 @@ nalgebra = { version = "0.33.0", optional = true }
 num-traits = "0.2.19"
 
 [features]
-default = ["wgpu", "netsci"]
+default = ["wgpu", "netsci", "fonts"]
 netsci = ["nalgebra"]
 wgpu = ["dep:wgpu", "nalgebra"]
 bevy = ["dep:bevy", "bevy/bevy_core_pipeline"]

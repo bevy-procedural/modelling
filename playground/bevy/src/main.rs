@@ -1,5 +1,9 @@
 use bevy::{
-    pbr::wireframe::{WireframeConfig, WireframePlugin},
+    core_pipeline::experimental::taa::TemporalAntiAliasPlugin,
+    pbr::{
+        wireframe::{WireframeConfig, WireframePlugin},
+        CascadeShadowConfigBuilder, ShadowFilteringMethod,
+    },
     prelude::*,
     window::WindowResolution,
 };
@@ -10,7 +14,7 @@ use bevy_inspector_egui::{
 };
 use bevy_panorbit_camera::*;
 use procedural_modelling::{
-    backends::{
+    extensions::{
         bevy::{text::*, *},
         svg::BackendSVG,
     },
@@ -576,9 +580,12 @@ fn _read_svg(settings: &GlobalSettings) -> BevyMesh3d {
     let mut m2d = BackendSVG::<BevyMeshType2d32>::from_svg(svg);
     println!("{:?}", m2d);
 
-    m2d.scale(&Vec2::splat(-0.004))
+    let mut m3d = m2d
+        .scale(&Vec2::splat(-0.004))
         .translate(&Vec2::new(2.0, 2.0))
-        .to_3d(settings.tol)
+        .to_3d(settings.tol);
+    m3d.extrude(0, Transform::from_translation(Vec3::new(0.0, 0.0, -0.2)));
+    m3d
 }
 
 fn make_mesh(_settings: &GlobalSettings) -> BevyMesh3d {
@@ -601,7 +608,7 @@ fn make_mesh(_settings: &GlobalSettings) -> BevyMesh3d {
     mesh*/
 
     //BevyMesh3d::uv_sphere(3.0, 64, 64)
-    BevyMesh3d::geodesic_icosahedron(3.0, 64)
+    //BevyMesh3d::geodesic_icosahedron(3.0, 64)
     //BevyMesh3d::geodesic_tetrahedron(3.0, 128)
     //BevyMesh3d::geodesic_octahedron(3.0, 128)
 
@@ -613,7 +620,7 @@ fn make_mesh(_settings: &GlobalSettings) -> BevyMesh3d {
     //_make_blechnum_spicant(_settings)
 
     //_make_bezier(_settings)
-    //_read_svg(_settings)
+    _read_svg(_settings)
 }
 
 pub fn main() {
@@ -690,6 +697,15 @@ fn update_meshes(
 
     for (bevy_mesh, _settings) in query.iter() {
         let mut mesh = make_mesh(&global_settings);
+
+        // place it "on the floor"
+        let min_y = mesh
+            .vertices()
+            .map(|v| v.pos().y)
+            .min_by(|a, b| a.partial_cmp(b).unwrap())
+            .unwrap_or(0.0);
+        mesh.translate(&Vec3::new(0.0, -min_y, 0.0));
+
         let mut meta = TesselationMeta::default();
         mesh.generate_smooth_normals();
         mesh.bevy_set_ex(
@@ -710,11 +726,22 @@ fn setup_meshes(
     mut texts: ResMut<Text3dGizmos>,
 ) {
     commands.spawn((
+        Mesh3d(meshes.add(Mesh::from(Plane3d::new(Vec3::Y, Vec2::new(10.0, 10.0))))),
+        MeshMaterial3d(materials.add(StandardMaterial {
+            base_color: Color::srgb(0.4, 0.6, 0.4),
+            double_sided: true,
+            cull_mode: None,
+            ..default()
+        })),
+        Name::new("Floor"),
+    ));
+
+    commands.spawn((
         Mesh3d(meshes.add(Mesh::from(Plane3d::new(Vec3::Y, Vec2::new(1.0, 1.0))))),
         MeshMaterial3d(materials.add(StandardMaterial {
-            base_color: Color::srgba(0.9, 0.9, 0.9, 1.0),
+            base_color: Color::srgb(0.9, 0.9, 0.9),
             //alpha_mode: AlphaMode::Blend,
-            double_sided: false,
+            double_sided: true,
             cull_mode: None,
             ..default()
         })),
@@ -729,19 +756,7 @@ fn setup_meshes(
         show_faces(&mut texts, &mesh);
     }
 
-    /*commands.spawn((
-        PbrBundle {
-            mesh: meshes.add(Mesh::from(Plane3d::new(Vec3::Y, Vec2::new(1.0, 1.0)))),
-            material: materials.add(StandardMaterial::default()),
-            transform: Transform::from_translation(Vec3::new(0.0, -1.0, 0.0))
-                .with_scale(Vec3::splat(10.0)),
-            ..default()
-        },
-        Name::new("Floor"),
-    ));*/
-
     commands.insert_resource(AmbientLight::default());
-
     commands.spawn((
         DirectionalLight {
             color: Color::WHITE,
@@ -753,11 +768,20 @@ fn setup_meshes(
             rotation: Quat::from_rotation_x(-PI / 4.),
             ..default()
         },
+        // very high quality shadows
+        CascadeShadowConfigBuilder {
+            num_cascades: 8,
+            first_cascade_far_bound: 5.0,
+            maximum_distance: 55.0,
+            ..default()
+        }
+        .build(),
     ));
 
     commands.spawn((
         Camera3d::default(),
-        Transform::from_xyz(3.0, 5.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+        Transform::from_xyz(3.0, 7.0, 5.0).looking_at(Vec3::new(0.0, 2.0, 0.0), Vec3::Y),
         PanOrbitCamera::default(),
+        ShadowFilteringMethod::Gaussian,
     ));
 }

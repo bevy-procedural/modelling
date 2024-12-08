@@ -100,32 +100,31 @@ pub fn ear_clipping_direct<Vec2: Vector2D, V: IndexType>(
 }
 
 #[cfg(test)]
-#[cfg(feature = "bevy")]
+#[cfg(feature = "nalgebra")]
 mod tests {
     use super::*;
-    use crate::prelude::{bevy::*, *};
-    use bevy::math::{Vec2, Vec3};
+    use crate::{extensions::nalgebra::*, prelude::*};
 
-    fn verify_triangulation(vec2s: &Vec<IndexedVertex2D<u32, Vec2>>) {
+    fn verify_triangulation(vec2s: &Vec<IndexedVertex2D<usize, Vec2<f64>>>) {
         assert!(
-            Bevy2DPolygon::from_iter(vec2s.iter().map(|v| v.vec)).is_ccw(),
+            Polygon2d::from_iter(vec2s.iter().map(|v| v.vec)).is_ccw(),
             "Polygon must be counterclockwise"
         );
         let mut indices = Vec::new();
         let mut tri = Triangulation::new(&mut indices);
-        let m = BevyMesh3d::polygon(
+        let m = Mesh3d64::polygon(
             vec2s
                 .iter()
-                .map(|v| BevyVertexPayload3d::from_pos(Vec3::new(v.vec.x, 0.0, v.vec.y))),
+                .map(|v| VertexPayloadPNU::from_pos(Vec3::new(v.vec.x, 0.0, v.vec.y))),
         );
-        ear_clipping::<BevyMeshType3d32>(m.face(0), &m, &mut tri, false);
-        tri.verify_full::<Vec2, Bevy2DPolygon>(vec2s);
+        ear_clipping::<MeshType3d64PNU>(m.face(0), &m, &mut tri, false);
+        tri.verify_full::<Vec2<f64>, Polygon2d<f64>>(vec2s);
     }
 
-    fn liv_from_array(arr: &[[f32; 2]]) -> Vec<IndexedVertex2D<u32, Vec2>> {
+    fn liv_from_array(arr: &[[f64; 2]]) -> Vec<IndexedVertex2D<usize, Vec2<f64>>> {
         arr.iter()
             .enumerate()
-            .map(|(i, &v)| IndexedVertex2D::new(Vec2::new(v[0], v[1]), i as u32))
+            .map(|(i, &v)| IndexedVertex2D::new(Vec2::new(v[0], v[1]), i as usize))
             .collect()
     }
 
@@ -141,7 +140,7 @@ mod tests {
             &(0..n)
                 .into_iter()
                 .map(|i| {
-                    let a = i as f32 / (n as f32) * std::f32::consts::PI * 2.0;
+                    let a = i as f64 / (n as f64) * std::f64::consts::PI * 2.0;
                     IndexedVertex2D::new(Vec2::new(a.cos(), a.sin()), i)
                 })
                 .collect(),

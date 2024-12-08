@@ -156,7 +156,7 @@ We are currently working on some tutorials for the most important features.
     -   [ ] Topology
 -->
 
--   Backends
+-   Extensions
 
     -   [x] Bevy
     -   [ ] wgpu

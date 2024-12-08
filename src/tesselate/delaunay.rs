@@ -80,9 +80,10 @@ pub fn delaunay_triangulation<T: MeshType3D>(
 }
 
 #[cfg(test)]
-#[cfg(feature = "bevy")]
+#[cfg(feature = "nalgebra")]
 mod tests {
-    use crate::prelude::{bevy::*, *};
+    use crate::extensions::nalgebra::*;
+    use crate::prelude::*;
 
     fn verify_triangulation<T: MeshType3D>(mesh: &T::Mesh, f: T::F) {
         let face = mesh.face(f);
@@ -100,10 +101,10 @@ mod tests {
     #[test]
     #[cfg(feature = "fonts")]
     fn test_font() {
-        let mut mesh2d = BevyMesh2d::new();
+        let mut mesh2d = Mesh2d64Curved::new();
         Font::new(include_bytes!("../../assets/Cochineal-Roman.otf"), 1.0)
-            .layout_text::<2, BevyMeshType2d32>("F", &mut mesh2d);
-        let mesh3d = mesh2d.to_3d(0.01);
-        self::verify_triangulation::<BevyMeshType3d32>(&mesh3d, 0);
+            .layout_text::<2, MeshType2d64PNUCurved>("F", &mut mesh2d);
+        let mesh3d = mesh2d.to_nd(0.01);
+        self::verify_triangulation::<MeshType3d64PNU>(&mesh3d, 0);
     }
 }

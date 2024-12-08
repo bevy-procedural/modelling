@@ -90,9 +90,10 @@ pub trait NetworkScience<T: MeshType<Mesh = Self>>: MeshBasics<T> {
 }
 
 #[cfg(test)]
+#[cfg(feature = "nalgebra")]
 mod tests {
     use super::*;
-    use crate::{backends::nalgebra::MeshNd64, math::Scalar, prelude::MakePrismatoid};
+    use crate::{extensions::nalgebra::MeshNd64, math::Scalar, prelude::MakePrismatoid};
     use itertools::Itertools;
 
     #[test]

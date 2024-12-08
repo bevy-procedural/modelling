@@ -2,7 +2,7 @@
 #![doc = include_str!("../README.md")]
 #![doc = include_str!("../doc/start.md")]
 
-pub mod backends;
+pub mod extensions;
 pub mod halfedge;
 pub mod math;
 pub mod mesh;
@@ -23,13 +23,30 @@ pub mod prelude {
 }
 
 #[cfg(test)]
-#[cfg(feature = "bevy")]
 mod tests {
-    use crate::prelude::{bevy::*, *};
+    use crate::prelude::*;
 
     #[test]
-    fn test_library() {
+    #[cfg(feature = "bevy")]
+    fn test_library_bevy() {
+        use crate::extensions::bevy::*;
+
         let mut mesh = BevyMesh3d::geodesic_octahedron(3.0, 128);
+        let mut meta = TesselationMeta::default();
+        mesh.generate_smooth_normals();
+        let (_is, _vs) = mesh.triangulate_and_generate_flat_normals_post(
+            TriangulationAlgorithm::Delaunay,
+            &mut meta,
+        );
+        // TODO: test something
+    }
+
+    #[test]
+    #[cfg(feature = "nalgebra")]
+    fn test_library_nalgebra() {
+        use crate::extensions::nalgebra::*;
+
+        let mut mesh = Mesh3d64::geodesic_octahedron(3.0, 128);
         let mut meta = TesselationMeta::default();
         mesh.generate_smooth_normals();
         let (_is, _vs) = mesh.triangulate_and_generate_flat_normals_post(

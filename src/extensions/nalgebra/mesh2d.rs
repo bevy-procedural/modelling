@@ -79,17 +79,10 @@ impl HalfEdgeMeshImpl<MeshType2d64PNUCurved> {
 }
 
 #[cfg(test)]
+#[cfg(feature = "nalgebra")]
 mod tests {
-    use core::f64;
-
-    use crate::{
-        backends::nalgebra::Vec3,
-        math::Polygon,
-        mesh::{Face3d, MeshChecker},
-        prelude::{regular_polygon_area, Make2dShape},
-    };
-
     use super::*;
+    use crate::{extensions::nalgebra::Vec3, prelude::*};
 
     #[test]
     fn test_mesh2d64curved_construction() {
