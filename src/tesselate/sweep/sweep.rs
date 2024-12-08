@@ -396,7 +396,7 @@ mod tests {
     use crate::{extensions::nalgebra::*, prelude::*, tesselate::sweep::LinearMonoTriangulator};
 
     fn verify_triangulation_i<
-        S: ScalarPlus,
+        S: Scalar,
         MT: MonotoneTriangulator<V = usize, Vec2 = Vec2<S>>,
     >(
         vec2s: &Vec<IndexedVertex2D<usize, Vec2<S>>>,
@@ -412,14 +412,14 @@ mod tests {
         tri.verify_full::<Vec2<S>, Polygon2d<S>>(vec2s);
     }
 
-    fn verify_triangulation<S: ScalarPlus>(vec2s: &Vec<IndexedVertex2D<usize, Vec2<S>>>) {
+    fn verify_triangulation<S: Scalar>(vec2s: &Vec<IndexedVertex2D<usize, Vec2<S>>>) {
         //println!("LINEAR");
         verify_triangulation_i::<S, LinearMonoTriangulator<usize, Vec2<S>>>(vec2s);
         //println!("DYNAMIC");
         //verify_triangulation_i::<DynamicMonoTriangulator<usize, Vec2, Bevy2DPolygon>>(vec2s);
     }
 
-    fn liv_from_array<S: ScalarPlus>(arr: &[[S; 2]]) -> Vec<IndexedVertex2D<usize, Vec2<S>>> {
+    fn liv_from_array<S: Scalar>(arr: &[[S; 2]]) -> Vec<IndexedVertex2D<usize, Vec2<S>>> {
         arr.iter()
             .enumerate()
             .map(|(i, &v)| IndexedVertex2D::new(Vec2::new(v[0], v[1]), i))

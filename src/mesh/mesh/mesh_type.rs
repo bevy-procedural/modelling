@@ -67,7 +67,7 @@ pub trait EuclideanMeshType<const D: usize>:
     /// The 2d vector type derived from the default vector
     type Vec2: Vector2D<S = Self::S>;
 
-    /// The type of the scalar used for vertices.
+    /// The type of the scalar used for vertex position.
     type S: Scalar;
 
     /// The type of the transformation used for vertices.

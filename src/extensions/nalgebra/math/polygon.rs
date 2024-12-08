@@ -1,4 +1,4 @@
-use super::{ScalarPlus, Vec2};
+use super::Vec2;
 use crate::math::{Polygon, Scalar};
 use nalgebra::SVector;
 
@@ -8,7 +8,7 @@ pub struct Polygon2d<S: Scalar> {
     vertices: Vec<SVector<S, 2>>,
 }
 
-impl<S: ScalarPlus> Polygon<Vec2<S>> for Polygon2d<S> {
+impl<S: Scalar> Polygon<Vec2<S>> for Polygon2d<S> {
     fn from_points(points: &[Vec2<S>]) -> Self {
         Self {
             vertices: points.to_vec(),

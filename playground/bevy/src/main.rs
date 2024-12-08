@@ -1,5 +1,4 @@
 use bevy::{
-    core_pipeline::experimental::taa::TemporalAntiAliasPlugin,
     pbr::{
         wireframe::{WireframeConfig, WireframePlugin},
         CascadeShadowConfigBuilder, ShadowFilteringMethod,

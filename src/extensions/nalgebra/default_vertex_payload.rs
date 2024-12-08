@@ -1,13 +1,12 @@
 use crate::{
-    math::{HasNormal, HasPosition, TransformTrait, Transformable},
+    extensions::nalgebra::{NdAffine, NdRotate, ScalarPlus, VecN},
+    math::{HasNormal, HasPosition, Scalar, TransformTrait, Transformable},
     mesh::VertexPayload,
 };
 
-use super::{NdAffine, NdRotate, ScalarPlus, VecN};
-
 /// d-dimensional Vertex Payload with position, normal, and uv coordinates.
 #[derive(Clone, PartialEq, Copy)]
-pub struct VertexPayloadPNU<S: ScalarPlus, const D: usize> {
+pub struct VertexPayloadPNU<S: Scalar, const D: usize> {
     /// The position of the vertex.
     position: VecN<S, D>,
 
@@ -18,7 +17,7 @@ pub struct VertexPayloadPNU<S: ScalarPlus, const D: usize> {
     uv: VecN<S, 2>,
 }
 
-impl<S: ScalarPlus, const D: usize> VertexPayload for VertexPayloadPNU<S, D> {
+impl<S: Scalar, const D: usize> VertexPayload for VertexPayloadPNU<S, D> {
     fn allocate() -> Self {
         Self {
             position: VecN::zeros(),
@@ -54,7 +53,7 @@ impl<S: ScalarPlus, const D: usize> Transformable<D> for VertexPayloadPNU<S, D> 
     }
 }
 
-impl<S: ScalarPlus, const D: usize> HasPosition<D, VecN<S, D>> for VertexPayloadPNU<S, D> {
+impl<S: Scalar, const D: usize> HasPosition<D, VecN<S, D>> for VertexPayloadPNU<S, D> {
     type S = S;
 
     #[inline(always)]
@@ -77,7 +76,7 @@ impl<S: ScalarPlus, const D: usize> HasPosition<D, VecN<S, D>> for VertexPayload
     }
 }
 
-impl<S: ScalarPlus, const D: usize> std::fmt::Debug for VertexPayloadPNU<S, D> {
+impl<S: Scalar, const D: usize> std::fmt::Debug for VertexPayloadPNU<S, D> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("VertexPayloadPosNorUV")
             .field("position", &self.position)
@@ -87,7 +86,7 @@ impl<S: ScalarPlus, const D: usize> std::fmt::Debug for VertexPayloadPNU<S, D> {
     }
 }
 
-impl<S: ScalarPlus, const D: usize> HasNormal<D, VecN<S, D>> for VertexPayloadPNU<S, D> {
+impl<S: Scalar, const D: usize> HasNormal<D, VecN<S, D>> for VertexPayloadPNU<S, D> {
     type S = S;
 
     #[inline(always)]

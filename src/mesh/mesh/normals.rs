@@ -1,5 +1,5 @@
 use crate::{
-    math::{HasNormal, Vector, VectorIteratorExt},
+    math::{HasNormal, Scalar, Vector, VectorIteratorExt},
     mesh::{EuclideanMeshType, Face3d, FaceBasics, MeshBasics, MeshType3D, VertexBasics},
 };
 use std::collections::HashMap;
@@ -21,9 +21,15 @@ pub enum GenerateNormals {
 }
 
 /// Methods to work with normals in a mesh.
-pub trait WithNormals<const D: usize, T: EuclideanMeshType<D, Mesh = Self>>: MeshBasics<T>
-where
-    T::VP: HasNormal<D, T::Vec, S = T::S>,
+///
+/// Normals can use different vector and scalar types than positions. But usually it's sensible to use the same types.
+pub trait WithNormals<
+    const D: usize,
+    VecN: Vector<SN, D>,
+    SN: Scalar,
+    T: EuclideanMeshType<D, Mesh = Self>,
+>: MeshBasics<T> where
+    T::VP: HasNormal<D, VecN, S = SN>,
 {
     /// Generates flat normals and safes them in the mesh.
     /// Requires all vertices in the mesh to be duplicated.
