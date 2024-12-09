@@ -75,7 +75,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     /// Since the vertex payloads in the `Deletable` can be sparse,
     /// we need to compact the vertices when converting them to a dense vector.
     /// This function returns the cloned compact vertices and maps the indices to the new compact buffer.
-    fn get_compact_vertices(&self, indices: &mut Vec<T::V>) -> Vec<T::VP>;
+    fn dense_vertices(&self, indices: &mut Vec<T::V>) -> Vec<T::VP>;
 
     /// Returns an iterator over all non-deleted vertices
     fn vertices<'a>(&'a self) -> impl Iterator<Item = &'a T::Vertex>
@@ -153,6 +153,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     fn shared_edge_id(&self, v: T::V, w: T::V) -> Option<T::E>;
 
     /// Returns the face shared by the two vertices or `None`.
+    /// 
     /// TODO: Currently cannot distinguish between holes and "the outside"
     fn shared_face(&self, v0: T::V, v1: T::V) -> Option<T::F>;
 
@@ -198,11 +199,16 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
             .any(|e| e.curve_type() != CurvedEdgeType::Linear)
     }
 
-    /// Given two graphs and an vertex id isomorphism, check whether
+
+    /// Given two graphs and a vertex id isomorphism, check whether
     /// - the graphs have the same number of vertices, edges, and faces,
     /// - the corresponding vertices are adjacent in one mesh iff they are adjacent in the other mesh,
     /// - the faces have the same vertices up to rotation of the vertex list,
     /// - the three comparison functions hold for all pairs of corresponding vertices, edges, and faces.
+    /// 
+    /// Can take up to O(n^2) time.
+    /// 
+    /// TODO: Split this into is_vertex/edge/face_isomorphic and make each of them return the induced isomorphism
     fn is_isomorphic<
         T2: MeshType,
         F1: Fn(&T::Vertex, &T2::Vertex) -> bool,
@@ -271,7 +277,6 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
                         .map(|id| *iso.get(id).unwrap())
                         .collect_vec();
                     for (other_f, other_vs) in other_faces.iter() {
-                        println!("vs: {:?}, other_vs: {:?}", vs, other_vs);
                         // faces are the same if they have the same vertices
                         if equal_up_to_rotation(&vs, other_vs) {
                             face_iso.insert(face, *other_f);
@@ -372,8 +377,10 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     }
 
     /// Whether the graphs have the same connectivity, ids, and vertex positions.
+    /// We use the trivial isomorphism for vertices and edges, i.e., the same vertices
+    /// should have the same ids and the same edges should have the same ids.
     /// Ignores other payloads. A special case of `is_equivalent`.
-    fn is_equivalent_pos<const D: usize, S: Scalar, Vec: Vector<S, D>>(
+    fn is_trivially_isomorphic_pos<const D: usize, S: Scalar, Vec: Vector<S, D>>(
         &self,
         other: &Self,
         eps: S,
@@ -436,8 +443,8 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
         )
     }
 
-    /// Same as `is_equivalent_pos`, but also checks control points of curved edges.
-    fn is_equivalent_pos_curved<const D: usize>(
+    /// Same as `is_trivially_isomorphic_pos`, but also checks control points of curved edges.
+    fn is_trivially_isomorphic_pos_curved<const D: usize>(
         &self,
         other: &Self,
         eps: T::S,

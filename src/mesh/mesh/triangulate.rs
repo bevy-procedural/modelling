@@ -27,7 +27,7 @@ pub trait Triangulateable<T: MeshType<Mesh = Self>>: MeshBasics<T> {
             // TODO debug_assert!(tri.verify_full());
         }
 
-        let vs = self.get_compact_vertices(&mut indices);
+        let vs = self.dense_vertices(&mut indices);
         (indices, vs)
     }
 

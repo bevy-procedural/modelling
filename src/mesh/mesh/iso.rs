@@ -118,11 +118,11 @@ mod tests {
         assert!(cube.is_trivially_isomorphic(&cube_by_vertices).ne());
         assert!(cube.is_trivially_isomorphic(&rotated_cube).eq());
 
-        assert!(cube.is_equivalent_pos(&cube, 1e-6).eq());
-        assert!(cube.is_equivalent_pos(&large_cube, 1e-6).ne());
-        assert!(cube.is_equivalent_pos(&flipped_cube, 1e-6).ne());
-        assert!(cube.is_equivalent_pos(&cube_by_vertices, 1e-6).ne());
-        assert!(cube.is_equivalent_pos(&rotated_cube, 1e-6).ne());
+        assert!(cube.is_trivially_isomorphic_pos(&cube, 1e-6).eq());
+        assert!(cube.is_trivially_isomorphic_pos(&large_cube, 1e-6).ne());
+        assert!(cube.is_trivially_isomorphic_pos(&flipped_cube, 1e-6).ne());
+        assert!(cube.is_trivially_isomorphic_pos(&cube_by_vertices, 1e-6).ne());
+        assert!(cube.is_trivially_isomorphic_pos(&rotated_cube, 1e-6).ne());
 
         let ps = |a: &Mesh3d64Vertex, b: &Mesh3d64Vertex| a.pos().is_about(&b.pos(), 1e-6);
 
@@ -137,6 +137,9 @@ mod tests {
             .is_ok());
         assert!(cube
             .find_payload_isomorphism::<MT, _>(&cube_by_vertices, ps)
+            .is_ok());
+        assert!(cube
+            .find_payload_isomorphism::<MT, _>(&rotated_cube, ps)
             .is_ok());
 
         assert!(cube.is_isomorphic_by::<MT, _>(&cube, ps).eq());

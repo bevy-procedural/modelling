@@ -1,6 +1,9 @@
 use super::{LineSegment2D, Scalar, ScalarIteratorExt, Vector2D, VectorIteratorExt};
 
 /// Trait for a polygon in n-dimensional space.
+///
+/// It should be able to handle degenerate and self-overlapping polygons and also
+/// empty polygons or those with only 1 or 2 vertices.
 pub trait Polygon<Vec2: Vector2D>: Clone + PartialEq + std::fmt::Debug + 'static {
     /// Returns a polygon from a list of points.
     fn from_points(points: &[Vec2]) -> Self;
@@ -47,7 +50,7 @@ pub trait Polygon<Vec2: Vector2D>: Clone + PartialEq + std::fmt::Debug + 'static
 
     /// Returns whether the polygon is clockwise oriented or zero.
     fn is_cw(&self) -> bool {
-        self.signed_area() >= Vec2::S::ZERO
+        self.signed_area() <= Vec2::S::ZERO
     }
 
     /// Whether a point is inside the polygon
@@ -77,7 +80,11 @@ pub trait Polygon<Vec2: Vector2D>: Clone + PartialEq + std::fmt::Debug + 'static
         }
 
         // not a diagonal, but definitely valid
-        if j + 1 == i || i + 1 == j {
+        if j + 1 == i
+            || i + 1 == j
+            || (i == 0 && j == self.num_points() - 1)
+            || (j == 0 && i == self.num_points() - 1)
+        {
             return true;
         }
 
@@ -112,5 +119,101 @@ pub trait Polygon<Vec2: Vector2D>: Clone + PartialEq + std::fmt::Debug + 'static
         }
 
         true
+    }
+}
+
+#[cfg(test)]
+#[cfg(feature = "nalgebra")]
+mod tests {
+    use super::*;
+    use crate::{extensions::nalgebra::*, prelude::*};
+
+    #[test]
+    fn test_polygon2d() {
+        for (points, area) in [
+            (vec![], 0.0),
+            (vec![Vec2::new(0.0, 0.0)], 0.0),
+            (vec![Vec2::new(0.0, 0.0), Vec2::new(1.0, 0.0)], 0.0),
+            (
+                vec![
+                    Vec2::new(0.0, 0.0),
+                    Vec2::new(1.0, 0.0),
+                    Vec2::new(0.0, 0.0),
+                ],
+                0.0,
+            ),
+            (
+                vec![
+                    Vec2::new(0.0, 0.0),
+                    Vec2::new(1.0, 1.0),
+                    Vec2::new(0.0, 1.0),
+                ],
+                0.5,
+            ),
+            (
+                vec![
+                    Vec2::new(0.0, 0.0),
+                    Vec2::new(0.0, 1.0),
+                    Vec2::new(1.0, 1.0),
+                ],
+                -0.5,
+            ),
+            (
+                vec![
+                    Vec2::new(0.0, 0.0),
+                    Vec2::new(1.0, 0.0),
+                    Vec2::new(1.0, 1.0),
+                    Vec2::new(0.0, 1.0),
+                ],
+                1.0,
+            ),
+            // a star
+            (
+                Mesh2d64::regular_polygon(1.0, 100)
+                    .vertices()
+                    .map(|v| v.pos())
+                    .collect(),
+                -3.1395259784676552,
+            ),
+        ] {
+            println!("{:?}", points);
+            let polygon = Polygon2d::from_points(&points);
+            assert_eq!(polygon.num_points(), points.len());
+            assert_eq!(polygon.points(), points.as_slice());
+            assert!(polygon.signed_area().is_about(area, 1e-10));
+            assert!(polygon.area().is_about(area.abs(), 1e-10));
+
+            if area != 0.0 {
+                for i in 0..points.len() {
+                    for j in 0..points.len() {
+                        assert_eq!(polygon.valid_diagonal(i, j), i != j);
+                    }
+                }
+
+                assert_eq!(polygon.is_ccw(), area > 0.0);
+                assert_eq!(polygon.is_cw(), area < 0.0);
+                assert!(polygon.contains(&Vec2::new(0.5, 0.51)));
+
+                let centroid = polygon.centroid();
+                assert!(polygon.contains(&centroid));
+
+                // undefined on the boundary, but moving an epsilon inside makes the test pass
+                let eps = 1e-10;
+                for p in points {
+                    let inside = p.lerp(&centroid, eps);
+                    assert!(polygon.contains(&inside));
+
+                    let outside = p.lerp(&centroid, -eps);
+                    assert!(!polygon.contains(&outside));
+                }
+            } else {
+                // TODO: test the degenerate points
+            }
+        }
+    }
+
+    #[test]
+    fn test_concave_polygon2d() {
+        // TODO: also test self intersecting polygons and nasty concave ones
     }
 }
