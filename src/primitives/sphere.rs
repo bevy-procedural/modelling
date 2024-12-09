@@ -173,11 +173,11 @@ where
     }*/
 
     /// An alias for `geodesic_icosahedron`.
-    fn icosphere(radius: T::S, n: usize)
+    fn icosphere(radius: T::S, n: usize) -> Self
     where
         T::Mesh: HalfEdgeSemiBuilder<T>,
     {
-        Self::geodesic_icosahedron(radius, n);
+        Self::geodesic_icosahedron(radius, n)
     }
 
     /// Create a geodesic icosahedron (aka icosphere) with a given `radius` and `n` subdivisions.

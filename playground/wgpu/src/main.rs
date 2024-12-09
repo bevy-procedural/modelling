@@ -1,6 +1,7 @@
 //! Based on https://github.com/gfx-rs/wgpu-rs/blob/gecko/examples/cube/main.rs
 
 use bytemuck::{Pod, Zeroable};
+use procedural_modelling::{extensions::nalgebra::*, prelude::*};
 use std::borrow::Cow;
 use wgpu::util::DeviceExt;
 use winit::{
@@ -16,14 +17,13 @@ struct MyVertex {
     _tex_coord: [f32; 2],
 }
 
-fn vertex(pos: [i8; 3], tc: [i8; 2]) -> MyVertex {
-    MyVertex {
-        _pos: [pos[0] as f32, pos[1] as f32, pos[2] as f32, 1.0],
-        _tex_coord: [tc[0] as f32, tc[1] as f32],
+fn _create_vertices() -> (Vec<MyVertex>, Vec<u16>) {
+    fn vertex(pos: [i8; 3], tc: [i8; 2]) -> MyVertex {
+        MyVertex {
+            _pos: [pos[0] as f32, pos[1] as f32, pos[2] as f32, 1.0],
+            _tex_coord: [tc[0] as f32, tc[1] as f32],
+        }
     }
-}
-
-fn create_vertices() -> (Vec<MyVertex>, Vec<u16>) {
     let vertex_data = [
         // top (0, 0, 1)
         vertex([-1, -1, 1], [0, 0]),
@@ -67,6 +67,26 @@ fn create_vertices() -> (Vec<MyVertex>, Vec<u16>) {
     ];
 
     (vertex_data.to_vec(), index_data.to_vec())
+}
+
+fn create_vertices2(t: f64) -> (Vec<MyVertex>, Vec<u16>) {
+    println!("Creating vertices with t = {}", t);
+    let mesh = Mesh3d64::icosphere(1.0, 2)
+        .rotated(&NdRotate::from_axis_angle(VecN::<f64, 3>::z_axis(), t));
+    let mut meta = TesselationMeta::<usize>::default();
+    let (is, vs) = mesh.triangulate(TriangulationAlgorithm::Auto, &mut meta);
+    let mut vertices = Vec::new();
+    let mut indices = Vec::new();
+    for i in is {
+        indices.push(i as u16);
+    }
+    for v in vs {
+        vertices.push(MyVertex {
+            _pos: [v.pos().x as f32, v.pos().y as f32, v.pos().z as f32, 1.0],
+            _tex_coord: [1.0, 1.0],
+        });
+    }
+    (vertices, indices)
 }
 
 fn generate_matrix(aspect_ratio: f32) -> glam::Mat4 {
@@ -134,7 +154,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
 
     let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
         label: None,
-        source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!("./phong.wgsl"))),
+        source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!("./shader.wgsl"))),
     });
 
     // Create pipeline layout
@@ -225,8 +245,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     });
 
     let vertex_size = size_of::<MyVertex>();
-    let (vertex_data, index_data) = create_vertices();
-    let index_count = index_data.len();
+    let (vertex_data, index_data) = create_vertices2(0.0);
 
     let vertex_buffers = [wgpu::VertexBufferLayout {
         array_stride: vertex_size as wgpu::BufferAddress,
@@ -277,6 +296,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         .unwrap();
     surface.configure(&device, &config);
 
+    // TODO: add wireframe support. Why isn't this working?
     let pipeline_wire = if device
         .features()
         .contains(wgpu::Features::POLYGON_MODE_LINE)
@@ -326,16 +346,18 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     let vertex_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
         label: Some("Vertex Buffer"),
         contents: bytemuck::cast_slice(&vertex_data),
-        usage: wgpu::BufferUsages::VERTEX,
+        usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
     });
 
     let index_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
         label: Some("Index Buffer"),
         contents: bytemuck::cast_slice(&index_data),
-        usage: wgpu::BufferUsages::INDEX,
+        usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
     });
 
     let window = &window;
+    let start_time = std::time::Instant::now();
+
     event_loop
         .run(move |event, target| {
             // Have the closure take ownership of the resources.
@@ -394,6 +416,12 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                                     timestamp_writes: None,
                                     occlusion_query_set: None,
                                 });
+
+                            let (vd, id) = create_vertices2(start_time.elapsed().as_secs_f64());
+                            let index_count = index_data.len();
+                            queue.write_buffer(&vertex_buf, 0, bytemuck::cast_slice(&vd));
+                            queue.write_buffer(&index_buf, 0, bytemuck::cast_slice(&id));
+
                             render_pass.push_debug_group("Prepare data for draw.");
                             render_pass.set_pipeline(&render_pipeline);
                             render_pass.set_bind_group(0, &bind_group, &[]);
@@ -404,6 +432,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                             render_pass.insert_debug_marker("Draw!");
                             render_pass.draw_indexed(0..index_count as u32, 0, 0..1);
                             if let Some(ref pipe) = pipeline_wire {
+                                println!("Drawing wireframe");
                                 render_pass.set_pipeline(pipe);
                                 render_pass.draw_indexed(0..index_count as u32, 0, 0..1);
                             }
@@ -411,6 +440,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
 
                         queue.submit(Some(encoder.finish()));
                         frame.present();
+                        window.request_redraw();
                     }
                     WindowEvent::CloseRequested => target.exit(),
                     _ => {}
