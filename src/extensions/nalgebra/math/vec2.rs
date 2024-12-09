@@ -12,13 +12,8 @@ impl<S: Scalar> Vector2D for Vec2<S> {
         Self::from([x, y])
     }
 
-    /// Magnitude of the vector.
-    fn magnitude(&self) -> S {
-        self.length()
-    }
-
     /// Angle between two vectors.
-    fn angle(&self, a: Self, b: Self) -> S {
+    fn angle_tri(&self, a: Self, b: Self) -> S {
         (a - *self).angle_between(b - *self)
     }
 

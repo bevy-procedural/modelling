@@ -6,7 +6,7 @@ mod pseudo_winged;
 
 use super::HalfEdgeImplMeshType;
 use crate::{
-    math::{HasNormal, Scalar, Vector},
+    math::{HasNormal, Scalar, Transformable, Vector},
     mesh::{
         EuclideanMeshType, MeshTopology, MeshTrait, TransformableMesh, Triangulateable, WithNormals,
     },
@@ -54,6 +54,11 @@ impl<T: HalfEdgeImplMeshType> Default for HalfEdgeMeshImpl<T> {
 
 impl<const D: usize, T: HalfEdgeImplMeshType + EuclideanMeshType<D>> TransformableMesh<D, T>
     for HalfEdgeMeshImpl<T>
+where
+    T::VP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
+    T::EP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
+    T::FP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
+    T::MP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
 {
 }
 impl<

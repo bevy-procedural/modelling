@@ -121,7 +121,9 @@ mod tests {
         assert!(cube.is_trivially_isomorphic_pos(&cube, 1e-6).eq());
         assert!(cube.is_trivially_isomorphic_pos(&large_cube, 1e-6).ne());
         assert!(cube.is_trivially_isomorphic_pos(&flipped_cube, 1e-6).ne());
-        assert!(cube.is_trivially_isomorphic_pos(&cube_by_vertices, 1e-6).ne());
+        assert!(cube
+            .is_trivially_isomorphic_pos(&cube_by_vertices, 1e-6)
+            .ne());
         assert!(cube.is_trivially_isomorphic_pos(&rotated_cube, 1e-6).ne());
 
         let ps = |a: &Mesh3d64Vertex, b: &Mesh3d64Vertex| a.pos().is_about(&b.pos(), 1e-6);
@@ -142,11 +144,19 @@ mod tests {
             .find_payload_isomorphism::<MT, _>(&rotated_cube, ps)
             .is_ok());
 
-        assert!(cube.is_isomorphic_by::<MT, _>(&cube, ps).eq());
-        assert!(cube.is_isomorphic_by::<MT, _>(&large_cube, ps).ne());
+        assert!(cube.is_isomorphic_by_pos::<_, 3, _, MT>(&cube, 1e-6).eq());
+        assert!(cube
+            .is_isomorphic_by_pos::<_, 3, _, MT>(&large_cube, 1e-6)
+            .ne());
         // not equal - faces are inside out
-        assert!(cube.is_isomorphic_by::<MT, _>(&flipped_cube, ps).ne());
-        assert!(cube.is_isomorphic_by::<MT, _>(&cube_by_vertices, ps).eq());
-        assert!(cube.is_isomorphic_by::<MT, _>(&rotated_cube, ps).eq());
+        assert!(cube
+            .is_isomorphic_by_pos::<_, 3, _, MT>(&flipped_cube, 1e-6)
+            .ne());
+        assert!(cube
+            .is_isomorphic_by_pos::<_, 3, _, MT>(&cube_by_vertices, 1e-6)
+            .eq());
+        assert!(cube
+            .is_isomorphic_by_pos::<_, 3, _, MT>(&rotated_cube, 1e-6)
+            .eq());
     }
 }

@@ -34,10 +34,17 @@ where
         self
     }
 
-    /// Flip all edges (and faces) turning the mesh inside out.
+    /// Returns a flipped clone of the mesh.
+    fn flipped(&self) -> Self {
+        let mut mesh = self.clone();
+        mesh.flip();
+        mesh
+    }
+
+    /// Flip all edges. The mesh won't change its topology, but the indices of all edges and their payloads will be swapped.
     fn flip(&mut self) -> &mut Self {
-        // TODO: this is an unnecessary clone
-        let ids: Vec<T::E> = self.edges().map(|e| e.id()).collect();
+        // PERF: this is an unnecessary clone
+        let ids: Vec<T::E> = self.twin_edges().map(|(e, _)| e.id()).collect();
         ids.iter().for_each(|&e| {
             self.flip_edge(e);
         });

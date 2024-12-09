@@ -44,6 +44,6 @@ pub trait TransformTrait<S: Scalar, const D: usize>:
     /// Applies the rotation/scale/sheer to a vector.
     fn apply_vec(&self, v: Self::Vec) -> Self::Vec;
 
-    /// Chains two transformations.
+    /// Chains two transformations. First apply the left transformation, then the other.
     fn chain(&self, other: &Self) -> Self;
 }

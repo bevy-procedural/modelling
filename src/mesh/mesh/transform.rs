@@ -7,15 +7,14 @@ use crate::{
 /// Methods for transforming meshes.
 pub trait TransformableMesh<const D: usize, T: EuclideanMeshType<D, Mesh = Self>>:
     MeshBasics<T>
+where
+    T::VP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
+    T::EP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
+    T::FP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
+    T::MP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
 {
     /// Transforms all vertices in the mesh
-    fn transform(&mut self, t: &T::Trans) -> &mut Self
-    where
-        T::VP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
-        T::EP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
-        T::FP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
-        T::MP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
-    {
+    fn transform(&mut self, t: &T::Trans) -> &mut Self {
         for v in self.vertices_mut() {
             v.payload_mut().transform(t);
         }
@@ -29,14 +28,15 @@ pub trait TransformableMesh<const D: usize, T: EuclideanMeshType<D, Mesh = Self>
         self
     }
 
+    /// Returns a transformed clone of the mesh
+    fn transformed(&self, t: &T::Trans) -> Self {
+        let mut mesh = self.clone();
+        mesh.transform(t);
+        mesh
+    }
+
     /// Translates all vertices in the mesh
-    fn translate(&mut self, t: &T::Vec) -> &mut Self
-    where
-        T::VP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
-        T::EP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
-        T::FP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
-        T::MP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
-    {
+    fn translate(&mut self, t: &T::Vec) -> &mut Self {
         for v in self.vertices_mut() {
             v.payload_mut().translate(t);
         }
@@ -50,14 +50,15 @@ pub trait TransformableMesh<const D: usize, T: EuclideanMeshType<D, Mesh = Self>
         self
     }
 
+    /// Returns a translated clone of the mesh
+    fn translated(&self, t: &T::Vec) -> Self {
+        let mut mesh = self.clone();
+        mesh.translate(t);
+        mesh
+    }
+
     /// Rotates all vertices in the mesh
-    fn rotate(&mut self, rotation: &T::Rot) -> &mut Self
-    where
-        T::VP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
-        T::EP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
-        T::FP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
-        T::MP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
-    {
+    fn rotate(&mut self, rotation: &T::Rot) -> &mut Self {
         for v in self.vertices_mut() {
             v.payload_mut().rotate(rotation);
         }
@@ -71,14 +72,15 @@ pub trait TransformableMesh<const D: usize, T: EuclideanMeshType<D, Mesh = Self>
         self
     }
 
+    /// Returns a rotated clone of the mesh
+    fn rotated(&self, rotation: &T::Rot) -> Self {
+        let mut mesh = self.clone();
+        mesh.rotate(rotation);
+        mesh
+    }
+
     /// Scales all vertices in the mesh
-    fn scale(&mut self, scale: &T::Vec) -> &mut Self
-    where
-        T::VP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
-        T::EP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
-        T::FP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
-        T::MP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
-    {
+    fn scale(&mut self, scale: &T::Vec) -> &mut Self {
         for v in self.vertices_mut() {
             v.payload_mut().scale(scale);
         }
@@ -90,5 +92,12 @@ pub trait TransformableMesh<const D: usize, T: EuclideanMeshType<D, Mesh = Self>
         }
         self.payload_mut().scale(scale);
         self
+    }
+
+    /// Returns a scaled clone of the mesh
+    fn scaled(&self, scale: &T::Vec) -> Self {
+        let mut mesh = self.clone();
+        mesh.scale(scale);
+        mesh
     }
 }

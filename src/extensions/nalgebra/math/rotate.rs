@@ -119,49 +119,35 @@ impl<S: Scalar, const D: usize> Rotator<VecN<S, D>> for NdRotate<S, D> {}
 
 #[cfg(test)]
 mod tests {
-    use crate::{extensions::nalgebra::*, prelude::*};
+    use crate::extensions::nalgebra::*;
     use nalgebra::SMatrix;
 
     #[test]
     fn test_nd_rotate() {
         let rot = NdRotate::<f64, 2>::from_angle(std::f64::consts::PI / 2.0);
         let expected = SMatrix::<f64, 2, 2>::new(0.0, -1.0, 1.0, 0.0);
-        // TODO: add a trait to do this comparison
-        assert!((rot.to_matrix() - expected)
-            .abs()
-            .iter()
-            .all(|&x| x < 1e-10));
+        assert!((rot.to_matrix() - expected).abs().max() < 1e-10);
 
         let rot = NdRotate::<f64, 2>::from_rotation_arc(
             VecN::<f64, 2>::new(1.0, 0.0),
             VecN::<f64, 2>::new(0.0, 1.0),
         );
         let expected = SMatrix::<f64, 2, 2>::new(0.0, -1.0, 1.0, 0.0);
-        assert!((rot.to_matrix() - expected)
-            .abs()
-            .iter()
-            .all(|&x| x < 1e-10));
+        assert!((rot.to_matrix() - expected).abs().max() < 1e-10);
 
         let rot = NdRotate::<f64, 3>::from_axis_angle(
             nalgebra::Unit::new_normalize(VecN::<f64, 3>::new(1.0, 0.0, 0.0)),
             std::f64::consts::PI / 2.0,
         );
         let expected = SMatrix::<f64, 3, 3>::new(1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0);
-        assert!((rot.to_matrix() - expected)
-            .abs()
-            .iter()
-            .all(|&x| x < 1e-10));
+        assert!((rot.to_matrix() - expected).abs().max() < 1e-10);
 
-        // TODO:
-
-        // TODO: The same operation can be done with a rotation arc
-        /*let rot = NdRotate::<f64, 3>::from_rotation_arc(
-            VecN::<f64, 3>::new(1.0, 0.0, 0.0),
+        // The same operation can be done with a rotation arc
+        let rot = NdRotate::<f64, 3>::from_rotation_arc(
             VecN::<f64, 3>::new(0.0, 1.0, 0.0),
+            VecN::<f64, 3>::new(0.0, 0.0, 1.0),
         );
-        assert!((rot.to_matrix() - expected)
-            .abs()
-            .iter()
-            .all(|&x| x < 1e-10));*/
+        let expected = SMatrix::<f64, 3, 3>::new(1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0);
+        assert!((rot.to_matrix() - expected).abs().max() < 1e-10);
     }
 }

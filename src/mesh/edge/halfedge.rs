@@ -66,7 +66,69 @@ pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
     /// Like `same_face` but searches clockwise
     fn same_face_back(&self, mesh: &T::Mesh, v: T::V) -> bool;
 
-    /// Flips the direction of the edge and its twin
+    /// Flips the direction of the edge and its twin.
+    /// Updates the neighboring edges, vertices, and faces.
     fn flip(e: T::E, mesh: &mut T::Mesh);
+}
 
+#[cfg(test)]
+#[cfg(feature = "nalgebra")]
+mod tests {
+    use super::*;
+    use crate::{extensions::nalgebra::*, prelude::*};
+
+    #[test]
+    fn test_halfedge_triangle() {
+        let mut mesh = Mesh3d64::regular_polygon(1.0, 3);
+        for edge in mesh.edges() {
+            assert!(edge.is_boundary_self() ^ (edge.twin(&mesh).is_boundary_self()));
+            if edge.is_boundary_self() {
+                assert!(edge.other_face(&mesh).is_some());
+            }
+        }
+
+        let e0 = mesh.edges().find(|e| !e.is_boundary_self()).unwrap().id();
+        let f0 = mesh.edge(e0).face_id();
+        mesh.edge_mut(e0).delete_face();
+        let edge = mesh.edge(e0);
+        assert!(edge.is_boundary_self());
+
+        mesh.edge_mut(e0).set_face(f0);
+        let edge = mesh.edge(e0);
+        assert!(!edge.is_boundary_self());
+
+        assert!(mesh.flipped().check().is_ok());
+        assert!(mesh
+            .flipped()
+            .flipped()
+            .is_trivially_isomorphic_pos(&mesh, 1e-6)
+            .eq());
+    }
+
+    #[test]
+    fn test_halfedge_cube() {
+        let mesh = Mesh3d64::cube(1.0);
+        for edge in mesh.edges() {
+            assert!(!edge.is_boundary_self());
+            assert!(edge.other_face(&mesh).is_some());
+        }
+
+        for face in mesh.faces() {
+            face.edges(&mesh).for_each(|e1| {
+                face.edges(&mesh).for_each(|e2| {
+                    assert!(e1.same_face(&mesh, e2.origin_id()));
+                });
+            });
+        }
+
+        let flipped = mesh.flipped();
+        assert!(flipped.check().is_ok());
+        assert!(flipped
+            .flipped()
+            .is_trivially_isomorphic_pos(&mesh, 1e-6)
+            .eq());
+        assert!(flipped
+            .is_isomorphic_by_pos::<_, 3, _, MeshType3d64PNU>(&mesh, 1e-6)
+            .eq());
+    }
 }

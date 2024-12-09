@@ -12,6 +12,9 @@ pub trait FaceBasics<T: MeshType<Face = Self>>: std::fmt::Debug + Clone + Copy {
     /// Returns an edge incident to the face.
     fn edge(&self, mesh: &T::Mesh) -> T::Edge;
 
+    /// Sets the representative edge incident to the face.
+    fn set_edge(&mut self, edge: T::E);
+
     /// Returns the id of a half-edge incident to the face.
     fn edge_id(&self) -> T::E;
 

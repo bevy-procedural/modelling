@@ -34,6 +34,15 @@ impl<S: Scalar, const D: usize> NdAffine<S, D> {
             m.fixed_view::<D, 1>(0, D).into_owned(),
         )
     }
+
+    /// Returns true if the two affine transformations are approximately equal.
+    pub fn is_about(&self, other: &Self, eps: S) -> bool
+    where
+        S: ScalarPlus,
+    {
+        (self.matrix - other.matrix).abs().max() < eps
+            && (self.translation - other.translation).abs().max() < eps
+    }
 }
 
 impl<S: Scalar, const D: usize> Default for NdAffine<S, D> {
@@ -96,6 +105,96 @@ impl<S: ScalarPlus, const D: usize> TransformTrait<S, D> for NdAffine<S, D> {
 
     fn chain(&self, other: &Self) -> Self {
         // PERF: This can be optimized
-        Self::from_matrix(self.as_matrix() * other.as_matrix())
+        Self::from_matrix(other.as_matrix() * self.as_matrix())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::math::Vector;
+
+    use super::*;
+    use nalgebra::{Matrix2, Matrix3};
+
+    #[test]
+    fn test_affine_transformations_2d() {
+        type V2 = VecN<f64, 2>;
+
+        // translate by (1, 2)
+        let a = NdAffine::<f64, 2>::new(Matrix2::new(1.0, 0.0, 0.0, 1.0), V2::new(1.0, 2.0));
+        // scale by 2 and translate by (3, 4)
+        let b = NdAffine::<f64, 2>::new(Matrix2::new(2.0, 0.0, 0.0, 2.0), V2::new(3.0, 4.0));
+        let c = b.chain(&a);
+
+        assert_eq!(a.apply(V2::new(0.0, 0.0)), V2::new(1.0, 2.0));
+        assert_eq!(a.apply(V2::new(1.0, 1.0)), V2::new(2.0, 3.0));
+        assert_eq!(b.apply(V2::new(0.0, 0.0)), V2::new(3.0, 4.0));
+        assert_eq!(b.apply(V2::new(1.0, 1.0)), V2::new(5.0, 6.0));
+        assert_eq!(c.apply(V2::new(0.0, 0.0)), V2::new(4.0, 6.0));
+        assert_eq!(c.apply(V2::new(1.0, 1.0)), V2::new(6.0, 8.0));
+
+        assert!(NdAffine::<f64, 2>::from_translation(V2::new(1.0, 2.0)).is_about(&a, 1e-10));
+        assert!(NdAffine::<f64, 2>::from_scale(V2::new(2.0, 2.0))
+            .with_translation(V2::new(3.0, 4.0))
+            .is_about(&b, 1e-10));
+        assert!(
+            NdAffine::<f64, 2>::from_translation(V2::new(3.0 / 2.0, 4.0 / 2.0))
+                .with_scale(V2::new(2.0, 2.0))
+                .is_about(&b, 1e-10)
+        );
+        assert!(a.is_about(&NdAffine::<f64, 2>::from_matrix(a.as_matrix()), 1e-10));
+        assert!(b.is_about(&NdAffine::<f64, 2>::from_matrix(b.as_matrix()), 1e-10));
+        assert!(c.is_about(&NdAffine::<f64, 2>::from_matrix(c.as_matrix()), 1e-10));
+
+        assert!(
+            (NdAffine::<f64, 2>::default().as_matrix() - Matrix3::identity())
+                .abs()
+                .max()
+                < 1e-10
+        );
+        assert!(
+            (NdAffine::<f64, 2>::identity().as_matrix() - Matrix3::identity())
+                .abs()
+                .max()
+                < 1e-10
+        );
+
+        let rot = NdRotate::<f64, 2>::from_angle(std::f64::consts::PI / 2.0);
+        let rot_affine = NdAffine::<f64, 2>::from_rotation(rot);
+        assert!(rot_affine
+            .apply(V2::new(1.0, 0.0))
+            .is_about(&V2::new(0.0, 1.0), 1e-10));
+
+        let move1 = NdAffine::<f64, 2>::from_translation(V2::new(1.0, 0.0));
+
+        assert!(move1
+            .chain(&rot_affine)
+            .apply(V2::new(2.0, 0.0))
+            .is_about(&rot_affine.apply(move1.apply(V2::new(2.0, 0.0))), 1e-10));
+        assert!(rot_affine
+            .chain(&move1)
+            .apply(V2::new(2.0, 0.0))
+            .is_about(&move1.apply(rot_affine.apply(V2::new(2.0, 0.0))), 1e-10));
+        assert!(rot_affine
+            .chain(&move1)
+            .apply(V2::new(0.0, 2.0))
+            .is_about(&move1.apply(rot_affine.apply(V2::new(0.0, 2.0))), 1e-10));
+
+        assert!(move1
+            .chain(&rot_affine)
+            .apply(V2::new(2.0, 0.0))
+            .is_about(&V2::new(0.0, 3.0), 1e-10));
+        assert!(rot_affine
+            .chain(&move1)
+            .apply(V2::new(2.0, 0.0))
+            .is_about(&V2::new(1.0, 2.0), 1e-10));
+        assert!(move1
+            .chain(&rot_affine)
+            .apply(V2::new(0.0, 2.0))
+            .is_about(&V2::new(-2.0, 1.0), 1e-10));
+        assert!(rot_affine
+            .chain(&move1)
+            .apply(V2::new(0.0, 2.0))
+            .is_about(&V2::new(-1.0, 0.0), 1e-10));
     }
 }

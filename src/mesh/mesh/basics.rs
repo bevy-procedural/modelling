@@ -153,7 +153,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     fn shared_edge_id(&self, v: T::V, w: T::V) -> Option<T::E>;
 
     /// Returns the face shared by the two vertices or `None`.
-    /// 
+    ///
     /// TODO: Currently cannot distinguish between holes and "the outside"
     fn shared_face(&self, v0: T::V, v1: T::V) -> Option<T::F>;
 
@@ -199,15 +199,14 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
             .any(|e| e.curve_type() != CurvedEdgeType::Linear)
     }
 
-
     /// Given two graphs and a vertex id isomorphism, check whether
     /// - the graphs have the same number of vertices, edges, and faces,
     /// - the corresponding vertices are adjacent in one mesh iff they are adjacent in the other mesh,
     /// - the faces have the same vertices up to rotation of the vertex list,
     /// - the three comparison functions hold for all pairs of corresponding vertices, edges, and faces.
-    /// 
+    ///
     /// Can take up to O(n^2) time.
-    /// 
+    ///
     /// TODO: Split this into is_vertex/edge/face_isomorphic and make each of them return the induced isomorphism
     fn is_isomorphic<
         T2: MeshType,
@@ -223,7 +222,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
         compare_face: F3,
     ) -> MeshEquivalenceDifference<T, T2> {
         // TODO: how is this related to https://hackmd.io/@bo-JY945TOmvepQ1tAWy6w/SyuaFtay6
-        
+
         if self.num_vertices() != other.num_vertices() {
             return MeshEquivalenceDifference::DifferentNumberOfVertices;
         }
@@ -309,6 +308,22 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
             return MeshEquivalenceDifference::NoCorrespondingVertex;
         };
         self.is_isomorphic(other, &iso, |_, _| true, |_, _| true, |_, _| true)
+    }
+
+    /// Checks whether the two meshes are isomorphic with the same vertex positions.
+    /// Ignores other payloads.
+    fn is_isomorphic_by_pos<S: Scalar, const D: usize, Vec: Vector<S, D>, T2: MeshType>(
+        &self,
+        other: &T2::Mesh,
+        eps: S,
+    ) -> MeshEquivalenceDifference<T, T2>
+    where
+        T::VP: HasPosition<D, Vec, S = S>,
+        T2::VP: HasPosition<D, Vec, S = S>,
+    {
+        self.is_isomorphic_by(other, |a: &T::Vertex, b: &T2::Vertex| {
+            a.pos().is_about(&b.pos(), eps)
+        })
     }
 
     /// Returns whether the two meshes are equal, i.e., when treating vertices, edges,

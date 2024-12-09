@@ -42,6 +42,11 @@ impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
     }
 
     #[inline(always)]
+    fn set_edge(&mut self, edge: T::E) {
+        self.edge = edge;
+    }
+
+    #[inline(always)]
     fn id(&self) -> T::F {
         self.id
     }

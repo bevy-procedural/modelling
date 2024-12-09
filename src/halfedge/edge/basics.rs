@@ -1,5 +1,8 @@
 use super::{BackwardEdgeIterator, ForwardEdgeIterator, HalfEdgeImpl, HalfEdgeImplMeshType};
-use crate::{math::IndexType, mesh::{EdgeBasics, HalfEdge, MeshBasics}};
+use crate::{
+    math::IndexType,
+    mesh::{EdgeBasics, HalfEdge, MeshBasics},
+};
 
 impl<T: HalfEdgeImplMeshType> EdgeBasics<T> for HalfEdgeImpl<T> {
     /// Returns the index of the half-edge

@@ -132,14 +132,10 @@ impl<S: Scalar, const D: usize> Vector<S, D> for VecN<S, D> {
     }
 
     #[inline(always)]
-    fn is_about(&self, other: &Self, epsilon: S) -> bool {
-        // TODO: robust comparison
-        for i in 0..D {
-            if (self[i] - other[i]).abs() > epsilon {
-                return false;
-            }
-        }
-        true
+    fn is_about(&self, other: &Self, eps: S) -> bool {
+        self.iter()
+            .zip(other.iter())
+            .all(|(a, b)| a.is_about(*b, eps))
     }
 }
 

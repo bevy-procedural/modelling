@@ -104,13 +104,8 @@ impl Vector2D for Vec2 {
         Vec2::new(x, y)
     }
 
-    /// Magnitude of the vector.
-    fn magnitude(&self) -> f32 {
-        Vec2::length(*self)
-    }
-
     /// Angle between two vectors.
-    fn angle(&self, a: Self, b: Self) -> f32 {
+    fn angle_tri(&self, a: Self, b: Self) -> f32 {
         Vec2::angle_to(a - *self, b - *self)
     }
 

@@ -39,8 +39,61 @@ pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone {
     /// Iterates all (half)edges incident to the same face (clockwise)
     fn edges_face_back<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Edge>;
 
-    /// Iterates all face ids incident to the edge 
-    /// (even for half-edges, this will return both faces if there are two 
+    /// Iterates all face ids incident to the edge
+    /// (even for half-edges, this will return both faces if there are two
     /// or more than that if the edge is non-manifold)
     fn face_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::F>;
+}
+
+#[cfg(test)]
+#[cfg(feature = "nalgebra")]
+mod tests {
+    use itertools::Itertools;
+
+    use crate::{extensions::nalgebra::*, prelude::*};
+
+    #[test]
+    fn test_edge_basics_triangle() {
+        let mesh = Mesh3d64::regular_polygon(1.0, 3);
+        let edge = mesh.edge(0);
+        assert_eq!(edge.origin(&mesh).id(), 0);
+        assert_eq!(edge.target(&mesh).id(), 1);
+        assert_eq!(edge.is_boundary(&mesh), true);
+        assert_eq!(edge.payload().is_empty(), true);
+        assert_eq!(edge.face_ids(&mesh).collect::<Vec<_>>(), vec![0]);
+        assert!(edge.edges_face(&mesh).count() == 3);
+        assert!(edge.edges_face_back(&mesh).count() == 3);
+        assert_eq!(
+            edge.edges_face(&mesh)
+                .map(|e| e.id())
+                .collect_vec()
+                .iter()
+                .rev()
+                .collect_vec(),
+            edge.edges_face_back(&mesh)
+                .map(|e| e.id())
+                .collect_vec()
+                .iter()
+                .cycle()
+                .skip(1)
+                .take(3)
+                .collect_vec()
+        );
+        for edge in mesh.edges() {
+            assert!(edge.is_boundary(&mesh));
+            assert_eq!(edge.face_ids(&mesh).count(), 1);
+            assert!(edge.edges_face(&mesh).count() == 3);
+        }
+    }
+
+    #[test]
+    fn test_edge_basics_cube() {
+        let mesh = Mesh3d64::cube(1.0);
+        for edge in mesh.edges() {
+            assert!(!edge.is_boundary(&mesh));
+            assert_eq!(edge.face_ids(&mesh).count(), 2);
+            assert!(edge.edges_face(&mesh).count() == 4);
+            assert!(edge.edges_face_back(&mesh).count() == 4);
+        }
+    }
 }
