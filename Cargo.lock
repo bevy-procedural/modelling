@@ -4144,7 +4144,6 @@ dependencies = [
  "rand",
  "spade",
  "usvg",
- "wgpu",
 ]
 
 [[package]]

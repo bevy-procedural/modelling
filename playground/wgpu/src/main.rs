@@ -14,67 +14,16 @@ use winit::{
 #[derive(Clone, Copy, Pod, Zeroable)]
 struct MyVertex {
     _pos: [f32; 4],
+    _norm: [f32; 3],
     _tex_coord: [f32; 2],
 }
 
-fn _create_vertices() -> (Vec<MyVertex>, Vec<u16>) {
-    fn vertex(pos: [i8; 3], tc: [i8; 2]) -> MyVertex {
-        MyVertex {
-            _pos: [pos[0] as f32, pos[1] as f32, pos[2] as f32, 1.0],
-            _tex_coord: [tc[0] as f32, tc[1] as f32],
-        }
-    }
-    let vertex_data = [
-        // top (0, 0, 1)
-        vertex([-1, -1, 1], [0, 0]),
-        vertex([1, -1, 1], [1, 0]),
-        vertex([1, 1, 1], [1, 1]),
-        vertex([-1, 1, 1], [0, 1]),
-        // bottom (0, 0, -1)
-        vertex([-1, 1, -1], [1, 0]),
-        vertex([1, 1, -1], [0, 0]),
-        vertex([1, -1, -1], [0, 1]),
-        vertex([-1, -1, -1], [1, 1]),
-        // right (1, 0, 0)
-        vertex([1, -1, -1], [0, 0]),
-        vertex([1, 1, -1], [1, 0]),
-        vertex([1, 1, 1], [1, 1]),
-        vertex([1, -1, 1], [0, 1]),
-        // left (-1, 0, 0)
-        vertex([-1, -1, 1], [1, 0]),
-        vertex([-1, 1, 1], [0, 0]),
-        vertex([-1, 1, -1], [0, 1]),
-        vertex([-1, -1, -1], [1, 1]),
-        // front (0, 1, 0)
-        vertex([1, 1, -1], [1, 0]),
-        vertex([-1, 1, -1], [0, 0]),
-        vertex([-1, 1, 1], [0, 1]),
-        vertex([1, 1, 1], [1, 1]),
-        // back (0, -1, 0)
-        vertex([1, -1, 1], [0, 0]),
-        vertex([-1, -1, 1], [1, 0]),
-        vertex([-1, -1, -1], [1, 1]),
-        vertex([1, -1, -1], [0, 1]),
-    ];
-
-    let index_data: &[u16] = &[
-        0, 1, 2, 2, 3, 0, // top
-        4, 5, 6, 6, 7, 4, // bottom
-        8, 9, 10, 10, 11, 8, // right
-        12, 13, 14, 14, 15, 12, // left
-        16, 17, 18, 18, 19, 16, // front
-        20, 21, 22, 22, 23, 20, // back
-    ];
-
-    (vertex_data.to_vec(), index_data.to_vec())
-}
-
-fn create_vertices2(t: f64) -> (Vec<MyVertex>, Vec<u16>) {
-    println!("Creating vertices with t = {}", t);
+fn create_vertices(t: f64) -> (Vec<MyVertex>, Vec<u16>) {
     let mesh = Mesh3d64::icosphere(1.0, 2)
         .rotated(&NdRotate::from_axis_angle(VecN::<f64, 3>::z_axis(), t));
     let mut meta = TesselationMeta::<usize>::default();
-    let (is, vs) = mesh.triangulate(TriangulationAlgorithm::Auto, &mut meta);
+    let (is, vs) =
+        mesh.triangulate_and_generate_flat_normals_post(TriangulationAlgorithm::Auto, &mut meta);
     let mut vertices = Vec::new();
     let mut indices = Vec::new();
     for i in is {
@@ -83,6 +32,11 @@ fn create_vertices2(t: f64) -> (Vec<MyVertex>, Vec<u16>) {
     for v in vs {
         vertices.push(MyVertex {
             _pos: [v.pos().x as f32, v.pos().y as f32, v.pos().z as f32, 1.0],
+            _norm: [
+                v.normal().x as f32,
+                v.normal().y as f32,
+                v.normal().z as f32,
+            ],
             _tex_coord: [1.0, 1.0],
         });
     }
@@ -245,7 +199,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     });
 
     let vertex_size = size_of::<MyVertex>();
-    let (vertex_data, index_data) = create_vertices2(0.0);
+    let (vertex_data, index_data) = create_vertices(0.0);
 
     let vertex_buffers = [wgpu::VertexBufferLayout {
         array_stride: vertex_size as wgpu::BufferAddress,
@@ -257,9 +211,14 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                 shader_location: 0,
             },
             wgpu::VertexAttribute {
-                format: wgpu::VertexFormat::Float32x2,
+                format: wgpu::VertexFormat::Float32x3,
                 offset: 4 * 4,
                 shader_location: 1,
+            },
+            wgpu::VertexAttribute {
+                format: wgpu::VertexFormat::Float32x2,
+                offset: 4 * 7,
+                shader_location: 2,
             },
         ],
     }];
@@ -417,7 +376,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                                     occlusion_query_set: None,
                                 });
 
-                            let (vd, id) = create_vertices2(start_time.elapsed().as_secs_f64());
+                            let (vd, id) = create_vertices(start_time.elapsed().as_secs_f64());
                             let index_count = index_data.len();
                             queue.write_buffer(&vertex_buf, 0, bytemuck::cast_slice(&vd));
                             queue.write_buffer(&index_buf, 0, bytemuck::cast_slice(&id));
@@ -432,7 +391,6 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                             render_pass.insert_debug_marker("Draw!");
                             render_pass.draw_indexed(0..index_count as u32, 0, 0..1);
                             if let Some(ref pipe) = pipeline_wire {
-                                println!("Drawing wireframe");
                                 render_pass.set_pipeline(pipe);
                                 render_pass.draw_indexed(0..index_count as u32, 0, 0..1);
                             }
