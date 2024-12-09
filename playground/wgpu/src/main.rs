@@ -83,6 +83,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     let adapter = instance
         .request_adapter(&wgpu::RequestAdapterOptions {
             power_preference: wgpu::PowerPreference::default(),
+
             force_fallback_adapter: false,
             // Request an adapter which can render to our surface
             compatible_surface: Some(&surface),
@@ -95,7 +96,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         .request_device(
             &wgpu::DeviceDescriptor {
                 label: None,
-                required_features: wgpu::Features::empty(),
+                required_features: wgpu::Features::POLYGON_MODE_LINE,
                 // Make sure we use the texture resolution limits from the adapter, so we can support images the size of the swapchain.
                 required_limits: wgpu::Limits::downlevel_webgl2_defaults()
                     .using_resolution(adapter.limits()),
@@ -255,7 +256,6 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
         .unwrap();
     surface.configure(&device, &config);
 
-    // TODO: add wireframe support. Why isn't this working?
     let pipeline_wire = if device
         .features()
         .contains(wgpu::Features::POLYGON_MODE_LINE)
@@ -274,7 +274,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
                 entry_point: Some("fs_wire"),
                 compilation_options: Default::default(),
                 targets: &[Some(wgpu::ColorTargetState {
-                    format: config.view_formats[0],
+                    format: wgpu::TextureFormat::Bgra8UnormSrgb, //TODO: config.view_formats[0],
                     blend: Some(wgpu::BlendState {
                         color: wgpu::BlendComponent {
                             operation: wgpu::BlendOperation::Add,
