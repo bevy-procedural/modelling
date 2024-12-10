@@ -71,13 +71,14 @@ We are currently working on some tutorials for the most important features.
 
     -   [x] Open PL 2-Manifold in 2d and 3d Space
     -   [x] Bezier Curves for 2d Meshes
+    -   [ ] Self-intersecting surfaces
     -   [ ] Open PL 2-Manifold in nd Space
     -   [ ] Open PL $n$-Manifold in md Space <!-- e.g., https://youtu.be/piJkuavhV50?si=1IZdm1PYnA2dvdAL&t=1135 -->
     -   [ ] Pseudomanifold (with singularities)
     -   [ ] Non-Manifold (with branching surfaces)
     -   [ ] Non-Euclidean
     -   [ ] Arbitrary Graphs
-    -   [ ] NURBS / T-Splines <!-- Bezier Surfaces / Parametric Surfaces / Spline Networks...? -->
+    -   [ ] NURBS, T-Splines <!-- Bezier Surfaces, Parametric Surfaces, Spline Networks...? -->
 
 -   Triangulation
 
@@ -92,14 +93,13 @@ We are currently working on some tutorials for the most important features.
 
 -   Primitives
 
-    -   [x] Polygon, Star, Loop
-    -   [x] Cuboid, Cube
-    -   [x] Cylinder, Cone
-    -   [x] Prism, Antiprism
-    -   [x] Pyramid, Frustum, Tetrahedron, Octahedron, Dodecahedron, Icosahedron
-    -   [x] UV Sphere, Icosphere, Geodesic Polyhedra
+    -   [x] 2d stuff: Polygon, Star, Circle, Loop, ...
+    -   [x] Prismatoids: Prism, Antiprism, Cuboid, Pyramid, Frustum, ...
+    -   [x] Platonic solids: Tetrahedron, Cube, Octahedron, Dodecahedron, Icosahedron
+    -   [x] Round things: Cylinder, Cone, UV Sphere, Icosphere, Geodesic Polyhedra
+    -   [ ] 4d stuff: Tesseract, Hypersphere, Hypersimplex, ...
     -   [ ] Cube Sphere
-    -   [ ] Torus
+    -   [ ] Torus, Clifford Torus
 
 -   Operations
 
@@ -107,9 +107,9 @@ We are currently working on some tutorials for the most important features.
     -   [x] Linear Loft (Triangle, Polygon), [ ] Loft along path
     -   [x] Transform (Translate, Rotate, Scale, [ ] Shear)
     -   [x] Frequency Subdivision (partial)
-    -   [ ] Chamfer / Cantellate / Bevel / Truncate / Bitruncate / Omnitruncate
+    -   [ ] Chamfer, Cantellate, Bevel, Truncate, Bitruncate, Omnitruncate
     -   [ ] Boolean Operations (Union, Intersection, Difference, Symmetric Difference)
-    -   [ ] (Anisotropic) Simplification / LODs
+    -   [ ] (Anisotropic) Simplification, LODs
     -   [ ] Dualize
     <!--
     -   [ ] Taper
@@ -127,7 +127,7 @@ We are currently working on some tutorials for the most important features.
     -   [ ] Weld
     -   [ ] Twist
     -   [ ] Offset
-    -   [ ] Inflate / Deflate
+    -   [ ] Inflate, Deflate
     -   [ ] Convex Hull
     -   [ ] Collapse
     -   [ ] Split
@@ -142,6 +142,7 @@ We are currently working on some tutorials for the most important features.
 
     -   [x] Basic Network Science Tools (Laplacian, Adjacency, Degree, Spectrum)
     -   [x] Mesh Isomorphism (partial)
+    -   [ ] 2d Polygons: Area, Efficient Valid Diagonals, Convexity, ...
     -   [ ] Geodesic Pathfinding
     -   [ ] Raycasting
     -   [ ] Topology Analysis
@@ -189,7 +190,6 @@ The following cargo features are available:
 -   `svg` -- Enable SVG import. Adds [usvg](https://github.com/linebender/resvg) as a dependency.
 -   `fonts` -- Enable font rendering. Adds [ab_glyph](https://github.com/alexheretic/ab-glyph) as a dependency.
 -   `meshopt` -- Enable mesh optimization. Adds [meshopt](https://github.com/gwihlidal/meshopt-rs) as a dependency.
--   `benchmarks` -- Enable [criterion](https://github.com/bheisler/criterion.rs) for the benchmarks.
 -   `nalgebra` -- Enable [nalgebra](https://nalgebra.org/) as a backend. This is usually required for anything but bevy.
 
 For development only:

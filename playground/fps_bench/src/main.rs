@@ -5,12 +5,7 @@ use bevy::{
     render::render_asset::RenderAssetUsages,
     window::{PresentMode, WindowMode, WindowResolution},
 };
-use procedural_modelling::{
-    bevy::{BevyMesh3d, BevyVertexPayload3d},
-    math::HasPosition,
-    primitives::{generate_zigzag, Make2dShape},
-    tesselate::TriangulationAlgorithm,
-};
+use procedural_modelling::{extensions::bevy::*, prelude::*};
 use std::time::Duration;
 
 #[derive(Resource)]
@@ -27,19 +22,19 @@ struct BenchmarkState {
 
 const BENCHMARK_WARMUP: Duration = Duration::from_secs(5);
 const BENCHMARK_DURATION: Duration = Duration::from_secs(15);
-const TARGET_VERTICES: usize = 100000;
 const TARGET_INSTANCES: usize = 100;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
-                resolution: WindowResolution::new(1920.0, 1080.0),
+                resolution: WindowResolution::new(1920.0, 1080.0).with_scale_factor_override(1.0),
                 title: "Bevy Mesh Benchmark".to_string(),
                 resizable: false,
-                mode: WindowMode::BorderlessFullscreen,
+                mode: WindowMode::SizedFullscreen(MonitorSelection::Primary),
                 // disable fps cap
                 present_mode: PresentMode::Immediate,
+                focused: true,
                 ..default()
             }),
             ..default()
@@ -71,22 +66,18 @@ fn setup(
 ) {
     for algo in [
         TriangulationAlgorithm::Delaunay,
-        /*TriangulationAlgorithm::Sweep,
-        TriangulationAlgorithm::SweepDynamic,
+        TriangulationAlgorithm::Sweep,
+        //TriangulationAlgorithm::SweepDynamic,
         TriangulationAlgorithm::EarClipping,
-        TriangulationAlgorithm::Fan,*/
+        TriangulationAlgorithm::Fan,
     ] {
         for (name, num_vertices, mesh) in [
-            //("circle10", 10, BevyMesh3d::regular_star(1.0, 1.0, 10)),
-            //("circle100", 100, BevyMesh3d::regular_star(1.0, 1.0, 100)),
-            /*("circle1000", 1000, BevyMesh3d::regular_star(1.0, 1.0, 1000)),
-            (
-                "circle10000",
-                10000,
-                BevyMesh3d::regular_star(1.0, 1.0, 10000),
-            ),*/
-           // ("zigzag1000", 1000, zigzag(1000)),
-            ("zigzag10000", 10000, zigzag(10000)),
+            ("circle", 10, BevyMesh3d::regular_polygon(1.0, 10)),
+            ("circle", 100, BevyMesh3d::regular_polygon(1.0, 100)),
+            ("circle", 1000, BevyMesh3d::regular_polygon(1.0, 1000)),
+            // ("circle", 10000, BevyMesh3d::regular_polygon(1.0, 10000)),
+            ("zigzag", 1000, zigzag(1000)),
+            //("zigzag", 10000, zigzag(10000)),
         ] {
             if num_vertices > 1000
                 && (algo == TriangulationAlgorithm::EarClipping
@@ -95,28 +86,31 @@ fn setup(
                 continue;
             }
             mesh_list.0.push((
-                name.to_string() + format!("_{:?}", algo).as_str(),
+                name.to_string() + format!("{}_{:?}", num_vertices, algo).as_str(),
                 meshes.add(mesh.to_bevy_ex(RenderAssetUsages::all(), algo, true)),
                 num_vertices,
             ));
         }
     }
 
-    // light
-    commands.spawn(PointLightBundle {
-        point_light: PointLight {
+    commands.insert_resource(AmbientLight::default());
+    commands.spawn((
+        DirectionalLight {
+            color: Color::WHITE,
             shadows_enabled: true,
             ..default()
         },
-        transform: Transform::from_xyz(4.0, 8.0, 4.0),
-        ..default()
-    });
+        Transform {
+            translation: Vec3::new(0.0, 2.0, 0.0),
+            rotation: Quat::from_rotation_x(-std::f32::consts::PI / 4.),
+            ..default()
+        },
+    ));
 
-    // camera
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(-2.5, 4.5, 9.0).looking_at(Vec3::ZERO, Vec3::Y),
-        ..default()
-    });
+    commands.spawn((
+        Camera3d::default(),
+        Transform::from_xyz(-2.5, 4.5, 9.0).looking_at(Vec3::ZERO, Vec3::Y),
+    ));
 }
 
 fn update_mesh(
@@ -124,7 +118,7 @@ fn update_mesh(
     mut state: ResMut<BenchmarkState>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mesh_list: Res<MeshList>,
-    query: Query<Entity, With<Handle<Mesh>>>,
+    query: Query<Entity, With<Mesh3d>>,
 ) {
     if state.accumulated_time < BENCHMARK_DURATION {
         return;
@@ -158,20 +152,16 @@ fn update_mesh(
         std::process::exit(0);
     }
 
-    let mesh = mesh_list.0[state.next_mesh_index].clone();
-    let _mesh_num_vertices = mesh.2;
+    let mesh: (String, Handle<Mesh>, usize) = mesh_list.0[state.next_mesh_index].clone();
     let material = materials.add(Color::srgba(0.0, 0.0, 1.0, 0.01));
 
     // Spawn the next mesh
     for i in 0..TARGET_INSTANCES {
-        //(TARGET_VERTICES / _mesh_num_vertices) {
-        commands.spawn(PbrBundle {
-            mesh: mesh.1.clone(),
-            material: material.clone(),
-            transform: Transform::from_scale(Vec3::splat(4.0))
-                .with_translation(Vec3::splat(0.01 * i as f32)),
-            ..default()
-        });
+        commands.spawn((
+            Mesh3d(mesh.1.clone()),
+            MeshMaterial3d(material.clone()),
+            Transform::from_scale(Vec3::splat(4.0)).with_translation(Vec3::splat(0.01 * i as f32)),
+        ));
     }
 
     println!("Starting benchmark for {}", mesh.0);

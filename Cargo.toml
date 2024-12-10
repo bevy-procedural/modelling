@@ -11,7 +11,7 @@ readme = "README.md"
 repository = "https://github.com/bevy-procedural/modelling"
 documentation = "https://docs.rs/procedural_modelling"
 rust-version = "1.81.0"
-include = ["src/**/*", "doc/**/*", "examples/**/*", "README.md", "Cargo.toml"]
+include = ["src/**/*", "doc/**/*", "examples/**/*", "playground/**/*", "README.md", "Cargo.toml"]
 
 [lib]
 name = "procedural_modelling"
@@ -19,7 +19,7 @@ path = "src/lib.rs"
 crate-type = ["rlib"]
 
 [workspace]
-members = ["playground/bevy", "playground/wgpu"]
+members = ["playground/bevy", "playground/wgpu", "playground/fps_bench"]
 
 [workspace.lints.clippy]
 type_complexity = "allow"
@@ -49,7 +49,6 @@ meshopt = { version = "^0.3.0", optional = true }
 rand = "^0.8.5"
 spade = "^2.12.1"
 usvg = { version = "0.44.0", optional = true }
-criterion = { version = "0.5.1", features = ["html_reports"], optional = true }
 lazy_static = "1.5.0"
 ab_glyph = { version = "0.2.29", optional = true }
 nalgebra = { version = "0.33.0", optional = true }
@@ -67,19 +66,12 @@ nalgebra = ["dep:nalgebra"]
 fonts = ["dep:ab_glyph"]
 bevy_dynamic = ["bevy/dynamic_linking"]
 meshopt = ["dep:meshopt"]
-benchmarks = ["dep:criterion"]
 sweep_debug = []
 sweep_debug_print = ["sweep_debug"]
 
 [[example]]
 name = "box"
 path = "examples/box.rs"
-doc-scrape-examples = true
-required-features = ["example_deps"]
-
-[[example]]
-name = "fps_bench"
-path = "examples/fps_bench.rs"
 doc-scrape-examples = true
 required-features = ["example_deps"]
 

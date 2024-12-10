@@ -984,9 +984,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_panorbit_camera"
-version = "0.21.0"
+version = "0.21.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d370e1a799a403eb7ed2892fba3cd3d0c4d125e015b6d6cbae55e5f6d8954544"
+checksum = "e025ec14a381fa89ec0ffcb99ae44ebbdd3b2ee4369e13165a70187b96c8c52e"
 dependencies = [
  "bevy",
  "bevy_egui",
@@ -2464,6 +2464,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e13624c2627564efccf4934284bdd98cbaa14e79b0b5a141218e507b3a823456"
 dependencies = [
  "percent-encoding",
+]
+
+[[package]]
+name = "fps_bench"
+version = "0.0.0"
+dependencies = [
+ "bevy",
+ "criterion",
+ "procedural_modelling",
 ]
 
 [[package]]
@@ -4135,7 +4144,6 @@ version = "0.3.0"
 dependencies = [
  "ab_glyph",
  "bevy",
- "criterion",
  "itertools 0.13.0",
  "lazy_static",
  "meshopt",
