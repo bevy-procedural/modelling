@@ -85,12 +85,6 @@ path = "examples/box.rs"
 doc-scrape-examples = true
 required-features = ["example_deps"]
 
-[[example]]
-name = "spiral"
-path = "examples/spiral.rs"
-doc-scrape-examples = true
-required-features = ["example_deps"]
-
 [[bench]]
 name = "triangulation"
 harness = false
