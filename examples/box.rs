@@ -8,17 +8,7 @@ use bevy::{
     prelude::*,
     render::render_asset::RenderAssetUsages,
 };
-use procedural_modelling::{
-    bevy::{BevyMesh3d, BevyMeshType3d32, BevyVertexPayload3d},
-    math::{HasPosition, Scalar, Vector, Vector3D},
-    mesh::{
-        DefaultEdgePayload, DefaultFacePayload, EdgeBasics, MeshBasics, MeshBuilder,
-        PathBuilder, MeshType3D, MeshTypeHalfEdge,
-    },
-    operations::MeshLoft,
-    primitives::{Make2dShape, MakePrismatoid},
-    tesselate::TriangulationAlgorithm,
-};
+use procedural_modelling::{extensions::bevy::*, mesh::MeshBuilder, prelude::*};
 use std::f32::consts::PI;
 
 /// A tiny helper function to create a bevy-compatible vertex payload
@@ -200,23 +190,20 @@ fn setup_meshes(
     // flat normals and tangents.
     for (i, mesh) in generated_meshes.iter().enumerate() {
         commands.spawn((
-            PbrBundle {
-                mesh: meshes.add(mesh.to_bevy_ex(
-                    RenderAssetUsages::all(),
-                    TriangulationAlgorithm::Delaunay,
-                    true,
-                )),
-                material: materials.add(StandardMaterial {
-                    base_color: Color::srgb(1.0, 0.0, 0.0),
-                    ..default()
-                }),
-                transform: Transform::from_translation(Vec3::new(
-                    (i as f32 - generated_meshes.len() as f32 / 2.0) * 1.5,
-                    0.0,
-                    0.0,
-                )),
+            Mesh3d(meshes.add(mesh.to_bevy_ex(
+                RenderAssetUsages::all(),
+                TriangulationAlgorithm::Delaunay,
+                true,
+            ))),
+            MeshMaterial3d(materials.add(StandardMaterial {
+                base_color: Color::srgb(1.0, 0.0, 0.0),
                 ..default()
-            },
+            })),
+            Transform::from_translation(Vec3::new(
+                (i as f32 - generated_meshes.len() as f32 / 2.0) * 1.5,
+                0.0,
+                0.0,
+            )),
             Name::new("Generated Shape"),
         ));
     }
@@ -229,31 +216,27 @@ fn setup_camera_and_light(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     commands.spawn((
-        PbrBundle {
-            mesh: meshes.add(Mesh::from(Plane3d::new(Vec3::Y, Vec2::new(1.0, 1.0)))),
-            material: materials.add(StandardMaterial::default()),
-            transform: Transform::from_translation(Vec3::new(0.0, -1.0, 0.0))
-                .with_scale(Vec3::splat(10.0)),
-            ..default()
-        },
+        Mesh3d(meshes.add(Mesh::from(Plane3d::new(Vec3::Y, Vec2::new(1.0, 1.0))))),
+        MeshMaterial3d(materials.add(StandardMaterial::default())),
+        Transform::from_translation(Vec3::new(0.0, -1.0, 0.0)).with_scale(Vec3::splat(10.0)),
         Name::new("Floor"),
     ));
+
     commands.insert_resource(AmbientLight::default());
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
+    commands.spawn((
+        DirectionalLight {
             color: Color::WHITE,
             shadows_enabled: true,
             ..default()
         },
-        transform: Transform {
+        Transform {
             translation: Vec3::new(0.0, 2.0, 0.0),
             rotation: Quat::from_rotation_x(-PI / 4.),
             ..default()
         },
-        ..Default::default()
-    });
-    commands.spawn((Camera3dBundle {
-        transform: Transform::from_xyz(3.0, 5.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
-        ..default()
-    },));
+    ));
+    commands.spawn((
+        Camera3d::default(),
+        Transform::from_xyz(3.0, 5.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+    ));
 }
