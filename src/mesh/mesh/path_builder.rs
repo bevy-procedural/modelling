@@ -6,11 +6,12 @@ use crate::{
     },
 };
 
+use super::{EuclideanMeshType, MeshTypeHalfEdge};
+
 /// Some basic operations to build a single face.
-pub struct PathBuilder<'a, T: MeshType>
+pub struct PathBuilder<'a, T: MeshType, Transform: Default>
 where
     T::Mesh: MeshBuilder<T> + 'a,
-    T::VP: HasPosition<T::Vec, S = T::S>,
 {
     /// Whether the path is closed
     closed: bool,
@@ -24,15 +25,13 @@ where
     start_edges: Option<(T::E, T::E)>,
     current_edges: Option<(T::E, T::E)>,
 
-    transform: T::Trans,
+    transform: Transform,
 }
 
 /// Some basic operations to build meshes.
-impl<'a, T: MeshType> PathBuilder<'a, T>
+impl<'a, T: MeshType, Transform: Default> PathBuilder<'a, T, Transform>
 where
     T::Mesh: MeshBuilder<T> + 'a,
-    T::VP: HasPosition<T::Vec, S = T::S>
-        + Transformable<Trans = T::Trans, Rot = T::Rot, Vec = T::Vec, S = T::S>,
 {
     /// Create a new empty MeshPathBuilder.
     pub fn new(mesh: &'a mut T::Mesh) -> Self {
@@ -45,15 +44,15 @@ where
             current_vertex: IndexType::max(),
             start_edges: None,
             current_edges: None,
-            transform: T::Trans::identity(),
+            transform: Transform::default(),
         }
     }
 
     /// Create a new MeshPathBuilder starting a new connected component.
-    pub fn start(mesh: &'a mut T::Mesh, pos: T::Vec) -> Self
+    pub fn start<const D: usize>(mesh: &'a mut T::Mesh, pos: T::Vec) -> Self
     where
         T::Edge: HalfEdge<T>,
-        T::VP: HasPosition<T::Vec, S = T::S>,
+        T: EuclideanMeshType<D>,
     {
         Self::start_ex(mesh, T::VP::from_pos(pos))
     }
@@ -87,43 +86,59 @@ where
                 current_vertex: v,
                 start_edges: None,
                 current_edges: None,
-                transform: T::Trans::identity(),
+                transform: Transform::default(),
             }
         }
     }
 
     /// Apply a transformation to the transformation applied to new vertices.
-    fn transform(&mut self, t: &T::Trans) -> &mut Self {
-        self.transform = self.transform * *t;
+    fn transform<const D: usize>(&mut self, t: &Transform) -> &mut Self
+    where
+        T: EuclideanMeshType<D, Trans = Transform>,
+        Transform: TransformTrait<T::S, D, Vec = T::Vec>,
+    {
+        self.transform = self.transform.chain(t);
         self
     }
 
     /// Reset the transformation applied to new vertices.
     fn reset_transform(&mut self) -> &mut Self {
-        self.transform = T::Trans::identity();
+        self.transform = Transform::default();
         self
     }
 
     /// Rotate the transformation applied to new vertices.
-    fn rotate(&mut self, _r: T::Rot) -> &mut Self {
+    fn rotate<const D: usize>(&mut self, _r: T::Rot) -> &mut Self
+    where
+        T: EuclideanMeshType<D, Trans = Transform>,
+        Transform: TransformTrait<T::S, D, Vec = T::Vec>,
+    {
         todo!()
     }
 
     /// Translate the transformation applied to new vertices.
-    fn translate(&mut self, v: T::Vec) -> &mut Self {
+    fn translate<const D: usize>(&mut self, v: T::Vec) -> &mut Self
+    where
+        T: EuclideanMeshType<D, Trans = Transform>,
+        Transform: TransformTrait<T::S, D, Vec = T::Vec>,
+    {
         self.transform = self.transform.with_translation(v);
         self
     }
 
     /// Scale the transformation applied to new vertices.
-    fn scale(&mut self, v: T::Vec) -> &mut Self {
+    fn scale<const D: usize>(&mut self, v: T::Vec) -> &mut Self
+    where
+        T: EuclideanMeshType<D, Trans = Transform>,
+        Transform: TransformTrait<T::S, D, Vec = T::Vec>,
+    {
         self.transform = self.transform.with_scale(v);
         self
     }
 
     /// Return the current transformation applied to new vertices.
-    fn get_transform(&self) -> T::Trans {
-        self.transform
+    fn get_transform(&self) -> &Transform {
+        &self.transform
     }
 
     /// Create a new MeshPathBuilder starting at the target of the given
@@ -145,7 +160,7 @@ where
             current_vertex: start_vertex,
             start_edges,
             current_edges: start_edges,
-            transform: T::Trans::identity(),
+            transform: Transform::default(),
         }
     }
 
@@ -248,7 +263,11 @@ where
 
     /// Add a vertex or return the index of the start vertex if the position is the same.
     #[inline(always)]
-    pub fn add_vertex_autoclose(&mut self, v: T::Vec) -> T::V {
+    pub fn add_vertex_autoclose<const D: usize>(&mut self, v: T::Vec) -> T::V
+    where
+        T: EuclideanMeshType<D, Trans = Transform>,
+        Transform: TransformTrait<T::S, D, Vec = T::Vec>,
+    {
         assert!(!self.is_closed());
 
         let sv = self.start_vertex();
@@ -261,12 +280,11 @@ where
 
     /// Draws a straight line from the current vertex to a new vertex with the given position.
     #[inline(always)]
-    pub fn line(&mut self, pos: T::Vec) -> &mut Self
+    pub fn line<const D: usize>(&mut self, pos: T::Vec) -> &mut Self
     where
-        T::Edge: HalfEdge<T>,
-        T::Mesh: MeshHalfEdgeBuilder<T>,
+        T: MeshTypeHalfEdge + EuclideanMeshType<D, Trans = Transform>,
+        Transform: TransformTrait<T::S, D, Vec = T::Vec>,
         T::EP: DefaultEdgePayload,
-        T::VP: HasPosition<T::Vec, S = T::S>,
     {
         let w = self.transform.apply(pos);
         let v = self.mesh().add_vertex(T::VP::from_pos(w));
@@ -276,18 +294,26 @@ where
 
     /// Moves to the given vertex.
     /// Assumes the path is currently empty or closed to begin a new path.
-    pub fn move_to(&mut self, pos: T::V) -> &mut Self {
+    pub fn move_to(&mut self, _pos: T::V) -> &mut Self {
         todo!()
     }
 
-    fn add_transformed_pos(&mut self, pos: T::Vec) -> T::V {
+    fn add_transformed_pos<const D: usize>(&mut self, pos: T::Vec) -> T::V
+    where
+        T: EuclideanMeshType<D, Trans = Transform>,
+        Transform: TransformTrait<T::S, D, Vec = T::Vec>,
+    {
         let w = self.transform.apply(pos);
         self.mesh().add_vertex(T::VP::from_pos(w))
     }
 
     /// Creates a new vertex at the given position and moves to it.
     /// Assumes the path is currently empty or closed to begin a new path.
-    pub fn move_to_new(&mut self, pos: T::Vec) -> &mut Self {
+    pub fn move_to_new<const D: usize>(&mut self, pos: T::Vec) -> &mut Self
+    where
+        T: EuclideanMeshType<D, Trans = Transform>,
+        Transform: TransformTrait<T::S, D, Vec = T::Vec>,
+    {
         assert!(self.start_vertex() == IndexType::max());
         assert!(self.start_edges().is_none());
         assert!(self.current_vertex() == IndexType::max());
@@ -301,10 +327,10 @@ where
 
     /// Draws a straight line from the current vertex to a new vertex with the given payload.
     #[inline(always)]
-    pub fn line_ex(&mut self, vp: T::VP, ep0: T::EP, ep1: T::EP) -> &mut Self
+    pub fn line_ex<const D: usize>(&mut self, vp: T::VP, ep0: T::EP, ep1: T::EP) -> &mut Self
     where
-        T::Edge: HalfEdge<T>,
-        T::Mesh: MeshHalfEdgeBuilder<T>,
+        T: EuclideanMeshType<D, Trans = Transform> + MeshTypeHalfEdge,
+        Transform: TransformTrait<T::S, D, Vec = T::Vec>,
     {
         let vp2 = vp.transformed(&self.transform);
         let v = self.mesh().add_vertex(vp2);
@@ -314,12 +340,12 @@ where
 
     /// Draws a quadratic bezier curve from the current vertex to a new vertex with the given payload.
     #[inline(always)]
-    pub fn quad(&mut self, control: T::Vec, end: T::Vec) -> &mut Self
+    pub fn quad<const D: usize>(&mut self, control: T::Vec, end: T::Vec) -> &mut Self
     where
-        T::VP: HasPosition<T::Vec, S = T::S>,
-        T::Edge: HalfEdge<T> + CurvedEdge<T>,
-        T::Mesh: MeshHalfEdgeBuilder<T>,
+        T::Edge: CurvedEdge<D, T>,
         T::EP: DefaultEdgePayload,
+        T: EuclideanMeshType<D, Trans = Transform> + MeshTypeHalfEdge,
+        Transform: TransformTrait<T::S, D, Vec = T::Vec>,
     {
         let v = self.add_transformed_pos(end);
         self.quad_to(control, v);
@@ -328,12 +354,17 @@ where
 
     /// Draws a cubic bezier curve from the current vertex to a new vertex with the given payload.
     #[inline(always)]
-    pub fn cubic(&mut self, control1: T::Vec, control2: T::Vec, end: T::Vec) -> &mut Self
+    pub fn cubic<const D: usize>(
+        &mut self,
+        control1: T::Vec,
+        control2: T::Vec,
+        end: T::Vec,
+    ) -> &mut Self
     where
-        T::VP: HasPosition<T::Vec, S = T::S>,
-        T::Edge: HalfEdge<T> + CurvedEdge<T>,
-        T::Mesh: MeshHalfEdgeBuilder<T>,
+        T::Edge: CurvedEdge<D, T>,
         T::EP: DefaultEdgePayload,
+        T: EuclideanMeshType<D, Trans = Transform> + MeshTypeHalfEdge,
+        Transform: TransformTrait<T::S, D, Vec = T::Vec>,
     {
         let v = self.add_transformed_pos(end);
         self.cubic_to(control1, control2, v);
@@ -388,11 +419,12 @@ where
 
     /// Draws a quadratic bezier curve from the current vertex to the given vertex.
     /// The vertex must have no edges at all or must only be adjacent to one "outside".
-    pub fn quad_to(&mut self, control: T::Vec, end: T::V) -> &mut Self
+    pub fn quad_to<const D: usize>(&mut self, control: T::Vec, end: T::V) -> &mut Self
     where
-        T::Edge: HalfEdge<T> + CurvedEdge<T>,
-        T::Mesh: MeshHalfEdgeBuilder<T>,
+        T::Edge: CurvedEdge<D, T>,
         T::EP: DefaultEdgePayload,
+        T: EuclideanMeshType<D, Trans = Transform> + MeshTypeHalfEdge,
+        Transform: TransformTrait<T::S, D, Vec = T::Vec>,
     {
         let ct = self.transform.apply(control);
         self.line_to(end);
@@ -405,11 +437,17 @@ where
 
     /// Draws a cubic bezier curve from the current vertex to the given vertex.
     /// The vertex must have no edges at all or must only be adjacent to one "outside".
-    pub fn cubic_to(&mut self, control1: T::Vec, control2: T::Vec, end: T::V) -> &mut Self
+    pub fn cubic_to<const D: usize>(
+        &mut self,
+        control1: T::Vec,
+        control2: T::Vec,
+        end: T::V,
+    ) -> &mut Self
     where
-        T::Edge: HalfEdge<T> + CurvedEdge<T>,
-        T::Mesh: MeshHalfEdgeBuilder<T>,
+        T::Edge: CurvedEdge<D, T>,
         T::EP: DefaultEdgePayload,
+        T: EuclideanMeshType<D, Trans = Transform> + MeshTypeHalfEdge,
+        Transform: TransformTrait<T::S, D, Vec = T::Vec>,
     {
         let ct1 = self.transform.apply(control1);
         let ct2 = self.transform.apply(control2);

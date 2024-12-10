@@ -1,20 +1,14 @@
-use super::{basics::FaceBasics, MeshType};
+use super::basics::FaceBasics;
 use crate::{
-    math::{
-        HasPosition, LineSegment2D, Scalar, TransformTrait, Vector, Vector3D, Vector3DIteratorExt,
-    },
-    mesh::{IndexedVertex2D, VertexBasics},
+    math::{LineSegment2D, Polygon, Scalar, TransformTrait, Vector, Vector3D, Vector3DIteratorExt},
+    mesh::{IndexedVertex2D, MeshType3D, VertexBasics},
 };
 use itertools::Itertools;
 
 // TODO: Many Face3d functions should be part of n dimensions, not just 3d.
 
 /// A face with vertices that have 3d positions.
-pub trait Face3d<T: MeshType<Face = Self>>: FaceBasics<T>
-where
-    T::Vec: Vector3D<S = T::S>,
-    T::VP: HasPosition<T::Vec, S = T::S>,
-{
+pub trait Face3d<T: MeshType3D<Face = Self>>: FaceBasics<T> {
     /// Get an iterator over the cross products of the vertices of the face.
     fn vertices_crossed<'a>(
         &'a self,
@@ -131,11 +125,8 @@ where
         &'a self,
         mesh: &'a T::Mesh,
     ) -> impl Iterator<Item = (T::Vec2, T::V)> + Clone + ExactSizeIterator + 'a {
-        // TODO: overload this in a way that allows different dimensions
-        assert!(T::Vec::dimensions() == 3);
-
         let z_axis = T::Vec::new(0.0.into(), 0.0.into(), 1.0.into());
-        let rotation = <T::Trans as TransformTrait>::from_rotation_arc(
+        let rotation = <T::Trans as TransformTrait<T::S, 3>>::from_rotation_arc(
             Face3d::normal(self, mesh).normalize(),
             z_axis.normalize(),
         );
@@ -148,5 +139,10 @@ where
         self.vertices_2d(mesh)
             .map(|(p, i)| IndexedVertex2D::<T::V, T::Vec2>::new(p, i))
             .collect()
+    }
+
+    /// Returns the polygon of the face rotated to the XY plane.
+    fn as_polygon(&self, mesh: &T::Mesh) -> T::Poly {
+        <T::Poly as Polygon<T::Vec2>>::from_iter(self.vec2s(mesh).iter().map(|v| v.vec))
     }
 }

@@ -2,7 +2,7 @@ use super::HalfEdgeImpl;
 use crate::{
     halfedge::{HalfEdgeImplMeshType, HalfEdgeMeshImpl},
     math::IndexType,
-    mesh::{EdgeBasics, HalfEdge, HalfEdgeVertex, MeshBasics},
+    mesh::{EdgeBasics, FaceBasics, HalfEdge, HalfEdgeVertex, MeshBasics},
 };
 
 impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
@@ -131,27 +131,43 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
     }
 
     fn flip(e: T::E, mesh: &mut HalfEdgeMeshImpl<T>) {
-        let origin = mesh.edge(e).origin_id();
-        let target = mesh.edge(e).target_id(mesh);
+        let origin_id = mesh.edge(e).origin_id();
+        let target_id = mesh.edge(e).target_id(mesh);
 
-        let twin_id = {
-            let edge = mesh.edge_mut(e);
-            let tmp = edge.next;
-            edge.next = edge.prev;
-            edge.prev = tmp;
-            edge.origin_id = target;
-            edge.twin_id()
-        };
-        {
-            let twin = mesh.edge_mut(twin_id);
-            let tmp = twin.next;
-            twin.next = twin.prev;
-            twin.prev = tmp;
-            twin.origin_id = origin;
+        let edge = mesh.edge(e);
+        let next_id = edge.next;
+        let prev_id = edge.prev;
+        let face_id = edge.face_id();
+        let twin_id = edge.twin_id();
+
+        let twin = mesh.edge(twin_id);
+        let t_next_id = twin.next;
+        let t_prev_id = twin.prev;
+        let t_face_id = twin.face_id();
+
+        let edge = mesh.edge_mut(e);
+        edge.next = t_next_id;
+        edge.prev = t_prev_id;
+        edge.face = t_face_id;
+        edge.origin_id = target_id;
+        mesh.edge_mut(t_next_id).prev = e;
+        mesh.edge_mut(t_prev_id).next = e;
+
+        let twin = mesh.edge_mut(twin_id);
+        twin.next = next_id;
+        twin.prev = prev_id;
+        twin.face = face_id;
+        twin.origin_id = origin_id;
+        mesh.edge_mut(next_id).prev = twin_id;
+        mesh.edge_mut(prev_id).next = twin_id;
+
+        mesh.vertex_mut(origin_id).set_edge(twin_id);
+        mesh.vertex_mut(target_id).set_edge(e);
+        if face_id != IndexType::max() {
+            mesh.face_mut(face_id).set_edge(twin_id);
         }
-        let o = mesh.vertex_mut(origin);
-        o.set_edge(twin_id);
-        let t = mesh.vertex_mut(target);
-        t.set_edge(e);
+        if t_face_id != IndexType::max() {
+            mesh.face_mut(t_face_id).set_edge(e);
+        }
     }
 }

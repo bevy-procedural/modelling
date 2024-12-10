@@ -75,6 +75,11 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         &mut self.payload
     }
 
+    fn set_payload(&mut self, payload: T::MP) -> &mut Self {
+        self.payload = payload;
+        self
+    }
+
     /// Returns an iterator over all non-deleted vertices
     fn vertices<'a>(&'a self) -> impl Iterator<Item = &'a T::Vertex>
     where
@@ -128,7 +133,7 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     /// Since the vertex payloads in the `Deletable` can be sparse,
     /// we need to compact the vertices when converting them to a dense vector.
     /// This function returns the cloned compact vertices and maps the indices to the new compact buffer.
-    fn get_compact_vertices(&self, indices: &mut Vec<T::V>) -> Vec<T::VP> {
+    fn dense_vertices(&self, indices: &mut Vec<T::V>) -> Vec<T::VP> {
         let mut vertices = Vec::with_capacity(self.num_vertices());
 
         if self.vertices.len() == self.vertices.capacity() {

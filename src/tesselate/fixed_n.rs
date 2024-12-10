@@ -2,21 +2,17 @@
 //! The number of triangulations for n vertices is given by the (n-2)nd Catalan number.
 
 use crate::{
-    math::{HasPosition, Vector2D, Vector3D},
-    mesh::{Face3d, MeshType, Triangulation},
+    math::Vector2D,
+    mesh::{Face3d, MeshType3D, Triangulation},
 };
 
 /// Quickly min-weight triangulates a (not necessarily convex) quadrilateral.
 #[inline(always)]
-pub fn min_weight_quad<T: MeshType>(
+pub fn min_weight_quad<T: MeshType3D>(
     face: &T::Face,
     mesh: &T::Mesh,
     indices: &mut Triangulation<T::V>,
-) where
-    T::Vec: Vector3D<S = T::S>,
-    T::VP: HasPosition<T::Vec, S = T::S>,
-    T::Face: Face3d<T>,
-{
+) {
     let vs: Vec<(T::Vec2, T::V)> = face.vertices_2d(mesh).collect();
     // TODO: is it faster to test convex or to test intersection?
     let vs1_convex = vs[1].0.convex(vs[0].0, vs[2].0);
@@ -34,15 +30,11 @@ pub fn min_weight_quad<T: MeshType>(
 
 /// Quickly min-weight triangulates a (not necessarily convex) pentagon.
 #[inline(always)]
-pub fn min_weight_pent<T: MeshType>(
+pub fn min_weight_pent<T: MeshType3D>(
     _face: &T::Face,
     _mesh: &T::Mesh,
     _indices: &mut Triangulation<T::V>,
-) where
-    T::Vec: Vector3D<S = T::S>,
-    T::VP: HasPosition<T::Vec, S = T::S>,
-    T::Face: Face3d<T>,
-{
+) {
     // TODO: make specialized implementations for n=5
     // both inner edges start at the same vertex, so you only have to test 5 configs and find:
     // 1) the shortest sum of edge lengths or largest angle
@@ -52,15 +44,11 @@ pub fn min_weight_pent<T: MeshType>(
 }
 
 /// Quickly  min-weight triangulates a (not necessarily convex) hexagon.
-pub fn min_weight_hex<T: MeshType>(
+pub fn min_weight_hex<T: MeshType3D>(
     _face: &T::Face,
     _mesh: &T::Mesh,
     _indices: &mut Triangulation<T::V>,
-) where
-    T::Vec: Vector3D<S = T::S>,
-    T::VP: HasPosition<T::Vec, S = T::S>,
-    T::Face: Face3d<T>,
-{
+) {
     // TODO: make specialized implementations for n=6
     // Iterate the 14 configurations: 6 for fans, 3 for Zs, 3 for mirrored Zs, and 2 Triangles.
     // Every time a new favorite is found, check if it intersects with one of the two (!) non-adjacent boundary edges.
@@ -72,15 +60,11 @@ pub fn min_weight_hex<T: MeshType>(
 
 /// Simple dynamic programming approach to calculate the min-weight triangulation of a polygon with a fixed number of vertices.
 /// Suitable for very small `n`.
-pub fn minweight_dynamic_fixed<T: MeshType, const N: usize>(
+pub fn minweight_dynamic_fixed<T: MeshType3D, const N: usize>(
     _face: &T::Face,
     _mesh: &T::Mesh,
     _indices: &mut Triangulation<T::V>,
-) where
-    T::Vec: Vector3D<S = T::S>,
-    T::VP: HasPosition<T::Vec, S = T::S>,
-    T::Face: Face3d<T>,
-{
+) {
     // TODO: for the next few larger n (as long, if at all, it is faster than sweep), we could attempt a simplified dynamic programming algo on the sub-polygons of the mesh.
 
     todo!("hex triangulate");

@@ -97,10 +97,11 @@ impl VertexType {
 }
 
 #[cfg(test)]
+#[cfg(feature = "nalgebra")]
 mod tests {
-    use bevy::math::Vec2;
-
     use super::*;
+    use crate::extensions::nalgebra::VecN;
+    type Vec2 = VecN<f32, 2>;
 
     #[test]
     fn detect_vertex_type_start() {
@@ -115,6 +116,7 @@ mod tests {
         );
     }
 
+    #[test]
     fn detect_vertex_type_merge() {
         assert_eq!(
             VertexType::classify::<usize, Vec2>(
@@ -127,6 +129,7 @@ mod tests {
         );
     }
 
+    #[test]
     fn detect_vertex_type_split() {
         assert_eq!(
             VertexType::classify::<usize, Vec2>(
@@ -139,6 +142,7 @@ mod tests {
         );
     }
 
+    #[test]
     fn detect_vertex_type_end() {
         assert_eq!(
             VertexType::classify::<usize, Vec2>(
@@ -151,25 +155,30 @@ mod tests {
         );
     }
 
+    #[test]
+    fn detect_vertex_type_undecisive() {
+        assert_eq!(
+            VertexType::classify::<usize, Vec2>(
+                Vec2::new(-1.0, 0.0),
+                Vec2::new(0.0, 0.0),
+                Vec2::new(1.0, 0.0),
+                f32::EPS
+            ),
+            VertexType::Undecisive
+        );
+        assert_eq!(
+            VertexType::classify::<usize, Vec2>(
+                Vec2::new(1.0, 0.0),
+                Vec2::new(0.0, 0.0),
+                Vec2::new(-1.0, 0.0),
+                f32::EPS
+            ),
+            VertexType::Undecisive
+        );
+    }
+
+    #[test]
     fn detect_vertex_type_regular() {
-        assert_eq!(
-            VertexType::classify::<usize, Vec2>(
-                Vec2::new(-1.0, 0.0),
-                Vec2::new(0.0, 0.0),
-                Vec2::new(1.0, 0.0),
-                f32::EPS
-            ),
-            VertexType::Regular
-        );
-        assert_eq!(
-            VertexType::classify::<usize, Vec2>(
-                Vec2::new(1.0, 0.0),
-                Vec2::new(0.0, 0.0),
-                Vec2::new(-1.0, 0.0),
-                f32::EPS
-            ),
-            VertexType::Regular
-        );
         assert_eq!(
             VertexType::classify::<usize, Vec2>(
                 Vec2::new(0.0, 1.0),

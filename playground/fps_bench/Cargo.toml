@@ -1,0 +1,14 @@
+[package]
+name = "fps_bench"
+description = "A bevy-based fps benchmark"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[dependencies]
+bevy = { version = "^0.15.0", default-features = true }
+criterion = { version = "0.5.1", features = ["html_reports"] }
+
+[dependencies.procedural_modelling]
+path = "../../"
+features = ["bevy"]

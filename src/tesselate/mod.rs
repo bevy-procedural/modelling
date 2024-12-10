@@ -20,8 +20,8 @@ pub use min_weight_greedy::*;
 pub use sweep::*;
 
 use crate::{
-    math::{HasPosition, IndexType, Vector3D},
-    mesh::{Face3d, FaceBasics, MeshType, Triangulation, VertexBasics},
+    math::IndexType,
+    mesh::{FaceBasics, MeshType3D, Triangulation, VertexBasics},
 };
 
 /// The algorithm to use for triangulating a face.
@@ -65,17 +65,13 @@ pub struct TesselationMeta<V: IndexType> {
 }
 
 /// Triangulate a face using the specified algorithm.
-pub fn triangulate_face<T: MeshType>(
+pub fn triangulate_face<T: MeshType3D>(
     face: &T::Face,
     mesh: &T::Mesh,
     tri: &mut Triangulation<T::V>,
     algorithm: TriangulationAlgorithm,
     meta: &mut TesselationMeta<T::V>,
-) where
-    T::Vec: Vector3D<S = T::S>,
-    T::VP: HasPosition<T::Vec, S = T::S>,
-    T::Face: Face3d<T>,
-{
+) {
     let n = face.num_vertices(mesh);
     assert!(
         n >= 3,

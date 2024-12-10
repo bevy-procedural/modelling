@@ -1,9 +1,9 @@
 use super::{ForwardEdgeIterator, HalfEdgeImplMeshType};
 use crate::{
-    math::{HasPosition, IndexType, Vector3D},
+    math::IndexType,
     mesh::{
         DefaultFacePayload, EdgeBasics, Face, Face3d, FaceBasics, FacePayload, HalfEdge,
-        MeshBasics, VertexBasics,
+        MeshBasics, MeshType3D,
     },
     util::Deletable,
 };
@@ -13,7 +13,7 @@ use crate::{
 /// If you want to handle a non-orientable mesh, you have to use double covering.
 ///
 /// Also, if you have inner components, you have to use multiple faces!
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Hash)]
 pub struct HalfEdgeFaceImpl<T: HalfEdgeImplMeshType> {
     /// the index of the face
     id: T::F,
@@ -28,12 +28,7 @@ pub struct HalfEdgeFaceImpl<T: HalfEdgeImplMeshType> {
     payload: T::FP,
 }
 
-impl<T: HalfEdgeImplMeshType> Face3d<T> for HalfEdgeFaceImpl<T>
-where
-    T::Vec: Vector3D<S = T::S>,
-    T::VP: HasPosition<T::Vec, S = T::S>,
-{
-}
+impl<T: HalfEdgeImplMeshType + MeshType3D> Face3d<T> for HalfEdgeFaceImpl<T> {}
 
 impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
     #[inline(always)]
@@ -44,6 +39,11 @@ impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
     #[inline(always)]
     fn edge_id(&self) -> T::E {
         self.edge
+    }
+
+    #[inline(always)]
+    fn set_edge(&mut self, edge: T::E) {
+        self.edge = edge;
     }
 
     #[inline(always)]

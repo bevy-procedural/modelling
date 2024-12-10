@@ -46,15 +46,15 @@ mesh.to_bevy(RenderAssetUsages::default())
 
 Or run the [examples](https://github.com/bevy-procedural/modelling/tree/main/examples) on your computer like, e.g., `cargo run --features="bevy bevy/bevy_pbr bevy/bevy_winit bevy/tonemapping_luts" --profile fast-dev --example box`.
 
-For package development, we recommend using the `editor`-subcrate. This example has a little [egui](https://github.com/jakobhellermann/bevy-inspector-egui/)-editor. Run it using `cargo watch -w editor/src -w src -x "run -p editor --profile fast-dev"`. The `fast-dev` profile will enable optimizations for the dependencies, but not for the package itself. This will slow down the first build _significantly_, but incremental builds are slightly faster and bevy's performance (bevy is used as the renderer in the examples) improves a lot.
+For package development, we recommend using the `playground_bevy`- resp. `playground_wgpu`-subcrate. This example has a little [egui](https://github.com/jakobhellermann/bevy-inspector-egui/)-editor. Run it using `cargo watch -w playground -w src -x "run -p playground_bevy --profile fast-dev"`. The `fast-dev` profile will enable optimizations for the dependencies, but not for the package itself. This will slow down the first build _significantly_, but incremental builds are slightly faster and bevy's performance (bevy is used as the renderer in the examples) improves a lot.
 
-When developing tests, we recommend `cargo watch -w editor/src -w src -x "test --profile fast-dev"`.
+When developing tests, we recommend `cargo watch -w src -x "test --profile fast-dev"` resp. `cargo llvm-cov --html` to generate a coverage report.
 
 ## Tutorial
 
-We are currently working on some tutorials for the most important features. 
+We are currently working on some tutorials for the most important features.
 
- - [Getting started](https://docs.rs/procedural_modelling/latest/procedural_modelling/)
+-   [Getting started](https://docs.rs/procedural_modelling/latest/procedural_modelling/)
 
 ## Feature Progress
 
@@ -71,13 +71,14 @@ We are currently working on some tutorials for the most important features.
 
     -   [x] Open PL 2-Manifold in 2d and 3d Space
     -   [x] Bezier Curves for 2d Meshes
+    -   [ ] Self-intersecting surfaces
     -   [ ] Open PL 2-Manifold in nd Space
     -   [ ] Open PL $n$-Manifold in md Space <!-- e.g., https://youtu.be/piJkuavhV50?si=1IZdm1PYnA2dvdAL&t=1135 -->
     -   [ ] Pseudomanifold (with singularities)
     -   [ ] Non-Manifold (with branching surfaces)
     -   [ ] Non-Euclidean
-    -   [ ] Combinatorial (purely topological)
-    -   [ ] NURBS / T-Splines <!-- Bezier Surfaces / Parametric Surfaces / Spline Networks...? -->
+    -   [ ] Arbitrary Graphs
+    -   [ ] NURBS, T-Splines <!-- Bezier Surfaces, Parametric Surfaces, Spline Networks...? -->
 
 -   Triangulation
 
@@ -92,25 +93,23 @@ We are currently working on some tutorials for the most important features.
 
 -   Primitives
 
-    -   [x] Polygon, Star, Loop
-    -   [x] Cuboid, Cube
-    -   [x] Cylinder, Cone
-    -   [x] Prism, Antiprism
-    -   [x] Pyramid, Frustum, Tetrahedron, Octahedron, Dodecahedron, Icosahedron
-    -   [x] UV Sphere, Icosphere, Geodesic Polyhedra
+    -   [x] 2d stuff: Polygon, Star, Circle, Loop, ...
+    -   [x] Prismatoids: Prism, Antiprism, Cuboid, Pyramid, Frustum, ...
+    -   [x] Platonic solids: Tetrahedron, Cube, Octahedron, Dodecahedron, Icosahedron
+    -   [x] Round things: Cylinder, Cone, UV Sphere, Icosphere, Geodesic Polyhedra
+    -   [ ] 4d stuff: Tesseract, Hypersphere, Hypersimplex, ...
     -   [ ] Cube Sphere
-    -   [ ] Torus
+    -   [ ] Torus, Clifford Torus
 
 -   Operations
 
     -   [x] Extrude
-    -   [x] Linear Loft (Triangle, Polygon)
-    -   [ ] Nonlinear Loft
+    -   [x] Linear Loft (Triangle, Polygon), [ ] Loft along path
     -   [x] Transform (Translate, Rotate, Scale, [ ] Shear)
     -   [x] Frequency Subdivision (partial)
-    -   [ ] Chamfer / Cantellate / Bevel / Truncate / Bitruncate / Omnitruncate
+    -   [ ] Chamfer, Cantellate, Bevel, Truncate, Bitruncate, Omnitruncate
     -   [ ] Boolean Operations (Union, Intersection, Difference, Symmetric Difference)
-    -   [ ] (Anisotropic) Simplification / LODs
+    -   [ ] (Anisotropic) Simplification, LODs
     -   [ ] Dualize
     <!--
     -   [ ] Taper
@@ -128,7 +127,7 @@ We are currently working on some tutorials for the most important features.
     -   [ ] Weld
     -   [ ] Twist
     -   [ ] Offset
-    -   [ ] Inflate / Deflate
+    -   [ ] Inflate, Deflate
     -   [ ] Convex Hull
     -   [ ] Collapse
     -   [ ] Split
@@ -141,6 +140,9 @@ We are currently working on some tutorials for the most important features.
 
 -   Tools
 
+    -   [x] Basic Network Science Tools (Laplacian, Adjacency, Degree, Spectrum)
+    -   [x] Mesh Isomorphism (partial)
+    -   [ ] 2d Polygons: Area, Efficient Valid Diagonals, Convexity, ...
     -   [ ] Geodesic Pathfinding
     -   [ ] Raycasting
     -   [ ] Topology Analysis
@@ -155,26 +157,46 @@ We are currently working on some tutorials for the most important features.
     -   [ ] Topology
 -->
 
--   Backends
+-   Extensions
 
-    -   [x] Bevy
-    -   [ ] wgpu
-    -   [ ] STL export/import
-    -   [ ] OBJ export/import
-    -   [x] SVG import
+    -   [x] bevy
+    -   [x] wgpu
+    -   [x] nalgebra (when not using bevy)
+    -   [x] SVG import/ [ ] export
+    -   [ ] STL import/export
+    -   [ ] OBJ import/export
+
+## Customization via Traits
+
+The availability of algorithms and operations for different mesh data structures is represented by traits. Some examples:
+
+-   The `Transformable` trait indicates that you can apply affine transformation to a mesh and implements methods such as `translate` and `rotate`.
+-   The `EuclideanMeshType` indicates that the mesh has vertex positions and lives in an Euclidean space and associates the mesh data type with a `Scalar` and `Vector` type etc.
+-   The `MakePrismatoid` trait implements methods such as `insert_pyramid` or `insert_cube`.
+-   The `MeshTypeHalfEdge` trait indicates that the mesh is based on a half-edge data structure (or can be treated as if) and makes sure that the mesh uses edge implementations that implement half-edge related methods like `twin_id`. It also enables the use of many algorithms that are currently only implemented for half-edge meshes.
+
+For a full list of traits see the [documentation](https://docs.rs/procedural_modelling).
+
+When using this trait-based library, you need to define your own type of `Mesh` and implement all traits you need. For most traits all methods have reasonable default implementations. This allows you to quickly implement meshes backed by a custom data structure or using custom vertex, face, edge, or mesh payloads. If you don't need anything special, you can use one of our default implementations such as `Bevy3dMesh` or the generic backend-agnostic `MeshNd<d>`. See `backends/bevy/mesh3d.rs` or `backends/nalgebra/mesh_nd.rs` for the exemplary default implementations.
 
 ## Features
 
 The following cargo features are available:
 
--   `meshopt` -- Use [Meshopt](https://github.com/gwihlidal/meshopt-rs) to optimize the performance of generated meshes.
--   `bevy` -- Compiles with support for bevy. Necessary for the examples and the editor.
--   `benchmarks` -- Enable [criterion](https://github.com/bheisler/criterion.rs) for the benchmarks.
+-   `bevy` -- Compiles with support for bevy.
+-   `wgpu` -- Compiles with support for wgpu.
+-   `example_deps` -- Compiles with the dependencies necessary for the examples.
+-   `netsci` -- Enable network science tools.
+-   `svg` -- Enable SVG import. Adds [usvg](https://github.com/linebender/resvg) as a dependency.
+-   `fonts` -- Enable font rendering. Adds [ab_glyph](https://github.com/alexheretic/ab-glyph) as a dependency.
+-   `meshopt` -- Enable mesh optimization. Adds [meshopt](https://github.com/gwihlidal/meshopt-rs) as a dependency.
+-   `nalgebra` -- Enable [nalgebra](https://nalgebra.org/) as a backend. This is usually required for anything but bevy.
 
 For development only:
 
 -   `sweep_debug` -- Collect debug information during the sweepline triangulation and enable visualizations in the bevy backend.
 -   `sweep_debug_print` -- Print debug information for the sweepline triangulation.
+-   `bevy_dynamic` -- Use dynamic linking for bevy. This is useful for faster incremental builds.
 
 ## Triangulation algorithms
 
@@ -191,6 +213,7 @@ The package supports different triangulation algorithms. The robustness and rend
 -   **Heuristic** Heuristic algorithm that tries to find a compromise between the speed of `Sweep` and the quality of `MinWeight`.
 -   **Auto** (default) Automatically choose the "best" algorithm based on the input. The edge-weight will be the same as Delaunay or better. Uses specialized fast implementations for small polygons to quickly generate min-weight triangulations. Falls back to Delaunay for larger polygons.
 
+<!--
 | Algorithm    | Requirements | Worst Case | Circle 10        | Circle 100         | Circle 1000       | Circle 10000      | ZigZag 1000        | ZigZag 10000      |
 | ------------ | ------------ | ---------- | ---------------- | ------------------ | ----------------- | ----------------- | ------------------ | ----------------- |
 | Fan          | Convex       | $n$        | 0.258µs (195fps) | 2.419µs¹ (154fps)² | 71.0µs (52.4fps)  | 161.8µs (15.7fps) | -                  | -                 |
@@ -202,13 +225,13 @@ The package supports different triangulation algorithms. The robustness and rend
 | MinWeight    | Simple       | $n^3$      | 4.087µs (196fps) | 2.320ms (181fps)   | 1.817s (177fps)   |                   |                    |                   |
 | Heuristic    | Simple       | $n \log n$ |                  |                    |                   |                   |                    |
 | Auto         | Simple       | $n \log n$ |                  |                    |                   |                   |                    |
+ -->
 
--   ¹) Time for the triangulation on a Intel i7-12700K (single threaded). Run the benchmarks using `cargo bench --features benchmarks`.
--   ²) FPS when rendering 100 large, transparent instances with the bevy 0.14.2 pbr shader on a Nvidia GeForce RTX 4060 Ti in Full HD. See `cargo run --example fps_bench --profile release --features="example_deps"`. For the non-Delaunay algorithms, the rendering time deteriorates for the larger circles since the edge length is not minimized causing significant overdraw.
+<img src="assets/fps_vs_render.svg" alt="FPS Boxplot" width="800"/>
 
-## Hierarchy of Traits
-
-The availability of algorithms and operations for different mesh data structures is represented by traits. For example, the `Transformable` trait implements methods such as `translate` and `rotate` and the `MakePrismatoid` trait implements methods such as `insert_pyramid` or `insert_cube`. There are also supertraits such as `Open2Manifold` that combine multiple traits for easier use. For a full list of traits and their implementations, see the [documentation](https://docs.rs/procedural_modelling).
+-   Time for the triangulation on a Intel i7-12700K (single threaded). Run the benchmarks using `cargo bench --features benchmarks --profile release`.
+-   FPS when rendering 100 large, transparent instances with the bevy 0.14.2 pbr shader on a Nvidia GeForce RTX 4060 Ti in Full HD. See `cargo run -p fps_bench --profile release` and `julia --project=./playground/fps_bench/FPSBench ./playground/fps_bench/FPSBench/src/main.jl`. For the non-Delaunay algorithms, the rendering time deteriorates for the larger circles since the edge length is not minimized causing significant overdraw.
+-   The `Delaunay` algorithm is currently significantly slowed down due to a inefficient algorithm for the interior detection. This will be fixed in the future.
 
 ## Supported Bevy Versions
 

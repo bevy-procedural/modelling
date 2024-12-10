@@ -1,11 +1,16 @@
 use crate::{
     math::{HasPosition, Scalar, Vector},
-    mesh::{DefaultEdgePayload, DefaultFacePayload, MeshTrait, MeshType},
+    mesh::{DefaultEdgePayload, DefaultFacePayload, EuclideanMeshType, MeshTrait, MeshType},
 };
 
 /// Calculate the side length of a regular polygon with `n` sides and a given `radius`.
 pub fn regular_polygon_sidelength<S: Scalar>(radius: S, n: usize) -> S {
     S::TWO * radius * (S::PI / S::from_usize(n)).sin()
+}
+
+/// Calculate the area of a regular polygon with `n` sides and a given `radius`.
+pub fn regular_polygon_area<S: Scalar>(radius: S, n: usize) -> S {
+    S::HALF * S::from_usize(n) * radius * radius * (S::TWO * S::PI / S::from_usize(n)).sin()
 }
 
 /// Methods to insert 2D shapes into a mesh.
@@ -35,9 +40,14 @@ where
     }
 
     /// create a regular star, i.e., a regular polygon with two radii
-    fn insert_regular_star(&mut self, inner_radius: T::S, outer_radius: T::S, n: usize) -> T::E
+    fn insert_regular_star<const D: usize>(
+        &mut self,
+        inner_radius: T::S,
+        outer_radius: T::S,
+        n: usize,
+    ) -> T::E
     where
-        T::VP: HasPosition<T::Vec, S = T::S>,
+        T: EuclideanMeshType<D>,
     {
         let pi2n = 2.0 * std::f32::consts::PI / (n as f32);
         self.insert_polygon((0..n).into_iter().map(|i| {
@@ -55,17 +65,17 @@ where
     }
 
     /// create a regular polygon
-    fn regular_polygon(radius: T::S, n: usize) -> Self
+    fn regular_polygon<const D: usize>(radius: T::S, n: usize) -> Self
     where
-        T::VP: HasPosition<T::Vec, S = T::S>,
+        T: EuclideanMeshType<D>,
     {
         Self::regular_star(radius, radius, n)
     }
 
     /// Calls `insert_regular_star` on a new mesh.
-    fn regular_star(inner_radius: T::S, outer_radius: T::S, n: usize) -> Self
+    fn regular_star<const D: usize>(inner_radius: T::S, outer_radius: T::S, n: usize) -> Self
     where
-        T::VP: HasPosition<T::Vec, S = T::S>,
+        T: EuclideanMeshType<D>,
     {
         let mut mesh = Self::default();
         mesh.insert_regular_star(inner_radius, outer_radius, n);

@@ -1,41 +1,22 @@
-use super::{
-    kahan_summation, HasZero, Scalar, TransformTrait, Vector2D, Vector3D, Vector4D,
-};
+use super::{kahan_summation, HasZero, Scalar, Vector2D};
 
 /// Trait for coordinates in n-dimensional space.
-pub trait Vector<S: Scalar>:
+pub trait Vector<S: Scalar, const D: usize>:
     Copy
-    + Default
     + PartialEq
     + std::fmt::Debug
     + std::ops::Add<Output = Self>
     + std::ops::AddAssign
     + std::ops::Sub<Output = Self>
     + std::ops::SubAssign
-    + std::ops::Mul<Self, Output = Self>
+    //+ std::ops::Mul<Self, Output = Self>
     + std::ops::Mul<S, Output = Self>
-    + std::ops::MulAssign
-    + std::ops::Div<Self, Output = Self>
+    //+ std::ops::MulAssign
     + std::ops::Div<S, Output = Self>
     + std::ops::Neg<Output = Self>
     + HasZero
     + 'static
 {
-    /// The associated 2d vector type
-    type Vec2: Vector2D<S = S>;
-
-    /// The associated 3d vector type
-    type Vec3: Vector3D<S = S>;
-
-    /// The associated 4d vector type
-    type Vec4: Vector4D<S = S>;
-
-    /// The data structure used for linear transformations of this vector.
-    type Trans: TransformTrait<S = S, Vec = Self>;
-
-    /// Returns the number of dimensions.
-    fn dimensions() -> usize;
-
     /// Returns the distance between two points.
     fn distance(&self, other: &Self) -> S;
 
@@ -64,13 +45,8 @@ pub trait Vector<S: Scalar>:
     fn w(&self) -> S;
 
     /// Returns the coordinates as a tuple.
-    fn vec2(&self) -> Self::Vec2 {
-        <Self::Vec2 as Vector2D>::new(self.x(), self.y())
-    }
-
-    /// Returns the coordinates as a tuple.
-    fn vec3(&self) -> Self::Vec3 {
-        <Self::Vec3 as Vector3D>::new(self.x(), self.y(), self.z())
+    fn vec2<Vec2: Vector2D<S=S>>(&self) -> Vec2 {
+        Vec2::new(self.x(), self.y())
     }
 
     /// Create a vector from one coordinate
@@ -96,15 +72,38 @@ pub trait Vector<S: Scalar>:
     /// Calculate the mean of an iterator of vectors using some numerically stable algorithm.
     fn stable_mean<I: Iterator<Item = Self>>(iter: I) -> Self {
         let (sum, count) = kahan_summation(iter);
-        sum / Self::splat(S::from_usize(count))
+        sum / S::from_usize(count)
+    }
+
+    /// Returns the angle between two vectors.
+    fn angle_between(&self, other: Self) -> S {
+        let len_self = self.length();
+        let len_other = other.length();
+
+        if len_self.is_zero() || len_other.is_zero() {
+            // Angle is undefined for zero-length vectors; handle as needed
+            return S::ZERO;
+        }
+
+        let cos_theta = self.dot(&other) / (len_self * len_other);
+
+        // Clamp cos_theta to [-1, 1] to handle numerical inaccuracies
+        cos_theta.clamp(-S::ONE, S::ONE).acos()
     }
 
     /// Check if two vectors are approximately equal.
     fn is_about(&self, other: &Self, epsilon: S) -> bool;
+
+    /// Returns the zero vector.
+    fn zero() -> Self {
+        Self::splat(S::ZERO)
+    }
 }
 
 /// Additional methods for vector iterators.
-pub trait VectorIteratorExt<S: Scalar, V: Vector<S>>: Iterator<Item = V> {
+pub trait VectorIteratorExt<S: Scalar, const D: usize, V: Vector<S, D>>:
+    Iterator<Item = V>
+{
     /// Calculate the sum of an iterator of vectors using some numerically stable algorithm.
     fn stable_sum(self) -> Self::Item
     where
@@ -122,4 +121,7 @@ pub trait VectorIteratorExt<S: Scalar, V: Vector<S>>: Iterator<Item = V> {
     }
 }
 
-impl<I: Iterator<Item = V>, S: Scalar, V: Vector<S>> VectorIteratorExt<S, V> for I {}
+impl<I: Iterator<Item = V>, S: Scalar, const D: usize, V: Vector<S, D>> VectorIteratorExt<S, D, V>
+    for I
+{
+}

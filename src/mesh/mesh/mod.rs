@@ -3,6 +3,7 @@ mod basics;
 mod builder;
 mod check;
 mod halfedge;
+mod iso;
 mod mesh_type;
 mod normals;
 mod path_builder;
@@ -16,6 +17,7 @@ pub use basics::*;
 pub use builder::*;
 pub use check::*;
 pub use halfedge::*;
+pub use iso::*;
 pub use mesh_type::*;
 pub use normals::*;
 pub use path_builder::*;
@@ -25,15 +27,17 @@ pub use topology::*;
 pub use transform::*;
 pub use triangulate::*;
 
+#[cfg(feature = "netsci")]
+mod netsci;
+
+#[cfg(feature = "netsci")]
+pub use netsci::*;
 
 #[cfg(feature = "fonts")]
 mod fonts;
 
 #[cfg(feature = "fonts")]
 pub use fonts::*;
-
-#[cfg(feature = "svg")]
-mod svg;
 
 /// The `MeshTrait` doesn't assume any specific data structure or topology,
 /// i.e., could be a manifold half-edge mesh, a topological directed graph, etc.

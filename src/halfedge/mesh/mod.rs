@@ -6,7 +6,10 @@ mod pseudo_winged;
 
 use super::HalfEdgeImplMeshType;
 use crate::{
-    mesh::{MeshTopology, MeshTrait, TransformableMesh, Triangulateable, WithNormals},
+    math::{HasNormal, Scalar, Transformable, Vector},
+    mesh::{
+        EuclideanMeshType, MeshTopology, MeshTrait, TransformableMesh, Triangulateable, WithNormals,
+    },
     util::DeletableVector,
 };
 
@@ -49,10 +52,28 @@ impl<T: HalfEdgeImplMeshType> Default for HalfEdgeMeshImpl<T> {
     }
 }
 
-impl<T: HalfEdgeImplMeshType> TransformableMesh<T> for HalfEdgeMeshImpl<T> {}
-impl<T: HalfEdgeImplMeshType> WithNormals<T> for HalfEdgeMeshImpl<T> {}
+impl<const D: usize, T: HalfEdgeImplMeshType + EuclideanMeshType<D>> TransformableMesh<D, T>
+    for HalfEdgeMeshImpl<T>
+where
+    T::VP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
+    T::EP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
+    T::FP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
+    T::MP: Transformable<D, Rot = T::Rot, Vec = T::Vec, Trans = T::Trans, S = T::S>,
+{
+}
+impl<
+        const D: usize,
+        VecN: Vector<SN, D>,
+        SN: Scalar,
+        T: HalfEdgeImplMeshType + EuclideanMeshType<D, VP: HasNormal<D, VecN, S = SN>>,
+    > WithNormals<D, VecN, SN, T> for HalfEdgeMeshImpl<T>
+{
+}
 impl<T: HalfEdgeImplMeshType> MeshTopology<T> for HalfEdgeMeshImpl<T> {}
 impl<T: HalfEdgeImplMeshType> Triangulateable<T> for HalfEdgeMeshImpl<T> {}
 impl<T: HalfEdgeImplMeshType> MeshTrait for HalfEdgeMeshImpl<T> {
     type T = T;
 }
+
+#[cfg(feature = "netsci")]
+impl<T: HalfEdgeImplMeshType> crate::mesh::NetworkScience<T> for HalfEdgeMeshImpl<T> {}

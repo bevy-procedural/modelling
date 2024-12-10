@@ -1,9 +1,8 @@
 use super::{HalfEdgeImplMeshType, HalfEdgeMeshImpl};
 use crate::{
-    math::{HasPosition, TransformTrait, Transformable, Vector3D},
     mesh::{
-        DefaultEdgePayload, DefaultFacePayload, EdgeBasics, Face3d, FaceBasics, HalfEdge,
-        MeshBasics, MeshBuilder, MeshPosition, MeshType3D, MeshTypeHalfEdge,
+        DefaultEdgePayload, DefaultFacePayload, EdgeBasics, EuclideanMeshType, FaceBasics,
+        HalfEdge, MeshBasics, MeshBuilder, MeshPosition, MeshType3D, MeshTypeHalfEdge,
     },
     operations::{MeshExtrude, MeshLoft, MeshSubdivision},
     primitives::{Make2dShape, MakePlane, MakePrismatoid, MakeSphere},
@@ -28,11 +27,11 @@ where
     }
 }
 
-impl<T: HalfEdgeImplMeshType> MakePlane<T> for HalfEdgeMeshImpl<T>
+impl<const D: usize, T: HalfEdgeImplMeshType + EuclideanMeshType<D>> MakePlane<D, T>
+    for HalfEdgeMeshImpl<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
-    T::VP: HasPosition<T::Vec, S = T::S>,
 {
 }
 
@@ -41,13 +40,7 @@ impl<T: HalfEdgeImplMeshType + MeshTypeHalfEdge + MeshType3D> MakePrismatoid<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
-    T::Vec: Vector3D<S = T::S>,
-    T::VP: Transformable<Vec = T::Vec, Rot = T::Rot, Trans = T::Trans, S = T::S>
-        + HasPosition<T::Vec, S = T::S>,
     Self: Make2dShape<T>,
-    T::Edge: HalfEdge<T> + EdgeBasics<T>,
-    T::Face: Face3d<T>,
-    T::Trans: TransformTrait<S = T::S>,
 {
 }
 
@@ -55,13 +48,7 @@ impl<T: HalfEdgeImplMeshType + MeshTypeHalfEdge + MeshType3D> MakeSphere<T> for 
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
-    T::Vec: Vector3D<S = T::S>,
-    T::VP: Transformable<Vec = T::Vec, Rot = T::Rot, Trans = T::Trans, S = T::S>
-        + HasPosition<T::Vec, S = T::S>,
     Self: Make2dShape<T>,
-    T::Edge: HalfEdge<T> + EdgeBasics<T>,
-    T::Face: Face3d<T>,
-    T::Trans: TransformTrait<S = T::S>,
 {
 }
 
@@ -73,8 +60,8 @@ where
 {
 }
 
-impl<T: HalfEdgeImplMeshType> MeshPosition<T> for HalfEdgeMeshImpl<T> where
-    T::VP: HasPosition<T::Vec, S = T::S>
+impl<const D: usize, T: HalfEdgeImplMeshType + EuclideanMeshType<D>> MeshPosition<D, T>
+    for HalfEdgeMeshImpl<T>
 {
 }
 
@@ -82,8 +69,6 @@ impl<T: HalfEdgeImplMeshType + MeshTypeHalfEdge> MeshExtrude<T> for HalfEdgeMesh
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
-    T::VP: Transformable<Trans = T::Trans, S = T::S>,
-    T::Edge: HalfEdge<T> + EdgeBasics<T>,
 {
 }
 
@@ -91,7 +76,5 @@ impl<T: HalfEdgeImplMeshType + MeshTypeHalfEdge> MeshLoft<T> for HalfEdgeMeshImp
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
-    T::VP: Transformable<Trans = T::Trans, S = T::S>,
-    T::Edge: HalfEdge<T> + EdgeBasics<T>,
 {
 }

@@ -3,17 +3,16 @@ use super::{Scalar, Vector};
 /// Trait for the data structure needed to rotate the value of type V.
 pub trait Rotator<V>: Clone {}
 
+// TODO: use references to vectors instead!
+
 /// Trait for tansformations in nd space. We call it `TransformTrait` to avoid
 /// collisions with the `Transform` struct in Bevy.
 
-pub trait TransformTrait:
-    Clone + Copy + Default + std::fmt::Debug + std::ops::Mul<Self, Output = Self> + 'static
+pub trait TransformTrait<S: Scalar, const D: usize>:
+    Clone + Copy + Default + std::fmt::Debug + 'static
 {
-    /// The scalar type of the coordinates and angles used in the rotation.
-    type S: Scalar;
-
     /// The vector type used in the transformatiom.
-    type Vec: Vector<Self::S>;
+    type Vec: Vector<S, D>;
 
     /// The rotation type used in the transformation.
     type Rot: Rotator<Self::Vec>;
@@ -33,7 +32,7 @@ pub trait TransformTrait:
     /// Constructs a transform from a scale.
     fn from_scale(v: Self::Vec) -> Self;
 
-    /// Adds scale.
+    /// Adds scale (everything is scaled - also previous translations).
     fn with_scale(&self, v: Self::Vec) -> Self;
 
     /// Adds translation.
@@ -44,4 +43,7 @@ pub trait TransformTrait:
 
     /// Applies the rotation/scale/sheer to a vector.
     fn apply_vec(&self, v: Self::Vec) -> Self::Vec;
+
+    /// Chains two transformations. First apply the left transformation, then the other.
+    fn chain(&self, other: &Self) -> Self;
 }

@@ -1,0 +1,15 @@
+[package]
+name = "playground_bevy"
+description = "An Bevy-based editor for the procedural_modelling crate"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[dependencies]
+bevy = { version = "^0.15.0", default-features = true }
+bevy-inspector-egui = "^0.28.0"
+bevy_panorbit_camera = { version = "^0.21.0", features = ["bevy_egui"] }
+
+[dependencies.procedural_modelling]
+path = "../../"
+features = ["bevy", "meshopt", "bevy_dynamic", "svg", "fonts", "gizmo"]

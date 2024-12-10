@@ -1,6 +1,6 @@
 use super::{interval::SweepLineInterval, monotone::MonotoneTriangulator};
 use crate::{
-    math::{HasZero, IndexType, Scalar, Vector, Vector2D},
+    math::{IndexType, Scalar, Vector, Vector2D},
     mesh::IndexedVertex2D,
 };
 use std::collections::{BTreeSet, HashMap};

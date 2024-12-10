@@ -1,21 +1,17 @@
 use super::Triangulation;
 use crate::{
-    math::{HasPosition, Polygon, Scalar, Vector, Vector3D},
-    mesh::{Face, Face3d, FaceBasics, MeshType},
+    math::{Polygon, Scalar, Vector},
+    mesh::{Face, Face3d, FaceBasics, MeshType3D},
 };
 use spade::{ConstrainedDelaunayTriangulation, Point2, Triangulation as _};
 use std::collections::HashMap;
 
 /// Converts the face into a triangle list using the delaunay triangulation.
-pub fn delaunay_triangulation<T: MeshType>(
+pub fn delaunay_triangulation<T: MeshType3D>(
     face: &T::Face,
     mesh: &T::Mesh,
     tri: &mut Triangulation<T::V>,
-) where
-    T::Vec: Vector3D<S = T::S>,
-    T::VP: HasPosition<T::Vec, S = T::S>,
-    T::Face: Face3d<T>,
-{
+) {
     debug_assert!(face.may_be_curved() || face.is_planar2(mesh));
     debug_assert!(!face.has_self_intersections(mesh));
 
@@ -84,15 +80,12 @@ pub fn delaunay_triangulation<T: MeshType>(
 }
 
 #[cfg(test)]
+#[cfg(feature = "nalgebra")]
 mod tests {
+    use crate::extensions::nalgebra::*;
     use crate::prelude::*;
 
-    fn verify_triangulation<T: MeshType>(mesh: &T::Mesh, f: T::F)
-    where
-        T::Face: Face3d<T>,
-        T::Vec: Vector3D<S = T::S>,
-        T::VP: HasPosition<T::Vec, S = T::S>,
-    {
+    fn verify_triangulation<T: MeshType3D>(mesh: &T::Mesh, f: T::F) {
         let face = mesh.face(f);
         let vec2s = face.vec2s(mesh);
         assert!(
@@ -106,13 +99,12 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "bevy")]
     #[cfg(feature = "fonts")]
     fn test_font() {
-        let mut mesh2d = BevyMesh2d::new();
+        let mut mesh2d = Mesh2d64Curved::new();
         Font::new(include_bytes!("../../assets/Cochineal-Roman.otf"), 1.0)
-            .layout_text::<BevyMeshType2d32>("F", &mut mesh2d);
-        let mesh3d = mesh2d.to_3d(0.01);
-        self::verify_triangulation::<BevyMeshType3d32>(&mesh3d, 0);
+            .layout_text::<2, MeshType2d64PNUCurved>("F", &mut mesh2d);
+        let mesh3d = mesh2d.to_nd(0.01);
+        self::verify_triangulation::<MeshType3d64PNU>(&mesh3d, 0);
     }
 }

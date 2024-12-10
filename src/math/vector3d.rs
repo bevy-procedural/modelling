@@ -1,10 +1,13 @@
-use super::{HasZero, Scalar, Vector, VectorIteratorExt};
+use super::{Scalar, Vector, VectorIteratorExt};
 use itertools::Itertools;
 
 /// Trait for spherical coordinates in 3d space.
-pub trait Spherical3d: Vector<Self::S> {
+pub trait Spherical3d: Vector<Self::S, 3> {
     /// The scalar type of the coordinates used in the vector
     type S: Scalar;
+
+    /// The Cartesian vector type
+    type Vec3: Vector<Self::S, 3>;
 
     /// Construct from scalar values.
     fn new(r: Self::S, phi: Self::S, theta: Self::S) -> Self {
@@ -26,7 +29,7 @@ pub trait Spherical3d: Vector<Self::S> {
         self.z()
     }
 
-    /// Converts to cartesian coordinates.
+    /// Converts to Cartesian coordinates.
     fn cartesian(&self) -> Self::Vec3 {
         let r = self.r();
         let phi = self.phi();
@@ -36,17 +39,18 @@ pub trait Spherical3d: Vector<Self::S> {
         let y = r * theta.sin() * phi.sin();
         let z = r * theta.cos();
 
-        Self::Vec3::new(x, y, z)
+        Self::Vec3::from_xyz(x, y, z)
     }
 }
 
 /// Trait for coordinates in 3d space.
-pub trait Vector3D: Vector<Self::S> {
+pub trait Vector3D: Vector<Self::S, 3> {
     /// The scalar type of the coordinates used in the vector
     type S: Scalar;
 
     /// The associated spherical 3d vector type
     type Spherical: Spherical3d<S = Self::S, Vec3 = Self>;
+
 
     /// Construct from scalar values.
     fn new(x: Self::S, y: Self::S, z: Self::S) -> Self;
@@ -167,7 +171,7 @@ pub trait Vector3DIteratorExt<S: Scalar, V: Vector3D<S = S>>: Iterator<Item = V>
             })
             .stable_sum();
 
-        normal * V::splat(S::from(-0.5))
+        normal * S::from(-0.5)
     }
 }
 

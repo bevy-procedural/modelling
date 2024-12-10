@@ -7,8 +7,8 @@ pub use basics::*;
 pub use face3d::*;
 pub use payload::*;
 
-use super::{MeshType, VertexBasics};
-use crate::math::{HasPosition, VectorIteratorExt};
+use super::{EuclideanMeshType, MeshType, VertexBasics};
+use crate::math::VectorIteratorExt;
 
 // TODO: Remove methods in trait Face
 
@@ -20,10 +20,12 @@ pub trait Face: FaceBasics<Self::T> {
     type T: MeshType<Face = Self>;
 
     /// Naive method to get the center of the face by averaging the vertices.
-    fn centroid(&self, mesh: &<Self::T as MeshType>::Mesh) -> <Self::T as MeshType>::Vec
+    fn centroid<const D: usize>(
+        &self,
+        mesh: &<Self::T as MeshType>::Mesh,
+    ) -> <Self::T as EuclideanMeshType<D>>::Vec
     where
-        <Self::T as MeshType>::VP:
-            HasPosition<<Self::T as MeshType>::Vec, S = <Self::T as MeshType>::S>,
+        Self::T: EuclideanMeshType<D>,
     {
         self.vertices(mesh).map(|v| v.pos()).stable_mean()
     }

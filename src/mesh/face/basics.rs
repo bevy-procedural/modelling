@@ -1,18 +1,19 @@
-use crate::mesh::EdgeBasics;
+use crate::mesh::{EdgeBasics, VertexBasics};
 
 use super::MeshType;
 
 /// A face in a mesh.
 ///
 /// Isn't necessarily planar or triangular.
-pub trait FaceBasics<T: MeshType<Face = Self>>:
-    std::fmt::Debug + Clone + Copy + PartialEq + Eq
-{
+pub trait FaceBasics<T: MeshType<Face = Self>>: std::fmt::Debug + Clone + Copy {
     /// Returns the index of the face.
     fn id(&self) -> T::F;
 
     /// Returns an edge incident to the face.
     fn edge(&self, mesh: &T::Mesh) -> T::Edge;
+
+    /// Sets the representative edge incident to the face.
+    fn set_edge(&mut self, edge: T::E);
 
     /// Returns the id of a half-edge incident to the face.
     fn edge_id(&self) -> T::E;
@@ -40,6 +41,14 @@ pub trait FaceBasics<T: MeshType<Face = Self>>:
         &'a self,
         mesh: &'a T::Mesh,
     ) -> impl Iterator<Item = T::Vertex> + 'a + Clone + ExactSizeIterator;
+
+    /// Iterates all vertex ids adjacent to the face
+    fn vertex_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::V> + 'a
+    where
+        T: 'a,
+    {
+        self.vertices(mesh).map(|v| v.id())
+    }
 
     /// Whether the face has holes.
     /// The data structure (currently!) cannot represent holes, so this is always false.

@@ -1,6 +1,6 @@
 use super::{ChainDirection, MonotoneTriangulator};
 use crate::{
-    math::{HasZero, IndexType, Vector2D},
+    math::{IndexType, Vector2D, Scalar},
     mesh::{IndexedVertex2D, Triangulation},
 };
 
@@ -64,7 +64,7 @@ impl<V: IndexType, Vec2: Vector2D> LinearMonoTriangulator<V, Vec2> {
             }
             let angle = vec2s[value]
                 .vec
-                .angle(vec2s[self.stack[l - 1]].vec, vec2s[self.stack[l - 2]].vec);
+                .angle_tri(vec2s[self.stack[l - 1]].vec, vec2s[self.stack[l - 2]].vec);
             if d == ChainDirection::Left {
                 if angle > Vec2::S::ZERO {
                     break;

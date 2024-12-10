@@ -1,4 +1,4 @@
-use crate::math::{HasZero, Scalar, Vector2D};
+use crate::math::{Scalar, Vector2D};
 use rand::Rng;
 
 /// Generates a zigzag pattern with `n` vertices, which

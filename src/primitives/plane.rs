@@ -1,14 +1,11 @@
-use crate::{
-    math::HasPosition,
-    mesh::{DefaultEdgePayload, DefaultFacePayload, MeshTrait, MeshType},
-};
+use crate::mesh::{DefaultEdgePayload, DefaultFacePayload, EuclideanMeshType, MeshTrait};
 
 /// A trait for creating plane approximations.
-pub trait MakePlane<T: MeshType<Mesh = Self>>: MeshTrait<T = T>
+pub trait MakePlane<const D: usize, T: EuclideanMeshType<D, Mesh = Self>>:
+    MeshTrait<T = T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
-    T::VP: HasPosition<T::Vec, S = T::S>,
 {
     // TODO: requires better theory of edges and half edges
     /*

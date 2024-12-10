@@ -164,10 +164,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::mesh::{
-        bevy::BevyMesh3d,
-        payload::{vertex_payload::BevyVertexPayload, HasPosition},
-    };
 
     #[test]
     fn subdivide_and_fixup() {

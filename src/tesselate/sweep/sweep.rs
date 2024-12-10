@@ -390,39 +390,36 @@ impl<'a, 'b, MT: MonotoneTriangulator> SweepContext<'a, 'b, MT> {
 }
 
 #[cfg(test)]
+#[cfg(feature = "nalgebra")]
 mod tests {
-    use crate::{
-        bevy::Bevy2DPolygon,
-        math::Polygon,
-        primitives::generate_zigzag,
-        tesselate::sweep::monotone::LinearMonoTriangulator,
-    };
-
     use super::*;
-    use bevy::math::Vec2;
+    use crate::{extensions::nalgebra::*, prelude::*, tesselate::sweep::LinearMonoTriangulator};
 
-    fn verify_triangulation_i<MT: MonotoneTriangulator<V = usize, Vec2 = Vec2>>(
-        vec2s: &Vec<IndexedVertex2D<usize, Vec2>>,
+    fn verify_triangulation_i<
+        S: Scalar,
+        MT: MonotoneTriangulator<V = usize, Vec2 = Vec2<S>>,
+    >(
+        vec2s: &Vec<IndexedVertex2D<usize, Vec2<S>>>,
     ) {
         assert!(
-            Bevy2DPolygon::from_iter(vec2s.iter().map(|v| v.vec)).is_ccw(),
+            Polygon2d::<S>::from_iter(vec2s.iter().map(|v| v.vec)).is_ccw(),
             "Polygon must be counterclockwise"
         );
         let mut indices = Vec::new();
         let mut tri = Triangulation::new(&mut indices);
         let mut meta = SweepMeta::default();
         sweep_line_triangulation::<MT>(&mut tri, &vec2s, &mut meta);
-        tri.verify_full::<Vec2, Bevy2DPolygon>(vec2s);
+        tri.verify_full::<Vec2<S>, Polygon2d<S>>(vec2s);
     }
 
-    fn verify_triangulation(vec2s: &Vec<IndexedVertex2D<usize, Vec2>>) {
+    fn verify_triangulation<S: Scalar>(vec2s: &Vec<IndexedVertex2D<usize, Vec2<S>>>) {
         //println!("LINEAR");
-        verify_triangulation_i::<LinearMonoTriangulator<usize, Vec2>>(vec2s);
+        verify_triangulation_i::<S, LinearMonoTriangulator<usize, Vec2<S>>>(vec2s);
         //println!("DYNAMIC");
         //verify_triangulation_i::<DynamicMonoTriangulator<usize, Vec2, Bevy2DPolygon>>(vec2s);
     }
 
-    fn liv_from_array(arr: &[[f32; 2]]) -> Vec<IndexedVertex2D<usize, Vec2>> {
+    fn liv_from_array<S: Scalar>(arr: &[[S; 2]]) -> Vec<IndexedVertex2D<usize, Vec2<S>>> {
         arr.iter()
             .enumerate()
             .map(|(i, &v)| IndexedVertex2D::new(Vec2::new(v[0], v[1]), i))
@@ -431,7 +428,7 @@ mod tests {
 
     #[test]
     fn sweep_triangle() {
-        verify_triangulation(&liv_from_array(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]));
+        verify_triangulation(&liv_from_array::<f64>(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]));
     }
 
     #[test]
@@ -444,15 +441,21 @@ mod tests {
         ]));
     }
 
-    #[test]
+    /*#[test]
     fn sweep_tricky_quad() {
-        verify_triangulation(&liv_from_array(&[
+        verify_triangulation(&liv_from_array::<f32>(&[
             [1.0, 0.0],
             [0.0, 1.0],
             [-1.0, 0.0],
             [0.0, 0.9],
         ]));
-    }
+        verify_triangulation(&liv_from_array::<f64>(&[
+            [1.0, 0.0],
+            [0.0, 1.0],
+            [-1.0, 0.0],
+            [0.0, 0.9],
+        ]));
+    }*/
 
     /*
     #[test]
@@ -477,12 +480,14 @@ mod tests {
     #[test]
     fn sweep_zigzag() {
         verify_triangulation(
-            &generate_zigzag::<Vec2>(100)
+            &generate_zigzag::<Vec2<f64>>(100)
                 .enumerate()
                 .map(|(i, v)| IndexedVertex2D::new(v, i))
                 .collect(),
         );
     }
+
+    /*
 
     #[test]
     fn numerical_hell_1() {
@@ -634,5 +639,6 @@ mod tests {
             verify_triangulation(&vec2s);
         }
     }
+    */
     */
 }

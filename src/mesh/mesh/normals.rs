@@ -1,7 +1,6 @@
-use super::{basics::MeshBasics, MeshType};
 use crate::{
-    math::{HasNormal, HasPosition, Vector, Vector3D, VectorIteratorExt},
-    mesh::{Face3d, FaceBasics, VertexBasics},
+    math::{HasNormal, Scalar, Vector, VectorIteratorExt},
+    mesh::{EuclideanMeshType, Face3d, FaceBasics, MeshBasics, MeshType3D, VertexBasics},
 };
 use std::collections::HashMap;
 
@@ -22,7 +21,16 @@ pub enum GenerateNormals {
 }
 
 /// Methods to work with normals in a mesh.
-pub trait WithNormals<T: MeshType<Mesh = Self>>: MeshBasics<T> {
+///
+/// Normals can use different vector and scalar types than positions. But usually it's sensible to use the same types.
+pub trait WithNormals<
+    const D: usize,
+    VecN: Vector<SN, D>,
+    SN: Scalar,
+    T: EuclideanMeshType<D, Mesh = Self>,
+>: MeshBasics<T> where
+    T::VP: HasNormal<D, VecN, S = SN>,
+{
     /// Generates flat normals and safes them in the mesh.
     /// Requires all vertices in the mesh to be duplicated.
     /// TODO: Implement this function and also the duplication methods.
@@ -33,20 +41,17 @@ pub trait WithNormals<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Generates smooth normals and safes them in the mesh.
     fn generate_smooth_normals(&mut self) -> &mut Self
     where
-        T::Vec: Vector3D<S = T::S>,
-        T::VP: HasPosition<T::Vec, S = T::S> + HasNormal<T::Vec, S = T::S>,
-        T::Face: Face3d<T>,
+        T: MeshType3D,
+        T::VP: HasNormal<3, <T as EuclideanMeshType<3>>::Vec, S = <T as EuclideanMeshType<3>>::S>,
     {
         // Smooth normals are calculated without vertex duplication.
         // Hence, we have to set the normals of the whole mesh.
         // we copy the vertices still to both compact the indices and set the normals without mutating the mesh
-        let face_normals: HashMap<T::F, T::Vec> = self
-            .faces()
+        let face_normals: HashMap<T::F, _> = MeshBasics::faces(self)
             .map(|f| (f.id(), Face3d::normal(f, self).normalize()))
             .collect();
 
-        let normals = self
-            .vertices()
+        let normals = MeshBasics::vertices(self)
             .map(|v| {
                 v.faces(self)
                     .map(|f| face_normals[&f.id()])

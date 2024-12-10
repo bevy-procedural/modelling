@@ -1,4 +1,4 @@
-use super::MeshType;
+use super::{EuclideanMeshType, MeshType};
 use crate::math::Transformable;
 
 /// A trait representing a payload for a mesh.
@@ -21,7 +21,7 @@ impl<T: MeshType> std::fmt::Display for EmptyMeshPayload<T> {
     }
 }
 
-impl<T: MeshType> Transformable for EmptyMeshPayload<T> {
+impl<const D: usize, T: EuclideanMeshType<D>> Transformable<D> for EmptyMeshPayload<T> {
     type Rot = T::Rot;
     type S = T::S;
     type Trans = T::Trans;

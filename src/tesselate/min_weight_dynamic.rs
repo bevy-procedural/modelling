@@ -2,22 +2,18 @@
 use std::time::Instant;
 
 use crate::{
-    math::{HasPosition, IndexType, Polygon, Scalar, Vector2D, Vector3D},
-    mesh::{Face3d, FaceBasics, IndexedVertex2D, MeshType, Triangulation},
+    math::{IndexType, Polygon, Scalar, Vector2D},
+    mesh::{Face3d, FaceBasics, IndexedVertex2D, MeshType3D, Triangulation},
 };
 
 /// The [min-weight triangulation problem](https://en.wikipedia.org/wiki/Minimum-weight_triangulation)
 /// is, in general, NP-hard. However, for polygons without interior points we can
 /// achieve it in O(n^3) time using dynamic programming.
-pub fn minweight_dynamic<T: MeshType>(
+pub fn minweight_dynamic<T: MeshType3D>(
     face: &T::Face,
     mesh: &T::Mesh,
     indices: &mut Triangulation<T::V>,
-) where
-    T::Vec: Vector3D<S = T::S>,
-    T::VP: HasPosition<T::Vec, S = T::S>,
-    T::Face: Face3d<T>,
-{
+) {
     debug_assert!(face.may_be_curved() || face.is_planar2(mesh));
 
     // TODO: Improve performance by directly using the nd-vertices instead of converting to 2d

@@ -1,11 +1,11 @@
 use crate::{
-    math::{HasPosition, HasZero, Scalar, Transformable, Vector},
-    mesh::{EdgeBasics, MeshType, VertexBasics},
+    math::{Scalar, Transformable, Vector},
+    mesh::{EdgeBasics, EuclideanMeshType, VertexBasics},
 };
 
 /// The type of curve that the edge represents.
 #[derive(Clone, Default, Copy, Debug, PartialEq, Hash)]
-pub enum CurvedEdgeType<T: MeshType> {
+pub enum CurvedEdgeType<const D: usize, T: EuclideanMeshType<D>> {
     /// A linear edge
     #[default]
     Linear,
@@ -15,11 +15,7 @@ pub enum CurvedEdgeType<T: MeshType> {
     CubicBezier(T::Vec, T::Vec),
 }
 
-impl<T: MeshType> CurvedEdgeType<T>
-where
-    T::VP: HasPosition<T::Vec, S = T::S>,
-    T::Vec: Transformable<S = T::S>,
-{
+impl<const D: usize, T: EuclideanMeshType<D>> CurvedEdgeType<D, T> {
     /// Returns the coordinates at a specific point on the curve
     /// The parameter `t` is in the range [0, 1]
     pub fn point_at(&self, edge: &T::Edge, mesh: &T::Mesh, t: T::S) -> T::Vec {
@@ -47,19 +43,29 @@ where
         };
         return res;
     }
+
+    /// Returns if two curves are about equal (control point wise) within a certain epsilon
+    pub fn is_about(&self, other: &Self, epsilon: T::S) -> bool {
+        match (self, other) {
+            (CurvedEdgeType::Linear, CurvedEdgeType::Linear) => true,
+            (CurvedEdgeType::QuadraticBezier(c1), CurvedEdgeType::QuadraticBezier(c2)) => {
+                c1.is_about(c2, epsilon)
+            }
+            (CurvedEdgeType::CubicBezier(c1, c2), CurvedEdgeType::CubicBezier(c3, c4)) => {
+                c1.is_about(c3, epsilon) && c2.is_about(c4, epsilon)
+            }
+            _ => false,
+        }
+    }
 }
 
 /// Edge that can be a line or some type of curve.
-pub trait CurvedEdge<T: MeshType<Edge = Self>>: EdgeBasics<T>
-where
-    T::VP: HasPosition<T::Vec, S = T::S>,
-    T::Vec: Transformable<S = T::S>,
-{
+pub trait CurvedEdge<const D: usize, T: EuclideanMeshType<D, Edge = Self>>: EdgeBasics<T> {
     /// Returns the curve type of the edge
-    fn curve_type(&self) -> CurvedEdgeType<T>;
+    fn curve_type(&self) -> CurvedEdgeType<D, T>;
 
     /// Overwrites the curve type of the edge
-    fn set_curve_type(&mut self, curve_type: CurvedEdgeType<T>);
+    fn set_curve_type(&mut self, curve_type: CurvedEdgeType<D, T>);
 
     /// Converts the curved edge to a uniformly spaced sequence of `n` line segments
     fn flatten_uniform(&self, n: usize, mesh: &T::Mesh) -> Vec<T::Vec> {
@@ -78,8 +84,8 @@ where
 
     /// Converts the curved edge to a sequence of line segments with a specific error using De Casteljau's algorithm
     fn flatten_casteljau(&self, error: T::S, mesh: &T::Mesh) -> Vec<T::Vec> {
-        fn recursive_flatten<T: MeshType>(
-            curve: &CurvedEdgeType<T>,
+        fn recursive_flatten<const D: usize, T: EuclideanMeshType<D>>(
+            curve: &CurvedEdgeType<D, T>,
             edge: &T::Edge,
             mesh: &T::Mesh,
             t0: T::S,
@@ -87,16 +93,14 @@ where
             error: T::S,
             lines: &mut Vec<T::Vec>,
         ) where
-            T::Edge: CurvedEdge<T>,
-            T::VP: HasPosition<T::Vec, S = T::S>,
-            T::Vec: Transformable<S = T::S>,
+            T::Edge: CurvedEdge<D, T>,
         {
             let p0 = curve.point_at(edge, mesh, t0);
             let p1 = curve.point_at(edge, mesh, t1);
             let tm = (t0 + t1) / T::S::TWO;
             let pm = curve.point_at(edge, mesh, tm);
-            let pline = p0.lerped(&p1, T::S::HALF);
-            let deviation = pm.distance(&pline);
+            let p_line = p0.lerped(&p1, T::S::HALF);
+            let deviation = pm.distance(&p_line);
 
             if deviation <= error {
                 // The segment is acceptable; push p1

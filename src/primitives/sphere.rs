@@ -1,5 +1,5 @@
 use crate::{
-    math::{HasPosition, HasZero, IndexType, Scalar, Vector},
+    math::{HasPosition, IndexType, Scalar, Vector},
     mesh::{
         DefaultEdgePayload, DefaultFacePayload, HalfEdge, HalfEdgeSemiBuilder, MeshType3D,
         MeshTypeHalfEdge, SlerpVertexInterpolator,
@@ -173,11 +173,11 @@ where
     }*/
 
     /// An alias for `geodesic_icosahedron`.
-    fn icosphere(radius: T::S, n: usize)
+    fn icosphere(radius: T::S, n: usize) -> Self
     where
         T::Mesh: HalfEdgeSemiBuilder<T>,
     {
-        Self::geodesic_icosahedron(radius, n);
+        Self::geodesic_icosahedron(radius, n)
     }
 
     /// Create a geodesic icosahedron (aka icosphere) with a given `radius` and `n` subdivisions.
@@ -186,10 +186,10 @@ where
         T::Mesh: HalfEdgeSemiBuilder<T>,
     {
         let mut mesh = Self::regular_icosahedron(icosahedron_r2a(radius));
-        debug_assert!(mesh.centroid().is_about(&T::Vec::ZERO, T::S::EPS));
+        debug_assert!(mesh.centroid().is_about(&T::Vec::zero(), T::S::EPS));
         mesh.subdivision_frequency(
             SubdivisionDescription::new(n, 0),
-            SlerpVertexInterpolator::new(T::Vec::ZERO, radius),
+            SlerpVertexInterpolator::new(T::Vec::zero(), radius),
         );
         mesh
     }
@@ -200,10 +200,10 @@ where
         T::Mesh: HalfEdgeSemiBuilder<T>,
     {
         let mut mesh = Self::regular_tetrahedron(radius);
-        debug_assert!(mesh.centroid().is_about(&T::Vec::ZERO, T::S::EPS));
+        debug_assert!(mesh.centroid().is_about(&T::Vec::zero(), T::S::EPS));
         mesh.subdivision_frequency(
             SubdivisionDescription::new(n, 0),
-            SlerpVertexInterpolator::new(T::Vec::ZERO, radius),
+            SlerpVertexInterpolator::new(T::Vec::zero(), radius),
         );
         mesh
     }
@@ -214,10 +214,10 @@ where
         T::Mesh: HalfEdgeSemiBuilder<T>,
     {
         let mut mesh = Self::regular_octahedron(radius);
-        debug_assert!(mesh.centroid().is_about(&T::Vec::ZERO, T::S::EPS));
+        debug_assert!(mesh.centroid().is_about(&T::Vec::zero(), T::S::EPS));
         mesh.subdivision_frequency(
             SubdivisionDescription::new(n, 0),
-            SlerpVertexInterpolator::new(T::Vec::ZERO, radius),
+            SlerpVertexInterpolator::new(T::Vec::zero(), radius),
         );
         mesh
     }

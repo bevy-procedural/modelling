@@ -1,6 +1,6 @@
 use super::monotone::MonotoneTriangulator;
 use crate::{
-    math::{HasZero, IndexType, Vector, Vector2D},
+    math::{IndexType, Scalar, Vector, Vector2D},
     mesh::IndexedVertex2D,
 };
 

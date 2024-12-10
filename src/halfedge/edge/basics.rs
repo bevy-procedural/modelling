@@ -1,5 +1,8 @@
 use super::{BackwardEdgeIterator, ForwardEdgeIterator, HalfEdgeImpl, HalfEdgeImplMeshType};
-use crate::mesh::{EdgeBasics, HalfEdge, MeshBasics};
+use crate::{
+    math::IndexType,
+    mesh::{EdgeBasics, HalfEdge, MeshBasics},
+};
 
 impl<T: HalfEdgeImplMeshType> EdgeBasics<T> for HalfEdgeImpl<T> {
     /// Returns the index of the half-edge
@@ -50,5 +53,21 @@ impl<T: HalfEdgeImplMeshType> EdgeBasics<T> for HalfEdgeImpl<T> {
     #[allow(refining_impl_trait)]
     fn edges_face_back<'a>(&'a self, mesh: &'a T::Mesh) -> BackwardEdgeIterator<'a, T> {
         BackwardEdgeIterator::new(self.clone(), mesh)
+    }
+
+    #[inline(always)]
+    fn face_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::F> {
+        // TODO: only works for manifold meshes
+        let mut res = Vec::new();
+        let id = self.face_id();
+        if id != IndexType::max() {
+            res.push(id);
+        }
+        let twin = self.twin(mesh);
+        let id = twin.face_id();
+        if id != IndexType::max() {
+            res.push(id);
+        }
+        res.into_iter()
     }
 }

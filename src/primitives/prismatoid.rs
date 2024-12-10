@@ -1,7 +1,7 @@
 use crate::{
-    math::{HasPosition, HasZero, Scalar, TransformTrait, Vector},
+    math::{HasPosition, Scalar, TransformTrait, Vector},
     mesh::{
-        DefaultEdgePayload, DefaultFacePayload, Face3d, HalfEdge, MeshTypeHalfEdge, MeshType3D,
+        DefaultEdgePayload, DefaultFacePayload, Face3d, HalfEdge, MeshType3D, MeshTypeHalfEdge,
         VertexPayload,
     },
     operations::{MeshExtrude, MeshLoft, MeshSubdivision},
@@ -11,14 +11,19 @@ use crate::{
 use super::regular_polygon_sidelength;
 
 /// Generates an iterator over vertices positioned in a circle.
-/// 
+///
 /// # Parameters
-/// 
+///
 /// - `r`: The radius of the circle.
 /// - `n`: The number of vertices to generate.
 /// - `shift`: A phase shift to apply to the angle of each vertex.
 /// - `y`: The y-coordinate for all vertices (assuming a 3D space).
-fn circle_iter<S: Scalar, Vec: Vector<S>, VP: VertexPayload + HasPosition<Vec, S = S>>(
+fn circle_iter<
+    const D: usize,
+    S: Scalar,
+    Vec: Vector<S, D>,
+    VP: VertexPayload + HasPosition<D, Vec, S = S>,
+>(
     r: S,
     n: usize,
     shift: S,

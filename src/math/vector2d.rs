@@ -1,7 +1,7 @@
 use super::{Scalar, Vector};
 
 /// Trait for coordinates in 2d space.
-pub trait Vector2D: Vector<Self::S> {
+pub trait Vector2D: Vector<Self::S, 2> {
     /// The scalar type of the coordinates used in the vector
     type S: Scalar;
 
@@ -23,11 +23,10 @@ pub trait Vector2D: Vector<Self::S> {
         ab.perp_dot(&ac).abs() <= eps
     }
 
-    /// Magnitude of the vector.
-    fn magnitude(&self) -> Self::S;
-
-    /// Angle between two vectors.
-    fn angle(&self, a: Self, b: Self) -> Self::S;
+    /// Angle between the segment from self to a and the segment from self to b.
+    ///
+    /// TODO: Remove this
+    fn angle_tri(&self, a: Self, b: Self) -> Self::S;
 
     /// Returns the barycentric sign of a point in a triangle.
     #[inline(always)]
@@ -45,42 +44,13 @@ pub trait Vector2D: Vector<Self::S> {
     #[inline(always)]
     fn is_inside_triangle(&self, a: Self, b: Self, c: Self) -> bool {
         // TODO: Numerical robustness
+        // TODO: Possible remove this
         let bs1 = Self::barycentric_sign(*self, a, b);
         let bs2 = Self::barycentric_sign(*self, b, c);
         let bs3 = Self::barycentric_sign(*self, c, a);
         let inside_ccw = bs1.is_positive() && bs2.is_positive() && bs3.is_positive();
         let inside_cw = bs1.is_negative() && bs2.is_negative() && bs3.is_negative();
         inside_ccw || inside_cw
-    }
-
-    /// Whether the point is inside the circumcircle of the triangle.
-    #[deprecated(since = "0.1.0", note = "use something more robust")]
-    fn is_inside_circumcircle(&self, a: Self, b: Self, c: Self, eps: Self::S) -> bool {
-        // https://en.wikipedia.org/wiki/Delaunay_triangulation#Algorithms
-
-        let adx = a.x() - self.x();
-        let ady = a.y() - self.y();
-        let bdx = b.x() - self.x();
-        let bdy = b.y() - self.y();
-        let cdx = c.x() - self.x();
-        let cdy = c.y() - self.y();
-        let d = Self::S::det3(
-            adx,
-            ady,
-            adx * adx + ady * ady,
-            bdx,
-            bdy,
-            bdx * bdx + bdy * bdy,
-            cdx,
-            cdy,
-            cdx * cdx + cdy * cdy,
-        );
-        d >= eps
-    }
-
-    /// Returns the coordinate values as a tuple.
-    fn tuple(&self) -> (Self::S, Self::S) {
-        (self.x(), self.y())
     }
 
     /// Swizzle
