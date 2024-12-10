@@ -63,7 +63,7 @@ num-traits = "0.2.19"
 criterion = { version = "0.5.1", features = ["html_reports"], optional = true }
 
 [features]
-default = ["nalgebra", "netsci", "fonts", "benchmarks"]
+default = ["nalgebra", "netsci", "fonts"]
 netsci = ["nalgebra"]
 wgpu = ["nalgebra"]
 bevy = ["dep:bevy", "bevy/bevy_core_pipeline"]
