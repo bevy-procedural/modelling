@@ -4144,6 +4144,7 @@ version = "0.3.0"
 dependencies = [
  "ab_glyph",
  "bevy",
+ "criterion",
  "itertools 0.13.0",
  "lazy_static",
  "meshopt",

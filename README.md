@@ -213,6 +213,7 @@ The package supports different triangulation algorithms. The robustness and rend
 -   **Heuristic** Heuristic algorithm that tries to find a compromise between the speed of `Sweep` and the quality of `MinWeight`.
 -   **Auto** (default) Automatically choose the "best" algorithm based on the input. The edge-weight will be the same as Delaunay or better. Uses specialized fast implementations for small polygons to quickly generate min-weight triangulations. Falls back to Delaunay for larger polygons.
 
+<!--
 | Algorithm    | Requirements | Worst Case | Circle 10        | Circle 100         | Circle 1000       | Circle 10000      | ZigZag 1000        | ZigZag 10000      |
 | ------------ | ------------ | ---------- | ---------------- | ------------------ | ----------------- | ----------------- | ------------------ | ----------------- |
 | Fan          | Convex       | $n$        | 0.258µs (195fps) | 2.419µs¹ (154fps)² | 71.0µs (52.4fps)  | 161.8µs (15.7fps) | -                  | -                 |
@@ -224,11 +225,13 @@ The package supports different triangulation algorithms. The robustness and rend
 | MinWeight    | Simple       | $n^3$      | 4.087µs (196fps) | 2.320ms (181fps)   | 1.817s (177fps)   |                   |                    |                   |
 | Heuristic    | Simple       | $n \log n$ |                  |                    |                   |                   |                    |
 | Auto         | Simple       | $n \log n$ |                  |                    |                   |                   |                    |
+ -->
 
-<img src="assets/fps_boxplot.svg" alt="FPS Boxplot" width="1200"/>
+<img src="assets/fps_vs_render.svg" alt="FPS Boxplot" width="800"/>
 
--   ¹) Time for the triangulation on a Intel i7-12700K (single threaded). Run the benchmarks using `cargo bench --features benchmarks`.
--   ²) FPS when rendering 100 large, transparent instances with the bevy 0.14.2 pbr shader on a Nvidia GeForce RTX 4060 Ti in Full HD. See `cargo run -p fps_bench --profile release` and `julia --project=./playground/fps_bench/FPSBench ./playground/fps_bench/FPSBench/src/main.jl`. For the non-Delaunay algorithms, the rendering time deteriorates for the larger circles since the edge length is not minimized causing significant overdraw.
+-   Time for the triangulation on a Intel i7-12700K (single threaded). Run the benchmarks using `cargo bench --features benchmarks --profile release`.
+-   FPS when rendering 100 large, transparent instances with the bevy 0.14.2 pbr shader on a Nvidia GeForce RTX 4060 Ti in Full HD. See `cargo run -p fps_bench --profile release` and `julia --project=./playground/fps_bench/FPSBench ./playground/fps_bench/FPSBench/src/main.jl`. For the non-Delaunay algorithms, the rendering time deteriorates for the larger circles since the edge length is not minimized causing significant overdraw.
+-   The `Delaunay` algorithm is currently significantly slowed down due to a inefficient algorithm for the interior detection. This will be fixed in the future.
 
 ## Supported Bevy Versions
 

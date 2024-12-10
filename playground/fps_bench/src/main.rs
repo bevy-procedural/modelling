@@ -12,7 +12,8 @@ use std::time::Duration;
 #[derive(Resource, Clone, Debug)]
 struct BenchmarkStats {
     name: String,
-    frame_times: Vec<f32>,
+    frame_times: Vec<f64>,
+    render_times: Vec<f64>,
     mesh: Handle<Mesh>,
     num: usize,
 }
@@ -29,6 +30,7 @@ struct BenchmarkState {
     mesh_benchmarks: Vec<f32>,
 }
 
+const BENCHMARK_RENDER: Duration = Duration::from_secs(5);
 const BENCHMARK_WARMUP: Duration = Duration::from_secs(5);
 const BENCHMARK_DURATION: Duration = Duration::from_secs(15);
 const TARGET_INSTANCES: usize = 100;
@@ -76,7 +78,7 @@ fn setup(
     for algo in [
         TriangulationAlgorithm::Delaunay,
         TriangulationAlgorithm::Sweep,
-        //TriangulationAlgorithm::SweepDynamic,
+        TriangulationAlgorithm::SweepDynamic,
         TriangulationAlgorithm::EarClipping,
         TriangulationAlgorithm::Fan,
         //TriangulationAlgorithm::Auto,
@@ -86,7 +88,8 @@ fn setup(
             ("circle", 100, BevyMesh3d::regular_polygon(1.0, 100)),
             ("circle", 1000, BevyMesh3d::regular_polygon(1.0, 1000)),
             ("circle", 10000, BevyMesh3d::regular_polygon(1.0, 10000)),
-            ("zigzag", 1000, zigzag(1000)),
+            //("circle", 100000, BevyMesh3d::regular_polygon(1.0, 100000)),
+            //("zigzag", 1000, zigzag(1000)),
             //("zigzag", 10000, zigzag(10000)),
         ] {
             if num_vertices > 1000
@@ -100,7 +103,26 @@ fn setup(
                 mesh: meshes.add(mesh.to_bevy_ex(RenderAssetUsages::all(), algo, true)),
                 num: num_vertices,
                 frame_times: Vec::new(),
+                render_times: Vec::new(),
             });
+
+            println!("Benchmarkign Rendering time for {}", name);
+            let start_time = std::time::Instant::now();
+            // record up to 10000 samples
+            for _ in 1..10000 {
+                if start_time.elapsed() > BENCHMARK_RENDER {
+                    break;
+                }
+                let mut meta = Default::default();
+                let start = std::time::Instant::now();
+                mesh.triangulate(algo, &mut meta);
+                mesh_list
+                    .0
+                    .last_mut()
+                    .unwrap()
+                    .render_times
+                    .push(start.elapsed().as_secs_f64());
+            }
         }
     }
 
@@ -163,7 +185,15 @@ fn update_mesh(
         let mut file = std::fs::File::create("bench_results.jl").unwrap();
         writeln!(file, "data = [").unwrap();
         for bench in mesh_list.0.iter() {
-            writeln!(file, "[\"{}\", {:?}],", bench.name, bench.frame_times).unwrap();
+            write!(file, "[\"{}\", [", bench.name).unwrap();
+            for frame_time in bench.frame_times.iter() {
+                write!(file, "{:.16},", frame_time).unwrap();
+            }
+            write!(file, "], [",).unwrap();
+            for render_time in bench.render_times.iter() {
+                write!(file, "{:.16},", render_time).unwrap();
+            }
+            writeln!(file, "]],",).unwrap();
         }
         writeln!(file, "]").unwrap();
 
@@ -209,7 +239,7 @@ fn benchmark_fps(
         if state.next_mesh_index >= 1 {
             mesh_list.0[state.next_mesh_index - 1]
                 .frame_times
-                .push(time.delta().as_secs_f32());
+                .push(time.delta().as_secs_f64());
         }
     }
 }
