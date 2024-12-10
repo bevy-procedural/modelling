@@ -160,3 +160,16 @@ impl<T: HalfEdgeImplMeshType<VP = BevyVertexPayload3d> + MeshType3D<Vec = Vec3, 
         mesh
     }
 }
+
+#[cfg(feature = "nalgebra")]
+impl From<&crate::extensions::nalgebra::Mesh3d64> for HalfEdgeMeshImpl<BevyMeshType3d32> {
+    fn from(value: &crate::extensions::nalgebra::Mesh3d64) -> Self {
+        BevyMesh3d::import_mesh::<_, _, _, _, crate::extensions::nalgebra::MeshType3d64PNU>(
+            value,
+            |vp| vp.into(),
+            |_ep| EmptyEdgePayload::default(),
+            |_fp| EmptyFacePayload::default(),
+            |_mp| EmptyMeshPayload::default(),
+        )
+    }
+}

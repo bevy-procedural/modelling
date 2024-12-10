@@ -323,16 +323,18 @@ impl<T: HalfEdgeImplMeshType> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T> {
 }
 
 impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
-    pub(crate) fn import_mesh<FE, FV, FF, T2: MeshType>(
+    pub(crate) fn import_mesh<FE, FV, FF, FM, T2: MeshType>(
         mesh: &T2::Mesh,
         fv: FV,
         fe: FE,
         ff: FF,
+        fm: FM
     ) -> Self
     where
         FE: Fn(&T2::EP) -> T::EP,
         FV: Fn(&T2::VP) -> T::VP,
         FF: Fn(&T2::FP) -> T::FP,
+        FM: Fn(&T2::MP) -> T::MP,
         T2::Edge: HalfEdge<T2>,
     {
         let mut res = Self::default();
@@ -385,6 +387,8 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
                 fe(&edge.payload()),
             );
         }
+
+        res.set_payload(fm(MeshBasics::payload(mesh)));
 
         res
     }

@@ -104,8 +104,7 @@ We are currently working on some tutorials for the most important features.
 -   Operations
 
     -   [x] Extrude
-    -   [x] Linear Loft (Triangle, Polygon)
-    -   [ ] Nonlinear Loft
+    -   [x] Linear Loft (Triangle, Polygon), [ ] Loft along path
     -   [x] Transform (Translate, Rotate, Scale, [ ] Shear)
     -   [x] Frequency Subdivision (partial)
     -   [ ] Chamfer / Cantellate / Bevel / Truncate / Bitruncate / Omnitruncate
@@ -159,10 +158,10 @@ We are currently working on some tutorials for the most important features.
 
 -   Extensions
 
-    -   [x] Bevy
-    -   [ ] wgpu
-    -   [x] nalgebra (for wgpu or use without a rendering backend)
-    -   [x] SVG import
+    -   [x] bevy
+    -   [x] wgpu
+    -   [x] nalgebra (when not using bevy)
+    -   [x] SVG import/ [ ] export
     -   [ ] STL import/export
     -   [ ] OBJ import/export
 

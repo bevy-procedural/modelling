@@ -64,7 +64,7 @@ impl HalfEdgeMeshImpl<BevyMeshType2d32> {
     /// Convert a BevyMesh2d to a 3d mesh.
     /// If there are curved edges they will be converted with the given tolerance.
     pub fn to_3d(&self, tol: f32) -> BevyMesh3d {
-        BevyMesh3d::import_mesh::<_, _, _, BevyMeshType2d32>(
+        BevyMesh3d::import_mesh::<_, _, _, _, BevyMeshType2d32>(
             self.clone().flatten_curved_edges(tol),
             |vp: &BevyVertexPayload2d| {
                 BevyVertexPayload3d::from_pos(Vec3::new(vp.pos().x, vp.pos().y, 0.0))
@@ -75,6 +75,7 @@ impl HalfEdgeMeshImpl<BevyMeshType2d32> {
                 EmptyEdgePayload::default()
             },
             |_fp| EmptyFacePayload::default(),
+            |_mp| EmptyMeshPayload::default(),
         )
     }
 }

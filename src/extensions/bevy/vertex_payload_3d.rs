@@ -1,7 +1,7 @@
 use bevy::math::{Quat, Vec2, Vec3};
 
 use crate::{
-    math::{HasNormal, HasPosition, TransformTrait, Transformable},
+    math::{HasNormal, HasPosition, HasUV, TransformTrait, Transformable},
     mesh::VertexPayload,
 };
 
@@ -111,6 +111,20 @@ impl HasNormal<3, Vec3> for BevyVertexPayload3d {
     }
 }
 
+impl HasUV<Vec2> for BevyVertexPayload3d {
+    type S = f32;
+
+    #[inline(always)]
+    fn uv(&self) -> &Vec2 {
+        &self.uv
+    }
+
+    #[inline(always)]
+    fn set_uv(&mut self, uv: Vec2) {
+        self.uv = uv;
+    }
+}
+
 impl std::fmt::Debug for BevyVertexPayload3d {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -118,5 +132,26 @@ impl std::fmt::Debug for BevyVertexPayload3d {
             "{:+05.3}, {:+05.3}, {:+05.3}",
             self.position.x, self.position.y, self.position.z,
         )
+    }
+}
+
+#[cfg(feature = "nalgebra")]
+impl<S: crate::math::Scalar> From<&crate::extensions::nalgebra::VertexPayloadPNU<S, 3>>
+    for BevyVertexPayload3d
+{
+    fn from(value: &crate::extensions::nalgebra::VertexPayloadPNU<S, 3>) -> Self {
+        Self {
+            position: Vec3::new(
+                value.pos().x.to_f64() as f32,
+                value.pos().y.to_f64() as f32,
+                value.pos().z.to_f64() as f32,
+            ),
+            normal: Vec3::new(
+                value.normal().x.to_f64() as f32,
+                value.normal().y.to_f64() as f32,
+                value.normal().z.to_f64() as f32,
+            ),
+            uv: Vec2::new(value.uv().x.to_f64() as f32, value.uv().y.to_f64() as f32),
+        }
     }
 }

@@ -65,7 +65,7 @@ impl HalfEdgeMeshImpl<MeshType2d64PNUCurved> {
     /// Convert a Mesh2d64Curved to a MeshNd64 mesh.
     /// If there are curved edges they will be converted with the given tolerance.
     pub fn to_nd<const D: usize>(&self, tol: f64) -> MeshNd64<D> {
-        MeshNd64::<D>::import_mesh::<_, _, _, MeshType2d64PNUCurved>(
+        MeshNd64::<D>::import_mesh::<_, _, _, _, MeshType2d64PNUCurved>(
             self.clone().flatten_curved_edges(tol),
             |vp| VertexPayloadPNU::<f64, D>::from_pos(Vector::from_xy(vp.pos().x, vp.pos().y)),
             |_ep| {
@@ -74,6 +74,7 @@ impl HalfEdgeMeshImpl<MeshType2d64PNUCurved> {
                 EmptyEdgePayload::default()
             },
             |_fp| EmptyFacePayload::default(),
+            |_mp| EmptyMeshPayload::default(),
         )
     }
 }

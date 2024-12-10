@@ -69,6 +69,9 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     /// Get the payload of the mesh
     fn payload(&self) -> &T::MP;
 
+    /// Set the payload of the mesh
+    fn set_payload(&mut self, payload: T::MP) -> &mut Self;
+
     /// Get a mutable reference to the payload of the mesh
     fn payload_mut(&mut self) -> &mut T::MP;
 

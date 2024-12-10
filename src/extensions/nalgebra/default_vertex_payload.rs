@@ -1,6 +1,6 @@
 use crate::{
     extensions::nalgebra::{NdAffine, NdRotate, ScalarPlus, VecN},
-    math::{HasNormal, HasPosition, Scalar, TransformTrait, Transformable},
+    math::{HasNormal, HasPosition, HasUV, Scalar, TransformTrait, Transformable},
     mesh::VertexPayload,
 };
 
@@ -101,6 +101,20 @@ impl<S: Scalar, const D: usize> HasNormal<D, VecN<S, D>> for VertexPayloadPNU<S,
     #[inline(always)]
     fn set_normal(&mut self, normal: VecN<S, D>) {
         self.normal = normal;
+    }
+}
+
+impl<S: Scalar, const D: usize> HasUV<VecN<S, 2>> for VertexPayloadPNU<S, D> {
+    type S = S;
+
+    #[inline(always)]
+    fn uv(&self) -> &VecN<S, 2> {
+        &self.uv
+    }
+
+    #[inline(always)]
+    fn set_uv(&mut self, uv: VecN<S, 2>) {
+        self.uv = uv;
     }
 }
 

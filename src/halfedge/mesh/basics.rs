@@ -75,6 +75,11 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         &mut self.payload
     }
 
+    fn set_payload(&mut self, payload: T::MP) -> &mut Self {
+        self.payload = payload;
+        self
+    }
+
     /// Returns an iterator over all non-deleted vertices
     fn vertices<'a>(&'a self) -> impl Iterator<Item = &'a T::Vertex>
     where
