@@ -1,0 +1,10 @@
+name = "FPSBench"
+uuid = "e87d3ac5-ed00-411c-b90f-26756937cac3"
+authors = ["Eric Skaliks"]
+version = "0.1.0"
+
+[deps]
+Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
+
+[compat]
+Makie = "0.21.17"

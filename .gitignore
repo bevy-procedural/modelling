@@ -1,2 +1,4 @@
 /target
 /target-bin
+bench_results.jl
+boxplot.png

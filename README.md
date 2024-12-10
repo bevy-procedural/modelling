@@ -225,8 +225,10 @@ The package supports different triangulation algorithms. The robustness and rend
 | Heuristic    | Simple       | $n \log n$ |                  |                    |                   |                   |                    |
 | Auto         | Simple       | $n \log n$ |                  |                    |                   |                   |                    |
 
+<img src="assets/fps_boxplot.svg" alt="FPS Boxplot" width="1200"/>
+
 -   ¹) Time for the triangulation on a Intel i7-12700K (single threaded). Run the benchmarks using `cargo bench --features benchmarks`.
--   ²) FPS when rendering 100 large, transparent instances with the bevy 0.14.2 pbr shader on a Nvidia GeForce RTX 4060 Ti in Full HD. See `cargo run --example fps_bench --profile release --features="example_deps"`. For the non-Delaunay algorithms, the rendering time deteriorates for the larger circles since the edge length is not minimized causing significant overdraw.
+-   ²) FPS when rendering 100 large, transparent instances with the bevy 0.14.2 pbr shader on a Nvidia GeForce RTX 4060 Ti in Full HD. See `cargo run -p fps_bench --profile release` and `julia --project=./playground/fps_bench/FPSBench ./playground/fps_bench/FPSBench/src/main.jl`. For the non-Delaunay algorithms, the rendering time deteriorates for the larger circles since the edge length is not minimized causing significant overdraw.
 
 ## Supported Bevy Versions
 

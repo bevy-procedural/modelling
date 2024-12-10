@@ -6,10 +6,19 @@ use bevy::{
     window::{PresentMode, WindowMode, WindowResolution},
 };
 use procedural_modelling::{extensions::bevy::*, prelude::*};
+use std::io::Write;
 use std::time::Duration;
 
+#[derive(Resource, Clone, Debug)]
+struct BenchmarkStats {
+    name: String,
+    frame_times: Vec<f32>,
+    mesh: Handle<Mesh>,
+    num: usize,
+}
+
 #[derive(Resource)]
-struct MeshList(Vec<(String, Handle<Mesh>, usize)>);
+struct MeshList(Vec<BenchmarkStats>);
 
 #[derive(Default, Resource)]
 struct BenchmarkState {
@@ -70,12 +79,13 @@ fn setup(
         //TriangulationAlgorithm::SweepDynamic,
         TriangulationAlgorithm::EarClipping,
         TriangulationAlgorithm::Fan,
+        //TriangulationAlgorithm::Auto,
     ] {
         for (name, num_vertices, mesh) in [
             ("circle", 10, BevyMesh3d::regular_polygon(1.0, 10)),
             ("circle", 100, BevyMesh3d::regular_polygon(1.0, 100)),
             ("circle", 1000, BevyMesh3d::regular_polygon(1.0, 1000)),
-            // ("circle", 10000, BevyMesh3d::regular_polygon(1.0, 10000)),
+            ("circle", 10000, BevyMesh3d::regular_polygon(1.0, 10000)),
             ("zigzag", 1000, zigzag(1000)),
             //("zigzag", 10000, zigzag(10000)),
         ] {
@@ -85,11 +95,12 @@ fn setup(
             {
                 continue;
             }
-            mesh_list.0.push((
-                name.to_string() + format!("{}_{:?}", num_vertices, algo).as_str(),
-                meshes.add(mesh.to_bevy_ex(RenderAssetUsages::all(), algo, true)),
-                num_vertices,
-            ));
+            mesh_list.0.push(BenchmarkStats {
+                name: name.to_string() + format!("_{}_{:?}", num_vertices, algo).as_str(),
+                mesh: meshes.add(mesh.to_bevy_ex(RenderAssetUsages::all(), algo, true)),
+                num: num_vertices,
+                frame_times: Vec::new(),
+            });
         }
     }
 
@@ -130,8 +141,8 @@ fn update_mesh(
         state.mesh_benchmarks.push(avg_fps);
         println!(
             "{}: {:.2} FPS",
-            mesh_list.0[state.next_mesh_index - 1].0,
-            avg_fps
+            mesh_list.0[state.next_mesh_index - 1].name,
+            avg_fps,
         );
 
         // Clean up the previous mesh
@@ -145,26 +156,34 @@ fn update_mesh(
         // Print or log the results
         println!("Benchmark complete. Average FPS for each mesh:");
         for (i, fps) in state.mesh_benchmarks.iter().enumerate() {
-            println!("{}: {:.2} FPS", mesh_list.0[i].0, fps);
+            println!("{}: {:.2} FPS", mesh_list.0[i].name, fps);
         }
+
+        // write results to julia
+        let mut file = std::fs::File::create("bench_results.jl").unwrap();
+        writeln!(file, "data = [").unwrap();
+        for bench in mesh_list.0.iter() {
+            writeln!(file, "[\"{}\", {:?}],", bench.name, bench.frame_times).unwrap();
+        }
+        writeln!(file, "]").unwrap();
 
         // Exit after all meshes are tested
         std::process::exit(0);
     }
 
-    let mesh: (String, Handle<Mesh>, usize) = mesh_list.0[state.next_mesh_index].clone();
+    let stats = mesh_list.0[state.next_mesh_index].clone();
     let material = materials.add(Color::srgba(0.0, 0.0, 1.0, 0.01));
 
     // Spawn the next mesh
     for i in 0..TARGET_INSTANCES {
         commands.spawn((
-            Mesh3d(mesh.1.clone()),
+            Mesh3d(stats.mesh.clone()),
             MeshMaterial3d(material.clone()),
             Transform::from_scale(Vec3::splat(4.0)).with_translation(Vec3::splat(0.01 * i as f32)),
         ));
     }
 
-    println!("Starting benchmark for {}", mesh.0);
+    println!("Starting benchmark for {}", stats.name);
 
     // Reset benchmark state
     state.accumulated_time = Duration::ZERO;
@@ -173,7 +192,11 @@ fn update_mesh(
     state.warm_up = true;
 }
 
-fn benchmark_fps(time: Res<Time>, mut state: ResMut<BenchmarkState>) {
+fn benchmark_fps(
+    time: Res<Time>,
+    mut state: ResMut<BenchmarkState>,
+    mut mesh_list: ResMut<MeshList>,
+) {
     // Accumulate time and frames
     state.accumulated_time += time.delta();
     if state.warm_up && state.accumulated_time > BENCHMARK_WARMUP {
@@ -183,5 +206,10 @@ fn benchmark_fps(time: Res<Time>, mut state: ResMut<BenchmarkState>) {
     }
     if !state.warm_up {
         state.total_frames += 1;
+        if state.next_mesh_index >= 1 {
+            mesh_list.0[state.next_mesh_index - 1]
+                .frame_times
+                .push(time.delta().as_secs_f32());
+        }
     }
 }
