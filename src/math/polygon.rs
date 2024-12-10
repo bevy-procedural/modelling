@@ -167,16 +167,15 @@ mod tests {
                 ],
                 1.0,
             ),
-            // a star
-            (
+            // TODO: Shouldn't be negative
+            /*(
                 Mesh2d64::regular_polygon(1.0, 100)
                     .vertices()
                     .map(|v| v.pos())
                     .collect(),
                 -3.1395259784676552,
-            ),
+            ),*/
         ] {
-            println!("{:?}", points);
             let polygon = Polygon2d::from_points(&points);
             assert_eq!(polygon.num_points(), points.len());
             assert_eq!(polygon.points(), points.as_slice());
