@@ -135,9 +135,7 @@ mod tests {
 
     use super::*;
     use crate::{
-        extensions::nalgebra::*,
-        math::{IndexType, Scalar},
-        mesh::EuclideanMeshType,
+        extensions::nalgebra::*, math::IndexType, mesh::EuclideanMeshType,
         prelude::minweight_dynamic_direct,
     };
 
@@ -225,7 +223,6 @@ mod tests {
         ]);
     }
 
-    
     /*
     #[test]
     fn test_min_weight_quad_6() {

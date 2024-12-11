@@ -101,7 +101,7 @@ pub fn triangulate_face<T: MeshType3D>(
             sweep_line::<T, DynamicMonoTriangulator<T::V, T::Vec2, T::Poly>>(face, mesh, tri, meta);
         }
         TriangulationAlgorithm::SweepDelaunay => {
-            todo!() //sweep_line::<T, DelaunayMonoTriangulator<T::V, T::Vec2>>(face, mesh, tri, 1000);
+            sweep_line::<T, DelaunayMonoTriangulator<T::V, T::Vec2>>(face, mesh, tri, meta);
         }
         TriangulationAlgorithm::MinWeight => {
             minweight_dynamic::<T>(face, mesh, tri);

@@ -76,9 +76,9 @@ fn setup(
     mut mesh_list: ResMut<MeshList>,
 ) {
     for algo in [
-        TriangulationAlgorithm::Delaunay,
-        /*TriangulationAlgorithm::SweepDelaunay,
-        TriangulationAlgorithm::Sweep,
+        //TriangulationAlgorithm::Delaunay,
+        TriangulationAlgorithm::SweepDelaunay,
+        /*TriangulationAlgorithm::Sweep,
         TriangulationAlgorithm::SweepDynamic,
         TriangulationAlgorithm::EarClipping,
         TriangulationAlgorithm::Fan,*/

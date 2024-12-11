@@ -2,16 +2,48 @@ use std::collections::{HashMap, HashSet};
 
 use super::{ChainDirection, MonotoneTriangulator};
 use crate::{
-    extensions::nalgebra::ScalarPlus,
     math::{IndexType, Scalar, Vector2D},
     mesh::{IndexedVertex2D, Triangulation},
 };
 
+fn determinant_4x4<S: Scalar>(matrix: [[S; 4]; 4]) -> S {
+    let mut det = S::zero();
+
+    for i in 0..4 {
+        let mut submatrix = [[S::zero(); 3]; 3];
+        for row in 1..4 {
+            let mut col_index = 0;
+            for col in 0..4 {
+                if col == i {
+                    continue;
+                }
+                submatrix[row - 1][col_index] = matrix[row][col];
+                col_index += 1;
+            }
+        }
+        let sign = if i % 2 == 0 { S::ONE } else { -S::ONE };
+        det += sign * matrix[0][i] * determinant_3x3(submatrix);
+    }
+
+    det
+}
+
+fn determinant_3x3<S: Scalar>(matrix: [[S; 3]; 3]) -> S {
+    let a = matrix[0][0];
+    let b = matrix[0][1];
+    let c = matrix[0][2];
+
+    let det = a * (matrix[1][1] * matrix[2][2] - matrix[1][2] * matrix[2][1])
+        - b * (matrix[1][0] * matrix[2][2] - matrix[1][2] * matrix[2][0])
+        + c * (matrix[1][0] * matrix[2][1] - matrix[1][1] * matrix[2][0]);
+
+    det
+}
+
 // disable automatic formatting:
 #[rustfmt::skip]
 fn circumcircle_contains<Vec2: Vector2D>(p1: &Vec2, p2: &Vec2, p3: &Vec2, p: &Vec2) -> bool
-where
-    Vec2::S: ScalarPlus,
+
 {
     let x1 = p1.x(); let y1 = p1.y();
     let x2 = p2.x(); let y2 = p2.y();
@@ -23,14 +55,17 @@ where
     // |x2 y2 x2²+y2² 1|
     // |x3 y3 x3²+y3² 1|
     // |xp yp xp²+yp² 1|
-    let m = nalgebra::SMatrix::<Vec2::S,4,4>::new(
-        x1, y1, x1*x1+y1*y1, Vec2::S::ONE,
-        x2, y2, x2*x2+y2*y2, Vec2::S::ONE,
-        x3, y3, x3*x3+y3*y3, Vec2::S::ONE,
-        xp, yp, xp*xp+yp*yp, Vec2::S::ONE
-    );
+    let m = [
+        [x1, y1, x1*x1+y1*y1, Vec2::S::ONE],
+        [x2, y2, x2*x2+y2*y2, Vec2::S::ONE],
+        [x3, y3, x3*x3+y3*y3, Vec2::S::ONE],
+        [xp, yp, xp*xp+yp*yp, Vec2::S::ONE]
+    ];
 
-    m.determinant().is_positive()
+    // The determinant of the matrix is positive if the point is inside the circumcircle.
+    // m.determinant().is_positive()
+    // we cannot use `determinant` because it requires `ScalarPlus`
+    determinant_4x4(m).is_positive()
 }
 
 /// A monotone triangulator that tries to build triangles that are locally Delaunay by
@@ -59,10 +94,7 @@ impl<V: IndexType, Vec2: Vector2D> std::fmt::Debug for DelaunayMonoTriangulator<
     }
 }
 
-impl<V: IndexType, Vec2: Vector2D> DelaunayMonoTriangulator<V, Vec2>
-where
-    Vec2::S: ScalarPlus,
-{
+impl<V: IndexType, Vec2: Vector2D> DelaunayMonoTriangulator<V, Vec2> {
     fn direction(&self) -> ChainDirection {
         self.d
     }
@@ -83,6 +115,25 @@ where
         self.stack.len()
     }
 
+    fn stack_edge(
+        &self,
+        seen: &mut HashSet<(usize, usize)>,
+        stack: &mut Vec<(usize, usize)>,
+        a: usize,
+        b: usize,
+    ) {
+        assert!(a != b);
+        let k = (a.min(b), a.max(b));
+        if seen.contains(&k) {
+            return;
+        }
+        if self.is_constrained_edge(a, b) {
+            return; // Cannot flip a constrained edge
+        }
+        seen.insert(k);
+        stack.push((a, b));
+    }
+
     /// After inserting a triangle, we attempt to "legalize" newly formed edges
     /// according to the Delaunay criterion. This method:
     /// 1. Identifies the new edges introduced.
@@ -94,11 +145,29 @@ where
         vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
         new_triangle: [usize; 3],
     ) {
+        // TODO: in theory we shouldn't need `seen`
+        let mut seen = HashSet::new();
+        let mut stack = Vec::new();
+
         // For each edge of the new triangle, try to legalize it:
         for i in 0..3 {
             let a = new_triangle[i];
-            let b = new_triangle[(i + 1) % 3];
-            self.legalize_edge(indices, vec2s, a, b);
+            let b: usize = new_triangle[(i + 1) % 3];
+            self.stack_edge(&mut seen, &mut stack, a, b);
+        }
+
+        loop {
+            let Some((a, b)) = stack.pop() else {
+                break;
+            };
+            if let Some((a, b, c, d)) = self.legalize_edge(indices, vec2s, a, b) {
+                // TODO: Do wee need all five edges here?
+                self.stack_edge(&mut seen, &mut stack, c, d);
+                self.stack_edge(&mut seen, &mut stack, a, d);
+                self.stack_edge(&mut seen, &mut stack, b, c);
+                self.stack_edge(&mut seen, &mut stack, b, d);
+                self.stack_edge(&mut seen, &mut stack, a, c);
+            }
         }
     }
 
@@ -132,15 +201,7 @@ where
         vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
         a: usize,
         b: usize,
-    ) {
-        // Ensure that the triangulation structure can give us:
-        // - Whether (a,b) is constrained.
-        // - The opposite triangle/vertex across (a,b).
-        // The following calls are conceptual. You must implement them in Triangulation:
-        if self.is_constrained_edge(a, b) {
-            return; // Cannot flip a constrained edge
-        }
-
+    ) -> Option<(usize, usize, usize, usize)> {
         //     c/p3
         //    /    \       triangle_ab
         // a/p1 --- b/p2
@@ -156,20 +217,19 @@ where
             // The current triangle sharing edge (a,b) is already known from insertion.
             // We must find the vertex opposite in the "current" triangle formed.
             if let Some((d, triangle_ba)) = self.opposite_vertex_of_edge(b, a) {
-                // Now we have a quadrilateral formed by (a,b,opposite_vertex,opposite_in_current).
-                // Check if `opposite_in_current` lies inside the circumcircle of the triangle formed by (a,b,opposite_vertex).
+                // Now we have a quadrilateral formed by (a,b,c,d).
+                // Check if `d` lies inside the circumcircle of the triangle formed by (a,b,c).
 
                 let p_test = vec2s[d].vec;
 
                 // check whether the diagonal (p3, p_test) is valid
                 if !p1.convex(p3, p_test) || !p2.convex(p_test, p3) {
-                    return;
+                    return None;
                 }
 
                 if circumcircle_contains(&p1, &p2, &p3, &p_test) {
                     // Edge (a,b) is not Delaunay. Flip it.
                     // After flipping, we must re-legalize the edges that were affected.
-                    println!("Flipping edge ({},{})", a, b);
                     assert!(indices
                         .flip_edge(vec2s[a].index, vec2s[b].index, triangle_ab, triangle_ba)
                         .is_ok());
@@ -184,14 +244,13 @@ where
                     self.opposite_vertex.insert((c, d), (b, triangle_ba));
                     self.opposite_vertex.insert((d, b), (c, triangle_ba));
 
-                    // The flip replaces edge (a,b) with (opposite_vertex, opposite_in_current).
+                    // The flip replaces edge (a,b) with (c, d).
                     // Now legalize the edges around the newly formed diagonals:
-                    self.legalize_edge(indices, vec2s, c, d);
-                    self.legalize_edge(indices, vec2s, a, d);
-                    self.legalize_edge(indices, vec2s, b, c);
+                    return Some((a, b, c, d));
                 }
             }
         }
+        return None;
     }
 
     /// Insert a triangle formed by three vertices and mark the opposite vertex across each edge.
@@ -357,10 +416,7 @@ where
     }
 }
 
-impl<V: IndexType, Vec2: Vector2D> MonotoneTriangulator for DelaunayMonoTriangulator<V, Vec2>
-where
-    Vec2::S: ScalarPlus,
-{
+impl<V: IndexType, Vec2: Vector2D> MonotoneTriangulator for DelaunayMonoTriangulator<V, Vec2> {
     type V = V;
     type Vec2 = Vec2;
 

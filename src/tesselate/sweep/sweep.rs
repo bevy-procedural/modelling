@@ -436,7 +436,6 @@ mod tests {
             verify_triangulation_i::<S, V, V2, Poly, DynamicMonoTriangulator<V, V2, Poly>>(vec2s);
 
         println!("w_lin: {}, w_dyn: {}, w_del: {}", w_lin, w_dyn, w_del);
-        assert!(false);
         assert!(
             w_lin - w_dyn + Scalar::sqrt(S::EPS) >= S::zero(),
             "Dynamic weight must be smaller than linear weight"
