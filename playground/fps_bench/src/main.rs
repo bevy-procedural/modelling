@@ -6,8 +6,8 @@ use bevy::{
     window::{PresentMode, WindowMode, WindowResolution},
 };
 use procedural_modelling::{extensions::bevy::*, prelude::*};
-use std::io::Write;
 use std::time::Duration;
+use std::{io::Write, process::exit};
 
 #[derive(Resource, Clone, Debug)]
 struct BenchmarkStats {
@@ -77,10 +77,10 @@ fn setup(
 ) {
     for algo in [
         TriangulationAlgorithm::Delaunay,
-        TriangulationAlgorithm::Sweep,
+        /*TriangulationAlgorithm::Sweep,
         TriangulationAlgorithm::SweepDynamic,
         TriangulationAlgorithm::EarClipping,
-        TriangulationAlgorithm::Fan,
+        TriangulationAlgorithm::Fan,*/
         //TriangulationAlgorithm::Auto,
     ] {
         for (name, num_vertices, mesh) in [
@@ -123,8 +123,15 @@ fn setup(
                     .render_times
                     .push(start.elapsed().as_secs_f64());
             }
+
+            /*println!("Rendering times for {} ", name);
+            for render_time in mesh_list.0.last().unwrap().render_times.iter() {
+                print!( "{:.10},", render_time);
+            }*/
         }
     }
+
+    //exit(0);
 
     commands.insert_resource(AmbientLight::default());
     commands.spawn((
@@ -187,11 +194,11 @@ fn update_mesh(
         for bench in mesh_list.0.iter() {
             write!(file, "[\"{}\", [", bench.name).unwrap();
             for frame_time in bench.frame_times.iter() {
-                write!(file, "{:.16},", frame_time).unwrap();
+                write!(file, "{:.10},", frame_time).unwrap();
             }
             write!(file, "], [",).unwrap();
             for render_time in bench.render_times.iter() {
-                write!(file, "{:.16},", render_time).unwrap();
+                write!(file, "{:.10},", render_time).unwrap();
             }
             writeln!(file, "]],",).unwrap();
         }

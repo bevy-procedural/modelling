@@ -6,7 +6,7 @@ mod status;
 mod sweep;
 mod vertex_type;
 
-use monotone::*;
+pub use monotone::*;
 pub use sweep::sweep_line_triangulation;
 pub use vertex_type::VertexType;
 
@@ -50,7 +50,7 @@ impl<V: IndexType> SweepMeta<V> {
 }
 
 /// Uses the sweep line triangulation
-pub fn sweep_line<T: MeshType3D>(
+pub fn sweep_line<T: MeshType3D, Tri: MonotoneTriangulator<V = T::V, Vec2 = T::Vec2>>(
     face: &T::Face,
     mesh: &T::Mesh,
     indices: &mut Triangulation<T::V>,
@@ -64,82 +64,13 @@ pub fn sweep_line<T: MeshType3D>(
         .map(|(p, i)| IndexedVertex2D::<T::V, T::Vec2>::new(p, i))
         .collect();
 
-    sweep_line_triangulation::<LinearMonoTriangulator<T::V, T::Vec2>>(
-        indices,
-        &vec2s,
-        &mut meta.sweep,
-    );
-}
-
-/// A variant of the sweep-line algorithm that finds the min-weight triangulation for each
-/// monotone sub-polygon using dynamic programming, leading to an overall O(n^2) time complexity.
-///
-/// When using the bound k, the approximation quality decreases the smaller k is, with time O(k^2 n log n).
-/// However, for k << n this comes in most cases very quickly close to O(n log n).
-///
-/// For the quality of the approximation it is generally beneficial to rotate the mesh
-/// such that the mesh can be decomposed in a large number of y-monotone components.
-pub fn sweep_dynamic<T: MeshType3D>(
-    face: &T::Face,
-    mesh: &T::Mesh,
-    indices: &mut Triangulation<T::V>,
-    _k: usize,
-) {
-    debug_assert!(face.may_be_curved() || face.is_planar2(mesh));
-
-    // TODO: Improve performance by directly using the nd-vertices instead of converting to 2d
-    let vec2s: Vec<_> = face
-        .vertices_2d(mesh)
-        .map(|(p, i)| IndexedVertex2D::<T::V, T::Vec2>::new(p, i))
-        .collect();
-
-    let mut sweep = SweepMeta::default();
-    sweep_line_triangulation::<DynamicMonoTriangulator<T::V, T::Vec2, T::Poly>>(
-        indices, &vec2s, &mut sweep,
-    );
-}
-
-/// A variant of the sweep-line algorithm that greedily approximates the min-weight triangulation for each
-/// monotone sub-polygon, leading to an overall O(n log n) time complexity.
-pub fn sweep_greedy<T: MeshType3D>(
-    _face: &T::Face,
-    _mesh: &T::Mesh,
-    _indices: &mut Triangulation<T::V>,
-    _k: usize,
-) {
-    // TODO: Use the fact that we can greedily approximate the min-weight triangulation of a x-monotone polygon in O(n log n) time:
-
-    /*
-    ChatGPT says:
-
-    Preprocessing:
-        Identify the Upper and Lower Chains:
-            Since the polygon is x-monotone, the vertices are already sorted by x-coordinate.
-            Label each vertex as belonging to either the upper or lower chain.
-        Initialize a Stack:
-            Start with the first two vertices on the combined chain.
-
-    Iterative Process:
-        For each vertex vi​ from the third to the last:
-            If vi​ and the top of the stack are on different chains:
-                Pop vertices from the stack, creating diagonals to vi, until only one vertex remains.
-                Push vi​ onto the stack.
-            If vi and the top of the stack are on the same chain:
-                While the angle formed is convex, pop vertices from the stack and create diagonals to vi.
-                Push vi onto the stack.
-
-    Termination:
-        Continue until all vertices are processed.
-        The diagonals formed during this process constitute the triangulation.
-    */
-
-    todo!("sweep greedy");
+    sweep_line_triangulation::<Tri>(indices, &vec2s, &mut meta.sweep);
 }
 
 #[cfg(test)]
 mod tests {
 
-    use crate::prelude::*;
+    use crate::{prelude::*, tesselate::sweep::LinearMonoTriangulator};
 
     fn verify_triangulation<T: MeshType3D>(mesh: &T::Mesh, f: T::F) {
         let face = mesh.face(f);
@@ -151,7 +82,7 @@ mod tests {
         let mut indices = Vec::new();
         let mut tri = Triangulation::new(&mut indices);
         let mut meta = TesselationMeta::default();
-        sweep_line::<T>(face, &mesh, &mut tri, &mut meta);
+        sweep_line::<T, LinearMonoTriangulator<T::V, T::Vec2>>(face, &mesh, &mut tri, &mut meta);
         tri.verify_full::<T::Vec2, T::Poly>(&vec2s);
     }
 

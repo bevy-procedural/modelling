@@ -2,6 +2,7 @@ use super::{ChainDirection, MonotoneTriangulator};
 use crate::{
     math::{IndexType, Polygon, Vector2D},
     mesh::{IndexedVertex2D, Triangulation},
+    prelude::try_min_weight_small_direct,
     tesselate::minweight_dynamic_direct,
 };
 
@@ -53,6 +54,14 @@ Result Retrieval:
 // To improve speed of the algorithm, we could use some pruning techniques and lazy evaluation.
 // Also, we could heuristically assume that that triangles that span a large range are not worth exploring.
 
+/// A variant of the sweep-line algorithm that finds the min-weight triangulation for each
+/// monotone sub-polygon using dynamic programming, leading to an overall O(n^2) time complexity.
+///
+/// When using the bound k, the approximation quality decreases the smaller k is, with time O(k^2 n log n).
+/// However, for k << n this comes in most cases very quickly close to O(n log n).
+///
+/// For the quality of the approximation it is generally beneficial to rotate the mesh
+/// such that the mesh can be decomposed in a large number of y-monotone components.
 #[derive(Debug)]
 pub struct DynamicMonoTriangulator<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2>> {
     left: Vec<usize>,
@@ -131,7 +140,9 @@ impl<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2>> MonotoneTriangulator
             vs.push(vec2s[v]);
         }
 
-        minweight_dynamic_direct::<V, Vec2, Poly>(&vs, indices);
+        if !try_min_weight_small_direct::<V, Vec2, Poly>(&vs, indices) {
+            minweight_dynamic_direct::<V, Vec2, Poly>(&vs, indices);
+        }
         //ear_clipping_direct(&vs, indices, false);
     }
 }

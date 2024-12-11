@@ -37,6 +37,9 @@ pub fn delaunay_triangulation<T: MeshType3D>(
     }
     assert!(cdt.add_constraint(last.unwrap(), first.unwrap()));
 
+    let v2d = face.vertices_2d(mesh).collect::<Vec<_>>();
+    let poly = T::Poly::from_iter(v2d.iter().map(|(v, _)| v.clone()));
+
     cdt.inner_faces().for_each(|f| {
         let [p0, p1, p2] = f.vertices();
         let v0 = i2v[p0.index()];
@@ -49,9 +52,8 @@ pub fn delaunay_triangulation<T: MeshType3D>(
                 return;
             }
 
+            // For triangles fully within or without the face, we need to check the centroid of the triangle
             // TODO: is there a better way? this is inefficient
-
-            let v2d = face.vertices_2d(mesh).collect::<Vec<_>>();
             let mut triangle: Vec<T::Vec2> = Vec::new();
             for (v, i) in &v2d {
                 if *i == v0 || *i == v1 || *i == v2 {
@@ -59,8 +61,6 @@ pub fn delaunay_triangulation<T: MeshType3D>(
                 }
             }
             let triangle = T::Poly::from_iter(triangle);
-            let poly = T::Poly::from_iter(v2d.iter().map(|(v, _)| v.clone()));
-
             if poly.contains(&triangle.centroid()) {
                 tri.insert_triangle(v0, v1, v2);
             }

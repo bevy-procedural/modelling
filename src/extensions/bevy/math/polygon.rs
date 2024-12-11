@@ -3,11 +3,11 @@ use bevy::math::Vec2;
 
 /// A polygon in 2D space.
 #[derive(Clone, Debug, PartialEq)]
-pub struct Bevy2DPolygon {
+pub struct Polygon2dBevy {
     vertices: Vec<Vec2>,
 }
 
-impl Polygon<Vec2> for Bevy2DPolygon {
+impl Polygon<Vec2> for Polygon2dBevy {
     fn from_points(points: &[Vec2]) -> Self {
         Self {
             vertices: points.to_vec(),

@@ -760,7 +760,7 @@ fn setup_meshes(
         },
         // very high quality shadows
         CascadeShadowConfigBuilder {
-            num_cascades: 8,
+            num_cascades: 4,
             first_cascade_far_bound: 5.0,
             maximum_distance: 55.0,
             ..default()

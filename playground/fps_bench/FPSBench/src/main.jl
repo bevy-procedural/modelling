@@ -122,7 +122,5 @@ begin
 	save("./graph.png", fig)
 	save("./assets/fps_vs_render.svg", fig)
 
-
-
 end
 

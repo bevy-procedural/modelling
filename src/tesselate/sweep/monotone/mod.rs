@@ -1,8 +1,10 @@
 mod dynamic;
 mod linear;
+mod delaunay;
 
 pub use dynamic::*;
 pub use linear::*;
+pub use delaunay::*;
 
 use crate::{
     math::{IndexType, Vector2D},
@@ -24,7 +26,10 @@ enum ChainDirection {
 /// It doesn't have to store all vertices - it's fine to do all the proccessing in
 /// the `left` and `right` functions and not doing anything in `finish`.
 pub trait MonotoneTriangulator: Sized + std::fmt::Debug {
+    /// The index type used in the mesh
     type V: IndexType;
+
+    /// The vector type used in the mesh
     type Vec2: Vector2D;
 
     /// Create a new chain with a single value

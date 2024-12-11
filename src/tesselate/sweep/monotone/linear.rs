@@ -1,6 +1,6 @@
 use super::{ChainDirection, MonotoneTriangulator};
 use crate::{
-    math::{IndexType, Vector2D, Scalar},
+    math::{IndexType, Scalar, Vector2D},
     mesh::{IndexedVertex2D, Triangulation},
 };
 
@@ -12,14 +12,25 @@ use crate::{
 /// at least one edge. Only one of the two chains contains more than one edge. The chain with the single
 /// edge has its bottom endpoint below the sweep line. Hence, we place the start vertex before the other
 /// chain. The currently active chain is indicated by d.
+///
+/// The invariant is maintained as follows:
+/// 1. The reflex chain contains vertices from either the left or right chain at any given time.
+/// 2. Triangulation ensures that all visible triangles are processed in the correct order.
+/// 3. The last vertex added is at the top of the stack, ensuring efficient visibility checks.
 pub struct LinearMonoTriangulator<V: IndexType, Vec2: Vector2D> {
+    // TODO: Replace usize with V
+    
+    /// Stack of vertices representing the reflex chain.
     stack: Vec<usize>,
+    /// Direction of the current reflex chain (Left, Right, None).
     d: ChainDirection,
 
+    /// Last vertex added to the left chain.
     last_left: Option<usize>,
+    /// Last vertex added to the right chain.
     last_right: Option<usize>,
 
-    /// Bind the types to the chain. There is no need to mix the types and it simplifies the type signatures.
+    /// Phantom type to bind `V` and `Vec2` to the struct, simplifying type signatures.
     phantom: std::marker::PhantomData<(V, Vec2)>,
 }
 
@@ -30,12 +41,12 @@ impl<V: IndexType, Vec2: Vector2D> std::fmt::Debug for LinearMonoTriangulator<V,
 }
 
 impl<V: IndexType, Vec2: Vector2D> LinearMonoTriangulator<V, Vec2> {
-    /// Get the direction of the chain
+    /// Returns the direction of the current chain.
     fn direction(&self) -> ChainDirection {
         self.d
     }
 
-    /// Get the last element of the chain
+    /// Returns the last vertex in the reflex chain.
     fn last(&self) -> usize {
         self.stack.last().unwrap().clone()
     }
@@ -45,6 +56,11 @@ impl<V: IndexType, Vec2: Vector2D> LinearMonoTriangulator<V, Vec2> {
         self.stack.first().unwrap().clone()
     }
 
+    /// Adds a vertex to the chain when the direction remains the same.
+    ///
+    /// The algorithm processes visible triangles formed by the new vertex
+    /// and the last two vertices in the reflex chain. It ensures that all
+    /// triangles are oriented correctly.
     #[inline]
     fn add_same_direction(
         &mut self,
@@ -62,17 +78,20 @@ impl<V: IndexType, Vec2: Vector2D> LinearMonoTriangulator<V, Vec2> {
             if l <= 1 {
                 break;
             }
+
+            // Calculate the signed angle between the last two vertices and the new vertex.
             let angle = vec2s[value]
                 .vec
                 .angle_tri(vec2s[self.stack[l - 1]].vec, vec2s[self.stack[l - 2]].vec);
+
             if d == ChainDirection::Left {
+                // Stop when the angle indicates the triangle is no longer visible.
                 if angle > Vec2::S::ZERO {
                     break;
                 }
                 indices.insert_triangle_local(self.stack[l - 1], value, self.stack[l - 2], vec2s);
             } else {
-                // right or no preference
-
+                // For right chains, stop when the angle is no longer valid.
                 if angle < Vec2::S::ZERO {
                     break;
                 }
@@ -92,6 +111,10 @@ impl<V: IndexType, Vec2: Vector2D> LinearMonoTriangulator<V, Vec2> {
         self.stack.push(value);
     }
 
+    /// Adds a vertex to the chain when the direction changes.
+    ///
+    /// This involves triangulating the current reflex chain completely
+    /// and initializing a new chain with the new vertex.
     #[inline]
     fn add_opposite_direction(
         &mut self,
@@ -103,12 +126,14 @@ impl<V: IndexType, Vec2: Vector2D> LinearMonoTriangulator<V, Vec2> {
         assert!(self.d != d);
         // TODO: assert for direction not none?
         assert!(self.stack.len() >= 1);
+
         // place the next triangle!
         if self.stack.len() == 1 {
+            // If the stack has only one vertex, simply switch the direction.
             self.stack.push(value);
             self.d = d;
         } else {
-            // there is enough on the stack to consume
+            // there is enough on the stack to consume: triangulate the current chain completely
             for i in 1..self.stack.len() {
                 if d == ChainDirection::Left {
                     indices.insert_triangle_local(self.stack[i - 1], value, self.stack[i], vec2s);
@@ -122,6 +147,8 @@ impl<V: IndexType, Vec2: Vector2D> LinearMonoTriangulator<V, Vec2> {
                     [self.stack[i - 1], self.stack[i], value]
                 );
             }
+
+            // Start a new chain with the last vertex and the new vertex.
             let last = self.stack.pop().unwrap();
             self.stack.clear();
             self.stack.push(last);
@@ -130,7 +157,9 @@ impl<V: IndexType, Vec2: Vector2D> LinearMonoTriangulator<V, Vec2> {
         }
     }
 
-    /// Add a new value to the reflex chain
+    /// Adds a vertex to the reflex chain based on its direction.
+    ///
+    /// This function handles both same and opposite direction cases.
     #[inline]
     fn add(
         &mut self,
@@ -141,8 +170,10 @@ impl<V: IndexType, Vec2: Vector2D> LinearMonoTriangulator<V, Vec2> {
     ) -> &Self {
         #[cfg(feature = "sweep_debug_print")]
         println!("chain add: {:?} {} {:?}", self.d, value, self.stack);
+
         if self.d == ChainDirection::None {
-            assert!(self.stack.len() <= 1);
+            // Initialize the chain with the first vertex.
+            assert!(self.stack.len() == 1);
             self.stack.push(value);
             self.d = d;
         } else if self.d == d {
@@ -155,7 +186,7 @@ impl<V: IndexType, Vec2: Vector2D> LinearMonoTriangulator<V, Vec2> {
         self
     }
 
-    /// Get the length of the reflex chain
+    /// Returns the length of the reflex chain.
     fn len(&self) -> usize {
         self.stack.len()
     }
@@ -170,7 +201,7 @@ impl<V: IndexType, Vec2: Vector2D> MonotoneTriangulator for LinearMonoTriangulat
     type V = V;
     type Vec2 = Vec2;
 
-    /// Create a new reflex chain with a single value
+    /// Creates a new reflex chain with a single vertex.
     fn new(v: usize) -> Self {
         LinearMonoTriangulator {
             stack: vec![v],
@@ -193,7 +224,7 @@ impl<V: IndexType, Vec2: Vector2D> MonotoneTriangulator for LinearMonoTriangulat
 
         assert!(res == self.first());
 
-        return res
+        return res;
     }
 
     /// Whether the chain is oriented to the right

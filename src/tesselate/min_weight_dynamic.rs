@@ -4,6 +4,7 @@ use std::time::Instant;
 use crate::{
     math::{IndexType, Polygon, Scalar, Vector2D},
     mesh::{Face3d, FaceBasics, IndexedVertex2D, MeshType3D, Triangulation},
+    tesselate::try_min_weight_small,
 };
 
 /// The [min-weight triangulation problem](https://en.wikipedia.org/wiki/Minimum-weight_triangulation)
@@ -15,6 +16,10 @@ pub fn minweight_dynamic<T: MeshType3D>(
     indices: &mut Triangulation<T::V>,
 ) {
     debug_assert!(face.may_be_curved() || face.is_planar2(mesh));
+
+    if try_min_weight_small::<T>(face, mesh, indices) {
+        return;
+    }
 
     // TODO: Improve performance by directly using the nd-vertices instead of converting to 2d
     let vec2s: Vec<_> = face

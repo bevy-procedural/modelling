@@ -17,10 +17,11 @@ impl HasZero for Vec3 {
 }
 
 impl Vector<f32, 3> for Vec3 {
-    #[inline(always)]
+    // Don't use the bevy implementation since it is approximate
+    /*#[inline(always)]
     fn angle_between(&self, other: Self) -> f32 {
         Vec3::angle_between(*self, other)
-    }
+    }*/
 
     #[inline(always)]
     fn distance(&self, other: &Self) -> f32 {

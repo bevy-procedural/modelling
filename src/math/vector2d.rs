@@ -24,9 +24,9 @@ pub trait Vector2D: Vector<Self::S, 2> {
     }
 
     /// Angle between the segment from self to a and the segment from self to b.
-    ///
-    /// TODO: Remove this
-    fn angle_tri(&self, a: Self, b: Self) -> Self::S;
+    fn angle_tri(&self, a: Self, b: Self) -> Self::S {
+        Vector::angle_between(&(a - *self), b - *self)
+    }
 
     /// Returns the barycentric sign of a point in a triangle.
     #[inline(always)]
