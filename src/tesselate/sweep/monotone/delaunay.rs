@@ -44,7 +44,8 @@ pub struct DelaunayMonoTriangulator<V: IndexType, Vec2: Vector2D> {
     constrained_edges: HashSet<(usize, usize)>,
 
     /// Opposite vertex across an edge, assuming triangles are formed in a CCW order.
-    opposite_vertex: HashMap<(usize, usize), usize>,
+    /// Also the index of the triangle that contains the edge.
+    opposite_vertex: HashMap<(usize, usize), (usize, usize)>,
 
     last_left: Option<usize>,
     last_right: Option<usize>,
@@ -88,7 +89,7 @@ where
     /// 2. Checks if any of them need to be flipped.
     /// 3. Repeats until no more flips are needed.
     fn legalize_triangle(
-        &self,
+        &mut self,
         indices: &mut Triangulation<V>,
         vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
         new_triangle: [usize; 3],
@@ -114,7 +115,7 @@ where
     }
 
     /// Get the opposite vertex and adjacent triangle across an edge.
-    fn opposite_vertex_of_edge(&self, a: usize, b: usize) -> Option<usize> {
+    fn opposite_vertex_of_edge(&self, a: usize, b: usize) -> Option<(usize, usize)> {
         self.opposite_vertex.get(&(a, b)).map(|&v| v)
     }
 
@@ -126,7 +127,7 @@ where
     ///
     /// After flipping, the newly formed edges around the flipped edge must also be checked.
     fn legalize_edge(
-        &self,
+        &mut self,
         indices: &mut Triangulation<V>,
         vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
         a: usize,
@@ -140,32 +141,54 @@ where
             return; // Cannot flip a constrained edge
         }
 
-        if let Some(opposite_vertex) = self.opposite_vertex_of_edge(a, b) {
+        //     c/p3
+        //    /    \       triangle_ab
+        // a/p1 --- b/p2
+        //    \    /       triangle_ba
+        //     d/p_test
+
+        if let Some((c, triangle_ab)) = self.opposite_vertex_of_edge(a, b) {
             // Check Delaunay condition:
             let p1 = vec2s[a].vec;
             let p2 = vec2s[b].vec;
-            let p3 = vec2s[opposite_vertex].vec;
+            let p3 = vec2s[c].vec;
 
             // The current triangle sharing edge (a,b) is already known from insertion.
             // We must find the vertex opposite in the "current" triangle formed.
-            if let Some(opposite_in_current) = self.opposite_vertex_of_edge(b, a) {
+            if let Some((d, triangle_ba)) = self.opposite_vertex_of_edge(b, a) {
                 // Now we have a quadrilateral formed by (a,b,opposite_vertex,opposite_in_current).
                 // Check if `opposite_in_current` lies inside the circumcircle of the triangle formed by (a,b,opposite_vertex).
 
-                let p_test = vec2s[opposite_in_current].vec;
+                let p_test = vec2s[d].vec;
+
+                // check whether the diagonal (p3, p_test) is valid
+                if !p1.convex(p3, p_test) || !p2.convex(p_test, p3) {
+                    return;
+                }
+
                 if circumcircle_contains(&p1, &p2, &p3, &p_test) {
                     // Edge (a,b) is not Delaunay. Flip it.
                     // After flipping, we must re-legalize the edges that were affected.
                     println!("Flipping edge ({},{})", a, b);
-                    // TODO:
-                    todo!("Flip edge");
-                    /*if indices.flip_edge(a, b).is_ok() {
-                        // The flip replaces edge (a,b) with (opposite_vertex, opposite_in_current).
-                        // Now legalize the edges around the newly formed diagonals:
-                        self.legalize_edge(indices, vec2s, opposite_vertex, opposite_in_current);
-                        self.legalize_edge(indices, vec2s, a, opposite_in_current);
-                        self.legalize_edge(indices, vec2s, b, opposite_vertex);
-                    }*/
+                    assert!(indices
+                        .flip_edge(vec2s[a].index, vec2s[b].index, triangle_ab, triangle_ba)
+                        .is_ok());
+
+                    // update the opposite edges
+                    self.opposite_vertex.remove(&(a, b));
+                    self.opposite_vertex.remove(&(b, a));
+                    self.opposite_vertex.insert((a, d), (c, triangle_ab));
+                    self.opposite_vertex.insert((d, c), (a, triangle_ab));
+                    self.opposite_vertex.insert((c, a), (d, triangle_ab));
+                    self.opposite_vertex.insert((b, c), (d, triangle_ba));
+                    self.opposite_vertex.insert((c, d), (b, triangle_ba));
+                    self.opposite_vertex.insert((d, b), (c, triangle_ba));
+
+                    // The flip replaces edge (a,b) with (opposite_vertex, opposite_in_current).
+                    // Now legalize the edges around the newly formed diagonals:
+                    self.legalize_edge(indices, vec2s, c, d);
+                    self.legalize_edge(indices, vec2s, a, d);
+                    self.legalize_edge(indices, vec2s, b, c);
                 }
             }
         }
@@ -180,10 +203,14 @@ where
         indices: &mut Triangulation<V>,
         vec2s: &Vec<IndexedVertex2D<V, Vec2>>,
     ) {
-        self.opposite_vertex.insert((a, b), c);
-        self.opposite_vertex.insert((b, c), a);
-        self.opposite_vertex.insert((c, a), b);
+        let index_offset = indices.next_pos();
         indices.insert_triangle_local(a, b, c, vec2s);
+        debug_assert!(self.opposite_vertex.get(&(a, b)).is_none());
+        debug_assert!(self.opposite_vertex.get(&(b, c)).is_none());
+        debug_assert!(self.opposite_vertex.get(&(c, a)).is_none());
+        self.opposite_vertex.insert((a, b), (c, index_offset));
+        self.opposite_vertex.insert((b, c), (a, index_offset));
+        self.opposite_vertex.insert((c, a), (b, index_offset));
     }
 
     /// Similar to the linear approach, but after forming a visible triangle, we check and fix edges.
@@ -313,7 +340,7 @@ where
             assert!(self.stack.len() == 1);
             self.stack.push(value);
             self.d = d;
-            
+
             // we don't Delaunay outside of the monotone region
             self.constrain_edge(self.stack[0], value);
         } else if self.d == d {

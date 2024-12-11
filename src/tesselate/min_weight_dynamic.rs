@@ -433,17 +433,16 @@ pub fn minweight_dynamic_direct<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2
     let mut m = initialize_m(n);
     let mut s = TriangularStore::<usize>::new(n, IndexType::max());
 
-    let now = Instant::now();
+    //let now = Instant::now();
 
     let valid_diagonal = find_valid_diagonals::<V, Vec2, Poly>(n, &vs);
 
-    println!("Valid diagonals: {:?}", now.elapsed());
-    let now = Instant::now();
+    //println!("Valid diagonals: {:?}", now.elapsed());
+    //let now = Instant::now();
 
     fill_m(n, 2, n - 1, &mut m, &mut s, &valid_diagonal, &vs);
 
-    let ela = now.elapsed();
-    println!("Dynamic programming: {:?}", ela,);
+    //println!("Dynamic programming: {:?}", now.elapsed());
 
     traceback(n, 0, n - 1, &s, indices, &vs);
 }

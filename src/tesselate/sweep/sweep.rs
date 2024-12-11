@@ -398,7 +398,7 @@ mod tests {
 
     use super::*;
     use crate::{
-        extensions::{bevy::Polygon2dBevy, nalgebra::*},
+        extensions::nalgebra::*,
         prelude::*,
         tesselate::sweep::{DelaunayMonoTriangulator, LinearMonoTriangulator},
     };
@@ -430,11 +430,13 @@ mod tests {
         vec2s: &Vec<IndexedVertex2D<V, V2>>,
     ) {
         let w_lin = verify_triangulation_i::<S, V, V2, Poly, LinearMonoTriangulator<V, V2>>(vec2s);
-        //verify_triangulation_i::<S, V, V2, Poly, DelaunayMonoTriangulator<V, V2>>(vec2s);
+        let w_del =
+            verify_triangulation_i::<S, V, V2, Poly, DelaunayMonoTriangulator<V, V2>>(vec2s);
         let w_dyn =
             verify_triangulation_i::<S, V, V2, Poly, DynamicMonoTriangulator<V, V2, Poly>>(vec2s);
 
-        println!("w_lin: {}, w_dyn: {} {}", w_lin, w_dyn, vec2s.len());
+        println!("w_lin: {}, w_dyn: {}, w_del: {}", w_lin, w_dyn, w_del);
+        assert!(false);
         assert!(
             w_lin - w_dyn + Scalar::sqrt(S::EPS) >= S::zero(),
             "Dynamic weight must be smaller than linear weight"
@@ -469,7 +471,12 @@ mod tests {
                 })
                 .collect_vec();
 
-            verify_triangulation::<f32, u32, bevy::math::Vec2, Polygon2dBevy>(&vec2bevy);
+            verify_triangulation::<
+                f32,
+                u32,
+                bevy::math::Vec2,
+                crate::extensions::bevy::Polygon2dBevy,
+            >(&vec2bevy);
         }
     }
 
@@ -530,6 +537,19 @@ mod tests {
             &generate_zigzag::<Vec2<f64>>(100)
                 .enumerate()
                 .map(|(i, v)| IndexedVertex2D::new(v, i))
+                .collect(),
+        );
+    }
+
+    #[test]
+    fn sweep_circle() {
+        verify_triangulations(
+            &(0..100)
+                .into_iter()
+                .map(|i| {
+                    let a = i as f64 * 2.0 * std::f64::consts::PI / 100.0;
+                    IndexedVertex2D::new(Vec2::new(a.cos(), a.sin()), i)
+                })
                 .collect(),
         );
     }
