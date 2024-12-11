@@ -126,10 +126,15 @@ impl<'a, V: IndexType> Triangulation<'a, V> {
     pub fn verify_non_degenerate_triangle<Vec2: Vector2D>(&self, vec_hm: &HashMap<V, Vec2>) {
         for i in self.start..self.len() {
             let area = self.get_triangle_area(i, vec_hm);
-            assert!(
+            /*assert!(
                 area.abs() > Vec2::S::ZERO,
                 "Triangle has zero or negative area"
-            );
+            );*/
+            // degenerate triangles are ok. But not negative ones!
+            if !(area >= -Vec2::S::EPS.sqrt()) {
+                println!("Triangle area: {}", area);
+                assert!(area >= -Vec2::S::EPS.sqrt(), "Triangle has negative area");
+            }
         }
     }
 

@@ -103,9 +103,12 @@ pub fn min_weight_pent<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2>>(
 ) {
     assert!(vs.len() == 5);
     // TODO: make specialized implementations for n=5
-    // both inner edges start at the same vertex, so you only have to test 5 configs and find:
-    // 1) the shortest sum of edge lengths or largest angle
+    // both diagonals start at the same vertex, so you only have to test 5 configs and find:
+    // 1) the shortest sum of edge lengths
     // 2) ...that doesn't intersect any boundary edge (because the intersecting case can be the optimum)
+
+    //let poly = Poly::from_iter(vs.iter().map(|v| v.vec));
+    //poly.
 
     todo!("pent triangulate");
 }
@@ -123,4 +126,115 @@ pub fn min_weight_hex<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2>>(
     // Test, whether this is faster than sweep or delaunay.
 
     todo!("hex triangulate");
+}
+
+#[cfg(test)]
+#[cfg(feature = "nalgebra")]
+mod tests {
+    use std::collections::HashMap;
+
+    use super::*;
+    use crate::{
+        extensions::nalgebra::*,
+        math::{IndexType, Scalar},
+        mesh::EuclideanMeshType,
+        prelude::minweight_dynamic_direct,
+    };
+
+    fn verify_min_weight<T: EuclideanMeshType<2>>(vs: &Vec<T::Vec2>) {
+        let vs: Vec<IndexedVertex2D<T::V, T::Vec2>> = vs
+            .iter()
+            .enumerate()
+            .map(|(i, v)| IndexedVertex2D::new(*v, T::V::new(i)))
+            .collect();
+        let hm: HashMap<T::V, T::Vec2> = vs.iter().map(|v| (v.index, v.vec)).collect();
+
+        let w1 = {
+            let mut indices = Vec::new();
+            let mut tri = Triangulation::<T::V>::new(&mut indices);
+            try_min_weight_small_direct::<T::V, T::Vec2, T::Poly>(&vs, &mut tri);
+            println!("Triangulation: {:?}", tri);
+            tri.verify_full::<T::Vec2, T::Poly>(&vs);
+            tri.total_edge_weight(&hm)
+        };
+
+        let w2 = {
+            let mut indices = Vec::new();
+            let mut tri = Triangulation::<T::V>::new(&mut indices);
+            minweight_dynamic_direct::<T::V, T::Vec2, T::Poly>(&vs, &mut tri);
+            tri.verify_full::<T::Vec2, T::Poly>(&vs);
+            tri.total_edge_weight(&hm)
+        };
+
+        // w1 should be the same as w2.
+        // Though, it can include degenerate triangles, so it might be even smaller!
+        assert!((w1 - w2) <= T::S::from(1e-6));
+    }
+
+    #[test]
+    fn test_min_weight_quad_1() {
+        verify_min_weight::<MeshType2d64PNU>(&vec![
+            Vec2::new(0.0, 0.0),
+            Vec2::new(1.0, 0.0),
+            Vec2::new(1.0, 1.0),
+            Vec2::new(0.0, 1.0),
+        ]);
+    }
+
+    #[test]
+    fn test_min_weight_quad_2() {
+        // this one is very concave
+        verify_min_weight::<MeshType2d64PNU>(&vec![
+            Vec2::new(0.0, 0.0),
+            Vec2::new(1.0, 0.0),
+            Vec2::new(0.0, 1.0),
+            Vec2::new(0.05, 0.9),
+        ]);
+    }
+
+    #[test]
+    fn test_min_weight_quad_3() {
+        // For this one the invalid diagonals are shorter
+        verify_min_weight::<MeshType2d64PNU>(&vec![
+            Vec2::new(0.0, 0.0),
+            Vec2::new(10.0, 0.0),
+            Vec2::new(0.0, 1.0),
+            Vec2::new(0.5, 0.5),
+        ]);
+    }
+
+    #[test]
+    fn test_min_weight_quad_4() {
+        // Similar to 3 but rotated to test the other branch
+        verify_min_weight::<MeshType2d64PNU>(&vec![
+            Vec2::new(0.5, 0.5),
+            Vec2::new(1.0, 0.0),
+            Vec2::new(0.0, 10.0),
+            Vec2::new(0.0, 0.0),
+        ]);
+    }
+
+    #[test]
+    fn test_min_weight_quad_5() {
+        // Similar to 4, but now it is fine to use the shorter diagonal
+        verify_min_weight::<MeshType2d64PNU>(&vec![
+            Vec2::new(0.5, -0.5),
+            Vec2::new(1.0, 0.0),
+            Vec2::new(0.0, 10.0),
+            Vec2::new(0.0, 0.0),
+        ]);
+    }
+
+    
+    /*
+    #[test]
+    fn test_min_weight_quad_6() {
+        // Nasty case where a degenerate triangle is part of the best triangulation
+        verify_min_weight::<MeshType2d64PNU>(&vec![
+            Vec2::new(0.0, 1.0),
+            Vec2::new(0.0, 0.0),
+            Vec2::new(0.0, -1.0),
+            Vec2::new(10.0, 0.0),
+        ]);
+    }*/
 }

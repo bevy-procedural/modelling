@@ -429,7 +429,7 @@ pub fn minweight_dynamic_direct<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2
     indices: &mut Triangulation<V>,
 ) {
     let n = vs.len();
-    assert!(n >= 5, "n={} < 5", n);
+    assert!(n >= 4, "n={} < 4", n);
     let mut m = initialize_m(n);
     let mut s = TriangularStore::<usize>::new(n, IndexType::max());
 
