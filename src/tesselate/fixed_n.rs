@@ -61,16 +61,37 @@ pub fn min_weight_quad<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2>>(
     indices: &mut Triangulation<V>,
 ) {
     assert!(vs.len() == 4);
-    let vs1_convex = vs[1].vec.convex(vs[0].vec, vs[2].vec);
-    let vs3_convex = !vs1_convex || vs[3].vec.convex(vs[2].vec, vs[0].vec);
-    if vs1_convex && vs3_convex {
-        indices.insert_triangle(vs[0].index, vs[1].index, vs[2].index);
-        indices.insert_triangle(vs[0].index, vs[2].index, vs[3].index);
+
+    let weight_diagonal_0_2 = vs[0].vec.distance_squared(&vs[2].vec);
+    let weight_diagonal_1_3 = vs[1].vec.distance_squared(&vs[3].vec);
+
+    // TODO: Are the convexity checks correct? Or do they check the exact opposite?
+
+    if weight_diagonal_0_2 <= weight_diagonal_1_3 {
+        let vs1_3_convex =
+            vs[1].vec.convex(vs[2].vec, vs[0].vec) && vs[3].vec.convex(vs[0].vec, vs[2].vec);
+        if vs1_3_convex {
+            // insert the diagonal 0-2
+            indices.insert_triangle(vs[0].index, vs[1].index, vs[2].index);
+            indices.insert_triangle(vs[0].index, vs[2].index, vs[3].index);
+        } else {
+            // insert the diagonal 1-3
+            indices.insert_triangle(vs[1].index, vs[2].index, vs[3].index);
+            indices.insert_triangle(vs[1].index, vs[3].index, vs[0].index);
+        }
     } else {
-        // Apparently, either vs[1] or vs[3] is a reflex vertex.
-        // Hence, we split the quadrilateral the other way.
-        indices.insert_triangle(vs[1].index, vs[2].index, vs[3].index);
-        indices.insert_triangle(vs[1].index, vs[3].index, vs[0].index);
+        let vs_0_2_convex =
+            vs[0].vec.convex(vs[3].vec, vs[1].vec) && vs[2].vec.convex(vs[1].vec, vs[3].vec);
+
+        if vs_0_2_convex {
+            // insert the diagonal 1-3
+            indices.insert_triangle(vs[1].index, vs[2].index, vs[3].index);
+            indices.insert_triangle(vs[1].index, vs[3].index, vs[0].index);
+        } else {
+            // insert the diagonal 0-2
+            indices.insert_triangle(vs[0].index, vs[1].index, vs[2].index);
+            indices.insert_triangle(vs[0].index, vs[2].index, vs[3].index);
+        }
     }
 }
 

@@ -77,7 +77,8 @@ fn setup(
 ) {
     for algo in [
         TriangulationAlgorithm::Delaunay,
-        /*TriangulationAlgorithm::Sweep,
+        /*TriangulationAlgorithm::SweepDelaunay,
+        TriangulationAlgorithm::Sweep,
         TriangulationAlgorithm::SweepDynamic,
         TriangulationAlgorithm::EarClipping,
         TriangulationAlgorithm::Fan,*/

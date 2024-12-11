@@ -429,17 +429,16 @@ mod tests {
     fn verify_triangulation<S: ScalarPlus, V: IndexType, V2: Vector2D<S = S>, Poly: Polygon<V2>>(
         vec2s: &Vec<IndexedVertex2D<V, V2>>,
     ) {
-        let _w_lin = verify_triangulation_i::<S, V, V2, Poly, LinearMonoTriangulator<V, V2>>(vec2s);
+        let w_lin = verify_triangulation_i::<S, V, V2, Poly, LinearMonoTriangulator<V, V2>>(vec2s);
         //verify_triangulation_i::<S, V, V2, Poly, DelaunayMonoTriangulator<V, V2>>(vec2s);
-        let _w_dyn =
+        let w_dyn =
             verify_triangulation_i::<S, V, V2, Poly, DynamicMonoTriangulator<V, V2, Poly>>(vec2s);
 
-        // TODO: assert that dynamic is smaller than linear/delaunay
-        /*println!("w_lin: {}, w_dyn: {}", w_lin, w_dyn);
+        println!("w_lin: {}, w_dyn: {} {}", w_lin, w_dyn, vec2s.len());
         assert!(
-            w_dyn <= w_lin,
+            w_lin - w_dyn + Scalar::sqrt(S::EPS) >= S::zero(),
             "Dynamic weight must be smaller than linear weight"
-        );*/
+        );
     }
 
     // tests the triangulations with different scalar types
@@ -627,9 +626,7 @@ mod tests {
 
     #[test]
     fn numerical_hell_8() {
-        // TODO: how to make this numerically stable? This is due to numerical instability, but sorting them differently could probably avoid this. At which point of the algorithm does this happen? During monotone polygon triangulation?
-        // see https://www.desmos.com/calculator/stf8nkndr7
-        // this will provoke intersecting edges where they actually intersect!
+        // this tries to provoke intersecting edges when the angle calculations are approximate (i.e., bevy's `angle_to` fails this test)
         verify_triangulations(&liv_from_array(&[
             [4.5899906, 0.0],
             [0.7912103, 0.7912103],
@@ -674,7 +671,7 @@ mod tests {
     fn sweep_fuzz() {
         for _ in 1..100000 {
             let vec2s =
-                IndexedVertex2D::from_vector(random_star::<Vec2>(5, 10, f32::EPS, 1.0).collect());
+                IndexedVertex2D::from_vector(random_star::<Vec2<f64>>(5, 10, f32::EPS, 1.0).collect());
 
             println!(
                 "vec2s: {:?}",
@@ -683,6 +680,5 @@ mod tests {
 
             verify_triangulations(&vec2s);
         }
-    }
-    */
+    }*/
 }
