@@ -3,3 +3,6 @@
 bench_results.jl
 bench_results.jl.back
 graph.png
+flamegraph.svg
+*.old
+*.data

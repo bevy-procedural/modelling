@@ -7,7 +7,6 @@ publish = false
 
 [dependencies]
 bevy = { version = "^0.15.0", default-features = true }
-criterion = { version = "0.5.1", features = ["html_reports"] }
 
 [dependencies.procedural_modelling]
 path = "../../"

@@ -102,7 +102,7 @@ pub struct SweepLineStatus<MT: MonotoneTriangulator> {
 impl<MT: MonotoneTriangulator> SweepLineStatus<MT> {
     pub fn new() -> Self {
         SweepLineStatus {
-            left: HashMap::new(),
+            left: HashMap::new().hasher(),
             right: HashMap::new(),
             tree: None,
         }

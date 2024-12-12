@@ -26,6 +26,7 @@ pub fn sweep_line_triangulation<MT: MonotoneTriangulator>(
     for here in 0..vec2s.len() {
         event_queue.push(EventPoint::classify::<MT::V>(here, &vec2s));
     }
+    // PERF: This is slow (15% of time for 10000 vertices) due to copy operations. Maybe only calculate the sort permutation? 
     event_queue.sort_unstable();
 
     let vt = event_queue.first().unwrap().vertex_type;
@@ -293,6 +294,7 @@ impl<'a, 'b, MT: MonotoneTriangulator> SweepContext<'a, 'b, MT> {
         undecisive: bool,
     ) {
         // PERF: find whether to expect the left or right side beforehand. The lookup is expensive.
+        // PERF: Removing and inserting into the Hashmap in the SLS is the most expensive thing (75% of time for 10000 vertices)
 
         if let Some(mut interval) = self.sls.remove_left(event.here, &self.vec2s) {
             if undecisive {
