@@ -143,6 +143,5 @@ impl<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2>> MonotoneTriangulator
         if !try_min_weight_small_direct::<V, Vec2, Poly>(&vs, indices) {
             minweight_dynamic_direct::<V, Vec2, Poly>(&vs, indices);
         }
-        //ear_clipping_direct(&vs, indices, false);
     }
 }

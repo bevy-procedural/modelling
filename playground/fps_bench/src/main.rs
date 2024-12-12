@@ -76,12 +76,12 @@ fn setup(
     mut mesh_list: ResMut<MeshList>,
 ) {
     for algo in [
-        //TriangulationAlgorithm::Delaunay,
+        TriangulationAlgorithm::Delaunay,
         TriangulationAlgorithm::SweepDelaunay,
-        /*TriangulationAlgorithm::Sweep,
+        TriangulationAlgorithm::Sweep,
         TriangulationAlgorithm::SweepDynamic,
         TriangulationAlgorithm::EarClipping,
-        TriangulationAlgorithm::Fan,*/
+        TriangulationAlgorithm::Fan,
         //TriangulationAlgorithm::Auto,
     ] {
         for (name, num_vertices, mesh) in [
@@ -89,14 +89,14 @@ fn setup(
             ("circle", 100, BevyMesh3d::regular_polygon(1.0, 100)),
             ("circle", 1000, BevyMesh3d::regular_polygon(1.0, 1000)),
             ("circle", 10000, BevyMesh3d::regular_polygon(1.0, 10000)),
-            //("circle", 100000, BevyMesh3d::regular_polygon(1.0, 100000)),
-            //("zigzag", 1000, zigzag(1000)),
+            ("circle", 100000, BevyMesh3d::regular_polygon(1.0, 100000)),
+            ("zigzag", 1000, zigzag(1000)),
             //("zigzag", 10000, zigzag(10000)),
         ] {
-            if num_vertices > 1000
-                && (algo == TriangulationAlgorithm::EarClipping
-                    || algo == TriangulationAlgorithm::SweepDynamic)
-            {
+            if num_vertices > 1000 && (algo == TriangulationAlgorithm::SweepDynamic) {
+                continue;
+            }
+            if num_vertices > 10000 && (algo == TriangulationAlgorithm::EarClipping) {
                 continue;
             }
             mesh_list.0.push(BenchmarkStats {
