@@ -25,7 +25,7 @@ enum ChainDirection {
 /// They will come as two chains, one for the left and one for the right side of the polygon.
 /// It doesn't have to store all vertices - it's fine to do all the proccessing in
 /// the `left` and `right` functions and not doing anything in `finish`.
-pub trait MonotoneTriangulator: Sized + std::fmt::Debug {
+pub trait MonotoneTriangulator: Sized + std::fmt::Debug + Clone{
     /// The index type used in the mesh
     type V: IndexType;
 

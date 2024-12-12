@@ -17,9 +17,9 @@ use crate::{
 /// 1. The reflex chain contains vertices from either the left or right chain at any given time.
 /// 2. Triangulation ensures that all visible triangles are processed in the correct order.
 /// 3. The last vertex added is at the top of the stack, ensuring efficient visibility checks.
+#[derive(Clone)]
 pub struct LinearMonoTriangulator<V: IndexType, Vec2: Vector2D> {
     // TODO: Replace usize with V
-    
     /// Stack of vertices representing the reflex chain.
     stack: Vec<usize>,
     /// Direction of the current reflex chain (Left, Right, None).

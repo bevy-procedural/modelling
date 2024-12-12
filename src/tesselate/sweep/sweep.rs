@@ -92,7 +92,7 @@ impl<'a, 'b, MT: MonotoneTriangulator> SweepContext<'a, 'b, MT> {
         vec2s: &'a Vec<IndexedVertex2D<MT::V, MT::Vec2>>,
     ) -> Self {
         return Self {
-            sls: SweepLineStatus::new(),
+            sls: SweepLineStatus::new(vec2s.len()),
             tri,
             vec2s,
         };

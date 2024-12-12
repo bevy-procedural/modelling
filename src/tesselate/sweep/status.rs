@@ -3,7 +3,7 @@ use crate::{
     math::{IndexType, Scalar, Vector, Vector2D},
     mesh::IndexedVertex2D,
 };
-use std::collections::{BTreeSet, HashMap};
+use std::collections::BTreeSet;
 
 /// Sweep Line Interval Sorter
 #[derive(Clone)]
@@ -90,22 +90,25 @@ impl<Vec2: Vector2D> SLISorter<Vec2> {
 /// that are currently inside the polygon.
 pub struct SweepLineStatus<MT: MonotoneTriangulator> {
     /// The sweep lines, ordered by the target vertex index of the left edge
-    left: HashMap<usize, SweepLineInterval<MT>>,
+    left: Vec<Option<SweepLineInterval<MT>>>,
 
     /// Maps right targets to left targets
-    right: HashMap<usize, usize>,
+    right: Vec<usize>,
 
     /// Use a b-tree to quickly find the correct interval
     tree: Option<BTreeSet<SLISorter<MT::Vec2>>>,
 }
 
 impl<MT: MonotoneTriangulator> SweepLineStatus<MT> {
-    pub fn new() -> Self {
-        SweepLineStatus {
-            left: HashMap::new().hasher(),
-            right: HashMap::new(),
+    pub fn new(capacity: usize) -> Self {
+        let mut r = SweepLineStatus {
+            left: Vec::with_capacity(capacity),
+            right: Vec::with_capacity(capacity),
             tree: None,
-        }
+        };
+        r.left.resize_with(capacity, || None);
+        r.right.resize_with(capacity, || usize::MAX);
+        r
     }
 
     pub fn insert(
@@ -120,8 +123,9 @@ impl<MT: MonotoneTriangulator> SweepLineStatus<MT> {
             .as_mut()
             .map(|tree| assert!(tree.insert(SLISorter::from_interval(&value, vec2s))));
 
-        self.right.insert(value.right.end, value.left.end);
-        self.left.insert(value.left.end, value);
+        self.right[value.right.end] = value.left.end;
+        let le = value.left.end;
+        self.left[le] = Some(value);
     }
 
     pub fn remove_left(
@@ -129,11 +133,12 @@ impl<MT: MonotoneTriangulator> SweepLineStatus<MT> {
         key: usize,
         vec2s: &Vec<IndexedVertex2D<MT::V, MT::Vec2>>,
     ) -> Option<SweepLineInterval<MT>> {
-        if let Some(v) = self.left.remove(&key) {
+        if let Some(v) = self.left.get_mut(key).and_then(|opt| opt.take()) {
+            assert!(self.left[key].is_none());
             self.tree
                 .as_mut()
                 .map(|tree| assert!(tree.remove(&SLISorter::from_interval(&v, vec2s))));
-            self.right.remove(&v.right.end);
+            self.right[v.right.end] = usize::MAX;
             Some(v)
         } else {
             None
@@ -141,7 +146,7 @@ impl<MT: MonotoneTriangulator> SweepLineStatus<MT> {
     }
 
     pub fn peek_left(&self, key: usize) -> Option<&SweepLineInterval<MT>> {
-        self.left.get(&key)
+        self.left[key].as_ref()
     }
 
     pub fn remove_right(
@@ -149,20 +154,28 @@ impl<MT: MonotoneTriangulator> SweepLineStatus<MT> {
         key: usize,
         vec2s: &Vec<IndexedVertex2D<MT::V, MT::Vec2>>,
     ) -> Option<SweepLineInterval<MT>> {
-        if let Some(k) = self.right.remove(&key) {
-            self.left.remove(&k).map(|v| {
+        let k = self.right[key];
+        if k != usize::MAX {
+            self.right[key] = usize::MAX;
+            if let Some(v) = self.left.get_mut(k).and_then(|opt| opt.take()) {
+                assert!(self.left[k].is_none());
                 self.tree
                     .as_mut()
                     .map(|tree| tree.remove(&SLISorter::from_interval(&v, vec2s)));
-                v
-            })
+                return Some(v);
+            }
+            return None;
         } else {
             None
         }
     }
 
     pub fn peek_right(&self, key: usize) -> Option<&SweepLineInterval<MT>> {
-        self.right.get(&key).and_then(|k| self.peek_left(*k))
+        let k = self.right[key];
+        if k != usize::MAX {
+            return self.peek_left(k);
+        }
+        return None;
     }
 
     pub fn tree_sanity_check(&self, at: <MT::Vec2 as Vector2D>::S) -> bool {
@@ -192,8 +205,14 @@ impl<MT: MonotoneTriangulator> SweepLineStatus<MT> {
     ) -> Option<usize> {
         self.left
             .iter()
-            .find(|(_, v)| v.contains(pos, vec2s))
-            .map(|(k, _)| *k)
+            .enumerate()
+            .find(|(_, v)| {
+                if let Some(vv) = &v {
+                    return vv.contains(pos, vec2s);
+                }
+                return false;
+            })
+            .map(|(k, _)| k)
     }
 
     /// Find an interval by its coordinates on the sweep line using binary search.
@@ -232,8 +251,10 @@ impl<MT: MonotoneTriangulator> SweepLineStatus<MT> {
         );
 
         if let Some(i) = x {
-            if self.left[&i].contains(pos, vec2s) {
-                return x;
+            if let Some(v) = &self.left[i] {
+                if v.contains(pos, vec2s) {
+                    return x;
+                }
             }
         }
         None
@@ -243,8 +264,10 @@ impl<MT: MonotoneTriangulator> SweepLineStatus<MT> {
     fn init_btree(&mut self, vec2s: &Vec<IndexedVertex2D<MT::V, MT::Vec2>>) {
         assert!(self.tree.is_none());
         let mut tree = BTreeSet::new();
-        for (_, v) in &self.left {
-            tree.insert(SLISorter::from_interval(v, vec2s));
+        for mv in &self.left {
+            if let Some(v) = mv {
+                tree.insert(SLISorter::from_interval(v, vec2s));
+            }
         }
         self.tree = Some(tree);
     }
@@ -274,8 +297,10 @@ impl<MT: MonotoneTriangulator> SweepLineStatus<MT> {
 impl<MT: MonotoneTriangulator> std::fmt::Debug for SweepLineStatus<MT> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "SweepLineStatus:\n")?;
-        for (k, v) in &self.left {
-            write!(f, "  {}: {:?}\n", k, v)?;
+        for (k, v) in self.left.iter().enumerate() {
+            if let Some(v) = v {
+                write!(f, "  {}: {:?}\n", k, v)?;
+            }
         }
         Ok(())
     }

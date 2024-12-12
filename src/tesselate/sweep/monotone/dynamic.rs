@@ -62,7 +62,7 @@ Result Retrieval:
 ///
 /// For the quality of the approximation it is generally beneficial to rotate the mesh
 /// such that the mesh can be decomposed in a large number of y-monotone components.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DynamicMonoTriangulator<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2>> {
     left: Vec<usize>,
     right: Vec<usize>,

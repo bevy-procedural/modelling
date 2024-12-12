@@ -71,6 +71,7 @@ fn circumcircle_contains<Vec2: Vector2D>(p1: &Vec2, p2: &Vec2, p3: &Vec2, p: &Ve
 /// A monotone triangulator that tries to build triangles that are locally Delaunay by
 /// checking the inCircle property. When adding a new vertex, it attempts to form
 /// diagonals that do not violate the Delaunay condition.
+#[derive(Clone)]
 pub struct DelaunayMonoTriangulator<V: IndexType, Vec2: Vector2D> {
     stack: Vec<usize>,
     d: ChainDirection,
