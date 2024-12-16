@@ -84,7 +84,7 @@ pub fn ear_clipping_direct<Vec2: Vector2D, V: IndexType>(
             }
         }
 
-        indices.insert_triangle(vs[i_a].1, vs[i_b].1, vs[i_c].1);
+        indices.insert_triangle(vs[i_a].1, vs[i_c].1, vs[i_b].1);
         clipped[i_b] = true;
         n -= 1;
         fails_since_advance = 0;
