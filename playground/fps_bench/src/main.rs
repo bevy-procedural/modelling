@@ -76,12 +76,12 @@ fn setup(
     mut mesh_list: ResMut<MeshList>,
 ) {
     for algo in [
-        TriangulationAlgorithm::Delaunay,
-        TriangulationAlgorithm::SweepDelaunay,
+        /*TriangulationAlgorithm::Delaunay,
+        TriangulationAlgorithm::SweepDelaunay,*/
         TriangulationAlgorithm::Sweep,
-        TriangulationAlgorithm::SweepDynamic,
+        /*TriangulationAlgorithm::SweepDynamic,
         TriangulationAlgorithm::EarClipping,
-        TriangulationAlgorithm::Fan,
+        TriangulationAlgorithm::Fan,*/
         //TriangulationAlgorithm::Auto,
     ] {
         for (name, num_vertices, mesh) in [

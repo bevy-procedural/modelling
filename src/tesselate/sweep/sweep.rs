@@ -5,7 +5,10 @@ use super::{
     status::SweepLineStatus,
     SweepMeta, VertexType,
 };
-use crate::mesh::{IndexedVertex2D, Triangulation};
+use crate::{
+    math::{Vector, Vector2D},
+    mesh::{IndexedVertex2D, Triangulation},
+};
 
 /// Perform the sweep line triangulation
 /// The sweep line moves from the top (positive y) to the bottom (negative y).
@@ -20,13 +23,13 @@ pub fn sweep_line_triangulation<MT: MonotoneTriangulator>(
     vec2s: &Vec<IndexedVertex2D<MT::V, MT::Vec2>>,
     meta: &mut SweepMeta<MT::V>,
 ) {
-    assert!(vec2s.len() >= 3, "At least 3 vertices are required");
+    let n = vec2s.len();
+    assert!(n >= 3, "At least 3 vertices are required");
 
-    let mut event_queue: Vec<EventPoint<MT::Vec2>> = Vec::new();
-    for here in 0..vec2s.len() {
-        event_queue.push(EventPoint::classify::<MT::V>(here, &vec2s));
+    let mut event_queue: Vec<EventPoint<MT::Vec2>> = Vec::with_capacity(n);
+    for i in 0..n {
+        event_queue.push(EventPoint::classify(i, &vec2s));
     }
-    // PERF: This is slow (15% of time for 10000 vertices) due to copy operations. Maybe only calculate the sort permutation? 
     event_queue.sort_unstable();
 
     let vt = event_queue.first().unwrap().vertex_type;
