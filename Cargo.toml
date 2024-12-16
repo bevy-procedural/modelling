@@ -107,6 +107,12 @@ opt-level = "z"
 lto = "fat"
 codegen-units = 1
 
+# When profiling, we want to enable debug info and all optimizations
 [profile.profiling]
 inherits = "release"
 debug = true
+
+# docs.rs-specific configuration
+[package.metadata.docs.rs]
+# document all features
+all-features = true

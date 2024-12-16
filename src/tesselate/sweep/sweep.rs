@@ -5,10 +5,7 @@ use super::{
     status::SweepLineStatus,
     SweepMeta, VertexType,
 };
-use crate::{
-    math::{Vector, Vector2D},
-    mesh::{IndexedVertex2D, Triangulation},
-};
+use crate::mesh::{IndexedVertex2D, Triangulation};
 
 /// Perform the sweep line triangulation
 /// The sweep line moves from the top (positive y) to the bottom (negative y).
