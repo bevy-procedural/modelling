@@ -2,10 +2,11 @@ use crate::math::{HasZero, Scalar, TransformTrait, Transformable, Vector, Vector
 use bevy::math::{Affine2, Vec2};
 
 impl Vector<f32, 2> for Vec2 {
-    #[inline(always)]
+    // Don't use the bevy implementation since it is approximate!
+    /*#[inline(always)]
     fn angle_between(&self, other: Self) -> f32 {
         Vec2::angle_to(*self, other)
-    }
+    }*/
 
     #[inline(always)]
     fn distance(&self, other: &Self) -> f32 {
@@ -104,11 +105,6 @@ impl Vector2D for Vec2 {
         Vec2::new(x, y)
     }
 
-    /// Angle between two vectors.
-    fn angle_tri(&self, a: Self, b: Self) -> f32 {
-        Vec2::angle_to(a - *self, b - *self)
-    }
-
     fn perp_dot(&self, other: &Self) -> Self::S {
         Vec2::perp_dot(*self, *other)
     }
@@ -181,5 +177,72 @@ impl Transformable<2> for Vec2 {
     fn lerp(&mut self, other: &Self, t: Self::S) -> &mut Self {
         *self = bevy::math::Vec2::lerp(*self, *other, t);
         self
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::math::{Vector, Vector2D};
+
+    #[test]
+    #[cfg(feature = "nalgebra")]
+    fn test_vec2_bevy_nalgebra() {
+        use crate::extensions::nalgebra as na;
+
+        let a = Vec2::new(1.0, 0.0);
+        let b = Vec2::new(0.0, 1.0);
+        let to_na = |v: Vec2| na::Vec2::<f32>::new(v.x(), v.y());
+
+        assert!(Vector2D::angle_tri(&Vec2::ZERO, a, b).is_about(std::f32::consts::FRAC_PI_2, 1e-6));
+        assert!(Vector2D::angle_tri(&Vector::zero(), to_na(a), to_na(b))
+            .is_about(std::f32::consts::FRAC_PI_2, 1e-6));
+
+        assert!(Vector2D::perp_dot(&a, &b).is_about(1.0, 1e-6));
+        assert!(Vector2D::perp_dot(&to_na(a), &to_na(b)).is_about(1.0, 1e-6));
+
+        let c = Vec2::new(1.0, 1.0);
+        let d = Vec2::new(-1.0, 1.0);
+
+        assert!(Vector2D::angle_tri(&a, c, d).is_about(1.1071486, 1e-6));
+        assert!(Vector2D::angle_tri(&to_na(a), to_na(c), to_na(d)).is_about(1.1071486, 1e-6));
+
+        assert!(Vector2D::perp_dot(&c, &d).is_about(2.0, 1e-6));
+        assert!(Vector2D::perp_dot(&to_na(c), &to_na(d)).is_about(2.0, 1e-6));
+
+        // TODO: more
+    }
+
+    #[test]
+    #[cfg(feature = "nalgebra")]
+    fn test_vec2_bevy_nalgebra_fuzzer() {
+        use crate::extensions::nalgebra as na;
+
+        for _ in 1..10 {
+            let a = Vec2::new(rand::random(), rand::random());
+            let b = Vec2::new(rand::random(), rand::random());
+
+            // some minimum length
+            if a.length() <= 1e-04 || b.length() <= 1e-04 {
+                continue;
+            }
+
+            let to_na = |v: Vec2| na::Vec2::<f32>::new(v.x(), v.y());
+
+            println!(
+                "a: {:?}, b: {:?} {} {}",
+                a,
+                b,
+                Vector2D::angle_tri(&Vector::zero(), a, b),
+                Vector2D::angle_tri(&Vector::zero(), to_na(a), to_na(b))
+            );
+
+            assert!(Vector2D::angle_tri(&Vector::zero(), a, b).is_about(
+                Vector2D::angle_tri(&Vector::zero(), to_na(a), to_na(b)),
+                1e-6
+            ));
+
+            assert!(Vector2D::perp_dot(&a, &b).is_about(Vector2D::perp_dot(&a, &b), 1e-6));
+        }
     }
 }

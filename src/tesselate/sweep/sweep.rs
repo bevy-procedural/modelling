@@ -5,7 +5,10 @@ use super::{
     status::SweepLineStatus,
     SweepMeta, VertexType,
 };
-use crate::mesh::{IndexedVertex2D, Triangulation};
+use crate::{
+    math::{Vector, Vector2D},
+    mesh::{IndexedVertex2D, Triangulation},
+};
 
 /// Perform the sweep line triangulation
 /// The sweep line moves from the top (positive y) to the bottom (negative y).
@@ -20,11 +23,12 @@ pub fn sweep_line_triangulation<MT: MonotoneTriangulator>(
     vec2s: &Vec<IndexedVertex2D<MT::V, MT::Vec2>>,
     meta: &mut SweepMeta<MT::V>,
 ) {
-    assert!(vec2s.len() >= 3, "At least 3 vertices are required");
+    let n = vec2s.len();
+    assert!(n >= 3, "At least 3 vertices are required");
 
-    let mut event_queue: Vec<EventPoint<MT::Vec2>> = Vec::new();
-    for here in 0..vec2s.len() {
-        event_queue.push(EventPoint::classify::<MT::V>(here, &vec2s));
+    let mut event_queue: Vec<EventPoint<MT::Vec2>> = Vec::with_capacity(n);
+    for i in 0..n {
+        event_queue.push(EventPoint::classify(i, &vec2s));
     }
     event_queue.sort_unstable();
 
@@ -91,7 +95,7 @@ impl<'a, 'b, MT: MonotoneTriangulator> SweepContext<'a, 'b, MT> {
         vec2s: &'a Vec<IndexedVertex2D<MT::V, MT::Vec2>>,
     ) -> Self {
         return Self {
-            sls: SweepLineStatus::new(),
+            sls: SweepLineStatus::new(vec2s.len()),
             tri,
             vec2s,
         };
@@ -293,6 +297,7 @@ impl<'a, 'b, MT: MonotoneTriangulator> SweepContext<'a, 'b, MT> {
         undecisive: bool,
     ) {
         // PERF: find whether to expect the left or right side beforehand. The lookup is expensive.
+        // PERF: Removing and inserting into the Hashmap in the SLS is the most expensive thing (75% of time for 10000 vertices)
 
         if let Some(mut interval) = self.sls.remove_left(event.here, &self.vec2s) {
             if undecisive {
@@ -392,31 +397,91 @@ impl<'a, 'b, MT: MonotoneTriangulator> SweepContext<'a, 'b, MT> {
 #[cfg(test)]
 #[cfg(feature = "nalgebra")]
 mod tests {
+    use std::collections::HashMap;
+
+    use itertools::Itertools;
+
     use super::*;
-    use crate::{extensions::nalgebra::*, prelude::*, tesselate::sweep::LinearMonoTriangulator};
+    use crate::{
+        extensions::nalgebra::*,
+        prelude::*,
+        tesselate::sweep::{DelaunayMonoTriangulator, LinearMonoTriangulator},
+    };
 
     fn verify_triangulation_i<
         S: Scalar,
-        MT: MonotoneTriangulator<V = usize, Vec2 = Vec2<S>>,
+        V: IndexType,
+        V2: Vector2D<S = S>,
+        Poly: Polygon<V2>,
+        MT: MonotoneTriangulator<V = V, Vec2 = V2>,
     >(
-        vec2s: &Vec<IndexedVertex2D<usize, Vec2<S>>>,
-    ) {
+        vec2s: &Vec<IndexedVertex2D<V, V2>>,
+    ) -> S {
         assert!(
-            Polygon2d::<S>::from_iter(vec2s.iter().map(|v| v.vec)).is_ccw(),
+            Poly::from_iter(vec2s.iter().map(|v| v.vec)).is_ccw(),
             "Polygon must be counterclockwise"
         );
         let mut indices = Vec::new();
         let mut tri = Triangulation::new(&mut indices);
         let mut meta = SweepMeta::default();
         sweep_line_triangulation::<MT>(&mut tri, &vec2s, &mut meta);
-        tri.verify_full::<Vec2<S>, Polygon2d<S>>(vec2s);
+        tri.verify_full::<V2, Poly>(vec2s);
+        let vec_hm: HashMap<V, V2> = vec2s.iter().map(|v| (v.index, v.vec)).collect();
+        tri.total_edge_weight(&vec_hm)
     }
 
-    fn verify_triangulation<S: Scalar>(vec2s: &Vec<IndexedVertex2D<usize, Vec2<S>>>) {
-        //println!("LINEAR");
-        verify_triangulation_i::<S, LinearMonoTriangulator<usize, Vec2<S>>>(vec2s);
-        //println!("DYNAMIC");
-        //verify_triangulation_i::<DynamicMonoTriangulator<usize, Vec2, Bevy2DPolygon>>(vec2s);
+    // tests the triangulations with different algorithms
+    fn verify_triangulation<S: ScalarPlus, V: IndexType, V2: Vector2D<S = S>, Poly: Polygon<V2>>(
+        vec2s: &Vec<IndexedVertex2D<V, V2>>,
+    ) {
+        let w_lin = verify_triangulation_i::<S, V, V2, Poly, LinearMonoTriangulator<V, V2>>(vec2s);
+        let w_del =
+            verify_triangulation_i::<S, V, V2, Poly, DelaunayMonoTriangulator<V, V2>>(vec2s);
+        let w_dyn =
+            verify_triangulation_i::<S, V, V2, Poly, DynamicMonoTriangulator<V, V2, Poly>>(vec2s);
+
+        println!("w_lin: {}, w_dyn: {}, w_del: {}", w_lin, w_dyn, w_del);
+        assert!(
+            w_lin - w_dyn + Scalar::sqrt(S::EPS) >= S::zero(),
+            "Dynamic weight must be smaller than linear weight"
+        );
+    }
+
+    // tests the triangulations with different scalar types
+    fn verify_triangulations(vec2s: &Vec<IndexedVertex2D<usize, Vec2<f64>>>) {
+        verify_triangulation::<f64, usize, Vec2<f64>, Polygon2d<f64>>(vec2s);
+
+        let vec2sf32 = vec2s
+            .iter()
+            .map(|v| {
+                IndexedVertex2D::<u32, Vec2<f32>>::new(
+                    Vec2::new(v.vec.x as f32, v.vec.y as f32),
+                    v.index as u32,
+                )
+            })
+            .collect_vec();
+
+        verify_triangulation::<f32, u32, Vec2<f32>, Polygon2d<f32>>(&vec2sf32);
+
+        #[cfg(feature = "bevy")]
+        {
+            let vec2bevy = vec2s
+                .iter()
+                .map(|v| {
+                    IndexedVertex2D::<u32, bevy::math::Vec2>::new(
+                        bevy::math::Vec2::new(v.vec.x as f32, v.vec.y as f32),
+                        v.index as u32,
+                    )
+                })
+                .collect_vec();
+
+            verify_triangulation::<
+                f32,
+                u32,
+                bevy::math::Vec2,
+                crate::extensions::bevy::Polygon2dBevy,
+            >(&vec2bevy);
+        }
     }
 
     fn liv_from_array<S: Scalar>(arr: &[[S; 2]]) -> Vec<IndexedVertex2D<usize, Vec2<S>>> {
@@ -428,12 +493,12 @@ mod tests {
 
     #[test]
     fn sweep_triangle() {
-        verify_triangulation(&liv_from_array::<f64>(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]));
+        verify_triangulations(&liv_from_array(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]));
     }
 
     #[test]
     fn sweep_square() {
-        verify_triangulation(&liv_from_array(&[
+        verify_triangulations(&liv_from_array(&[
             [0.0, 0.0],
             [1.0, 0.0],
             [1.0, 1.0],
@@ -441,26 +506,19 @@ mod tests {
         ]));
     }
 
-    /*#[test]
+    #[test]
     fn sweep_tricky_quad() {
-        verify_triangulation(&liv_from_array::<f32>(&[
+        verify_triangulations(&liv_from_array(&[
             [1.0, 0.0],
             [0.0, 1.0],
             [-1.0, 0.0],
             [0.0, 0.9],
         ]));
-        verify_triangulation(&liv_from_array::<f64>(&[
-            [1.0, 0.0],
-            [0.0, 1.0],
-            [-1.0, 0.0],
-            [0.0, 0.9],
-        ]));
-    }*/
+    }
 
-    /*
     #[test]
     fn sweep_tricky_shape() {
-        verify_triangulation(&liv_from_array(&[
+        verify_triangulations(&liv_from_array(&[
             // front
             [1.0, 1.0],
             [0.5, -0.9],
@@ -475,11 +533,11 @@ mod tests {
             [0.8, -0.8],
             [1.0, -1.0],
         ]));
-    }*/
+    }
 
     #[test]
     fn sweep_zigzag() {
-        verify_triangulation(
+        verify_triangulations(
             &generate_zigzag::<Vec2<f64>>(100)
                 .enumerate()
                 .map(|(i, v)| IndexedVertex2D::new(v, i))
@@ -487,11 +545,22 @@ mod tests {
         );
     }
 
-    /*
+    #[test]
+    fn sweep_circle() {
+        verify_triangulations(
+            &(0..100)
+                .into_iter()
+                .map(|i| {
+                    let a = i as f64 * 2.0 * std::f64::consts::PI / 100.0;
+                    IndexedVertex2D::new(Vec2::new(a.cos(), a.sin()), i)
+                })
+                .collect(),
+        );
+    }
 
     #[test]
     fn numerical_hell_1() {
-        verify_triangulation(&liv_from_array(&[
+        verify_triangulations(&liv_from_array(&[
             [2.001453, 0.0],
             [0.7763586, 2.3893864],
             [-3.2887821, 2.3894396],
@@ -502,7 +571,7 @@ mod tests {
 
     #[test]
     fn numerical_hell_2() {
-        verify_triangulation(&liv_from_array(&[
+        verify_triangulations(&liv_from_array(&[
             [2.8768363, 0.0],
             [1.6538008, 2.0738008],
             [-0.5499903, 2.4096634],
@@ -516,7 +585,7 @@ mod tests {
     #[test]
     fn numerical_hell_3() {
         // has a hidden end vertex
-        verify_triangulation(&liv_from_array(&[
+        verify_triangulations(&liv_from_array(&[
             [7.15814, 0.0],
             [2.027697, 2.542652],
             [-1.5944574, 6.98577],
@@ -530,7 +599,7 @@ mod tests {
     #[test]
     fn numerical_hell_4() {
         // has a hidden merge vertex
-        verify_triangulation(&liv_from_array(&[
+        verify_triangulations(&liv_from_array(&[
             [5.1792994, 0.0],
             [0.46844417, 0.5874105],
             [-0.13406669, 0.58738416],
@@ -544,7 +613,7 @@ mod tests {
     #[test]
     fn numerical_hell_5() {
         // has a undecisive end vertex
-        verify_triangulation(&liv_from_array(&[
+        verify_triangulations(&liv_from_array(&[
             [9.576968, 0.0],
             [-3.2991974e-7, 7.5476837],
             [-0.9634365, -8.422629e-8],
@@ -556,7 +625,7 @@ mod tests {
     fn numerical_hell_6() {
         // has vertices with quite different y that still cause problems with being to parallel to the sweep line
         // vertex 2 might appear to be a start or split, but it turns out to be a merge. Quite tricky.
-        verify_triangulation(&liv_from_array(&[
+        verify_triangulations(&liv_from_array(&[
             [1.9081093, 0.0],
             [0.0056778197, 0.007119762],
             [-0.0015940086, 0.0069838036],
@@ -570,7 +639,7 @@ mod tests {
     #[test]
     fn numerical_hell_7() {
         // this will provoke intersecting edges with almost collinear edges
-        verify_triangulation(&liv_from_array(&[
+        verify_triangulations(&liv_from_array(&[
             [3.956943, 0.0],
             [0.42933345, 1.3213526],
             [-4.2110167, 3.059482],
@@ -579,24 +648,21 @@ mod tests {
         ]));
     }
 
-    /*
     #[test]
     fn numerical_hell_8() {
-        // TODO: how to make this numerically stable? This is due to numerical instability, but sorting them differently could probably avoid this. At which point of the algorithm does this happen? During monotone polygon triangulation?
-        // see https://www.desmos.com/calculator/stf8nkndr7
-        // this will provoke intersecting edges where they actually intersect!
-        verify_triangulation(&liv_from_array(&[
+        // this tries to provoke intersecting edges when the angle calculations are approximate (i.e., bevy's `angle_to` fails this test)
+        verify_triangulations(&liv_from_array(&[
             [4.5899906, 0.0],
             [0.7912103, 0.7912103],
             [-4.2923173e-8, 0.9819677],
             [-1.2092295, 1.2092295],
             [-0.835097, -7.30065e-8],
         ]));
-    }*/
+    }
 
     #[test]
     fn numerical_hell_9() {
-        verify_triangulation(&liv_from_array(&[
+        verify_triangulations(&liv_from_array(&[
             [1.877369, 0.0],
             [0.72744876, 0.912192],
             [-0.037827354, 0.16573237],
@@ -609,7 +675,7 @@ mod tests {
 
     #[test]
     fn numerical_hell_10() {
-        verify_triangulation(&liv_from_array(&[
+        verify_triangulations(&liv_from_array(&[
             [0.8590163, 0.0],
             [0.52688754, 0.52688754],
             [-3.721839e-8, 0.8514575],
@@ -629,16 +695,14 @@ mod tests {
     fn sweep_fuzz() {
         for _ in 1..100000 {
             let vec2s =
-                IndexedVertex2D::from_vector(random_star::<Vec2>(5, 10, f32::EPS, 1.0).collect());
+                IndexedVertex2D::from_vector(random_star::<Vec2<f64>>(5, 10, f32::EPS, 1.0).collect());
 
             println!(
                 "vec2s: {:?}",
                 vec2s.iter().map(|v| [v.vec.x, v.vec.y]).collect::<Vec<_>>()
             );
 
-            verify_triangulation(&vec2s);
+            verify_triangulations(&vec2s);
         }
-    }
-    */
-    */
+    }*/
 }

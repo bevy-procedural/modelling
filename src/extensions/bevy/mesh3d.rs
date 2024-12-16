@@ -1,4 +1,4 @@
-use super::{Bevy2DPolygon, BevyVertexPayload3d};
+use super::{Polygon2dBevy, BevyVertexPayload3d};
 use crate::{
     halfedge::{
         HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeImplMeshType, HalfEdgeMeshImpl, HalfEdgeVertexImpl,
@@ -45,7 +45,7 @@ impl EuclideanMeshType<3> for BevyMeshType3d32 {
     type Vec2 = Vec2;
     type Trans = bevy::transform::components::Transform;
     type Rot = Quat;
-    type Poly = Bevy2DPolygon;
+    type Poly = Polygon2dBevy;
 }
 impl HalfEdgeImplMeshType for BevyMeshType3d32 {}
 impl MeshTypeHalfEdge for BevyMeshType3d32 {}

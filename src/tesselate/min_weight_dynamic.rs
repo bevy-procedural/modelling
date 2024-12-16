@@ -4,6 +4,7 @@ use std::time::Instant;
 use crate::{
     math::{IndexType, Polygon, Scalar, Vector2D},
     mesh::{Face3d, FaceBasics, IndexedVertex2D, MeshType3D, Triangulation},
+    tesselate::try_min_weight_small,
 };
 
 /// The [min-weight triangulation problem](https://en.wikipedia.org/wiki/Minimum-weight_triangulation)
@@ -15,6 +16,10 @@ pub fn minweight_dynamic<T: MeshType3D>(
     indices: &mut Triangulation<T::V>,
 ) {
     debug_assert!(face.may_be_curved() || face.is_planar2(mesh));
+
+    if try_min_weight_small::<T>(face, mesh, indices) {
+        return;
+    }
 
     // TODO: Improve performance by directly using the nd-vertices instead of converting to 2d
     let vec2s: Vec<_> = face
@@ -424,21 +429,20 @@ pub fn minweight_dynamic_direct<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2
     indices: &mut Triangulation<V>,
 ) {
     let n = vs.len();
-    assert!(n >= 5, "n={} < 5", n);
+    assert!(n >= 4, "n={} < 4", n);
     let mut m = initialize_m(n);
     let mut s = TriangularStore::<usize>::new(n, IndexType::max());
 
-    let now = Instant::now();
+    //let now = Instant::now();
 
     let valid_diagonal = find_valid_diagonals::<V, Vec2, Poly>(n, &vs);
 
-    println!("Valid diagonals: {:?}", now.elapsed());
-    let now = Instant::now();
+    //println!("Valid diagonals: {:?}", now.elapsed());
+    //let now = Instant::now();
 
     fill_m(n, 2, n - 1, &mut m, &mut s, &valid_diagonal, &vs);
 
-    let ela = now.elapsed();
-    println!("Dynamic programming: {:?}", ela,);
+    //println!("Dynamic programming: {:?}", now.elapsed());
 
     traceback(n, 0, n - 1, &s, indices, &vs);
 }

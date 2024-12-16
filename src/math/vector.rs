@@ -75,20 +75,25 @@ pub trait Vector<S: Scalar, const D: usize>:
         sum / S::from_usize(count)
     }
 
-    /// Returns the angle between two vectors.
+    /// Returns the angle of rotation (in radians) from self to rhs in the range [0, +π] resp. [-π, +π] for 2d.
     fn angle_between(&self, other: Self) -> S {
         let len_self = self.length();
         let len_other = other.length();
 
-        if len_self.is_zero() || len_other.is_zero() {
+        if len_self.is_about(S::ZERO, S::EPS) || len_other.is_about(S::ZERO, S::EPS) {
             // Angle is undefined for zero-length vectors; handle as needed
             return S::ZERO;
         }
 
-        let cos_theta = self.dot(&other) / (len_self * len_other);
+        if D == 2 {
+            let det = self.x() * other.y() - self.y() * other.x();
+            det.atan2(self.dot(&other))
+        } else {                
+            let cos_theta = self.dot(&other) / (len_self * len_other);
 
-        // Clamp cos_theta to [-1, 1] to handle numerical inaccuracies
-        cos_theta.clamp(-S::ONE, S::ONE).acos()
+            // Clamp cos_theta to [-1, 1] to handle numerical inaccuracies
+            cos_theta.clamp(-S::ONE, S::ONE).acos()
+        }
     }
 
     /// Check if two vectors are approximately equal.

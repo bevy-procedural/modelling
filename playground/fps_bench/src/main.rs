@@ -6,8 +6,8 @@ use bevy::{
     window::{PresentMode, WindowMode, WindowResolution},
 };
 use procedural_modelling::{extensions::bevy::*, prelude::*};
-use std::io::Write;
 use std::time::Duration;
+use std::{io::Write, process::exit};
 
 #[derive(Resource, Clone, Debug)]
 struct BenchmarkStats {
@@ -76,11 +76,12 @@ fn setup(
     mut mesh_list: ResMut<MeshList>,
 ) {
     for algo in [
-        TriangulationAlgorithm::Delaunay,
+        /*TriangulationAlgorithm::Delaunay,
+        TriangulationAlgorithm::SweepDelaunay,*/
         TriangulationAlgorithm::Sweep,
-        TriangulationAlgorithm::SweepDynamic,
+        /*TriangulationAlgorithm::SweepDynamic,
         TriangulationAlgorithm::EarClipping,
-        TriangulationAlgorithm::Fan,
+        TriangulationAlgorithm::Fan,*/
         //TriangulationAlgorithm::Auto,
     ] {
         for (name, num_vertices, mesh) in [
@@ -88,14 +89,14 @@ fn setup(
             ("circle", 100, BevyMesh3d::regular_polygon(1.0, 100)),
             ("circle", 1000, BevyMesh3d::regular_polygon(1.0, 1000)),
             ("circle", 10000, BevyMesh3d::regular_polygon(1.0, 10000)),
-            //("circle", 100000, BevyMesh3d::regular_polygon(1.0, 100000)),
-            //("zigzag", 1000, zigzag(1000)),
+            ("circle", 100000, BevyMesh3d::regular_polygon(1.0, 100000)),
+            ("zigzag", 1000, zigzag(1000)),
             //("zigzag", 10000, zigzag(10000)),
         ] {
-            if num_vertices > 1000
-                && (algo == TriangulationAlgorithm::EarClipping
-                    || algo == TriangulationAlgorithm::SweepDynamic)
-            {
+            if num_vertices > 1000 && (algo == TriangulationAlgorithm::SweepDynamic) {
+                continue;
+            }
+            if num_vertices > 10000 && (algo == TriangulationAlgorithm::EarClipping) {
                 continue;
             }
             mesh_list.0.push(BenchmarkStats {
@@ -123,8 +124,15 @@ fn setup(
                     .render_times
                     .push(start.elapsed().as_secs_f64());
             }
+
+            /*println!("Rendering times for {} ", name);
+            for render_time in mesh_list.0.last().unwrap().render_times.iter() {
+                print!( "{:.10},", render_time);
+            }*/
         }
     }
+
+    //exit(0);
 
     commands.insert_resource(AmbientLight::default());
     commands.spawn((
@@ -187,11 +195,11 @@ fn update_mesh(
         for bench in mesh_list.0.iter() {
             write!(file, "[\"{}\", [", bench.name).unwrap();
             for frame_time in bench.frame_times.iter() {
-                write!(file, "{:.16},", frame_time).unwrap();
+                write!(file, "{:.10},", frame_time).unwrap();
             }
             write!(file, "], [",).unwrap();
             for render_time in bench.render_times.iter() {
-                write!(file, "{:.16},", render_time).unwrap();
+                write!(file, "{:.10},", render_time).unwrap();
             }
             writeln!(file, "]],",).unwrap();
         }

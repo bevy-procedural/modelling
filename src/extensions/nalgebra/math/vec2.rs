@@ -12,12 +12,7 @@ impl<S: Scalar> Vector2D for Vec2<S> {
         Self::from([x, y])
     }
 
-    /// Angle between two vectors.
-    fn angle_tri(&self, a: Self, b: Self) -> S {
-        (a - *self).angle_between(b - *self)
-    }
-
     fn perp_dot(&self, other: &Self) -> S {
-        self.x() * other.y() - self.y() * other.x()
+        (self.x() * other.y()) - (self.y() * other.x())
     }
 }

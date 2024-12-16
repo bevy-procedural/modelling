@@ -125,6 +125,7 @@ pub trait Face3d<T: MeshType3D<Face = Self>>: FaceBasics<T> {
         &'a self,
         mesh: &'a T::Mesh,
     ) -> impl Iterator<Item = (T::Vec2, T::V)> + Clone + ExactSizeIterator + 'a {
+        // PERF: Calculating the normal from all vertices in the face is slow. Maybe use a faster normal impl? Also, we're traversing the face twice!
         let z_axis = T::Vec::new(0.0.into(), 0.0.into(), 1.0.into());
         let rotation = <T::Trans as TransformTrait<T::S, 3>>::from_rotation_arc(
             Face3d::normal(self, mesh).normalize(),

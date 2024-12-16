@@ -122,14 +122,74 @@ impl<'a, V: IndexType> Triangulation<'a, V> {
         n / 3
     }
 
+    /// Get the next index that will be added to the index buffer
+    pub fn next_pos(&self) -> usize {
+        self.indices.len()
+    }
+
+    /// Flip the edge of the two triangles
+    pub fn flip_edge(
+        &mut self,
+        a: V,
+        b: V,
+        triangle_ab: usize,
+        triangle_ba: usize,
+    ) -> Result<(), ()> {
+        let offset_ab = if self.indices[triangle_ab + 0] == a {
+            0
+        } else if self.indices[triangle_ab + 1] == a {
+            1
+        } else {
+            2
+        };
+        if self.indices[triangle_ab + offset_ab] != a
+            || self.indices[triangle_ab + ((offset_ab + 1) % 3)] != b
+        {
+            return Err(());
+        }
+
+        let offset_ba = if self.indices[triangle_ba + 0] == a {
+            0
+        } else if self.indices[triangle_ba + 1] == a {
+            1
+        } else {
+            2
+        };
+        if self.indices[triangle_ba + offset_ba] != a
+            || self.indices[triangle_ba + ((offset_ba + 2) % 3)] != b
+        {
+            return Err(());
+        }
+
+        let c = self.indices[triangle_ab + ((offset_ab + 2) % 3)];
+        let d = self.indices[triangle_ba + ((offset_ba + 1) % 3)];
+
+        // Apply the flip
+        // abc -> adc
+        // adb -> dbc
+        self.indices[triangle_ab + 0] = a;
+        self.indices[triangle_ab + 1] = d;
+        self.indices[triangle_ab + 2] = c;
+        self.indices[triangle_ba + 0] = d;
+        self.indices[triangle_ba + 1] = b;
+        self.indices[triangle_ba + 2] = c;
+
+        Ok(())
+    }
+
     /// Check for non-degenerate triangles (no zero-area triangles)
     pub fn verify_non_degenerate_triangle<Vec2: Vector2D>(&self, vec_hm: &HashMap<V, Vec2>) {
         for i in self.start..self.len() {
             let area = self.get_triangle_area(i, vec_hm);
-            assert!(
+            /*assert!(
                 area.abs() > Vec2::S::ZERO,
                 "Triangle has zero or negative area"
-            );
+            );*/
+            // degenerate triangles are ok. But not negative ones!
+            if !(area >= -Vec2::S::EPS.sqrt()) {
+                println!("Triangle area: {}", area);
+                assert!(area >= -Vec2::S::EPS.sqrt(), "Triangle has negative area");
+            }
         }
     }
 

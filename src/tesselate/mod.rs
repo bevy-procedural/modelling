@@ -14,14 +14,13 @@ pub use convex::*;
 pub use delaunay::*;
 pub use ear_clipping::*;
 pub use fixed_n::*;
-use itertools::Itertools;
 pub use min_weight_dynamic::*;
 pub use min_weight_greedy::*;
 pub use sweep::*;
 
 use crate::{
     math::IndexType,
-    mesh::{FaceBasics, MeshType3D, Triangulation, VertexBasics},
+    mesh::{FaceBasics, MeshType3D, Triangulation},
 };
 
 /// The algorithm to use for triangulating a face.
@@ -39,6 +38,9 @@ pub enum TriangulationAlgorithm {
 
     /// The sweep-line algorithm, but with a O(n^2) dynamic programming min-weight algorithm running on each monotone sub-polygon.
     SweepDynamic,
+
+    /// The sweep-line algorithm, but with a delaunay triangulation running on each monotone sub-polygon.
+    SweepDelaunay,
 
     /// Slow, but large flat surfaces might render faster. Currently uses [Spade](https://github.com/Stoeoef/spade). TODO: allow Delaunay refinements! Runs in O(n log n) time. TODO: Isn't constrained delaunay O(n^2)?
     Delaunay,
@@ -80,12 +82,7 @@ pub fn triangulate_face<T: MeshType3D>(
         n
     );
 
-    if n == 3 {
-        let (a, b, c) = face.vertices(mesh).map(|v| v.id()).collect_tuple().unwrap();
-        tri.insert_triangle(a, b, c);
-        return;
-    } else if n == 4 {
-        min_weight_quad::<T>(face, mesh, tri);
+    if try_min_weight_small::<T>(face, mesh, tri) {
         return;
     }
 
@@ -98,10 +95,13 @@ pub fn triangulate_face<T: MeshType3D>(
             ear_clipping::<T>(face, mesh, tri, false);
         }
         TriangulationAlgorithm::Sweep => {
-            sweep_line::<T>(face, mesh, tri, meta);
+            sweep_line::<T, LinearMonoTriangulator<T::V, T::Vec2>>(face, mesh, tri, meta);
         }
         TriangulationAlgorithm::SweepDynamic => {
-            sweep_dynamic::<T>(face, mesh, tri, 1000);
+            sweep_line::<T, DynamicMonoTriangulator<T::V, T::Vec2, T::Poly>>(face, mesh, tri, meta);
+        }
+        TriangulationAlgorithm::SweepDelaunay => {
+            sweep_line::<T, DelaunayMonoTriangulator<T::V, T::Vec2>>(face, mesh, tri, meta);
         }
         TriangulationAlgorithm::MinWeight => {
             minweight_dynamic::<T>(face, mesh, tri);

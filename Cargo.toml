@@ -10,7 +10,7 @@ license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/bevy-procedural/modelling"
 documentation = "https://docs.rs/procedural_modelling"
-rust-version = "1.81.0"
+rust-version = "1.80.0"
 include = [
     "src/**/*",
     "doc/**/*",
@@ -61,6 +61,7 @@ ab_glyph = { version = "0.2.29", optional = true }
 nalgebra = { version = "0.33.0", optional = true }
 num-traits = "0.2.19"
 criterion = { version = "0.5.1", features = ["html_reports"], optional = true }
+web-sys = "0.3.72"
 
 [features]
 default = ["nalgebra", "netsci", "fonts"]
@@ -105,3 +106,7 @@ inherits = "release"
 opt-level = "z"
 lto = "fat"
 codegen-units = 1
+
+[profile.profiling]
+inherits = "release"
+debug = true
