@@ -10,6 +10,7 @@ impl<T: HalfEdgeImplMeshType + MeshType3D> HalfEdgeMeshImpl<T> {
     /// Flips the y and z coordinates of all vertices.
     pub fn flip_yz(&mut self) -> &mut Self {
         self.vertices_mut().for_each(|v| {
+            // TODO: ignors normals and other attributes
             let pos = v.payload().pos().xzy();
             v.payload_mut().set_pos(pos)
         });
