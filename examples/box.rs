@@ -218,7 +218,7 @@ fn setup_meshes(
         commands.spawn((
             Mesh3d(meshes.add(mesh.to_bevy_ex(
                 RenderAssetUsages::all(),
-                TriangulationAlgorithm::Delaunay,
+                TriangulationAlgorithm::Auto,
                 true,
             ))),
             MeshMaterial3d(materials.add(StandardMaterial {

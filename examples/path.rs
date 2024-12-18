@@ -102,6 +102,7 @@ fn generate_path(
     commands.spawn((
         Mesh3d(meshes.add(mesh.to_bevy_ex(
             RenderAssetUsages::all(),
+            // slowest triangulation, but looks nice for small examples
             TriangulationAlgorithm::MinWeight,
             true,
         ))),

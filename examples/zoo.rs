@@ -68,7 +68,7 @@ fn generate_shapes(
         commands.spawn((
             Mesh3d(meshes.add(mesh.to_bevy_ex(
                 RenderAssetUsages::all(),
-                TriangulationAlgorithm::MinWeight,
+                TriangulationAlgorithm::Auto,
                 true,
             ))),
             MeshMaterial3d(materials.add(StandardMaterial {
