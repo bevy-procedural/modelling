@@ -19,6 +19,9 @@ include = [
     "README.md",
     "Cargo.toml",
 ]
+exclude = [
+    "examples/bevy_examples.rs"
+]
 
 [lib]
 name = "procedural_modelling"
