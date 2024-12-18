@@ -238,9 +238,7 @@ where
             .edge(current_inner)
             .clone()
             .edges_face(self.mesh())
-            .find(|e| {
-                println!("e.id() {}  current_outer {} start_inner {}", e.id(), current_outer, start_inner);
-                e.id() == current_outer || e.id() == start_inner})
+            .find(|e| e.id() == current_outer || e.id() == start_inner)
             .expect("The path is malformed.");
 
         if end_of_path.id() == current_outer {
@@ -250,7 +248,7 @@ where
         }
 
         self.closed = true;
-        
+
         // TODO: is this necessary or not? Generally, is the correction above correct? Or is the winding in the opposite direction?
         /*debug_assert!(self
         .mesh()

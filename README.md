@@ -44,8 +44,11 @@ mesh.to_bevy(RenderAssetUsages::default())
 -   [box](https://github.com/bevy-procedural/modelling/blob/main/examples/box.rs) demonstrates different methods to build a cube from scratch. This is a good place to get started with this crate!
 -   [path](https://github.com/bevy-procedural/modelling/blob/main/examples/path.rs) demonstrates the path builder with bezier curves.
 -   [text](https://github.com/bevy-procedural/modelling/blob/main/examples/text.rs) demonstrates how to insert text into a mesh.
--   [zoo](https://github.com/bevy-procedural/modelling/blob/main/examples/zoo.rs) showcases a variety of different predefined shapes.
+-   [zoo](https://github.com/bevy-procedural/modelling/blob/main/examples/zoo.rs) showcases a variety of different predefined 3d shapes.
+-   [zoo_2d](https://github.com/bevy-procedural/modelling/blob/main/examples/zoo_2d.rs) showcases a variety of different predefined 2d shapes.
 -   [svg](https://github.com/bevy-procedural/modelling/blob/main/examples/svg.rs) loads and renders a duck from a svg string.
+-   [triangulation](https://github.com/bevy-procedural/modelling/blob/main/examples/triangulation.rs) demonstrates the different triangulation algorithms.
+-   [fern](https://github.com/bevy-procedural/modelling/blob/main/examples/fern.rs) is a more advanced example creating a detailed fern leaf.
 
 <!-- TODO: demonstrate smooth normals, custom attributes, custom mesh types, 4d geometry, triangulation strategies, mesh comparison, net science -->
 
@@ -94,7 +97,7 @@ We are currently working on some tutorials for the most important features.
 
 -   Primitives
 
-    -   [x] 2d stuff: Polygon, Star, Circle, Loop, ...
+    -   [x] [2d stuff](https://github.com/bevy-procedural/modelling/blob/main/examples/zoo_2d.rs): Polygon, Star, Circle, Loop, ...
     -   [x] [Prismatoids](https://github.com/bevy-procedural/modelling/blob/main/examples/zoo.rs): Prism, Antiprism, Cuboid, Pyramid, Frustum, ...
     -   [x] [Platonic solids](https://github.com/bevy-procedural/modelling/blob/main/examples/zoo.rs): Tetrahedron, Cube, Octahedron, Dodecahedron, Icosahedron
     -   [x] [Round things](https://github.com/bevy-procedural/modelling/blob/main/examples/zoo.rs): Cylinder, Cone, UV Sphere, Icosphere, Geodesic Polyhedra

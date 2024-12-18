@@ -4,6 +4,44 @@ use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
 use procedural_modelling::{extensions::bevy::*, prelude::*};
 mod bevy_examples;
 
+/*
+fn _make_bezier(_settings: &GlobalSettings) -> BevyMesh3d {
+    let mut mesh2d = BevyMesh2d::new();
+    /*mesh2d.insert_regular_star(1.0, 1.0, 3);
+    let e = mesh2d.edge_mut(0);
+    e.set_curve_type(procedural_modelling::mesh::CurvedEdgeType::CubicBezier(
+        Vec2::new(0.2, 0.0),
+        Vec2::new(0.9, 0.5),
+    ));*/
+
+    procedural_modelling::mesh::Font::new(
+        include_bytes!("../../../assets/Cochineal-Roman.otf"),
+        2.0,
+    )
+    .layout_text::<2, BevyMeshType2d32>("sFä", &mut mesh2d);
+
+    /*
+    PathBuilder::<BevyMeshType2d32>::start(&mut mesh2d, Vec2::new(0.0, 0.0))
+        .line(Vec2::new(1.0, 0.0))
+        .line(Vec2::new(0.0, -2.0))
+        .cubic_bezier(
+            Vec2::new(0.0, 2.0),
+            Vec2::new(-2.0, -2.0),
+            Vec2::new(-1.0, 0.5),
+        )
+        .close(Default::default());
+    */
+
+
+    println!("{:?}", mesh2d);
+
+    let mut mesh3d = mesh2d.to_3d(0.01);
+    mesh3d.extrude_boundary(Transform::from_translation(Vec3::new(0.0, 0.0, -0.2)));
+    mesh3d
+}
+
+*/
+
 fn generate_path(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -43,6 +81,8 @@ fn generate_path(
         // Note that the face has only 2 vertices. This is fine since the edges are curved. 
         .close(Default::default());
     */
+
+    // TODO: demonstrate how to change edge types afterwards
 
     println!("{:?}", mesh2d);
 

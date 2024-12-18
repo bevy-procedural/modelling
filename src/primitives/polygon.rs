@@ -1,6 +1,9 @@
 use crate::{
     math::{HasPosition, Scalar, Vector},
-    mesh::{DefaultEdgePayload, DefaultFacePayload, EuclideanMeshType, MeshTrait, MeshType},
+    mesh::{
+        CurvedEdge, DefaultEdgePayload, DefaultFacePayload, EuclideanMeshType, HalfEdge,
+        MeshBuilder, MeshTrait, MeshType, MeshTypeHalfEdge, PathBuilder,
+    },
 };
 
 /// Calculate the side length of a regular polygon with `n` sides and a given `radius`.
@@ -70,6 +73,40 @@ where
         T: EuclideanMeshType<D>,
     {
         Self::regular_star(radius, radius, n)
+    }
+
+    /// Create a circle from four cubic Bezier curves.
+    fn cubic_circle<const D: usize>(radius: T::S) -> Self
+    where
+        T::Edge: CurvedEdge<D, T> + HalfEdge<T>,
+        T: EuclideanMeshType<D> + MeshTypeHalfEdge,
+        T::Mesh: MeshBuilder<T>,
+    {
+        let mut mesh = Self::default();
+        let circle_len = radius * T::S::FOUR / T::S::THREE * (T::S::TWO.sqrt() - T::S::ONE);
+        PathBuilder::<T, _>::start(&mut mesh, T::Vec::from_xy(radius, T::S::ZERO))
+            .cubic(
+                T::Vec::from_xy(radius, -circle_len),
+                T::Vec::from_xy(circle_len, -radius),
+                T::Vec::from_xy(T::S::ZERO, -radius),
+            )
+            .cubic(
+                T::Vec::from_xy(-circle_len, -radius),
+                T::Vec::from_xy(-radius, -circle_len),
+                T::Vec::from_xy(-radius, T::S::ZERO),
+            )
+            .cubic(
+                T::Vec::from_xy(-radius, circle_len),
+                T::Vec::from_xy(-circle_len, radius),
+                T::Vec::from_xy(T::S::ZERO, radius),
+            )
+            .cubic(
+                T::Vec::from_xy(circle_len, radius),
+                T::Vec::from_xy(radius, circle_len),
+                T::Vec::from_xy(radius, T::S::ZERO),
+            )
+            .close(Default::default());
+        mesh
     }
 
     /// Calls `insert_regular_star` on a new mesh.

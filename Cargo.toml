@@ -87,6 +87,12 @@ doc-scrape-examples = true
 required-features = ["example_deps"]
 
 [[example]]
+name = "fern"
+path = "examples/fern.rs"
+doc-scrape-examples = true
+required-features = ["example_deps"]
+
+[[example]]
 name = "path"
 path = "examples/path.rs"
 doc-scrape-examples = true
@@ -104,16 +110,24 @@ path = "examples/text.rs"
 doc-scrape-examples = true
 required-features = ["example_deps", "fonts"]
 
+[[bench]]
+name = "triangulation"
+path = "examples/triangulation.rs"
+harness = false
+required-features = ["benchmarks"]
+
 [[example]]
 name = "zoo"
 path = "examples/zoo.rs"
 doc-scrape-examples = true
 required-features = ["example_deps"]
 
-[[bench]]
-name = "triangulation"
-harness = false
-required-features = ["benchmarks"]
+[[example]]
+name = "zoo_2d"
+path = "examples/zoo_2d.rs"
+doc-scrape-examples = true
+required-features = ["example_deps"]
+
 
 # Enable a small amount of optimization in debug mode
 [profile.fast-dev]
