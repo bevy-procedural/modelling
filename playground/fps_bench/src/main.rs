@@ -6,8 +6,8 @@ use bevy::{
     window::{PresentMode, WindowMode, WindowResolution},
 };
 use procedural_modelling::{extensions::bevy::*, prelude::*};
+use std::io::Write;
 use std::time::Duration;
-use std::{io::Write, process::exit};
 
 #[derive(Resource, Clone, Debug)]
 struct BenchmarkStats {
@@ -15,6 +15,7 @@ struct BenchmarkStats {
     frame_times: Vec<f64>,
     render_times: Vec<f64>,
     mesh: Handle<Mesh>,
+    #[allow(dead_code)]
     num: usize,
 }
 

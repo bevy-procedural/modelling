@@ -84,7 +84,7 @@ We are currently working on some tutorials for the most important features.
     -   [ ] Arbitrary Graphs
     -   [ ] NURBS, T-Splines <!-- Bezier Surfaces, Parametric Surfaces, Spline Networks...? -->
 
--   Triangulation (comparison below, also see the [example](https://github.com/bevy-procedural/modelling/blob/main/examples/triangulation.rs))
+-   Triangulation (comparison [below](#triangulation-algorithms), also see the [example](https://github.com/bevy-procedural/modelling/blob/main/examples/triangulation.rs))
 
     -   [x] Fan
     -   [x] Ear Clipping
