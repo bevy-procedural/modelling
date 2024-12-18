@@ -176,6 +176,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
             let edge = self.edge(*e);
             if edge.curve_type() != CurvedEdgeType::Linear {
                 let vs = edge.flatten_casteljau(tol, self);
+                self.edge_mut(*e).set_curve_type(CurvedEdgeType::Linear);
                 if vs.len() == 0 {
                     continue;
                 }
@@ -184,7 +185,6 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
                     vs.iter()
                         .map(|v| (T::EP::default(), T::EP::default(), T::VP::from_pos(*v))),
                 );
-                self.edge_mut(*e).set_curve_type(CurvedEdgeType::Linear);
             }
         }
 

@@ -19,6 +19,7 @@ impl<const D: usize, T: EuclideanMeshType<D>> CurvedEdgeType<D, T> {
     /// Returns the coordinates at a specific point on the curve
     /// The parameter `t` is in the range [0, 1]
     pub fn point_at(&self, edge: &T::Edge, mesh: &T::Mesh, t: T::S) -> T::Vec {
+        // TODO: Make this faster. Should work without reference to mesh!
         let start: T::Vec = edge.origin(mesh).pos();
         let end: T::Vec = edge.target(mesh).pos();
         let res: T::Vec = match self {
@@ -56,6 +57,74 @@ impl<const D: usize, T: EuclideanMeshType<D>> CurvedEdgeType<D, T> {
             }
             _ => false,
         }
+    }
+
+    /// Approximates the Fréchet distance between the edge and a line segment.
+    pub fn frechet_distance(
+        &self,
+        line_start: T::Vec,
+        line_end: T::Vec,
+        t0: T::S,
+        t1: T::S,
+        edge: &T::Edge,
+        mesh: &T::Mesh,
+        samples: usize,
+        max_search: usize,
+    ) -> T::S {
+        let mut max_dist = T::S::ZERO;
+        let mut bezier_pos = t0;
+
+        // TODO: this is a performance bottleneck. Optimizing this would be great.
+
+        for i in 1..=samples {
+            // only consider inner positions
+            let s = T::S::from_usize(i) / T::S::from_usize(samples + 1);
+            let line_point = line_start.lerped(&line_end, s);
+
+            let mut min_distance = T::S::INFINITY;
+
+            // make a good first guess for the step size
+            let mut step_size = (t1 - t0) / T::S::from_usize(samples);
+            let mut t = bezier_pos;
+
+            // walk forward while it gets smaller
+            while t <= t1 {
+                let distance = self.point_at(edge, mesh, t).distance_squared(&line_point);
+                if distance >= min_distance {
+                    break;
+                }
+                min_distance = distance;
+                t += step_size;
+            }
+
+            // binary search for the local minimum around t
+            for _ in 0..max_search {
+                let t1 = (t + step_size).min(t1);
+                let t2 = (t - step_size).max(t0);
+                let d1 = self.point_at(edge, mesh, t1).distance_squared(&line_point);
+                let d2 = self.point_at(edge, mesh, t2).distance_squared(&line_point);
+                if d1 < d2 {
+                    t = t1;
+                } else {
+                    t = t2;
+                }
+                step_size *= T::S::HALF;
+                if step_size <= T::S::EPS {
+                    break;
+                }
+            }
+
+            min_distance = self.point_at(edge, mesh, t).distance(&line_point);
+
+            // safe the new position for later. We cannot walk backwards!
+            bezier_pos = t.min(t1);
+
+            if min_distance > max_dist {
+                max_dist = min_distance;
+            }
+        }
+
+        max_dist.sqrt()
     }
 }
 
@@ -97,16 +166,32 @@ pub trait CurvedEdge<const D: usize, T: EuclideanMeshType<D, Edge = Self>>: Edge
         {
             let p0 = curve.point_at(edge, mesh, t0);
             let p1 = curve.point_at(edge, mesh, t1);
-            let tm = (t0 + t1) / T::S::TWO;
-            let pm = curve.point_at(edge, mesh, tm);
-            let p_line = p0.lerped(&p1, T::S::HALF);
-            let deviation = pm.distance(&p_line);
 
-            if deviation <= error {
+            /*
+            // we shouldn't just test the middle but n points
+            // e.g., if the curve is s-shaped, the deviation would be 0 at the middle
+            let n = 4;
+
+            // start in the middle, since it is most likely to be the worst point
+            let is_acceptable = [2, 1, 3].into_iter().find(|i| {
+                let t = t0 + (t1 - t0) * T::S::from_usize(*i) / T::S::from_usize(n);
+                let p = curve.point_at(edge, mesh, t);
+                let p_line = p0.lerped(&p1, t - t0);
+                p.distance(&p_line) > error
+            }).is_none();*/
+
+            // TODO: don't hardcode the frechet params
+            let is_acceptable = edge
+                .curve_type()
+                .frechet_distance(p0, p1, t0, t1, edge, mesh, 3, 20)
+                < error;
+
+            if is_acceptable {
                 // The segment is acceptable; push p1
                 lines.push(p1);
             } else {
                 // Subdivide further
+                let tm = (t0 + t1) / T::S::TWO;
                 recursive_flatten(curve, edge, mesh, tm, t1, error, lines);
                 recursive_flatten(curve, edge, mesh, t0, tm, error, lines);
             }

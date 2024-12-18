@@ -42,13 +42,14 @@ mesh.to_bevy(RenderAssetUsages::default())
  TODO: bevy-procedural.org -->
 
 -   [box](https://github.com/bevy-procedural/modelling/blob/main/examples/box.rs) demonstrates different methods to build a cube from scratch. This is a good place to get started with this crate!
--   [fps_bench](https://github.com/bevy-procedural/modelling/blob/main/examples/fps_bench.rs) benchmarks the rendering performance of the different triangulation algorithms.
+-   [path](https://github.com/bevy-procedural/modelling/blob/main/examples/path.rs) demonstrates the path builder with bezier curves.
+-   [text](https://github.com/bevy-procedural/modelling/blob/main/examples/text.rs) demonstrates how to insert text into a mesh.
+-   [zoo](https://github.com/bevy-procedural/modelling/blob/main/examples/zoo.rs) showcases a variety of different predefined shapes.
+-   [svg](https://github.com/bevy-procedural/modelling/blob/main/examples/svg.rs) loads and renders a duck from a svg string.
 
-Or run the [examples](https://github.com/bevy-procedural/modelling/tree/main/examples) on your computer like, e.g., `cargo run --features="bevy bevy/bevy_pbr bevy/bevy_winit bevy/tonemapping_luts" --profile fast-dev --example box`.
+<!-- TODO: demonstrate smooth normals, custom attributes, custom mesh types, 4d geometry, triangulation strategies, mesh comparison, net science -->
 
-For package development, we recommend using the `playground_bevy`- resp. `playground_wgpu`-subcrate. This example has a little [egui](https://github.com/jakobhellermann/bevy-inspector-egui/)-editor. Run it using `cargo watch -w playground -w src -x "run -p playground_bevy --profile fast-dev"`. The `fast-dev` profile will enable optimizations for the dependencies, but not for the package itself. This will slow down the first build _significantly_, but incremental builds are slightly faster and bevy's performance (bevy is used as the renderer in the examples) improves a lot.
-
-When developing tests, we recommend `cargo watch -w src -x "test --profile fast-dev"` resp. `cargo llvm-cov --html` to generate a coverage report.
+You can compile and run the [examples](https://github.com/bevy-procedural/modelling/tree/main/examples) like, e.g., `cargo run --features=example_deps --profile fast-dev --example box`. The `fast-dev` profile will enable optimizations for the dependencies, but not for the package itself. This will slow down the first build _significantly_, but incremental builds are slightly faster and bevy's performance (bevy is used as the renderer in the examples) improves a lot.
 
 ## Tutorial
 
@@ -61,7 +62,7 @@ We are currently working on some tutorials for the most important features.
 -   Attributes
 
     -   [x] Positions
-    -   [x] Normals (flat, smooth)
+    -   [x] Normals ([flat](https://github.com/bevy-procedural/modelling/blob/main/examples/box.rs), smooth)
     -   [x] Custom Attributes
     -   [ ] Crease Weights, Surface Groups
     -   [ ] Tangents
@@ -70,7 +71,7 @@ We are currently working on some tutorials for the most important features.
 -   Mesh Types
 
     -   [x] Open PL 2-Manifold in 2d and 3d Space
-    -   [x] Bezier Curves for 2d Meshes
+    -   [x] [Bezier Curves for 2d Meshes](https://github.com/bevy-procedural/modelling/blob/main/examples/path.rs)
     -   [ ] Self-intersecting surfaces
     -   [ ] Open PL 2-Manifold in nd Space
     -   [ ] Open PL $n$-Manifold in md Space <!-- e.g., https://youtu.be/piJkuavhV50?si=1IZdm1PYnA2dvdAL&t=1135 -->
@@ -80,7 +81,7 @@ We are currently working on some tutorials for the most important features.
     -   [ ] Arbitrary Graphs
     -   [ ] NURBS, T-Splines <!-- Bezier Surfaces, Parametric Surfaces, Spline Networks...? -->
 
--   Triangulation
+-   Triangulation (comparison below, also see the [example](https://github.com/bevy-procedural/modelling/blob/main/examples/triangulation.rs))
 
     -   [x] Fan
     -   [x] Ear Clipping
@@ -94,16 +95,16 @@ We are currently working on some tutorials for the most important features.
 -   Primitives
 
     -   [x] 2d stuff: Polygon, Star, Circle, Loop, ...
-    -   [x] Prismatoids: Prism, Antiprism, Cuboid, Pyramid, Frustum, ...
-    -   [x] Platonic solids: Tetrahedron, Cube, Octahedron, Dodecahedron, Icosahedron
-    -   [x] Round things: Cylinder, Cone, UV Sphere, Icosphere, Geodesic Polyhedra
+    -   [x] [Prismatoids](https://github.com/bevy-procedural/modelling/blob/main/examples/zoo.rs): Prism, Antiprism, Cuboid, Pyramid, Frustum, ...
+    -   [x] [Platonic solids](https://github.com/bevy-procedural/modelling/blob/main/examples/zoo.rs): Tetrahedron, Cube, Octahedron, Dodecahedron, Icosahedron
+    -   [x] [Round things](https://github.com/bevy-procedural/modelling/blob/main/examples/zoo.rs): Cylinder, Cone, UV Sphere, Icosphere, Geodesic Polyhedra
     -   [ ] 4d stuff: Tesseract, Hypersphere, Hypersimplex, ...
     -   [ ] Cube Sphere
     -   [ ] Torus, Clifford Torus
 
 -   Operations
 
-    -   [x] Extrude
+    -   [x] [Extrude](https://github.com/bevy-procedural/modelling/blob/main/examples/box.rs)
     -   [x] Linear Loft (Triangle, Polygon), [ ] Loft along path
     -   [x] Transform (Translate, Rotate, Scale, [ ] Shear)
     -   [x] Frequency Subdivision (partial)

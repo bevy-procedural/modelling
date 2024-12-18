@@ -3,13 +3,9 @@
 //! This is a good way to see the different ways this crate
 //! provides to build a mesh and compare their trade-offs.
 
-use bevy::{
-    pbr::wireframe::{WireframeConfig, WireframePlugin},
-    prelude::*,
-    render::render_asset::RenderAssetUsages,
-};
+use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
 use procedural_modelling::{extensions::bevy::*, mesh::MeshBuilder, prelude::*};
-use std::f32::consts::PI;
+mod bevy_examples;
 
 /// A tiny helper function to create a bevy-compatible vertex payload
 fn vp(x: f32, y: f32, z: f32) -> BevyVertexPayload3d {
@@ -98,6 +94,28 @@ fn cuboid_from_prism(size: Vec3) -> BevyMesh3d {
 
 /// Creates a cuboid with a given `size`.
 ///
+/// The `PathBuilder` is a more flexible way to create a 2d shape.
+/// It's a bit overpowered here, but can be usefull when working with bezier curves.
+fn cuboid_from_builder(size: Vec3) -> BevyMesh3d {
+    let p = size * 0.5;
+    let mut mesh = BevyMesh3d::new();
+
+    PathBuilder::<BevyMeshType3d32, _>::start(&mut mesh, Vec3::new(-p.x(), -p.y(), -p.z()))
+        .line(Vec3::new(p.x(), -p.y(), -p.z()))
+        .line(Vec3::new(p.x(), p.y(), -p.z()))
+        .line(Vec3::new(-p.x(), p.y(), -p.z()))
+        .close(Default::default());
+
+    mesh.extrude_boundary(Transform::from_translation(Vec3::new(
+        0.0,
+        0.0,
+        p.z() * 2.0,
+    )));
+    mesh
+}
+
+/// Creates a cuboid with a given `size`.
+///
 /// To keep this crate flexible, most methods are highly generic.
 /// Especially the vertex payloads are in no way restricted to
 /// vertices with positions in 3D space. This method demonstrates
@@ -149,29 +167,18 @@ fn cuboid_from_cuboid(size: Vec3) -> BevyMesh3d {
     BevyMesh3d::cuboid(size)
 }
 
-fn main() {
-    App::new()
-        .add_plugins(DefaultPlugins)
-        .add_plugins(WireframePlugin)
-        .insert_resource(WireframeConfig {
-            global: true,
-            default_color: Color::WHITE,
-        })
-        .add_systems(Startup, setup_camera_and_light)
-        .add_systems(Startup, setup_meshes)
-        .run();
-}
-
 fn setup_meshes(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut texts: ResMut<Text3dGizmos>,
 ) {
     let size = Vec3::new(1.0, 1.0, 2.0);
     let generated_meshes = [
         cuboid_from_vertices(size),
         //cuboid_from_edges(size),
         cuboid_from_loft(size),
+        cuboid_from_builder(size),
         cuboid_from_prism(size),
         cuboid_from_prism_generic::<BevyMeshType3d32>(size),
         cuboid_from_cuboid(size),
@@ -189,6 +196,24 @@ fn setup_meshes(
     // usages, the triangulation algorithm, and whether the mesh should have
     // flat normals and tangents.
     for (i, mesh) in generated_meshes.iter().enumerate() {
+        // We can verify that the generated meshes are isomorphic to a normal cuboid
+        // (even though the might have a different vertex order)
+        assert!(BevyMesh3d::cuboid(size)
+            .is_isomorphic_by_pos::<_, 3, _, BevyMeshType3d32>(&mesh, 1e-5)
+            .eq());
+
+        // Since we want to visualize the vertex indices, we translate the mesh here
+        // instead of translating the bevy mesh.
+        let mesh = mesh.translated(&Vec3::new(
+            (i as f32 - generated_meshes.len() as f32 / 2.0) * 1.5,
+            0.5,
+            0.0,
+        ));
+
+        show_vertex_indices(&mut texts, &mesh);
+        //show_edges(&mut texts, &mesh, 0.1);
+        //show_faces(&mut texts, &mesh);
+
         commands.spawn((
             Mesh3d(meshes.add(mesh.to_bevy_ex(
                 RenderAssetUsages::all(),
@@ -199,44 +224,13 @@ fn setup_meshes(
                 base_color: Color::srgb(1.0, 0.0, 0.0),
                 ..default()
             })),
-            Transform::from_translation(Vec3::new(
-                (i as f32 - generated_meshes.len() as f32 / 2.0) * 1.5,
-                0.0,
-                0.0,
-            )),
-            Name::new("Generated Shape"),
+            Name::new(format!("Box {}", i)),
         ));
     }
 }
 
-/// Add a floor, a camera, and some lights
-fn setup_camera_and_light(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    commands.spawn((
-        Mesh3d(meshes.add(Mesh::from(Plane3d::new(Vec3::Y, Vec2::new(1.0, 1.0))))),
-        MeshMaterial3d(materials.add(StandardMaterial::default())),
-        Transform::from_translation(Vec3::new(0.0, -1.0, 0.0)).with_scale(Vec3::splat(10.0)),
-        Name::new("Floor"),
-    ));
-
-    commands.insert_resource(AmbientLight::default());
-    commands.spawn((
-        DirectionalLight {
-            color: Color::WHITE,
-            shadows_enabled: true,
-            ..default()
-        },
-        Transform {
-            translation: Vec3::new(0.0, 2.0, 0.0),
-            rotation: Quat::from_rotation_x(-PI / 4.),
-            ..default()
-        },
-    ));
-    commands.spawn((
-        Camera3d::default(),
-        Transform::from_xyz(3.0, 5.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
-    ));
+fn main() {
+    bevy_examples::setup_basic_bevy_app()
+        .add_systems(Startup, setup_meshes)
+        .run();
 }

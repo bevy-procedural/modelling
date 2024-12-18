@@ -95,6 +95,8 @@ pub trait MeshHalfEdgeBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Hence, they must be also on the boundary of each connected components.
     ///
     /// Returns the inserted pair of halfedges.
+    /// 
+    /// TODO: connectivity is unclear!
     fn insert_edge_between(
         &mut self,
         origin0: T::V,

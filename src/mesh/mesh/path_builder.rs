@@ -221,8 +221,6 @@ where
             return self.mesh().close_hole(start_inner, fp, false);
         }
 
-        self.closed = true;
-
         let Some((current_inner, current_outer)) = self.current_edges() else {
             // The current vertex doesn't have any edges yet.
             assert!(self.start_edges().is_none());
@@ -240,7 +238,9 @@ where
             .edge(current_inner)
             .clone()
             .edges_face(self.mesh())
-            .find(|e| e.id() == current_outer || e.id() == start_inner)
+            .find(|e| {
+                println!("e.id() {}  current_outer {} start_inner {}", e.id(), current_outer, start_inner);
+                e.id() == current_outer || e.id() == start_inner})
             .expect("The path is malformed.");
 
         if end_of_path.id() == current_outer {
@@ -249,6 +249,8 @@ where
             self.line_to(self.start_vertex());
         }
 
+        self.closed = true;
+        
         // TODO: is this necessary or not? Generally, is the correction above correct? Or is the winding in the opposite direction?
         /*debug_assert!(self
         .mesh()
@@ -389,11 +391,9 @@ where
         T::Edge: HalfEdge<T>,
         T::Mesh: MeshHalfEdgeBuilder<T>,
     {
-        // TODO: Avoid these requirements! Also, only take the position.
-
         assert!(!self.is_closed(), "The path is already closed.");
         if v == self.start_vertex() {
-            // The path is closed.
+            // The path is now closed.
             self.closed = true;
         }
 
@@ -409,7 +409,8 @@ where
             assert!(self.start_vertex() == self.current_vertex());
             let origin = self.current_vertex();
             let edges = self.mesh().insert_edge_between(origin, ep0, v, ep1);
-            self.current_edges = Some(edges);
+            // TODO: make some tests to see whether inside and outside are always correct
+            self.current_edges = Some((edges.1, edges.0));
             self.start_edges = Some((edges.1, edges.0));
         }
 

@@ -15,4 +15,11 @@ impl<T: HalfEdgeImplMeshType + MeshType3D> HalfEdgeMeshImpl<T> {
         });
         self
     }
+
+    /// Flips the y and z coordinates of all vertices.
+    pub fn flipped_yz(&self) -> Self {
+        let mut res = self.clone();
+        res.flip_yz();
+        res
+    }
 }

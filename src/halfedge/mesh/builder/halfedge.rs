@@ -116,7 +116,8 @@ impl<T: HalfEdgeImplMeshType> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T> {
             "Second Vertex {} does not exist",
             origin1
         );
-        debug_assert!(
+        // TODO: test cases with multigraphs! For curved edges, this is perfectly fine
+        /*debug_assert!(
             self.shared_edge(origin0, origin1).is_none(),
             "There is already an edge between first vertex {} and second vertex {}",
             origin0,
@@ -127,7 +128,7 @@ impl<T: HalfEdgeImplMeshType> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T> {
             "There is already an edge between second vertex {} and first vertex {}",
             origin1,
             origin0
-        );
+        );*/
         // TODO: is this necessary or not?
         /*debug_assert!(
             self.shortest_path(origin0, origin1).is_none(),

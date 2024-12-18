@@ -1,3 +1,9 @@
+//! `cargo watch -w playground -w src -x "run -p playground_bevy --profile fast-dev`
+//! 
+//! When developing tests, we recommend 
+//! `cargo watch -w src -x "test --profile fast-dev"` resp. 
+//! `cargo llvm-cov --html` to generate a coverage report.
+
 use bevy::{
     pbr::{
         wireframe::{WireframeConfig, WireframePlugin},
@@ -749,20 +755,22 @@ fn setup_meshes(
     commands.insert_resource(AmbientLight::default());
     commands.spawn((
         DirectionalLight {
-            color: Color::WHITE,
+            illuminance: light_consts::lux::AMBIENT_DAYLIGHT,
             shadows_enabled: true,
             ..default()
         },
         Transform {
             translation: Vec3::new(0.0, 2.0, 0.0),
-            rotation: Quat::from_rotation_x(-PI / 4.),
+            rotation: Quat::from_rotation_x(-PI / 4.)
+                .rotate_towards(Quat::from_rotation_x(PI / 4.), 0.5),
             ..default()
         },
-        // very high quality shadows
+        // The default cascade config is designed to handle large scenes.
+        // As this example has a much smaller world, we can tighten the shadow
+        // bounds for better visual quality.
         CascadeShadowConfigBuilder {
-            num_cascades: 4,
-            first_cascade_far_bound: 5.0,
-            maximum_distance: 55.0,
+            first_cascade_far_bound: 4.0,
+            maximum_distance: 10.0,
             ..default()
         }
         .build(),

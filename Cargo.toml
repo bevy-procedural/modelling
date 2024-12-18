@@ -69,7 +69,7 @@ netsci = ["nalgebra"]
 wgpu = ["nalgebra"]
 bevy = ["dep:bevy", "bevy/bevy_core_pipeline"]
 gizmo = ["bevy", "bevy/bevy_text", "bevy/bevy_ui"]
-example_deps = ["bevy", "bevy/default"]
+example_deps = ["bevy", "bevy/default", "gizmo"]
 svg = ["dep:usvg"]
 nalgebra = ["dep:nalgebra"]
 fonts = ["dep:ab_glyph"]
@@ -83,6 +83,30 @@ benchmarks = ["dep:criterion", "bevy"]
 [[example]]
 name = "box"
 path = "examples/box.rs"
+doc-scrape-examples = true
+required-features = ["example_deps"]
+
+[[example]]
+name = "path"
+path = "examples/path.rs"
+doc-scrape-examples = true
+required-features = ["example_deps"]
+
+[[example]]
+name = "svg"
+path = "examples/svg.rs"
+doc-scrape-examples = true
+required-features = ["example_deps", "svg"]
+
+[[example]]
+name = "text"
+path = "examples/text.rs"
+doc-scrape-examples = true
+required-features = ["example_deps", "fonts"]
+
+[[example]]
+name = "zoo"
+path = "examples/zoo.rs"
 doc-scrape-examples = true
 required-features = ["example_deps"]
 

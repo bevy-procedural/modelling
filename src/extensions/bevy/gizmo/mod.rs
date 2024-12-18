@@ -1,6 +1,6 @@
 //! gizmo implementations for bevy.
 
-pub mod text;
+mod text;
 mod text3d;
 
 use super::BevyMesh3d;
@@ -10,7 +10,7 @@ use crate::{
     tesselate::TesselationMeta,
 };
 use bevy::prelude::*;
-use text::{Text3dGizmo, Text3dGizmos};
+pub use text::*;
 
 #[cfg(feature = "sweep_debug")]
 use crate::mesh::payload::VertexPayload;
