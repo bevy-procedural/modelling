@@ -1,4 +1,5 @@
 //! Some scaffolding code is needed to integrate the generated meshes with bevy.
+#![cfg_attr(test, allow(dead_code))]
 
 use bevy::{
     pbr::{
@@ -23,7 +24,7 @@ fn setup_camera_and_light(
             ..default()
         })),
         Name::new("Floor"),
-        NoWireframe
+        NoWireframe,
     ));
 
     commands.insert_resource(AmbientLight::default());
@@ -69,7 +70,6 @@ pub fn close_on_esc(
             commands.entity(window).despawn();
         }
     }
-
 }
 
 pub fn setup_basic_bevy_app() -> App {
