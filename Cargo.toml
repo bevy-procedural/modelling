@@ -14,12 +14,10 @@ rust-version = "1.80.0"
 include = [
     "src/**/*",
     "doc/**/*",
+    "examples/**/*",
     "playground/**/*",
     "README.md",
     "Cargo.toml",
-]
-exclude = [
-    "examples/bevy_examples.rs"
 ]
 
 [lib]

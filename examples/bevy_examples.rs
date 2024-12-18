@@ -1,5 +1,5 @@
 //! Some scaffolding code is needed to integrate the generated meshes with bevy.
-#![cfg_attr(test, allow(dead_code))]
+#![cfg(feature = "example_deps")]
 
 use bevy::{
     pbr::{
