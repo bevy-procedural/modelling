@@ -19,7 +19,7 @@ include = [
     "README.md",
     "Cargo.toml",
 ]
-exclude = ["assets/", "examples/bevy_examples.rs"]
+exclude = ["assets/"]
 
 [lib]
 name = "procedural_modelling"
