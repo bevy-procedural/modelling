@@ -92,7 +92,7 @@ fn generate_path(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let mut mesh = _make_2d_zigzag();
+    let mesh = _make_2d_zigzag();
 
     commands.spawn((
         Mesh3d(meshes.add(mesh.to_bevy_ex(
