@@ -5,6 +5,7 @@
 
 use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
 use procedural_modelling::{extensions::bevy::*, mesh::MeshBuilder, prelude::*};
+#[path = "common/bevy.rs"]
 mod bevy_examples;
 
 /// A tiny helper function to create a bevy-compatible vertex payload

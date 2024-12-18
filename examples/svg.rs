@@ -5,6 +5,7 @@ use procedural_modelling::{
     extensions::{bevy::*, svg::*},
     prelude::*,
 };
+#[path = "common/bevy.rs"]
 mod bevy_examples;
 
 fn generate_path(

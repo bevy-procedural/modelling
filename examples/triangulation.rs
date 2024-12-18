@@ -2,6 +2,7 @@
 
 use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
 use procedural_modelling::{extensions::bevy::*, prelude::*};
+#[path = "common/bevy.rs"]
 mod bevy_examples;
 
 fn _make_2d_merge_join() -> BevyMesh3d {

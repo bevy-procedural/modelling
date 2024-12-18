@@ -3,6 +3,7 @@
 use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
 use procedural_modelling::{extensions::bevy::*, mesh::MeshBuilder, prelude::*};
 use std::f32::consts::PI;
+#[path = "common/bevy.rs"]
 mod bevy_examples;
 
 fn generate_shapes(

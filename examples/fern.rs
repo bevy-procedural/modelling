@@ -4,6 +4,7 @@ use std::f32::consts::PI;
 
 use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
 use procedural_modelling::{extensions::bevy::*, prelude::*};
+#[path = "common/bevy.rs"]
 mod bevy_examples;
 
 struct GlobalSettings {
