@@ -2,11 +2,9 @@ use std::collections::HashMap;
 
 use super::{HalfEdgeImplMeshType, HalfEdgeMeshImpl};
 use crate::{
-    math::IndexType,
-    mesh::{
+    math::IndexType, mesh::{
         EdgeBasics, FaceBasics, HalfEdge, MeshBasics, Triangulation, VertexBasics, VertexPayload,
-    },
-    util::Deletable,
+    }, prelude::{BackwardEdgeIterator, ForwardEdgeIterator}, util::Deletable
 };
 
 impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
@@ -58,6 +56,18 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
 
     fn num_faces(&self) -> usize {
         self.faces.len()
+    }
+
+    #[allow(refining_impl_trait)]
+    #[inline(always)]
+    fn edges_from<'a>(&'a self, e: T::E) -> ForwardEdgeIterator<'a, T> {
+        ForwardEdgeIterator::<'a, T>::new(self.edge(e).clone(), self)
+    }
+
+    #[allow(refining_impl_trait)]
+    #[inline(always)]
+    fn edges_back_from<'a>(&'a self, e: T::E) -> BackwardEdgeIterator<'a, T> {
+        BackwardEdgeIterator::<'a, T>::new(self.edge(e).clone(), self)
     }
 
     fn clear(&mut self) -> &mut Self {

@@ -63,6 +63,14 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     /// Returns the number of faces in the mesh
     fn num_faces(&self) -> usize;
 
+    /// Iterates forwards over the (half-)edge chain starting at the given edge.
+    /// If the edges are not directed or half-edges, follow the face resp. boundary to mimic that behavior.
+    fn edges_from<'a>(&'a self, e: T::E) -> impl Iterator<Item = T::Edge>;
+
+    /// Iterates backwards over the (half-)edge chain starting at the given edge.
+    /// If the edges are not directed or half-edges, follow the face resp. boundary to mimic that behavior.
+    fn edges_back_from<'a>(&'a self, e: T::E) -> impl Iterator<Item = T::Edge>;
+
     /// Clears the mesh (deletes all vertices, edges, and faces)
     fn clear(&mut self) -> &mut Self;
 
@@ -204,6 +212,8 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
 
     /// Finds an edge isomorphism (if there is one) given a vertex isomorphism.
     ///
+    /// Assumes there is at most one edge between each two vertices.
+    ///
     /// Runs in O(e*d) where e is the number of edges and d is the maximum number of edges per vertex.
     fn find_edge_isomorphism<T2: MeshType, F: Fn(&T::Edge, &T2::Edge) -> bool>(
         &self,
@@ -211,6 +221,8 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
         iso: &IndexIsomorphism<T::V, T2::V>,
         compare_edge: F,
     ) -> Result<IndexIsomorphism<T::E, T2::E>, MeshEquivalenceDifference<T, T2>> {
+        // TODO: assert max number of edges per directed vertex pair is 1
+
         if self.num_edges() != other.num_edges() {
             return Err(MeshEquivalenceDifference::DifferentNumberOfEdges);
         }
@@ -249,6 +261,8 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     /// Finds a face isomorphism (if there is one) given an edge isomorphism.
     /// If `ignore_order` is true, the order of the edges in the face is ignored.
     ///
+    /// Assumes there is at most one face for each directed cycle of edges.
+    ///
     /// Runs in O(e * fe) where
     ///  - e is the number of edges,
     ///  - fe is the maximum number of faces per edge, and
@@ -259,6 +273,8 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
         compare_face: F,
         ignore_order: bool,
     ) -> Result<IndexIsomorphism<T::F, T2::F>, MeshEquivalenceDifference<T, T2>> {
+        // TODO: assert max number of faces per directed cycle of edges is 1
+
         if self.num_faces() != other.num_faces() {
             return Err(MeshEquivalenceDifference::DifferentNumberOfFaces);
         }
@@ -312,7 +328,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
             }
 
             // when caring about order, we have to check whether the sets can be rotated to match.
-            // This runs in O(f*fe*ef) since each edge is compared to at most ef other edges 
+            // This runs in O(f*fe*ef) since each edge is compared to at most ef other edges
             // where ef is the maximum number of edges per face. This simplifies to O(e*fe).
             for other_face in matches {
                 let other_es = other.face(other_face).edge_ids(&other).collect_vec();
@@ -343,6 +359,9 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     /// - the corresponding vertices are adjacent in one mesh iff they are adjacent in the other mesh,
     /// - the faces have the same vertices up to rotation of the vertex list,
     /// - the three comparison functions hold for all pairs of corresponding vertices, edges, and faces.
+    ///
+    /// Assumes there is at most one edge between each two vertices
+    /// and at most one face for each directed cycle of edges.
     ///
     /// Can take up to O(e * (fe + d)) time where
     /// - e is the number of edges,
@@ -391,6 +410,9 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
 
     /// `is_isomorphic` for the vertex isomorphism based on the given similarity metric.
     /// Ignoring all payloads.
+    ///
+    /// Assumes there is at most one edge between each two vertices
+    /// and at most one face for each directed cycle of edges.
     fn is_isomorphic_by<T2: MeshType, F: Fn(&T::Vertex, &T2::Vertex) -> bool>(
         &self,
         other: &T2::Mesh,
