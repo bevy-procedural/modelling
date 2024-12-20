@@ -15,7 +15,7 @@ fn main() {
     // since we implemented the Transformable trait for our custom payload, we can transform the mesh
     mesh.translate(&Vec3::new(1.0, 0.0, 0.0));
 
-    // triangulate the mesh end retrieve the indices
+    // triangulate the mesh and retrieve the indices
     let (indices, vertices) = mesh.triangulate(TriangulationAlgorithm::Auto);
 
     // Check how many triangles have all red vertices
@@ -47,9 +47,6 @@ pub struct VertexColor {
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
 pub struct MeshTypeColored<const D: usize>;
 
-/// a shorthand for 3d meshes
-pub type MeshTypeColored3d = MeshTypeColored<3>;
-
 // Define the datatypes used in the mesh
 impl<const D: usize> MeshType for MeshTypeColored<D> {
     type E = u16;
@@ -79,26 +76,11 @@ impl<const D: usize> EuclideanMeshType<D> for MeshTypeColored<D> {
 impl<const D: usize> HalfEdgeImplMeshType for MeshTypeColored<D> {}
 impl<const D: usize> MeshTypeHalfEdge for MeshTypeColored<D> {}
 
-// Our mesh is 3D
+// enable some extra functionality for 3d meshes
 impl MeshType3D for MeshTypeColored<3> {}
 
-/// A mesh with
-/// - nalgebra nd vertices,
-/// - usize indices,
-/// - f64 positions, normals, and uv coordinates
+/// A nd mesh with colored vertices
 pub type MeshNdColored<const D: usize> = HalfEdgeMeshImpl<MeshTypeColored<D>>;
-
-/// 3d variant of MeshNdColored
-pub type Mesh3dColored = MeshNdColored<3>;
-
-/// 64-bit 3d variant of the half-edge vertex
-pub type Mesh3dColoredVertex = HalfEdgeVertexImpl<MeshTypeColored<3>>;
-
-/// 64-bit 3d variant of the half-edge edge
-pub type Mesh3dColoredEdge = HalfEdgeImpl<MeshTypeColored<3>>;
-
-/// 64-bit 3d variant of the half-edge face
-pub type Mesh3dColoredFace = HalfEdgeFaceImpl<MeshTypeColored<3>>;
 
 /// d-dimensional Vertex Payload with position, normal, and uv coordinates.
 #[derive(Clone, PartialEq, Copy, Debug)]
@@ -167,3 +149,14 @@ impl<S: Scalar, const D: usize> HasPosition<D, VecN<S, D>> for VertexPayloadColo
         self.position = v;
     }
 }
+
+/// shorthand for the 3d version of our mesh
+pub type Mesh3dColored = MeshNdColored<3>;
+/// shorthand for the 3d version of our mesh vertex type
+pub type Mesh3dColoredVertex = HalfEdgeVertexImpl<MeshTypeColored<3>>;
+/// shorthand for the 3d version of our mesh edge type
+pub type Mesh3dColoredEdge = HalfEdgeImpl<MeshTypeColored<3>>;
+/// shorthand for the 3d version of our mesh face type
+pub type Mesh3dColoredFace = HalfEdgeFaceImpl<MeshTypeColored<3>>;
+/// shorthand for the 3d version of our mesh type
+pub type MeshTypeColored3d = MeshTypeColored<3>;
