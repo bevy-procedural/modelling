@@ -6,7 +6,7 @@ use crate::{
     },
 };
 use itertools::Itertools;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use super::{EuclideanMeshType, IndexIsomorphism, MeshBuilder, MeshEquivalenceDifference};
 
@@ -202,15 +202,152 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
             .any(|e| e.curve_type() != CurvedEdgeType::Linear)
     }
 
+    /// Finds an edge isomorphism (if there is one) given a vertex isomorphism.
+    ///
+    /// Runs in O(e*d) where e is the number of edges and d is the maximum number of edges per vertex.
+    fn find_edge_isomorphism<T2: MeshType, F: Fn(&T::Edge, &T2::Edge) -> bool>(
+        &self,
+        other: &T2::Mesh,
+        iso: &IndexIsomorphism<T::V, T2::V>,
+        compare_edge: F,
+    ) -> Result<IndexIsomorphism<T::E, T2::E>, MeshEquivalenceDifference<T, T2>> {
+        if self.num_edges() != other.num_edges() {
+            return Err(MeshEquivalenceDifference::DifferentNumberOfEdges);
+        }
+
+        let mut edge_iso = IndexIsomorphism::<T::E, T2::E>::new();
+
+        for v in self.vertices() {
+            let other_v: &T2::Vertex = other.vertex(*iso.get(v.id()).unwrap());
+
+            // Is there a corresponding edge?
+            for e in v.edges_out(self) {
+                if edge_iso.has(e.id()) {
+                    continue;
+                }
+
+                let Some(other_e) =
+                    other.shared_edge(other_v.id(), *iso.get(e.target(self).id()).unwrap())
+                else {
+                    return Err(MeshEquivalenceDifference::NoCorrespondingEdge(e.id()));
+                };
+
+                edge_iso.insert(e.id(), other_e.id());
+
+                if !compare_edge(&e, &other_e) {
+                    return Err(MeshEquivalenceDifference::DifferentEdges(
+                        e.id(),
+                        other_e.id(),
+                    ));
+                }
+            }
+        }
+
+        Ok(edge_iso)
+    }
+
+    /// Finds a face isomorphism (if there is one) given an edge isomorphism.
+    /// If `ignore_order` is true, the order of the edges in the face is ignored.
+    ///
+    /// Runs in O(e * fe) where
+    ///  - e is the number of edges,
+    ///  - fe is the maximum number of faces per edge, and
+    fn find_face_isomorphism<T2: MeshType, F: Fn(&T::Face, &T2::Face) -> bool>(
+        &self,
+        other: &T2::Mesh,
+        iso: &IndexIsomorphism<T::E, T2::E>,
+        compare_face: F,
+        ignore_order: bool,
+    ) -> Result<IndexIsomorphism<T::F, T2::F>, MeshEquivalenceDifference<T, T2>> {
+        if self.num_faces() != other.num_faces() {
+            return Err(MeshEquivalenceDifference::DifferentNumberOfFaces);
+        }
+
+        let mut face_iso = IndexIsomorphism::<T::F, T2::F>::new();
+
+        for face in self.face_ids() {
+            assert!(!face_iso.has(face));
+
+            // faces are the same if they have the same edges
+
+            let es = self
+                .face(face)
+                .edge_ids(self)
+                .map(|id| *iso.get(id).unwrap())
+                .collect_vec();
+
+            assert!(!es.is_empty());
+
+            // check which face occurs in all corresponding edges.
+            // This runs in O(e*fe) since all edges are checked once per incident face
+            let mut other_faces: HashMap<T2::F, usize> =
+                other.edge(es[0]).face_ids(&other).map(|f| (f, 1)).collect();
+            for e in es.iter().skip(1) {
+                for other_face in other.edge(*e).face_ids(&other) {
+                    if let Some(count) = other_faces.get_mut(&other_face) {
+                        *count += 1;
+                    }
+                }
+            }
+
+            // when the counts are equal, those are faces on the same edge set
+            let num_edges = self.face(face).num_edges(self);
+            let matches = other_faces
+                .iter()
+                .filter(|(_, count)| **count == num_edges)
+                .map(|(f, _)| *f)
+                .collect_vec();
+
+            // when ignoring order, having a match is enough
+            if ignore_order {
+                if matches.is_empty() {
+                    return Err(MeshEquivalenceDifference::NoCorrespondingFace(face));
+                }
+                if !compare_face(self.face(face), other.face(matches[0])) {
+                    return Err(MeshEquivalenceDifference::DifferentFaces(face, matches[0]));
+                }
+                face_iso.insert(face, matches[0]);
+                // we don't have to check for duplicate matches since otherwise the number faces wouldn't be equal
+                continue;
+            }
+
+            // when caring about order, we have to check whether the sets can be rotated to match.
+            // This runs in O(f*fe*ef) since each edge is compared to at most ef other edges 
+            // where ef is the maximum number of edges per face. This simplifies to O(e*fe).
+            for other_face in matches {
+                let other_es = other.face(other_face).edge_ids(&other).collect_vec();
+                if equal_up_to_rotation(&es, &other_es) {
+                    if face_iso.has(face) {
+                        // duplicate found
+                        return Err(MeshEquivalenceDifference::DifferentFaces(face, other_face));
+                    }
+                    if !compare_face(self.face(face), other.face(other_face)) {
+                        return Err(MeshEquivalenceDifference::DifferentFaces(face, other_face));
+                    }
+                    face_iso.insert(face, other_face);
+                    // we don't have to check for duplicate matches since otherwise the number faces wouldn't be equal
+                    break;
+                }
+            }
+
+            if !face_iso.has(face) {
+                return Err(MeshEquivalenceDifference::NoCorrespondingFace(face));
+            }
+        }
+
+        Ok(face_iso)
+    }
+
     /// Given two graphs and a vertex id isomorphism, check whether
     /// - the graphs have the same number of vertices, edges, and faces,
     /// - the corresponding vertices are adjacent in one mesh iff they are adjacent in the other mesh,
     /// - the faces have the same vertices up to rotation of the vertex list,
     /// - the three comparison functions hold for all pairs of corresponding vertices, edges, and faces.
     ///
-    /// Can take up to O(n^2) time.
-    ///
-    /// TODO: Split this into is_vertex/edge/face_isomorphic and make each of them return the induced isomorphism
+    /// Can take up to O(e * (fe + d)) time where
+    /// - e is the number of edges,
+    /// - fe is the maximum number of faces per edge (usually 2),
+    /// - d is the maximum number of edges per vertex.
     fn is_isomorphic<
         T2: MeshType,
         F1: Fn(&T::Vertex, &T2::Vertex) -> bool,
@@ -223,81 +360,33 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
         compare_vertex: F1,
         compare_edge: F2,
         compare_face: F3,
+        ignore_order: bool,
     ) -> MeshEquivalenceDifference<T, T2> {
         // TODO: how is this related to https://hackmd.io/@bo-JY945TOmvepQ1tAWy6w/SyuaFtay6
 
         if self.num_vertices() != other.num_vertices() {
             return MeshEquivalenceDifference::DifferentNumberOfVertices;
         }
-        if self.num_edges() != other.num_edges() {
-            return MeshEquivalenceDifference::DifferentNumberOfEdges;
-        }
-        if self.num_faces() != other.num_faces() {
-            return MeshEquivalenceDifference::DifferentNumberOfFaces;
-        }
-
-        let mut edge_iso = IndexIsomorphism::<T::E, T2::E>::new();
-        let mut face_iso = IndexIsomorphism::<T::F, T2::F>::new();
-
         for v in self.vertices() {
-            let other_v: &T2::Vertex = other.vertex(*iso.get(v.id()).unwrap());
+            let other_v = other.vertex(*iso.get(v.id()).unwrap());
             if !compare_vertex(v, other_v) {
                 return MeshEquivalenceDifference::DifferentVertices(v.id(), other_v.id());
             }
+        }
 
-            // Is there a corresponding edge?
-            for e in v.edges_out(self) {
-                if edge_iso.has(e.id()) {
-                    continue;
-                }
-
-                let Some(other_e) =
-                    other.shared_edge(other_v.id(), *iso.get(e.target(self).id()).unwrap())
-                else {
-                    return MeshEquivalenceDifference::NoCorrespondingEdge(e.id());
-                };
-
-                edge_iso.insert(e.id(), other_e.id());
-
-                if !compare_edge(&e, &other_e) {
-                    return MeshEquivalenceDifference::DifferentEdges(e.id(), other_e.id());
-                }
-
-                let other_faces = other_e
-                    .face_ids(other)
-                    .map(|f| (f, other.face(f).vertex_ids(other).collect_vec()))
-                    .collect_vec();
-
-                for face in e.face_ids(self) {
-                    if face_iso.has(face) {
-                        continue;
-                    }
-
-                    let vs = self
-                        .face(face)
-                        .vertex_ids(self)
-                        .map(|id| *iso.get(id).unwrap())
-                        .collect_vec();
-                    for (other_f, other_vs) in other_faces.iter() {
-                        // faces are the same if they have the same vertices
-                        if equal_up_to_rotation(&vs, other_vs) {
-                            face_iso.insert(face, *other_f);
-
-                            if !compare_face(self.face(face), other.face(*other_f)) {
-                                return MeshEquivalenceDifference::DifferentFaces(face, *other_f);
-                            }
-                            break;
-                        }
-                    }
-
-                    if !face_iso.has(face) {
-                        return MeshEquivalenceDifference::NoCorrespondingFace(face);
-                    }
+        match self.find_edge_isomorphism::<T2, _>(other, iso, compare_edge) {
+            Err(e) => e,
+            Ok(edge_iso) => {
+                if self
+                    .find_face_isomorphism::<T2, _>(other, &edge_iso, compare_face, ignore_order)
+                    .is_ok()
+                {
+                    MeshEquivalenceDifference::Equivalent
+                } else {
+                    MeshEquivalenceDifference::DifferentNumberOfFaces
                 }
             }
         }
-
-        MeshEquivalenceDifference::Equivalent
     }
 
     /// `is_isomorphic` for the vertex isomorphism based on the given similarity metric.
@@ -310,7 +399,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
         let Ok(iso) = self.find_payload_isomorphism::<T2, F>(other, f) else {
             return MeshEquivalenceDifference::NoCorrespondingVertex;
         };
-        self.is_isomorphic(other, &iso, |_, _| true, |_, _| true, |_, _| true)
+        self.is_isomorphic(other, &iso, |_, _| true, |_, _| true, |_, _| true, false)
     }
 
     /// Checks whether the two meshes are isomorphic with the same vertex positions.
