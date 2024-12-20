@@ -58,7 +58,7 @@ impl Scalar for f32 {
     }
 
     #[inline(always)]
-    fn to_f64(self) -> f64 {
+    fn as_f64(self) -> f64 {
         self as f64
     }
 

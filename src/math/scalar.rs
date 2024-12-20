@@ -70,7 +70,7 @@ pub trait Scalar:
     fn is_negative(self) -> bool;
 
     /// Converts the scalar to a 64-bit floating point number.
-    fn to_f64(self) -> f64;
+    fn as_f64(self) -> f64;
 
     /// Converts a usize to the scalar.
     fn from_usize(value: usize) -> Self;

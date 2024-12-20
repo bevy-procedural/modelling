@@ -26,7 +26,7 @@ pub fn delaunay_triangulation<T: MeshType3D>(
     for (i2, (vec2, global_index)) in vec2s.iter().enumerate() {
         i2v.push(*global_index);
         let spade_vertex = cdt
-            .insert(Point2::new(vec2.x().to_f64(), vec2.y().to_f64()))
+            .insert(Point2::new(vec2.x().as_f64(), vec2.y().as_f64()))
             .unwrap();
         // TODO: Handle meshes with vertices with the same position
         assert!(spade_vertex.index() == i2);

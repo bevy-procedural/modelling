@@ -142,16 +142,16 @@ impl<S: crate::math::Scalar> From<&crate::extensions::nalgebra::VertexPayloadPNU
     fn from(value: &crate::extensions::nalgebra::VertexPayloadPNU<S, 3>) -> Self {
         Self {
             position: Vec3::new(
-                value.pos().x.to_f64() as f32,
-                value.pos().y.to_f64() as f32,
-                value.pos().z.to_f64() as f32,
+                value.pos().x.as_f64() as f32,
+                value.pos().y.as_f64() as f32,
+                value.pos().z.as_f64() as f32,
             ),
             normal: Vec3::new(
-                value.normal().x.to_f64() as f32,
-                value.normal().y.to_f64() as f32,
-                value.normal().z.to_f64() as f32,
+                value.normal().x.as_f64() as f32,
+                value.normal().y.as_f64() as f32,
+                value.normal().z.as_f64() as f32,
             ),
-            uv: Vec2::new(value.uv().x.to_f64() as f32, value.uv().y.to_f64() as f32),
+            uv: Vec2::new(value.uv().x.as_f64() as f32, value.uv().y.as_f64() as f32),
         }
     }
 }

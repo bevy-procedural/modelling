@@ -43,6 +43,17 @@ pub struct VertexColor {
     b: u8,
 }
 
+impl VertexColor {
+    /// Linearly interpolate between two colors
+    fn lerp(&self, other: &Self, t: f64) -> Self {
+        Self {
+            r: (self.r as f64 * (1.0 - t) + other.r as f64 * t) as u8,
+            g: (self.g as f64 * (1.0 - t) + other.g as f64 * t) as u8,
+            b: (self.b as f64 * (1.0 - t) + other.b as f64 * t) as u8,
+        }
+    }
+}
+
 /// A nd mesh type with 16 bit indices and colored vertices with 64-bit vertex positions
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
 pub struct MeshTypeColored<const D: usize>;
@@ -123,6 +134,7 @@ impl<S: ScalarPlus, const D: usize> Transformable<D> for VertexPayloadColored<S,
     #[inline(always)]
     fn lerp(&mut self, _other: &Self, t: Self::S) -> &mut Self {
         self.position = self.position.lerp(&_other.position, t);
+        self.color = self.color.lerp(&_other.color, t.as_f64());
         self
     }
 }
