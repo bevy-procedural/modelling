@@ -37,4 +37,4 @@ jobs:
       - name: Run cargo test
         run: cargo test --verbose --no-default-features --features="bevy,nalgebra,fonts,svg"
       - name: Compile examples
-        run: cargo build --examples --no-default-features --features="example_deps"
+        run: cargo build --examples --no-default-features --features="bevy_example,nalgebra,fonts,svg"

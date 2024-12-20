@@ -72,7 +72,6 @@ pub fn triangulate_face<T: MeshType3D>(
     mesh: &T::Mesh,
     tri: &mut Triangulation<T::V>,
     algorithm: TriangulationAlgorithm,
-    meta: &mut TesselationMeta<T::V>,
 ) {
     let n = face.num_vertices(mesh);
     assert!(
@@ -95,13 +94,18 @@ pub fn triangulate_face<T: MeshType3D>(
             ear_clipping::<T>(face, mesh, tri, false);
         }
         TriangulationAlgorithm::Sweep => {
-            sweep_line::<T, LinearMonoTriangulator<T::V, T::Vec2>>(face, mesh, tri, meta);
+            let mut meta = TesselationMeta::default();
+            sweep_line::<T, LinearMonoTriangulator<T::V, T::Vec2>>(face, mesh, tri, &mut meta);
         }
         TriangulationAlgorithm::SweepDynamic => {
-            sweep_line::<T, DynamicMonoTriangulator<T::V, T::Vec2, T::Poly>>(face, mesh, tri, meta);
+            let mut meta = TesselationMeta::default();
+            sweep_line::<T, DynamicMonoTriangulator<T::V, T::Vec2, T::Poly>>(
+                face, mesh, tri, &mut meta,
+            );
         }
         TriangulationAlgorithm::SweepDelaunay => {
-            sweep_line::<T, DelaunayMonoTriangulator<T::V, T::Vec2>>(face, mesh, tri, meta);
+            let mut meta = TesselationMeta::default();
+            sweep_line::<T, DelaunayMonoTriangulator<T::V, T::Vec2>>(face, mesh, tri, &mut meta);
         }
         TriangulationAlgorithm::MinWeight => {
             minweight_dynamic::<T>(face, mesh, tri);

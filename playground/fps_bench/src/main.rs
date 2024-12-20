@@ -115,9 +115,8 @@ fn setup(
                 if start_time.elapsed() > BENCHMARK_RENDER {
                     break;
                 }
-                let mut meta = Default::default();
                 let start = std::time::Instant::now();
-                mesh.triangulate(algo, &mut meta);
+                mesh.triangulate(algo);
                 mesh_list
                     .0
                     .last_mut()

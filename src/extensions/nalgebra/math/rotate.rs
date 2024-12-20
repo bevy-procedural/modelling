@@ -1,5 +1,5 @@
 use super::{ScalarPlus, VecN};
-use crate::math::{Rotator, Scalar};
+use crate::math::{Rotator, Scalar, Vector};
 use nalgebra::SMatrix;
 
 /// Rotation in D-dimensional space.
@@ -100,13 +100,22 @@ impl<S: Scalar, const D: usize> NdRotate<S, D> {
         } else if D == 3 {
             Self {
                 rot2: None,
-                rot3: Some(
-                    nalgebra::Rotation3::rotation_between(
-                        &from.fixed_rows::<3>(0).into_owned(),
-                        &to.fixed_rows::<3>(0).into_owned(),
-                    )
-                    .expect("Failed to create rotation"),
-                ),
+                rot3: if let Some(r) = nalgebra::Rotation3::rotation_between(
+                    &from.fixed_rows::<3>(0).into_owned(),
+                    &to.fixed_rows::<3>(0).into_owned(),
+                ) {
+                    Some(r)
+                } else if Vector::<S, D>::is_about(&from, &(-to), S::EPS) {
+                    // rotate 180 degrees around any axis
+                    Some(nalgebra::Rotation3::from_axis_angle(
+                        &nalgebra::Unit::new_normalize(VecN::<S, 3>::new(S::ONE, S::ZERO, S::ZERO)),
+                        S::PI,
+                    ))
+                } else {
+                    assert!(false, "Could not create rotation arc {} {}", from, to);
+                    None
+                },
+
                 rot: None,
             }
         } else {

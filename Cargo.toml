@@ -70,7 +70,7 @@ netsci = ["nalgebra"]
 wgpu = ["nalgebra"]
 bevy = ["dep:bevy", "bevy/bevy_core_pipeline"]
 gizmo = ["bevy", "bevy/bevy_text", "bevy/bevy_ui"]
-example_deps = ["bevy", "bevy/default", "gizmo"]
+bevy_example = ["bevy", "bevy/default", "gizmo"]
 svg = ["dep:usvg"]
 nalgebra = ["dep:nalgebra"]
 fonts = ["dep:ab_glyph"]
@@ -85,49 +85,55 @@ benchmarks = ["dep:criterion", "bevy"]
 name = "box"
 path = "examples/box.rs"
 doc-scrape-examples = true
-required-features = ["example_deps"]
+required-features = ["bevy_example"]
+
+[[example]]
+name = "custom_mesh_type"
+path = "examples/custom_mesh_type.rs"
+doc-scrape-examples = true
+required-features = ["nalgebra"]
 
 [[example]]
 name = "fern"
 path = "examples/fern.rs"
 doc-scrape-examples = true
-required-features = ["example_deps"]
+required-features = ["bevy_example"]
 
 [[example]]
 name = "path"
 path = "examples/path.rs"
 doc-scrape-examples = true
-required-features = ["example_deps"]
+required-features = ["bevy_example"]
 
 [[example]]
 name = "svg"
 path = "examples/svg.rs"
 doc-scrape-examples = true
-required-features = ["example_deps", "svg"]
+required-features = ["bevy_example", "svg"]
 
 [[example]]
 name = "text"
 path = "examples/text.rs"
 doc-scrape-examples = true
-required-features = ["example_deps", "fonts"]
+required-features = ["bevy_example", "fonts"]
 
 [[example]]
 name = "triangulation"
 path = "examples/triangulation.rs"
 doc-scrape-examples = true
-required-features = ["example_deps"]
+required-features = ["bevy_example"]
 
 [[example]]
 name = "zoo"
 path = "examples/zoo.rs"
 doc-scrape-examples = true
-required-features = ["example_deps"]
+required-features = ["bevy_example"]
 
 [[example]]
 name = "zoo_2d"
 path = "examples/zoo_2d.rs"
 doc-scrape-examples = true
-required-features = ["example_deps"]
+required-features = ["bevy_example"]
 
 [[bench]]
 name = "triangulation"

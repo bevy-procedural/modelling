@@ -1,4 +1,4 @@
-use super::{Polygon2dBevy, BevyVertexPayload3d};
+use super::{BevyVertexPayload3d, Polygon2dBevy};
 use crate::{
     halfedge::{
         HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeImplMeshType, HalfEdgeMeshImpl, HalfEdgeVertexImpl,
@@ -8,7 +8,7 @@ use crate::{
         EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshType,
         MeshType3D, MeshTypeHalfEdge, Triangulateable,
     },
-    tesselate::{TesselationMeta, TriangulationAlgorithm},
+    tesselate::TriangulationAlgorithm,
 };
 use bevy::{
     math::{Quat, Vec2, Vec3},
@@ -87,21 +87,15 @@ impl<T: HalfEdgeImplMeshType<VP = BevyVertexPayload3d> + MeshType3D<Vec = Vec3, 
     /// Replace the mesh's attributes with the current mesh.
     /// Requires the mesh to be a triangle list and have the MAIN_WORLD usage.
     pub fn bevy_set(&self, mesh: &mut bevy::render::mesh::Mesh) {
-        self.bevy_set_ex(
-            mesh,
-            TriangulationAlgorithm::Auto,
-            false,
-            &mut TesselationMeta::default(),
-        );
+        self.bevy_set_ex(mesh, TriangulationAlgorithm::Auto, false);
     }
 
-    /// Like bevy_set, but with additional meta information
+    /// Like bevy_set, but with more options
     pub fn bevy_set_ex(
         &self,
         mesh: &mut bevy::render::mesh::Mesh,
         algo: TriangulationAlgorithm,
         generate_flat_normals: bool,
-        meta: &mut TesselationMeta<T::V>,
     ) {
         assert!(mesh.primitive_topology() == PrimitiveTopology::TriangleList);
         assert!(mesh.asset_usage.contains(RenderAssetUsages::MAIN_WORLD));
@@ -110,9 +104,9 @@ impl<T: HalfEdgeImplMeshType<VP = BevyVertexPayload3d> + MeshType3D<Vec = Vec3, 
         // use https://crates.io/crates/stats_alloc to measure memory usage
         //let now = std::time::Instant::now();
         let (is, vs) = if generate_flat_normals {
-            self.triangulate_and_generate_flat_normals_post(algo, meta)
+            self.triangulate_and_generate_flat_normals_post(algo)
         } else {
-            self.triangulate(algo, meta)
+            self.triangulate(algo)
         };
         //let elapsed = now.elapsed();
         //println!("///////////////////\nTriangulation took {:.2?}", elapsed);
@@ -143,7 +137,7 @@ impl<T: HalfEdgeImplMeshType<VP = BevyVertexPayload3d> + MeshType3D<Vec = Vec3, 
         mesh
     }
 
-    /// Convert the mesh to a bevy mesh with additional meta information
+    /// Convert the mesh to a bevy mesh with more options
     pub fn to_bevy_ex(
         &self,
         usage: RenderAssetUsages,
@@ -151,12 +145,7 @@ impl<T: HalfEdgeImplMeshType<VP = BevyVertexPayload3d> + MeshType3D<Vec = Vec3, 
         generate_flat_normals: bool,
     ) -> bevy::render::mesh::Mesh {
         let mut mesh = bevy::render::mesh::Mesh::new(PrimitiveTopology::TriangleList, usage);
-        self.bevy_set_ex(
-            &mut mesh,
-            algo,
-            generate_flat_normals,
-            &mut TesselationMeta::default(),
-        );
+        self.bevy_set_ex(&mut mesh, algo, generate_flat_normals);
         mesh
     }
 }

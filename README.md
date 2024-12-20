@@ -49,8 +49,9 @@ mesh.to_bevy(RenderAssetUsages::default())
 -   [svg](https://github.com/bevy-procedural/modelling/blob/main/examples/svg.rs) loads and renders a duck from a svg string.
 -   [triangulation](https://github.com/bevy-procedural/modelling/blob/main/examples/triangulation.rs) demonstrates the different triangulation algorithms.
 -   [fern](https://github.com/bevy-procedural/modelling/blob/main/examples/fern.rs) is a more advanced example creating a detailed fern leaf.
+-   [custom_mesh_type](https://github.com/bevy-procedural/modelling/blob/main/examples/custom_mesh_type.rs) demonstrates how to define a custom mesh by extending the default implementation with vertex colors.
 
-<!-- TODO: demonstrate smooth normals, custom attributes, custom mesh types, 4d geometry, triangulation strategies, mesh comparison, net science -->
+<!-- TODO: demonstrate smooth normals, 4d geometry, triangulation strategies, mesh comparison, net science -->
 
 You can compile and run the [examples](https://github.com/bevy-procedural/modelling/tree/main/examples) like, e.g., `cargo run --features=example_deps --profile fast-dev --example box`. The `fast-dev` profile will enable optimizations for the dependencies, but not for the package itself. This will slow down the first build _significantly_, but incremental builds are slightly faster and bevy's performance (bevy is used as the renderer in the examples) improves a lot.
 
@@ -189,7 +190,7 @@ The following cargo features are available:
 
 -   `bevy` -- Compiles with support for bevy.
 -   `wgpu` -- Compiles with support for wgpu.
--   `example_deps` -- Compiles with the dependencies necessary for the examples.
+-   `bevy_example` -- Compiles with the dependencies necessary for the examples.
 -   `netsci` -- Enable network science tools.
 -   `svg` -- Enable SVG import. Adds [usvg](https://github.com/linebender/resvg) as a dependency.
 -   `fonts` -- Enable font rendering. Adds [ab_glyph](https://github.com/alexheretic/ab-glyph) as a dependency.

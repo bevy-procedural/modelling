@@ -4,25 +4,21 @@ use super::{basics::MeshBasics, MeshType, MeshType3D};
 use crate::{
     math::{HasNormal, IndexType, Vector},
     mesh::{Face3d, FaceBasics, Triangulation, VertexBasics},
-    tesselate::{triangulate_face, TesselationMeta, TriangulationAlgorithm},
+    tesselate::{triangulate_face, TriangulationAlgorithm},
 };
 
 /// Methods for transforming meshes.
 pub trait Triangulateable<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// convert the mesh to triangles and get all indices to do so.
     /// Compact the vertices and return the indices
-    fn triangulate(
-        &self,
-        algorithm: TriangulationAlgorithm,
-        meta: &mut TesselationMeta<T::V>,
-    ) -> (Vec<T::V>, Vec<T::VP>)
+    fn triangulate(&self, algorithm: TriangulationAlgorithm) -> (Vec<T::V>, Vec<T::VP>)
     where
         T: MeshType3D,
     {
         let mut indices = Vec::new();
         for f in self.faces() {
             let mut tri = Triangulation::new(&mut indices);
-            triangulate_face::<T>(f, self, &mut tri, algorithm, meta)
+            triangulate_face::<T>(f, self, &mut tri, algorithm)
 
             // TODO debug_assert!(tri.verify_full());
         }
@@ -36,7 +32,6 @@ pub trait Triangulateable<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     fn triangulate_and_generate_flat_normals_post(
         &self,
         algorithm: TriangulationAlgorithm,
-        meta: &mut TesselationMeta<T::V>,
     ) -> (Vec<T::V>, Vec<T::VP>)
     where
         T: MeshType3D,
@@ -56,7 +51,7 @@ pub trait Triangulateable<T: MeshType<Mesh = Self>>: MeshBasics<T> {
                 p.set_normal(face_normal);
                 vertices.push(p)
             });
-            triangulate_face::<T>(f, self, &mut tri, algorithm, meta);
+            triangulate_face::<T>(f, self, &mut tri, algorithm);
             tri.map_indices(&id_map);
         }
 

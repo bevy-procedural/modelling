@@ -1,8 +1,8 @@
-//! `cargo watch -w playground -w src -x "run -p playground_bevy --profile fast-dev`
+//! cargo watch -w playground -w src -x "run -p playground_bevy --profile fast-dev"
 //!
-//! When developing tests, we recommend
-//! `cargo watch -w src -x "test --profile fast-dev"` resp.
-//! `cargo llvm-cov --html` to generate a coverage report.
+//! When developing tests, we recommend:
+//! cargo watch -w src -x "test --profile fast-dev"
+//! cargo llvm-cov --html
 
 use bevy::{
     pbr::{
@@ -85,7 +85,7 @@ fn update_meshes(
     global_settings: ResMut<GlobalSettings>,
     windows: Query<&Window>,
     camera_q: Query<(&Camera, &GlobalTransform)>,
-    mut texts: ResMut<Text3dGizmos>,
+    // mut texts: ResMut<Text3dGizmos>,
 ) {
     let window = windows.single();
     let (camera, camera_transform) = camera_q.single();
@@ -114,16 +114,15 @@ fn update_meshes(
             .unwrap_or(0.0);
         mesh.translate(&Vec3::new(0.0, -min_y, 0.0));
 
-        let mut meta = TesselationMeta::default();
         mesh.generate_smooth_normals();
         mesh.bevy_set_ex(
             assets.get_mut(bevy_mesh).unwrap(),
             TriangulationAlgorithm::MinWeight,
             true,
-            &mut meta,
         );
 
-        show_tesselation_meta(&mut texts, &mesh, &meta);
+        // TODO: reimplement meta has a custom payload
+        //show_tesselation_meta(&mut texts, &mesh, &meta);
     }
 }
 
