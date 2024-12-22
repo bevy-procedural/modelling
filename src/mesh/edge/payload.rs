@@ -8,6 +8,9 @@ use crate::{
 use super::CurvedEdgeType;
 
 /// A trait that defines how the payload of an edge should behave.
+/// 
+/// Edge payloads are exactly one per edge, .e.g., on half-edge graphs, 
+/// there should only be one payload per pair of half-edges.
 pub trait EdgePayload: Clone + std::fmt::Debug + PartialEq {
     /// Returns a new default instance without any meaningful data.
     fn allocate() -> Self;

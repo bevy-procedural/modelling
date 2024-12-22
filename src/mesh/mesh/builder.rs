@@ -96,7 +96,7 @@ pub trait MeshHalfEdgeBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     ///
     /// Returns the inserted pair of halfedges.
     /// 
-    /// TODO: connectivity is unclear!
+    /// TODO: connectivity is unclear!  
     fn insert_edge_between(
         &mut self,
         origin0: T::V,

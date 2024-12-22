@@ -7,7 +7,7 @@ pub use iterator::*;
 use super::HalfEdgeImplMeshType;
 use crate::{
     math::IndexType,
-    mesh::{DefaultEdgePayload, Edge, EdgeBasics, EdgePayload},
+    mesh::{DefaultEdgePayload, Edge, EdgeBasics},
     util::Deletable,
 };
 
@@ -44,7 +44,7 @@ pub struct HalfEdgeImpl<T: HalfEdgeImplMeshType> {
     face: T::F,
 
     /// Some user-defined payload
-    payload: T::EP,
+    payload: Option<T::EP>,
 }
 
 impl<T: HalfEdgeImplMeshType> Edge for HalfEdgeImpl<T> {
@@ -53,10 +53,10 @@ impl<T: HalfEdgeImplMeshType> Edge for HalfEdgeImpl<T> {
 
 impl<T: HalfEdgeImplMeshType> std::fmt::Debug for HalfEdgeImpl<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let payload = if self.payload.is_empty() {
+        let payload = if self.payload_self_empty() {
             "".to_string()
         } else {
-            format!(", payload: {:?}", self.payload)
+            format!(", payload: {:?}", self.payload.as_ref().unwrap())
         };
         write!(
             f,
@@ -73,9 +73,6 @@ impl<T: HalfEdgeImplMeshType> std::fmt::Debug for HalfEdgeImpl<T> {
             self.next.index(),
             payload
         )?;
-        if !self.payload.is_empty() {
-            write!(f, ", payload: {:?}", self.payload)?;
-        }
         Ok(())
     }
 }
@@ -106,7 +103,7 @@ impl<T: HalfEdgeImplMeshType> Deletable<T::E> for HalfEdgeImpl<T> {
             prev: IndexType::max(),
             origin_id: IndexType::max(),
             face: IndexType::max(),
-            payload: T::EP::allocate(),
+            payload: None,
         }
     }
 }
@@ -117,14 +114,6 @@ where
 {
     /// Creates a deleted edge
     fn default() -> Self {
-        Self {
-            id: IndexType::max(),
-            next: IndexType::max(),
-            twin: IndexType::max(),
-            prev: IndexType::max(),
-            origin_id: IndexType::max(),
-            face: IndexType::max(),
-            payload: T::EP::default(),
-        }
+        Self::allocate()
     }
 }

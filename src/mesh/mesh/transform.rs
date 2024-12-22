@@ -1,7 +1,9 @@
+use itertools::Itertools;
+
 use super::{basics::MeshBasics, EuclideanMeshType};
 use crate::{
     math::Transformable,
-    mesh::{EdgeBasics, FaceBasics, VertexBasics},
+    mesh::{FaceBasics, VertexBasics},
 };
 
 /// Methods for transforming meshes.
@@ -18,8 +20,8 @@ where
         for v in self.vertices_mut() {
             v.payload_mut().transform(t);
         }
-        for e in self.edges_mut() {
-            e.payload_mut().transform(t);
+        for e in self.edges().cloned().collect_vec() {
+            self.edge_payload_mut(&e).transform(t);
         }
         for f in self.faces_mut() {
             f.payload_mut().transform(t);
@@ -40,8 +42,8 @@ where
         for v in self.vertices_mut() {
             v.payload_mut().translate(t);
         }
-        for e in self.edges_mut() {
-            e.payload_mut().translate(t);
+        for e in self.edges().cloned().collect_vec() {
+            self.edge_payload_mut(&e).translate(t);
         }
         for f in self.faces_mut() {
             f.payload_mut().translate(t);
@@ -62,8 +64,8 @@ where
         for v in self.vertices_mut() {
             v.payload_mut().rotate(rotation);
         }
-        for e in self.edges_mut() {
-            e.payload_mut().rotate(rotation);
+        for e in self.edges().cloned().collect_vec() {
+            self.edge_payload_mut(&e).rotate(rotation);
         }
         for f in self.faces_mut() {
             f.payload_mut().rotate(rotation);
@@ -84,8 +86,8 @@ where
         for v in self.vertices_mut() {
             v.payload_mut().scale(scale);
         }
-        for e in self.edges_mut() {
-            e.payload_mut().scale(scale);
+        for e in self.edges().cloned().collect_vec() {
+            self.edge_payload_mut(&e).scale(scale);
         }
         for f in self.faces_mut() {
             f.payload_mut().scale(scale);

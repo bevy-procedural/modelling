@@ -4,9 +4,8 @@ use crate::{
     },
     math::{HasPosition, Vector},
     mesh::{
-        CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EdgeBasics, EmptyEdgePayload,
-        EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshType,
-        MeshTypeHalfEdge,
+        CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EmptyEdgePayload, EmptyFacePayload,
+        EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshType, MeshTypeHalfEdge,
     },
 };
 
@@ -49,12 +48,16 @@ impl HalfEdgeImplMeshType for MeshType2d64PNUCurved {}
 impl MeshTypeHalfEdge for MeshType2d64PNUCurved {}
 
 impl CurvedEdge<2, MeshType2d64PNUCurved> for HalfEdgeImpl<MeshType2d64PNUCurved> {
-    fn curve_type(&self) -> CurvedEdgeType<2, MeshType2d64PNUCurved> {
-        self.payload().curve_type()
+    fn curve_type(&self, mesh: &Mesh2d64Curved) -> CurvedEdgeType<2, MeshType2d64PNUCurved> {
+        mesh.edge_payload(self).curve_type()
     }
 
-    fn set_curve_type(&mut self, curve_type: CurvedEdgeType<2, MeshType2d64PNUCurved>) {
-        self.payload_mut().set_curve_type(curve_type);
+    fn set_curve_type_in_mesh(
+        &self,
+        mesh: &mut Mesh2d64Curved,
+        curve_type: CurvedEdgeType<2, MeshType2d64PNUCurved>,
+    ) {
+        mesh.edge_payload_mut(self).set_curve_type(curve_type);
     }
 }
 

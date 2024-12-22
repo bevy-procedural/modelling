@@ -5,8 +5,8 @@ use crate::{
     math::IndexType,
     mesh::{
         DefaultEdgePayload, DefaultFacePayload, EdgeBasics, FaceBasics, HalfEdge,
-        HalfEdgeSemiBuilder, HalfEdgeVertex, MeshBasics, MeshHalfEdgeBuilder,
-        MeshType, VertexBasics,
+        HalfEdgeSemiBuilder, HalfEdgeVertex, MeshBasics, MeshHalfEdgeBuilder, MeshType,
+        VertexBasics,
     },
 };
 use itertools::Itertools;
@@ -240,7 +240,7 @@ impl<T: HalfEdgeImplMeshType> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T> {
                 if prev == IndexType::max() { twin } else { prev },
                 origin,
                 face,
-                payload,
+                Some(payload),
             ),
         );
     }
@@ -329,7 +329,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
         fv: FV,
         fe: FE,
         ff: FF,
-        fm: FM
+        fm: FM,
     ) -> Self
     where
         FE: Fn(&T2::EP) -> T::EP,
@@ -385,7 +385,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
                 edge_map[&edge.prev_id()],
                 edge_map[&edge.twin_id()],
                 edge_map[&edge.next_id()],
-                fe(&edge.payload()),
+                fe(&mesh.edge_payload(edge)),
             );
         }
 

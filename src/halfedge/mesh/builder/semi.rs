@@ -134,7 +134,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeSemiBuilder<T> for HalfEdgeMeshImpl<T> {
                 old_edge.id(),
                 new_v,
                 old_edge.face_id(),
-                ep,
+                Some(ep),
             ),
         );
         self.vertices
@@ -178,7 +178,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeSemiBuilder<T> for HalfEdgeMeshImpl<T> {
                 old_edge.id(),
                 other_new.origin_id(),
                 old_edge.face_id(),
-                ep,
+                Some(ep),
             ),
         );
 

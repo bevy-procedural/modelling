@@ -62,17 +62,22 @@ impl<const D: usize, T: EuclideanMeshType<D>> CurvedEdgeType<D, T> {
     /// Approximates the Fréchet distance between the edge and a line segment.
     pub fn frechet_distance(
         &self,
-        line_start: T::Vec,
-        line_end: T::Vec,
         t0: T::S,
         t1: T::S,
         edge: &T::Edge,
         mesh: &T::Mesh,
         samples: usize,
         max_search: usize,
-    ) -> T::S {
+    ) -> T::S
+    where
+        T::Edge: CurvedEdge<D, T>,
+    {
         let mut max_dist = T::S::ZERO;
         let mut bezier_pos = t0;
+
+        let curve = edge.curve_type(mesh);
+        let line_start = curve.point_at(edge, mesh, t0);
+        let line_end = curve.point_at(edge, mesh, t1);
 
         // TODO: this is a performance bottleneck. Optimizing this would be great.
 
@@ -131,30 +136,26 @@ impl<const D: usize, T: EuclideanMeshType<D>> CurvedEdgeType<D, T> {
 /// Edge that can be a line or some type of curve.
 pub trait CurvedEdge<const D: usize, T: EuclideanMeshType<D, Edge = Self>>: EdgeBasics<T> {
     /// Returns the curve type of the edge
-    fn curve_type(&self) -> CurvedEdgeType<D, T>;
+    fn curve_type(&self, mesh: &T::Mesh) -> CurvedEdgeType<D, T>;
 
-    /// Overwrites the curve type of the edge
-    fn set_curve_type(&mut self, curve_type: CurvedEdgeType<D, T>);
+    /// Overwrites the curve type of the edge. Notice that the given edge instance is not modified.
+    /// 
+    /// TODO: This is confusing. Should probably be defined on the mesh, not the edge.
+    fn set_curve_type_in_mesh(&self, mesh: &mut T::Mesh, curve_type: CurvedEdgeType<D, T>);
 
     /// Converts the curved edge to a uniformly spaced sequence of `n` line segments
     fn flatten_uniform(&self, n: usize, mesh: &T::Mesh) -> Vec<T::Vec> {
         assert!(n > 0);
+        let ct = self.curve_type(mesh);
         return (0..n - 1)
             .into_iter()
-            .map(|i| {
-                self.curve_type().point_at(
-                    self,
-                    mesh,
-                    T::S::from_usize(i + 1) / T::S::from_usize(n),
-                )
-            })
+            .map(|i| ct.point_at(self, mesh, T::S::from_usize(i + 1) / T::S::from_usize(n)))
             .collect();
     }
 
     /// Converts the curved edge to a sequence of line segments with a specific error using De Casteljau's algorithm
     fn flatten_casteljau(&self, error: T::S, mesh: &T::Mesh) -> Vec<T::Vec> {
         fn recursive_flatten<const D: usize, T: EuclideanMeshType<D>>(
-            curve: &CurvedEdgeType<D, T>,
             edge: &T::Edge,
             mesh: &T::Mesh,
             t0: T::S,
@@ -164,9 +165,6 @@ pub trait CurvedEdge<const D: usize, T: EuclideanMeshType<D, Edge = Self>>: Edge
         ) where
             T::Edge: CurvedEdge<D, T>,
         {
-            let p0 = curve.point_at(edge, mesh, t0);
-            let p1 = curve.point_at(edge, mesh, t1);
-
             /*
             // we shouldn't just test the middle but n points
             // e.g., if the curve is s-shaped, the deviation would be 0 at the middle
@@ -181,26 +179,24 @@ pub trait CurvedEdge<const D: usize, T: EuclideanMeshType<D, Edge = Self>>: Edge
             }).is_none();*/
 
             // TODO: don't hardcode the frechet params
-            let is_acceptable = edge
-                .curve_type()
-                .frechet_distance(p0, p1, t0, t1, edge, mesh, 3, 20)
-                < error;
+
+            let curve = edge.curve_type(mesh);
+            let is_acceptable = curve.frechet_distance(t0, t1, edge, mesh, 3, 20) < error;
 
             if is_acceptable {
                 // The segment is acceptable; push p1
-                lines.push(p1);
+                lines.push(curve.point_at(edge, mesh, t1));
             } else {
                 // Subdivide further
                 let tm = (t0 + t1) / T::S::TWO;
-                recursive_flatten(curve, edge, mesh, tm, t1, error, lines);
-                recursive_flatten(curve, edge, mesh, t0, tm, error, lines);
+                recursive_flatten::<D, T>(edge, mesh, tm, t1, error, lines);
+                recursive_flatten::<D, T>(edge, mesh, t0, tm, error, lines);
             }
         }
 
         let mut lines = Vec::new();
         // Start by adding the target point
-        let curve = self.curve_type();
-        recursive_flatten(&curve, self, mesh, T::S::ZERO, T::S::ONE, error, &mut lines);
+        recursive_flatten::<D, T>(self, mesh, T::S::ZERO, T::S::ONE, error, &mut lines);
         // Reverse the points to get them in the correct order
         lines.reverse();
         lines.pop();

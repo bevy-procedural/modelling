@@ -429,8 +429,9 @@ where
         self.line_to(end);
         let (edge, _twin) = self.current_edges().unwrap();
         self.mesh()
-            .edge_mut(edge)
-            .set_curve_type(CurvedEdgeType::QuadraticBezier(ct));
+            .edge(edge)
+            .clone()
+            .set_curve_type_in_mesh(self.mesh(), CurvedEdgeType::QuadraticBezier(ct));
         self
     }
 
@@ -453,8 +454,9 @@ where
         self.line_to(end);
         let (edge, _twin) = self.current_edges().unwrap();
         self.mesh()
-            .edge_mut(edge)
-            .set_curve_type(CurvedEdgeType::CubicBezier(ct1, ct2));
+            .edge(edge)
+            .clone()
+            .set_curve_type_in_mesh(self.mesh(), CurvedEdgeType::CubicBezier(ct1, ct2));
         self
     }
 }

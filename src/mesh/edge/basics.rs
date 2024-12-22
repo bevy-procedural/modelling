@@ -8,11 +8,9 @@ pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone {
     /// Returns the identifier of the edge
     fn id(&self) -> T::E;
 
-    /// Returns the face payload.
-    fn payload(&self) -> &T::EP;
-
-    /// Returns a mutable reference to the face payload.
-    fn payload_mut(&mut self) -> &mut T::EP;
+    /// Whether the edge payload is considered empty or, if this is a half-edge,
+    /// the edge payload is stored in the twin.
+    fn payload_self_empty(&self) -> bool;
 
     /// Returns the source vertex of the edge. If it is not directed, can be either vertex but not the same as the target.
     fn origin<'a>(&'a self, mesh: &'a T::Mesh) -> &'a T::Vertex;
@@ -22,6 +20,16 @@ pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone {
 
     /// Returns whether the edge (i.e., this HalfEdge or its twin) is a boundary edge, i.e., adjacent to a hole.
     fn is_boundary(&self, mesh: &T::Mesh) -> bool;
+
+    /// Returns the edge payload if it exists.
+    /// Might be `None` if the payload is stored in the twin.
+    /// Usually, you should use `Mesh::edge_payload` to get the payload.
+    fn payload_self(&self) -> Option<&T::EP>;
+
+    /// Returns the edge payload if it exists.
+    /// Might be `None` if the payload is stored in the twin.
+    /// Usually, you should use `Mesh::edge_payload_mut` to get the payload.
+    fn payload_self_mut<'a>(&'a mut self) -> Option<&'a mut T::EP>;
 
     /// Returns the centroid of the edge.
     fn centroid<const D: usize>(&self, mesh: &T::Mesh) -> T::Vec
@@ -59,7 +67,7 @@ mod tests {
         assert_eq!(edge.origin(&mesh).id(), 0);
         assert_eq!(edge.target(&mesh).id(), 1);
         assert_eq!(edge.is_boundary(&mesh), true);
-        assert_eq!(edge.payload().is_empty(), true);
+        assert_eq!(mesh.edge_payload(edge).is_empty(), true);
         assert_eq!(edge.face_ids(&mesh).collect::<Vec<_>>(), vec![0]);
         assert!(edge.edges_face(&mesh).count() == 3);
         assert!(edge.edges_face_back(&mesh).count() == 3);

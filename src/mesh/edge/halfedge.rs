@@ -4,7 +4,7 @@ use crate::mesh::MeshType;
 /// Basic halfedge traits.
 pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
     /// Creates a new half-edge
-    fn new(next: T::E, twin: T::E, prev: T::E, origin: T::V, face: T::F, payload: T::EP) -> Self;
+    fn new(next: T::E, twin: T::E, prev: T::E, origin: T::V, face: T::F, payload: Option<T::EP>) -> Self;
 
     /// Sets the face of the HalfEdge. Panics if the face is already set.
     fn set_face(&mut self, face: T::F);

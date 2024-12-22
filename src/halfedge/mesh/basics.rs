@@ -2,9 +2,11 @@ use std::collections::HashMap;
 
 use super::{HalfEdgeImplMeshType, HalfEdgeMeshImpl};
 use crate::{
-    math::IndexType, mesh::{
+    math::IndexType,
+    mesh::{
         EdgeBasics, FaceBasics, HalfEdge, MeshBasics, Triangulation, VertexBasics, VertexPayload,
-    }, prelude::{BackwardEdgeIterator, ForwardEdgeIterator}, util::Deletable
+    },
+    util::Deletable,
 };
 
 impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
@@ -16,7 +18,7 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         self.vertices.get(index)
     }
 
-    fn edge(&self, index: T::E) -> &T::Edge {
+    fn edge<'a>(&'a self, index: T::E) -> &'a T::Edge {
         self.halfedges.get(index)
     }
 
@@ -58,18 +60,6 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         self.faces.len()
     }
 
-    #[allow(refining_impl_trait)]
-    #[inline(always)]
-    fn edges_from<'a>(&'a self, e: T::E) -> ForwardEdgeIterator<'a, T> {
-        ForwardEdgeIterator::<'a, T>::new(self.edge(e).clone(), self)
-    }
-
-    #[allow(refining_impl_trait)]
-    #[inline(always)]
-    fn edges_back_from<'a>(&'a self, e: T::E) -> BackwardEdgeIterator<'a, T> {
-        BackwardEdgeIterator::<'a, T>::new(self.edge(e).clone(), self)
-    }
-
     fn clear(&mut self) -> &mut Self {
         self.vertices.clear();
         self.halfedges.clear();
@@ -88,6 +78,34 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     fn set_payload(&mut self, payload: T::MP) -> &mut Self {
         self.payload = payload;
         self
+    }
+
+    #[inline(always)]
+    fn edge_payload<'a>(&'a self, edge: &'a T::Edge) -> &'a T::EP {
+        if let Some(p) = &edge.payload_self() {
+            p
+        } else if let Some(p) = &(self.edge(edge.twin_id()).payload_self()) {
+            p
+        } else {
+            panic!("No payload found for edge {}", edge.id());
+        }
+    }
+
+    #[inline(always)]
+    fn edge_payload_mut<'a>(&'a mut self, edge: &'a T::Edge) -> &'a mut T::EP {
+        if edge.payload_self().is_some() {
+            let pr: Option<&'a mut T::EP> = self.edge_mut(edge.id()).payload_self_mut();
+            if let Some(v) = pr {
+                return v;
+            }
+        } else {
+            let twin_id = edge.twin_id();
+            let pr: Option<&'a mut T::EP> = self.edge_mut(twin_id).payload_self_mut();
+            if let Some(v) = pr {
+                return v;
+            }
+        }
+        panic!("No payload found for edge {}", edge.id());
     }
 
     /// Returns an iterator over all non-deleted vertices

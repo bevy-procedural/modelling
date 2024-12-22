@@ -174,14 +174,18 @@ impl<'a> Font<'a> {
             }
 
             if c1.is_some() {
-                mesh.edge_mut(cur_e)
-                    .set_curve_type(CurvedEdgeType::CubicBezier(
+                mesh.edge(cur_e).clone().set_curve_type_in_mesh(
+                    mesh,
+                    CurvedEdgeType::CubicBezier(
                         c0.unwrap() * scale + trans,
                         c1.unwrap() * scale + trans,
-                    ));
+                    ),
+                );
             } else if c0.is_some() {
-                mesh.edge_mut(cur_e)
-                    .set_curve_type(CurvedEdgeType::QuadraticBezier(c0.unwrap() * scale + trans));
+                mesh.edge(cur_e).clone().set_curve_type_in_mesh(
+                    mesh,
+                    CurvedEdgeType::QuadraticBezier(c0.unwrap() * scale + trans),
+                );
             }
         });
     }

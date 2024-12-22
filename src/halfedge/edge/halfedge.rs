@@ -6,7 +6,7 @@ use crate::{
 };
 
 impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
-    fn new(next: T::E, twin: T::E, prev: T::E, origin: T::V, face: T::F, payload: T::EP) -> Self {
+    fn new(next: T::E, twin: T::E, prev: T::E, origin: T::V, face: T::F, payload: Option<T::EP>) -> Self {
         assert!(next != IndexType::max());
         assert!(prev != IndexType::max());
         assert!(twin != IndexType::max());

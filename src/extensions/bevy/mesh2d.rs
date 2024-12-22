@@ -1,4 +1,4 @@
-use super::{Polygon2dBevy, BevyMesh3d, BevyVertexPayload2d, BevyVertexPayload3d};
+use super::{BevyMesh3d, BevyVertexPayload2d, BevyVertexPayload3d, Polygon2dBevy};
 use crate::{
     halfedge::{
         HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeImplMeshType, HalfEdgeMeshImpl, HalfEdgeVertexImpl,
@@ -48,12 +48,16 @@ impl HalfEdgeImplMeshType for BevyMeshType2d32 {}
 impl MeshTypeHalfEdge for BevyMeshType2d32 {}
 
 impl CurvedEdge<2, BevyMeshType2d32> for HalfEdgeImpl<BevyMeshType2d32> {
-    fn curve_type(&self) -> CurvedEdgeType<2, BevyMeshType2d32> {
-        self.payload().curve_type()
+    fn curve_type(&self, mesh: &BevyMesh2d) -> CurvedEdgeType<2, BevyMeshType2d32> {
+        mesh.edge_payload(self).curve_type()
     }
 
-    fn set_curve_type(&mut self, curve_type: CurvedEdgeType<2, BevyMeshType2d32>) {
-        self.payload_mut().set_curve_type(curve_type);
+    fn set_curve_type_in_mesh(
+        &self,
+        mesh: &mut BevyMesh2d,
+        curve_type: CurvedEdgeType<2, BevyMeshType2d32>,
+    ) {
+        mesh.edge_payload_mut(self).set_curve_type(curve_type);
     }
 }
 

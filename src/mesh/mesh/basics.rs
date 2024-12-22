@@ -34,7 +34,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     fn vertex(&self, index: T::V) -> &T::Vertex;
 
     /// Returns a reference to the requested edge
-    fn edge(&self, index: T::E) -> &T::Edge;
+    fn edge<'a>(&'a self, index: T::E) -> &'a T::Edge;
 
     /// Returns a reference to the requested face
     fn face(&self, index: T::F) -> &T::Face;
@@ -63,14 +63,6 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     /// Returns the number of faces in the mesh
     fn num_faces(&self) -> usize;
 
-    /// Iterates forwards over the (half-)edge chain starting at the given edge.
-    /// If the edges are not directed or half-edges, follow the face resp. boundary to mimic that behavior.
-    fn edges_from<'a>(&'a self, e: T::E) -> impl Iterator<Item = T::Edge>;
-
-    /// Iterates backwards over the (half-)edge chain starting at the given edge.
-    /// If the edges are not directed or half-edges, follow the face resp. boundary to mimic that behavior.
-    fn edges_back_from<'a>(&'a self, e: T::E) -> impl Iterator<Item = T::Edge>;
-
     /// Clears the mesh (deletes all vertices, edges, and faces)
     fn clear(&mut self) -> &mut Self;
 
@@ -82,6 +74,22 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
 
     /// Get a mutable reference to the payload of the mesh
     fn payload_mut(&mut self) -> &mut T::MP;
+
+    /// Returns the edge payload.
+    ///
+    /// On half-edge meshes, the payload is shared between the two half-edges.
+    /// Since this means the payload is not necessarily stored in the edge,
+    /// we consider the edge payload a property of the mesh.
+    fn edge_payload<'a>(&'a self, edge: &'a T::Edge) -> &'a T::EP;
+
+    /// Returns a mutable reference to the edge payload.
+    ///
+    /// On half-edge meshes, the payload is shared between the two half-edges.
+    /// Since this means the payload is not necessarily stored in the edge,
+    /// we consider the edge payload a property of the mesh.
+    ///
+    /// Notice that the given edge is not modified.
+    fn edge_payload_mut<'a>(&'a mut self, edge: &'a T::Edge) -> &'a mut T::EP;
 
     /// Since the vertex payloads in the `Deletable` can be sparse,
     /// we need to compact the vertices when converting them to a dense vector.
@@ -182,9 +190,9 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
         // Convert curved edges
         for e in self.edge_ids().collect::<Vec<_>>().iter() {
             let edge = self.edge(*e);
-            if edge.curve_type() != CurvedEdgeType::Linear {
+            if edge.curve_type(self) != CurvedEdgeType::Linear {
                 let vs = edge.flatten_casteljau(tol, self);
-                self.edge_mut(*e).set_curve_type(CurvedEdgeType::Linear);
+                edge.clone().set_curve_type_in_mesh(self, CurvedEdgeType::Linear);
                 if vs.len() == 0 {
                     continue;
                 }
@@ -207,7 +215,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
         T::VP: HasPosition<D, T::Vec>,
     {
         self.edges()
-            .any(|e| e.curve_type() != CurvedEdgeType::Linear)
+            .any(|e| e.curve_type(self) != CurvedEdgeType::Linear)
     }
 
     /// Finds an edge isomorphism (if there is one) given a vertex isomorphism.
@@ -586,7 +594,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
         self.is_trivially_isomorphic_ex(
             other,
             |a, b| a.pos().is_about(&b.pos(), eps),
-            |a, b| a.curve_type().is_about(&b.curve_type(), eps),
+            |a, b| a.curve_type(self).is_about(&b.curve_type(self), eps),
             |_, _| true,
         )
     }
