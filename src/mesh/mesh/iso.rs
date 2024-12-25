@@ -86,15 +86,15 @@ mod tests {
 
         let (x, y, z) = (size * 0.5).tuple();
         let mut mesh = Mesh3d64::new();
-        let (v0, v1) = mesh.add_isolated_edge_default(vp(x, y, z), vp(-x, y, z));
-        let v2 = mesh.add_vertex_via_vertex_default(v1, vp(-x, -y, z)).0;
-        let v3 = mesh.add_vertex_via_vertex_default(v2, vp(x, -y, z)).0;
+        let (v0, v1) = mesh.insert_isolated_edge(vp(x, y, z), vp(-x, y, z));
+        let v2 = mesh.insert_vertex_v(v1, vp(-x, -y, z)).0;
+        let v3 = mesh.insert_vertex_v(v2, vp(x, -y, z)).0;
         mesh.close_face_vertices_default(v2, v3, v0, false);
-        let v4 = mesh.add_vertex_via_vertex_default(v1, vp(-x, y, -z)).0;
-        let v5 = mesh.add_vertex_via_vertex_default(v4, vp(-x, -y, -z)).0;
+        let v4 = mesh.insert_vertex_v(v1, vp(-x, y, -z)).0;
+        let v5 = mesh.insert_vertex_v(v4, vp(-x, -y, -z)).0;
         mesh.close_face_vertices_default(v4, v5, v2, false);
-        let v6 = mesh.add_vertex_via_vertex_default(v0, vp(x, y, -z)).0;
-        let v7 = mesh.add_vertex_via_vertex_default(v3, vp(x, -y, -z)).0;
+        let v6 = mesh.insert_vertex_v(v0, vp(x, y, -z)).0;
+        let v7 = mesh.insert_vertex_v(v3, vp(x, -y, -z)).0;
         mesh.close_face_vertices_default(v3, v7, v6, false);
         mesh.close_face_vertices_default(v2, v5, v7, false);
         mesh.close_face_vertices_default(v0, v6, v4, false);

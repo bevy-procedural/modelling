@@ -154,7 +154,7 @@ impl<'a> Font<'a> {
                 } else {
                     //assert!(p0 == p || p1 == first.unwrap(), "Expected {:?} but got {:?}", p, p0);
                     let (v, e, _) = mesh
-                        .add_vertex_via_vertex_default(cur_v, T::VP::from_pos(p1 * scale + trans));
+                        .insert_vertex_v(cur_v, T::VP::from_pos(p1 * scale + trans));
                     cur_e = e;
                     prev_v = cur_v;
                     cur_v = v;
@@ -163,7 +163,7 @@ impl<'a> Font<'a> {
             } else {
                 first = Some(p0);
                 cur = Some(p1);
-                let (v0, v1) = mesh.add_isolated_edge_default(
+                let (v0, v1) = mesh.insert_isolated_edge(
                     T::VP::from_pos(p0 * scale + trans),
                     T::VP::from_pos(p1 * scale + trans),
                 );

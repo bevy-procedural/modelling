@@ -52,11 +52,11 @@ impl<T:HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
 }*/
 
 impl<T: HalfEdgeImplMeshType> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
-    fn add_vertex_via_vertex_default(&mut self, v: T::V, vp: T::VP) -> (T::V, T::E, T::E)
+    fn insert_vertex_v(&mut self, v: T::V, vp: T::VP) -> (T::V, T::E, T::E)
     where
         T::EP: DefaultEdgePayload,
     {
-        self.add_vertex_via_vertex(v, vp, T::EP::default(), T::EP::default())
+        self.insert_vertex_v(v, vp, T::EP::default(), T::EP::default())
     }
 
     fn add_vertex_via_edge_default(
@@ -116,7 +116,7 @@ impl<T: HalfEdgeImplMeshType> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         )
     }
 
-    fn insert_vertices_into_edge<I: Iterator<Item = (T::EP, T::EP, T::VP)>>(
+    fn subdivide_edge<I: Iterator<Item = (T::EP, T::EP, T::VP)>>(
         &mut self,
         e: T::E,
         ps: I,
@@ -151,7 +151,7 @@ impl<T: HalfEdgeImplMeshType> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         return e;
     }
 
-    fn add_vertex(&mut self, vp: T::VP) -> T::V {
+    fn insert_vertex(&mut self, vp: T::VP) -> T::V {
         let new = self.vertices.allocate();
         self.vertices.set(new, T::Vertex::new(IndexType::max(), vp));
         new
@@ -167,7 +167,7 @@ impl<T: HalfEdgeImplMeshType> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         let mut iter = vp.into_iter();
         let p0 = iter.next().expect("Path must have at least one vertex");
         let p1 = iter.next().expect("Path must have at least two vertices");
-        let (v0, v) = self.add_isolated_edge_default(p0, p1);
+        let (v0, v) = self.insert_isolated_edge(p0, p1);
         let first = self.shared_edge(v0, v).unwrap();
         let mut input = first.id();
         let mut output = first.twin_id();
@@ -181,11 +181,11 @@ impl<T: HalfEdgeImplMeshType> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         (first.twin_id(), input)
     }
 
-    fn add_isolated_edge_default(&mut self, a: T::VP, b: T::VP) -> (T::V, T::V)
+    fn insert_isolated_edge(&mut self, a: T::VP, b: T::VP) -> (T::V, T::V)
     where
         T::EP: DefaultEdgePayload,
     {
-        self.add_isolated_edge(a, T::EP::default(), b, T::EP::default())
+        self.insert_isolated_edge(a, T::EP::default(), b, T::EP::default())
     }
 
     fn insert_loop(&mut self, vp: impl IntoIterator<Item = T::VP>) -> T::E

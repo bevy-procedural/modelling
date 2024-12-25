@@ -73,7 +73,7 @@ impl<const D: usize> MeshType for MeshTypeColored<D> {
     type Vertex = HalfEdgeVertexImpl<Self>;
 }
 
-// Our custom mesh should be treated as a mesh in Euclidean space
+// enable functionality for meshes in euclidean space
 impl<const D: usize> EuclideanMeshType<D> for MeshTypeColored<D> {
     type S = f64;
     type Vec = VecN<f64, D>;
@@ -83,7 +83,7 @@ impl<const D: usize> EuclideanMeshType<D> for MeshTypeColored<D> {
     type Poly = Polygon2d<f64>;
 }
 
-// Our mesh is half-edge based
+// enable half-edge-specific functionality  
 impl<const D: usize> HalfEdgeImplMeshType for MeshTypeColored<D> {}
 impl<const D: usize> MeshTypeHalfEdge for MeshTypeColored<D> {}
 

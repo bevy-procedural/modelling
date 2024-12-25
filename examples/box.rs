@@ -13,30 +13,36 @@ fn vp(x: f32, y: f32, z: f32) -> BevyVertexPayload3d {
     BevyVertexPayload3d::from_pos(Vec3::new(x, y, z))
 }
 
+
 /// Creates a cuboid with a given `size`.
 ///
 /// This method attempts the most intuitive approach:
-/// Define all the vertices and manually close each face by connecting the vertices.
-///
-/// This, however, is not very efficient and also quite unpleasant to write.
+/// Define all the vertices, then insert all the edges, then all the faces.
+/// 
+/// While being quite low-level, this method is not nice to read and 
+/// also not necessarily more efficient than the other methods.
 fn cuboid_from_vertices(size: Vec3) -> BevyMesh3d {
+    // TODO: Rewrite this method for better clarity
+
     let (x, y, z) = (size * 0.5).tuple();
     let mut mesh = BevyMesh3d::new();
-    let (v0, v1) = mesh.add_isolated_edge_default(vp(x, y, z), vp(-x, y, z));
-    let v2 = mesh.add_vertex_via_vertex_default(v1, vp(-x, -y, z)).0;
-    let v3 = mesh.add_vertex_via_vertex_default(v2, vp(x, -y, z)).0;
-    mesh.close_face_vertices_default(v2, v3, v0, false);
-    let v4 = mesh.add_vertex_via_vertex_default(v1, vp(-x, y, -z)).0;
-    let v5 = mesh.add_vertex_via_vertex_default(v4, vp(-x, -y, -z)).0;
+    let (v0, v1) = mesh.insert_isolated_edge(vp(x, y, z), vp(-x, y, z));
+    let v2 = mesh.insert_vertex_v(v1, vp(-x, -y, z)).0;
+    let v3 = mesh.insert_vertex_v(v2, vp(x, -y, z)).0;
+    let v4 = mesh.insert_vertex_v(v1, vp(-x, y, -z)).0;
+    let v5 = mesh.insert_vertex_v(v4, vp(-x, -y, -z)).0;
+    let v6 = mesh.insert_vertex_v(v0, vp(x, y, -z)).0;
+    let v7 = mesh.insert_vertex_v(v3, vp(x, -y, -z)).0;
+
     mesh.close_face_vertices_default(v4, v5, v2, false);
-    let v6 = mesh.add_vertex_via_vertex_default(v0, vp(x, y, -z)).0;
-    let v7 = mesh.add_vertex_via_vertex_default(v3, vp(x, -y, -z)).0;
+    mesh.close_face_vertices_default(v2, v3, v0, false);
     mesh.close_face_vertices_default(v3, v7, v6, false);
     mesh.close_face_vertices_default(v2, v5, v7, false);
     mesh.close_face_vertices_default(v0, v6, v4, false);
     mesh.close_hole_default(mesh.shared_edge(v6, v7).unwrap().id());
     mesh
 }
+
 
 /// Creates a cuboid with a given `size`.
 ///
@@ -76,6 +82,15 @@ fn cuboid_from_loft(size: Vec3) -> BevyMesh3d {
 
 /// Creates a cuboid with a given `size`.
 ///
+/// We can also use the fact that faces aren't necessarily planar. 
+/// Therefore, we construct the cube net with a single face and then
+/// subdivide that face into quads to create the cuboid.
+fn cuboid_from_net(size: Vec3) -> BevyMesh3d {
+    todo!()
+}
+
+/// Creates a cuboid with a given `size`.
+///
 /// This crate provides a collection of primitives that can be used
 /// to build more complex shapes. For example, noticing that a cuboid
 /// is just a prism with a rectangular base, we can use the `prism`
@@ -96,7 +111,7 @@ fn cuboid_from_prism(size: Vec3) -> BevyMesh3d {
 /// Creates a cuboid with a given `size`.
 ///
 /// The `PathBuilder` is a more flexible way to create a 2d shape.
-/// It's a bit overpowered here, but can be usefull when working with bezier curves.
+/// It's a bit overpowered here, but can be especially usefull when working with bezier curves.
 fn cuboid_from_builder(size: Vec3) -> BevyMesh3d {
     let p = size * 0.5;
     let mut mesh = BevyMesh3d::new();
@@ -147,6 +162,8 @@ where
     T::FP: DefaultFacePayload,
     T::Mesh: MakePrismatoid<T>,
 {
+    // TODO: With the improved types, the description isn't helpful anymore.
+
     let p = size * T::S::HALF;
     let make = |x, y, z| T::VP::from_pos(T::Vec::from_xyz(x, y, z));
     T::Mesh::prism(

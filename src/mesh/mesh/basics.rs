@@ -196,7 +196,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
                 if vs.len() == 0 {
                     continue;
                 }
-                self.insert_vertices_into_edge(
+                self.subdivide_edge(
                     *e,
                     vs.iter()
                         .map(|v| (T::EP::default(), T::EP::default(), T::VP::from_pos(*v))),
