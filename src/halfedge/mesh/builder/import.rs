@@ -13,7 +13,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
         fm: FM,
     ) -> Self
     where
-        FE: Fn(&T2::EP) -> Option<T::EP>,
+        FE: Fn(&T2::EP) -> T::EP,
         FV: Fn(&T2::VP) -> T::VP,
         FF: Fn(&T2::FP) -> T::FP,
         FM: Fn(&T2::MP) -> T::MP,
@@ -66,7 +66,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
                 edge_map[&edge.prev_id()],
                 edge_map[&edge.twin_id()],
                 edge_map[&edge.next_id()],
-                fe(&mesh.edge_payload(edge)),
+                edge.payload_self().map(|x| fe(x)),
             );
         }
 

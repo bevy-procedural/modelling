@@ -43,37 +43,25 @@ where
         self.payload.as_mut()
     }
 
-    type FaceEdgesIterator<'a>
-        = ForwardEdgeIterator<'a, T>
-    where
-        T: 'a;
-
     #[inline(always)]
-    fn edges_face<'a>(&'a self, mesh: &'a T::Mesh) -> Self::FaceEdgesIterator<'a>
+    fn edges_face<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge> + 'a
     where
         T: 'a,
     {
         ForwardEdgeIterator::<'a, T>::new(self, mesh)
     }
 
-    type FaceEdgesIteratorBack<'a>
-        = BackwardEdgeIterator<'a, T>
-    where
-        T: 'a;
-
     #[inline(always)]
     #[allow(refining_impl_trait)]
-    fn edges_face_back<'a>(&'a self, mesh: &'a T::Mesh) -> Self::FaceEdgesIteratorBack<'a> {
+    fn edges_face_back<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge> + 'a
+    where
+        T: 'a,
+    {
         BackwardEdgeIterator::new(self, mesh)
     }
 
-    type FaceIdsIterator<'a>
-        = std::vec::IntoIter<T::F>
-    where
-        T: 'a;
-
     #[inline(always)]
-    fn face_ids<'a>(&'a self, mesh: &'a T::Mesh) -> Self::FaceIdsIterator<'a> {
+    fn face_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::F> + 'a {
         // TODO: only works for manifold meshes
         let mut res = Vec::new();
         let id = self.face_id();

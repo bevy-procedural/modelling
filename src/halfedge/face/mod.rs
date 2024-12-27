@@ -32,8 +32,8 @@ impl<T: HalfEdgeImplMeshType + MeshType3D> Face3d<T> for HalfEdgeFaceImpl<T> {}
 
 impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
     #[inline(always)]
-    fn edge(&self, mesh: &T::Mesh) -> T::Edge {
-        mesh.edge(self.edge).clone()
+    fn edge<'a>(&'a self, mesh: &'a T::Mesh) -> &'a T::Edge {
+        mesh.edge(self.edge)
     }
 
     #[inline(always)]

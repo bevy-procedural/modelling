@@ -41,30 +41,20 @@ pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone {
         (v1 + v2) * T::S::HALF
     }
 
-    type FaceEdgesIterator<'a>: Iterator<Item = &'a <T as MeshType>::Edge>
-    where
-        Self: 'a;
-
     /// Iterates all (half)edges incident to the same face or boundary (counter-clockwise)
-    fn edges_face<'a>(&'a self, mesh: &'a T::Mesh) -> Self::FaceEdgesIterator<'a>
+    fn edges_face<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge> + 'a
     where
         T: 'a;
 
-    type FaceEdgesIteratorBack<'a>: Iterator<Item = &'a <T as MeshType>::Edge>
-    where
-        Self: 'a;
-
     /// Iterates all (half)edges incident to the same face or boundary (clockwise)
-    fn edges_face_back<'a>(&'a self, mesh: &'a T::Mesh) -> Self::FaceEdgesIteratorBack<'a>;
-
-    type FaceIdsIterator<'a>: Iterator<Item = T::F>
+    fn edges_face_back<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge> + 'a
     where
-        Self: 'a;
+        T: 'a;
 
     /// Iterates all face ids incident to the edge
     /// (even for half-edges, this will return both faces if there are two
     /// or more than that if the edge is non-manifold)
-    fn face_ids<'a>(&'a self, mesh: &'a T::Mesh) -> Self::FaceIdsIterator<'a>;
+    fn face_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::F> + 'a;
 }
 
 #[cfg(test)]

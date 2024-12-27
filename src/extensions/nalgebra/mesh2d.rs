@@ -4,8 +4,7 @@ use crate::{
     },
     math::{HasPosition, Vector},
     mesh::{
-        CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EmptyEdgePayload, EmptyFacePayload,
-        EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshType, MeshTypeHalfEdge,
+        CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EdgePayload, EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshType, MeshTypeHalfEdge
     },
 };
 
@@ -71,9 +70,8 @@ impl HalfEdgeMeshImpl<MeshType2d64PNUCurved> {
         MeshNd64::<D>::import_mesh::<_, _, _, _, MeshType2d64PNUCurved>(
             self.clone().flatten_curved_edges(tol),
             |vp| VertexPayloadPNU::<f64, D>::from_pos(Vector::from_xy(vp.pos().x, vp.pos().y)),
-            |_ep| {
-                // TODO: flatten_curved_edges seems to miss some edges?
-                //assert!(ep.is_empty()); // no curves or anything
+            |ep| {
+                assert!(ep.is_empty()); // no curves or anything
                 EmptyEdgePayload::default()
             },
             |_fp| EmptyFacePayload::default(),
