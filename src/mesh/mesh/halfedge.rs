@@ -25,10 +25,14 @@ where
     /// Iterates forwards over the half-edge chain starting at the given edge.
     /// Notice that this only makes sense for half-edge meshes since, unless there is a face,
     /// edge-connectivity at vertices is not stored in the mesh.
-    fn edges_from<'a>(&'a self, e: T::E) -> impl Iterator<Item = T::Edge>;
+    fn edges_from<'a>(&'a self, e: T::E) -> impl Iterator<Item = &'a T::Edge>
+    where
+        T: 'a;
 
     /// Iterates backwards over the half-edge chain starting at the given edge
-    fn edges_back_from<'a>(&'a self, e: T::E) -> impl Iterator<Item = T::Edge>;
+    fn edges_back_from<'a>(&'a self, e: T::E) -> impl Iterator<Item = &'a T::Edge>
+    where
+        T: 'a;
 
     /// Flips the edge, i.e., swaps the origin and target vertices.
     fn flip_edge(&mut self, e: T::E) -> &mut Self {

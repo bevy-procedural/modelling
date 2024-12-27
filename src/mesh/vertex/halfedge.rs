@@ -10,47 +10,29 @@ where
     /// Changes the representative of the outgoing edges
     fn set_edge(&mut self, edge: T::E);
 
-    /// Returns an outgoing boundary edge incident to the vertex
+    /// Returns an outgoing boundary edge incident to the vertex if it exists and is unique
     fn outgoing_boundary_edge(&self, mesh: &T::Mesh) -> Option<T::E> {
-        // TODO: Assumes a manifold vertex. Otherwise, there can be multiple boundary edges!
-        debug_assert!(
-            self.edges_out(mesh).count() == 0
-                || self
-                    .edges_out(mesh)
-                    .filter(|e| e.is_boundary_self())
-                    .exactly_one()
-                    .is_ok(),
-            "Vertex {} is not manifold, edges are: {:?}",
-            self.id(),
-            self.edges_out(mesh).map(|e| e.id()).collect_vec()
-        );
-
-        self.edges_out(mesh).find_map(|e| {
-            if e.is_boundary_self() {
-                Some(e.id())
-            } else {
-                None
-            }
-        })
+        if let Ok(e) = self
+            .edges_out(mesh)
+            .filter(|e| e.is_boundary_self())
+            .exactly_one()
+        {
+            Some(e.id())
+        } else {
+            None
+        }
     }
 
-    /// Returns an ingoing boundary edge incident to the vertex
+    /// Returns an ingoing boundary edge incident to the vertex if it exists and is unique
     fn ingoing_boundary_edge(&self, mesh: &T::Mesh) -> Option<T::E> {
-        debug_assert!(
-            self.edges_in(mesh)
-                .filter(|e| e.is_boundary_self())
-                .exactly_one()
-                .is_ok(),
-            "Vertex {} is not manifold",
-            self.id()
-        );
-
-        self.edges_in(mesh).find_map(|e| {
-            if e.is_boundary_self() {
-                Some(e.id())
-            } else {
-                None
-            }
-        })
+        if let Ok(e) = self
+            .edges_in(mesh)
+            .filter(|e| e.is_boundary_self())
+            .exactly_one()
+        {
+            Some(e.id())
+        } else {
+            None
+        }
     }
 }

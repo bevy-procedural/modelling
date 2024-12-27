@@ -30,6 +30,12 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     /// Returns whether the vertex exists and is not deleted
     fn has_vertex(&self, index: T::V) -> bool;
 
+    /// Returns whether the edge exists and is not deleted
+    fn has_edge(&self, index: T::E) -> bool;
+
+    /// Returns whether the face exists and is not deleted
+    fn has_face(&self, index: T::F) -> bool;
+
     /// Returns a reference to the requested vertex
     fn vertex(&self, index: T::V) -> &T::Vertex;
 
@@ -96,8 +102,13 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     /// This function returns the cloned compact vertices and maps the indices to the new compact buffer.
     fn dense_vertices(&self, indices: &mut Vec<T::V>) -> Vec<T::VP>;
 
+    type VertexIterator<'a>: Iterator<Item = &'a T::Vertex>
+    where
+        Self: 'a,
+        T: 'a;
+
     /// Returns an iterator over all non-deleted vertices
-    fn vertices<'a>(&'a self) -> impl Iterator<Item = &'a T::Vertex>
+    fn vertices<'a>(&'a self) -> Self::VertexIterator<'a>
     where
         T: 'a;
 
@@ -105,13 +116,18 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     fn vertex_ids<'a>(&'a self) -> impl Iterator<Item = T::V>
     where
         T: 'a,
-        T::Face: 'a,
     {
         self.vertices().map(|v| v.id())
     }
 
+    // TODO: Do i need these types?
+    type VertexIteratorMut<'a>: Iterator<Item = &'a mut T::Vertex>
+    where
+        Self: 'a,
+        T: 'a;
+
     /// Returns an mutable iterator over all non-deleted vertices
-    fn vertices_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T::Vertex>
+    fn vertices_mut<'a>(&'a mut self) -> Self::VertexIteratorMut<'a>
     where
         T: 'a;
 
@@ -166,7 +182,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
         T: 'a;
 
     /// Returns the id of the (half)edge from `v` to `w` or `None` if they are not neighbors.
-    fn shared_edge(&self, v: T::V, w: T::V) -> Option<T::Edge>;
+    fn shared_edge(&self, v: T::V, w: T::V) -> Option<&T::Edge>;
 
     /// Returns the (half)edge id from v to w. Panics if the edge does not exist.
     fn shared_edge_id(&self, v: T::V, w: T::V) -> Option<T::E>;
@@ -192,7 +208,8 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
             let edge = self.edge(*e);
             if edge.curve_type(self) != CurvedEdgeType::Linear {
                 let vs = edge.flatten_casteljau(tol, self);
-                edge.clone().set_curve_type_in_mesh(self, CurvedEdgeType::Linear);
+                edge.clone()
+                    .set_curve_type_in_mesh(self, CurvedEdgeType::Linear);
                 if vs.len() == 0 {
                     continue;
                 }

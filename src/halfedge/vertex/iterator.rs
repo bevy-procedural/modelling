@@ -35,7 +35,7 @@ impl<'a, T: HalfEdgeImplMeshType> IncidentToVertexIterator<'a, T> {
 }
 
 impl<'a, T: HalfEdgeImplMeshType> Iterator for IncidentToVertexIterator<'a, T> {
-    type Item = T::Edge;
+    type Item = &'a T::Edge;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.current == IndexType::max() {
@@ -44,7 +44,7 @@ impl<'a, T: HalfEdgeImplMeshType> Iterator for IncidentToVertexIterator<'a, T> {
         let current = self.mesh.edge(self.current);
         if self.is_first {
             self.is_first = false;
-            return Some(current.clone());
+            return Some(current);
         }
         let next = current.twin(self.mesh).next(self.mesh);
         debug_assert!(

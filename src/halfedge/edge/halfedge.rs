@@ -6,7 +6,14 @@ use crate::{
 };
 
 impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
-    fn new(next: T::E, twin: T::E, prev: T::E, origin: T::V, face: T::F, payload: Option<T::EP>) -> Self {
+    fn new(
+        next: T::E,
+        twin: T::E,
+        prev: T::E,
+        origin: T::V,
+        face: T::F,
+        payload: Option<T::EP>,
+    ) -> Self {
         assert!(next != IndexType::max());
         assert!(prev != IndexType::max());
         assert!(twin != IndexType::max());
@@ -48,9 +55,8 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
     }
 
     #[inline(always)]
-    fn next(&self, mesh: &HalfEdgeMeshImpl<T>) -> HalfEdgeImpl<T> {
-        // PERF: avoid clone
-        mesh.edge(self.next).clone()
+    fn next<'a>(&self, mesh: &'a HalfEdgeMeshImpl<T>) -> &'a HalfEdgeImpl<T> {
+        mesh.edge(self.next)
     }
 
     #[inline(always)]
@@ -59,10 +65,8 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
     }
 
     #[inline(always)]
-    fn twin(&self, mesh: &HalfEdgeMeshImpl<T>) -> HalfEdgeImpl<T> {
-        // TODO: Make this return a reference?
-        // PERF: avoid clone
-        mesh.edge(self.twin).clone()
+    fn twin<'a>(&self, mesh: &'a HalfEdgeMeshImpl<T>) -> &'a HalfEdgeImpl<T> {
+        mesh.edge(self.twin)
     }
 
     #[inline(always)]
@@ -71,9 +75,8 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
     }
 
     #[inline(always)]
-    fn prev(&self, mesh: &HalfEdgeMeshImpl<T>) -> HalfEdgeImpl<T> {
-        // PERF: avoid clone
-        mesh.edge(self.prev).clone()
+    fn prev<'a>(&self, mesh: &'a HalfEdgeMeshImpl<T>) -> &'a HalfEdgeImpl<T> {
+        mesh.edge(self.prev)
     }
 
     #[inline(always)]
@@ -120,16 +123,6 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
         self.face == IndexType::max()
     }
 
-    fn same_face(&self, mesh: &HalfEdgeMeshImpl<T>, v: T::V) -> bool {
-        self.edges_face(mesh).find(|e| e.origin_id() == v).is_some()
-    }
-
-    fn same_face_back(&self, mesh: &HalfEdgeMeshImpl<T>, v: T::V) -> bool {
-        self.edges_face_back(mesh)
-            .find(|e| e.origin_id() == v)
-            .is_some()
-    }
-
     fn flip(e: T::E, mesh: &mut HalfEdgeMeshImpl<T>) {
         let origin_id = mesh.edge(e).origin_id();
         let target_id = mesh.edge(e).target_id(mesh);
@@ -169,5 +162,19 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
         if t_face_id != IndexType::max() {
             mesh.face_mut(t_face_id).set_edge(e);
         }
+    }
+
+    fn is_valid(&self, mesh: &T::Mesh) -> bool {
+        let oi = self.origin_id();
+        let ti = self.target_id(mesh);
+        self.next(mesh).prev_id() == self.id
+            && self.prev(mesh).next_id() == self.id
+            && self.twin(mesh).twin_id() == self.id
+            && oi != IndexType::max()
+            && ti != IndexType::max()
+            && mesh.has_vertex(oi)
+            && mesh.has_vertex(ti)
+            && (self.face_id() == IndexType::max() || mesh.has_face(self.face_id()))
+            && oi != ti
     }
 }

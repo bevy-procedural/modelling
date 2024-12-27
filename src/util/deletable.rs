@@ -121,7 +121,7 @@ impl<T: Deletable<I>, I: IndexType> DeletableVector<T, I> {
     }
 
     /// Marks the element as deleted and remembers it for reallocation.
-    pub fn delete_internal(&mut self, f: I) {
+    pub fn delete(&mut self, f: I) {
         self.data[f.index()].delete();
         self.deleted.push(f);
     }

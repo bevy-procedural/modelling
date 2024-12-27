@@ -1,22 +1,21 @@
-use crate::mesh::{EdgeBasics, VertexBasics};
-
 use super::{MeshBasics, MeshType};
+use crate::mesh::{DefaultEdgePayload, EdgeBasics, VertexBasics};
 
 /// Some basic operations to build meshes.
 pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// add a new vertex and return it's id
     fn insert_vertex(&mut self, vp: T::VP) -> T::V;
 
-    /// Removes the vertex `v` and returns its payload.
+    /// Removes the vertex `v`.
     /// Panics if the vertex doesn't exist or if it is not isolated.
     #[inline(always)]
-    fn remove_vertex(&mut self, v: T::V) -> T::VP {
-        self.try_remove_vertex(v).unwrap()
+    fn remove_vertex(&mut self, v: T::V) {
+        assert!(self.try_remove_vertex(v), "Could not remove vertex {}", v);
     }
 
-    /// Tries to remove the vertex `v` and returns its payload if successful.
+    /// Tries to remove the vertex `v` and returns whether it was successful.
     /// Fails if the vertex is not isolated.
-    fn try_remove_vertex(&mut self, v: T::V) -> Option<T::VP>;
+    fn try_remove_vertex(&mut self, v: T::V) -> bool;
 
     /// Inserts vertices a and b and adds an isolated edge between a and b.
     ///
@@ -96,23 +95,34 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Connectivity at `v` is inferred from the graph. Behaves similar to `insert_edge_vv`.
     fn insert_edge_ev(&mut self, e: T::E, v: T::V, ep: T::EP) -> Option<T::E>;
 
-    /// Removes the edge `e` and returns its payload.
+    /// Removes the edge `e`.
     /// Panics if the edge doesn't exist or there are adjacent faces.
+    ///
+    /// On half-edge meshes, this will also remove the twin edge.
     #[inline(always)]
-    fn remove_edge(&mut self, e: T::E) -> T::EP {
-        self.try_remove_edge(e).unwrap()
+    fn remove_edge(&mut self, e: T::E) {
+        assert!(self.try_remove_edge(e), "Could not remove edge {}", e);
     }
 
-    /// Tries to remove the edge `e` and returns its payload if successful.
+    /// Tries to remove the edge `e` and returns whether it was successful.
     /// Fails if there are adjacent faces.
-    fn try_remove_edge(&mut self, e: T::E) -> Option<T::EP>;
+    ///
+    /// On half-edge meshes, this will also remove the twin edge.
+    fn try_remove_edge(&mut self, e: T::E) -> bool;
 
     ////////////////////////////////////////////////////////////////////////////////////
     //************************ Face-related ******************************************//
 
-    /// Removes the face `f` and returns its payload if successful.
+    /// Removes the face `f`.
+    /// Panics if the face doesn't exist.
+    #[inline(always)]
+    fn remove_face(&mut self, f: T::F) {
+        assert!(self.try_remove_face(f), "Could not remove face {}", f);
+    }
+
+    /// Tries to remove the face `f` and returns whether it was successful.
     /// Fails only if the face doesn't exist.
-    fn remove_face(&mut self, f: T::F) -> Option<T::FP>;
+    fn try_remove_face(&mut self, f: T::F) -> bool;
 
     /// Close the open boundary with a single face. Doesn't create new edges or vertices.
     /// Fails if there is already a face using the boundary.
@@ -130,14 +140,22 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         -> Option<(T::E, T::F)>;
 
     /// Close the given boundary by inserting an edge from `from` to `to` and insert a face.
+    /// The vertex `prev` must also lie on the face with an edge from `prev` to `from`. That way
+    /// we can know which side of the edge to insert the face.
     ///
     /// There must be exactly one edge chain from `to` to `from` without a face.
     /// Otherwise, the method will return `None`.
     ///
     /// Returns the new face and edge id. For half-edge meshes, this should be the half-edge
     /// on the inside of the face, i.e., the half-edge directed from `from` to `to`.
-    fn close_face_vv(&mut self, from: T::V, to: T::V, ep: T::EP, fp: T::FP)
-        -> Option<(T::E, T::F)>;
+    fn close_face_vv(
+        &mut self,
+        prev: T::V,
+        from: T::V,
+        to: T::V,
+        ep: T::EP,
+        fp: T::FP,
+    ) -> Option<(T::E, T::F)>;
 
     ////////////////////////////////////////////////////////////////////////////////////
     //************************ More complex operations *******************************//
@@ -178,6 +196,33 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     ) -> (Option<T::E>, T::V) {
         let v = self.insert_vertex(vp);
         self.append_path(v, iter)
+
+        /*
+
+           /// Generate a path from the finite iterator of positions and return the halfedges pointing to the first and last vertex.
+           fn insert_path(&mut self, vp: impl IntoIterator<Item = T::VP>) -> (T::E, T::E)
+           where
+               T::EP: DefaultEdgePayload,
+           {
+               // TODO: create this directly without the builder functions
+
+               let mut iter = vp.into_iter();
+               let p0 = iter.next().expect("Path must have at least one vertex");
+               let p1 = iter.next().expect("Path must have at least two vertices");
+               let (v0, v) = self.insert_isolated_edge(p0, p1);
+               let first = self.shared_edge(v0, v).unwrap();
+               let mut input = first.id();
+               let mut output = first.twin_id();
+               for pos in iter {
+                   self.add_vertex_via_edge_default(input, output, pos);
+                   let n = self.edge(input).next(self);
+                   input = n.id();
+                   output = n.twin_id();
+               }
+
+               (first.twin_id(), input)
+           }
+        */
     }
 
     /// Same as `insert_path` but closes the path by connecting the last vertex with the first one.
@@ -189,47 +234,28 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         let (e, last_v) = self.insert_path(vp, iter);
         self.insert_edge_vv(last_v, self.edge(e).origin(self).id(), ep)
             .unwrap()
+
+        /*
+                 fn insert_loop(&mut self, vp: impl IntoIterator<Item = T::VP>) -> T::E
+        where
+            T::EP: DefaultEdgePayload,
+        {
+            let (first, last) = self.insert_path(vp);
+            self.insert_edge(first, Default::default(), last, Default::default());
+            return first;
+        } */
     }
-}
 
-/// Some low-level operations to build meshes with halfedges.
-pub trait MeshHalfEdgeBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
-    /// Inserts a single half-edge with the given id.
-    /// This will not update the neighbors and will not check whether the operation is allowed!
-    /// After this operation, the mesh might be in an inconsistent state.
-    fn insert_halfedge_forced(
-        &mut self,
-        edge: T::E,
-        origin: T::V,
-        face: T::F,
-        prev: T::E,
-        twin: T::E,
-        next: T::E,
-        ep: Option<T::EP>,
-    );
+    /// Insert a face with the given vertices.
+    /// If some edges to construct this face are missing, they will be created.
+    /// Uses the default edge payload.
+    fn insert_face_v(&mut self, fp: T::FP, vs: impl IntoIterator<Item = T::V>) -> Option<T::F>
+    where
+        T::EP: DefaultEdgePayload,
+    {
+        let iter = vs.into_iter();
+        // use insert_edge_ee to avoid ambiguity
 
-    /// Allocates and inserts a pair of half-edges and returns the ids.
-    /// This will not update the neighbors and will not check whether the operation is allowed!
-    /// After this operation, the mesh might be in an inconsistent state.
-    fn insert_halfedge_pair_forced(
-        &mut self,
-        to_origin: T::E,
-        origin: T::V,
-        from_origin: T::E,
-        to_target: T::E,
-        target: T::V,
-        from_target: T::E,
-        forward_face: T::F,
-        backward_face: T::F,
-        ep: T::EP,
-    ) -> (T::E, T::E);
-
-    /// Will insert a new vertex inside this halfedge.
-    /// After this, the mesh will be invalid since the twin is not updated!
-    fn subdivide_halfedge(&mut self, e: T::E, vp: T::VP, ep: T::EP) -> T::E;
-
-    /// Call this on the twin of an halfedge where `subdivide_unsafe` was called
-    /// and it will apply the same subdivision on this halfedge making the mesh valid again.
-    /// Returns the id of the new edge. If the twin was not subdivided, it will return `None`.
-    fn subdivide_halfedge_try_fixup(&mut self, e: T::E, ep: T::EP) -> Option<T::E>;
+        todo!()
+    }
 }

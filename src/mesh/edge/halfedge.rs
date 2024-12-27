@@ -4,7 +4,14 @@ use crate::mesh::MeshType;
 /// Basic halfedge traits.
 pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
     /// Creates a new half-edge
-    fn new(next: T::E, twin: T::E, prev: T::E, origin: T::V, face: T::F, payload: Option<T::EP>) -> Self;
+    fn new(
+        next: T::E,
+        twin: T::E,
+        prev: T::E,
+        origin: T::V,
+        face: T::F,
+        payload: Option<T::EP>,
+    ) -> Self;
 
     /// Sets the face of the HalfEdge. Panics if the face is already set.
     fn set_face(&mut self, face: T::F);
@@ -25,19 +32,19 @@ pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
     fn set_origin(&mut self, origin: T::V);
 
     /// Returns the next half-edge incident to the same face or boundary
-    fn next(&self, mesh: &T::Mesh) -> T::Edge;
+    fn next<'a>(&self, mesh: &'a T::Mesh) -> &'a T::Edge;
 
     /// Returns the next id
     fn next_id(&self) -> T::E;
 
     /// Returns the other, opposite half-edge
-    fn twin(&self, mesh: &T::Mesh) -> T::Edge;
+    fn twin<'a>(&self, mesh: &'a T::Mesh) -> &'a T::Edge;
 
     /// Returns the twin id
     fn twin_id(&self) -> T::E;
 
     /// Returns the previous half-edge incident to the same face or boundary
-    fn prev(&self, mesh: &T::Mesh) -> T::Edge;
+    fn prev<'a>(&self, mesh: &'a T::Mesh) -> &'a T::Edge;
 
     /// Returns the prev id
     fn prev_id(&self) -> T::E;
@@ -60,15 +67,28 @@ pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
     /// Returns whether the edge (i.e., this HalfEdge and not necessarily its twin) is a boundary edge
     fn is_boundary_self(&self) -> bool;
 
-    /// Returns whether the edge can reach the vertex when searching counter-clockwise along the face
-    fn same_face(&self, mesh: &T::Mesh, v: T::V) -> bool;
-
-    /// Like `same_face` but searches clockwise
-    fn same_face_back(&self, mesh: &T::Mesh, v: T::V) -> bool;
+    /// Returns whether the edge can reach the given vertex
+    /// when searching counter-clockwise along the boundary.
+    /// The returned edge's origin is `v`.
+    fn same_boundary(&self, mesh: &T::Mesh, v: T::V) -> Option<T::E> {
+        self.edges_face(mesh)
+            .find(|e| e.origin_id() == v)
+            .map(|e| e.id())
+    }
+    /// Like `same_boundary` but searches clockwise.
+    /// The returned edge's origin is `v`.
+    fn same_boundary_back(&self, mesh: &T::Mesh, v: T::V) -> Option<T::E> {
+        self.edges_face_back(mesh)
+            .find(|e| e.origin_id() == v)
+            .map(|e| e.id())
+    }
 
     /// Flips the direction of the edge and its twin.
     /// Updates the neighboring edges, vertices, and faces.
     fn flip(e: T::E, mesh: &mut T::Mesh);
+
+    /// Checks whether the neighbors and twin exist and don't contradict the current edge.
+    fn is_valid(&self, mesh: &T::Mesh) -> bool;
 }
 
 #[cfg(test)]
@@ -116,7 +136,7 @@ mod tests {
         for face in mesh.faces() {
             face.edges(&mesh).for_each(|e1| {
                 face.edges(&mesh).for_each(|e2| {
-                    assert!(e1.same_face(&mesh, e2.origin_id()));
+                    assert!(e1.same_boundary(&mesh, e2.origin_id()));
                 });
             });
         }

@@ -12,7 +12,12 @@ pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone {
 
     /// Returns the payload of the vertex
     fn payload(&self) -> &T::VP;
-    
+
+    /// Returns whether the vertex is isolated, i.e., has no edges incident to it
+    fn is_isolated(&self, mesh: &T::Mesh) -> bool {
+        self.edges_out(mesh).next().is_none()
+    }
+
     /// Returns the vertex coordinates of the payload
     fn pos<S: Scalar, const D: usize, Vec: Vector<S, D>>(&self) -> Vec
     where
@@ -56,11 +61,15 @@ pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone {
 
     /// Iterates all outgoing (half)edges (resp. all edges in outwards-direction
     /// if undirected) incident to this vertex (clockwise)
-    fn edges_out<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Edge> + 'a;
+    fn edges_out<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge>
+    where
+        T::Edge: 'a;
 
     /// Iterates all ingoing (half)edges (resp. all edges in inwards-direction
     /// if undirected) incident to this vertex (clockwise)
-    fn edges_in<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Edge> + 'a;
+    fn edges_in<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge>
+    where
+        T::Edge: 'a;
 
     /*
     /// Iterates the wheel of vertices (will have length one if the vertex is manifold)

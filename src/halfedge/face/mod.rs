@@ -87,7 +87,10 @@ impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
 
     #[inline(always)]
     #[allow(refining_impl_trait)]
-    fn edges<'a>(&'a self, mesh: &'a T::Mesh) -> ForwardEdgeIterator<'a, T> {
+    fn edges<'a>(&'a self, mesh: &'a T::Mesh) -> ForwardEdgeIterator<'a, T>
+    where
+        T: 'a,
+    {
         ForwardEdgeIterator::new(self.edge(mesh), mesh)
     }
 }

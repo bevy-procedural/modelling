@@ -8,8 +8,8 @@ use crate::{
 use super::CurvedEdgeType;
 
 /// A trait that defines how the payload of an edge should behave.
-/// 
-/// Edge payloads are exactly one per edge, .e.g., on half-edge graphs, 
+///
+/// Edge payloads are exactly one per edge, .e.g., on half-edge graphs,
 /// there should only be one payload per pair of half-edges.
 pub trait EdgePayload: Clone + std::fmt::Debug + PartialEq {
     /// Returns a new default instance without any meaningful data.
@@ -17,6 +17,11 @@ pub trait EdgePayload: Clone + std::fmt::Debug + PartialEq {
 
     /// Returns true if the payload is empty.
     fn is_empty(&self) -> bool;
+
+    /// Returns whether the edge supports parallel edges.
+    fn allow_multigraph(&self) -> bool {
+        false
+    }
 }
 
 /// The default edge payload can be safely constructed with a default constructor.
@@ -86,6 +91,9 @@ impl<const D: usize, T: EuclideanMeshType<D>> EdgePayload for CurvedEdgePayload<
             CurvedEdgeType::Linear => true,
             _ => false,
         }
+    }
+    fn allow_multigraph(&self) -> bool {
+        true
     }
 }
 

@@ -15,16 +15,19 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeImpl<T> {
 
 /// Follows a chain of half-edges forwards (counter-clockwise) until reaching the start again
 #[derive(Clone)]
-pub struct ForwardEdgeIterator<'a, T: HalfEdgeImplMeshType + 'a> {
+pub struct ForwardEdgeIterator<'a, T: HalfEdgeImplMeshType>
+where
+    T::Edge: 'a,
+{
     is_first: bool,
     first: T::E,
-    current: HalfEdgeImpl<T>,
+    current: &'a HalfEdgeImpl<T>,
     mesh: &'a T::Mesh,
 }
 
 impl<'a, T: HalfEdgeImplMeshType> ForwardEdgeIterator<'a, T> {
     /// Creates a new iterator
-    pub fn new(first: HalfEdgeImpl<T>, mesh: &'a T::Mesh) -> Self {
+    pub fn new(first: &'a HalfEdgeImpl<T>, mesh: &'a T::Mesh) -> Self {
         Self {
             first: first.id(),
             current: first,
@@ -34,27 +37,32 @@ impl<'a, T: HalfEdgeImplMeshType> ForwardEdgeIterator<'a, T> {
     }
 }
 
-impl<'a, T: HalfEdgeImplMeshType> Iterator for ForwardEdgeIterator<'a, T> {
-    type Item = T::Edge;
+impl<'a, T: HalfEdgeImplMeshType> Iterator for ForwardEdgeIterator<'a, T>
+where
+    T::Edge: 'a,
+{
+    type Item = &'a T::Edge;
 
     #[inline(always)]
     fn next(&mut self) -> Option<Self::Item> {
         if self.is_first {
             self.is_first = false;
-            return Some(self.current.clone());
+            return Some(self.current);
         }
         let next = self.current.next(self.mesh);
         if next.id() == self.first {
             return None;
         } else {
-            self.current = next.clone();
+            self.current = next;
             return Some(next);
         }
     }
 
+    /// Estimates the number of edges in the loop by traversing it.
+    /// This is an O(n) operation where n is the number of edges in the face.
     #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let mut curr = self.current.clone();
+        let mut curr = self.current;
         let mut len = 1;
         while curr.next(self.mesh).id() != self.first {
             len += 1;
@@ -70,13 +78,13 @@ impl<'a, T: HalfEdgeImplMeshType> ExactSizeIterator for ForwardEdgeIterator<'a, 
 pub struct BackwardEdgeIterator<'a, T: HalfEdgeImplMeshType + 'a> {
     is_first: bool,
     first: T::E,
-    current: HalfEdgeImpl<T>,
+    current: &'a HalfEdgeImpl<T>,
     mesh: &'a T::Mesh,
 }
 
 impl<'a, T: HalfEdgeImplMeshType> BackwardEdgeIterator<'a, T> {
     /// Creates a new iterator
-    pub fn new(first: HalfEdgeImpl<T>, mesh: &'a T::Mesh) -> Self {
+    pub fn new(first: &'a HalfEdgeImpl<T>, mesh: &'a T::Mesh) -> Self {
         Self {
             first: first.id(),
             current: first,
@@ -87,19 +95,19 @@ impl<'a, T: HalfEdgeImplMeshType> BackwardEdgeIterator<'a, T> {
 }
 
 impl<'a, T: HalfEdgeImplMeshType> Iterator for BackwardEdgeIterator<'a, T> {
-    type Item = HalfEdgeImpl<T>;
+    type Item = &'a HalfEdgeImpl<T>;
 
     #[inline(always)]
     fn next(&mut self) -> Option<Self::Item> {
         if self.is_first {
             self.is_first = false;
-            return Some(self.current.clone());
+            return Some(self.current);
         }
         let prev = self.current.prev(self.mesh);
         if prev.id() == self.first {
             return None;
         } else {
-            self.current = prev.clone();
+            self.current = prev;
             return Some(prev);
         }
     }

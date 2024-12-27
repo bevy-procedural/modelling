@@ -11,6 +11,10 @@ impl<T: HalfEdgeImplMeshType> VertexBasics<T> for HalfEdgeVertexImpl<T> {
         self.id
     }
 
+    fn is_isolated(&self, _mesh: &T::Mesh) -> bool {
+        self.edge == IndexType::max()
+    }
+
     /// Returns the payload of the vertex
     #[inline(always)]
     fn payload(&self) -> &T::VP {
@@ -81,7 +85,10 @@ impl<T: HalfEdgeImplMeshType> VertexBasics<T> for HalfEdgeVertexImpl<T> {
     }
 
     #[inline(always)]
-    fn edges_out<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Edge> + 'a {
+    fn edges_out<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge>
+    where
+        T::Edge: 'a,
+    {
         if let Some(e) = self.edge(mesh) {
             IncidentToVertexIterator::<T>::new(e, mesh)
         } else {
@@ -90,7 +97,10 @@ impl<T: HalfEdgeImplMeshType> VertexBasics<T> for HalfEdgeVertexImpl<T> {
     }
 
     #[inline(always)]
-    fn edges_in<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Edge> + 'a {
+    fn edges_in<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge>
+    where
+        T::Edge: 'a,
+    {
         (if let Some(e) = self.edge(mesh) {
             IncidentToVertexIterator::<T>::new(e, mesh)
         } else {

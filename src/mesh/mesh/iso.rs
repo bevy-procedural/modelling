@@ -86,19 +86,32 @@ mod tests {
 
         let (x, y, z) = (size * 0.5).tuple();
         let mut mesh = Mesh3d64::new();
-        let (v0, v1) = mesh.insert_isolated_edge(vp(x, y, z), vp(-x, y, z));
-        let v2 = mesh.insert_vertex_v(v1, vp(-x, -y, z)).0;
-        let v3 = mesh.insert_vertex_v(v2, vp(x, -y, z)).0;
-        mesh.close_face_vertices_default(v2, v3, v0, false);
-        let v4 = mesh.insert_vertex_v(v1, vp(-x, y, -z)).0;
-        let v5 = mesh.insert_vertex_v(v4, vp(-x, -y, -z)).0;
-        mesh.close_face_vertices_default(v4, v5, v2, false);
-        let v6 = mesh.insert_vertex_v(v0, vp(x, y, -z)).0;
-        let v7 = mesh.insert_vertex_v(v3, vp(x, -y, -z)).0;
-        mesh.close_face_vertices_default(v3, v7, v6, false);
-        mesh.close_face_vertices_default(v2, v5, v7, false);
-        mesh.close_face_vertices_default(v0, v6, v4, false);
-        mesh.close_hole_default(mesh.shared_edge(v6, v7).unwrap().id());
+        //let (v0, v1) = mesh.insert_isolated_edge(vp(x, y, z), vp(-x, y, z));
+        let v0 = mesh.insert_vertex(vp(x, y, z));
+        let v1 = mesh.insert_vertex(vp(-x, y, z));
+        mesh.insert_edge_vv(v0, v1, Default::default());
+        let (_, v2) = mesh
+            .insert_vertex_v(v1, vp(-x, -y, z), Default::default())
+            .unwrap();
+        let (_, v3) = mesh.insert_vertex_v(v2, vp(x, -y, z), Default::default()).0;
+        mesh.close_face_vv(v2, v3, v0, Default::default(), Default::default());
+        let (_, v4) = mesh
+            .insert_vertex_v(v1, vp(-x, y, -z), Default::default())
+            .unwrap();
+        let (_, v5) = mesh
+            .insert_vertex_v(v4, vp(-x, -y, -z), Default::default())
+            .unwrap();
+        mesh.close_face_vv(v4, v5, v2, Default::default(), Default::default());
+        let (_, v6) = mesh
+            .insert_vertex_v(v0, vp(x, y, -z), Default::default())
+            .unwrap();
+        let (_, v7) = mesh
+            .insert_vertex_v(v3, vp(x, -y, -z), Default::default())
+            .unwrap();
+        mesh.close_face_vv(v3, v7, v6, Default::default(), Default::default());
+        mesh.close_face_vv(v2, v5, v7, Default::default(), Default::default());
+        mesh.close_face_vv(v0, v6, v4, Default::default(), Default::default());
+        mesh.insert_face(mesh.shared_edge(v6, v7).unwrap().id(), Default::default());
         mesh
     }
 

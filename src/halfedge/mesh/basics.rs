@@ -10,32 +10,47 @@ use crate::{
 };
 
 impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
+    #[inline(always)]
     fn has_vertex(&self, index: T::V) -> bool {
         self.vertices.has(index)
     }
 
+    #[inline(always)]
+    fn has_edge(&self, index: T::E) -> bool {
+        self.halfedges.has(index)
+    }
+
+    #[inline(always)]
+    fn has_face(&self, index: T::F) -> bool {
+        self.faces.has(index)
+    }
+
+    #[inline(always)]
     fn vertex(&self, index: T::V) -> &T::Vertex {
         self.vertices.get(index)
     }
 
+    #[inline(always)]
     fn edge<'a>(&'a self, index: T::E) -> &'a T::Edge {
         self.halfedges.get(index)
     }
 
+    #[inline(always)]
     fn face(&self, index: T::F) -> &T::Face {
-        let f = &self.faces.get(index);
-        assert!(!f.is_deleted());
-        f
+        self.faces.get(index)
     }
 
+    #[inline(always)]
     fn vertex_mut(&mut self, index: T::V) -> &mut T::Vertex {
         self.vertices.get_mut(index)
     }
 
+    #[inline(always)]
     fn edge_mut<'a>(&'a mut self, index: T::E) -> &'a mut T::Edge {
         self.halfedges.get_mut(index)
     }
 
+    #[inline(always)]
     fn face_mut(&mut self, index: T::F) -> &mut T::Face {
         self.faces.get_mut(index)
     }
@@ -108,16 +123,26 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         panic!("No payload found for edge {}", edge.id());
     }
 
-    /// Returns an iterator over all non-deleted vertices
-    fn vertices<'a>(&'a self) -> impl Iterator<Item = &'a T::Vertex>
+    type VertexIterator<'a>
+        = std::slice::Iter<'a, T::Vertex>
     where
-        T::Vertex: 'a,
+        T: 'a;
+
+    /// Returns an iterator over all non-deleted vertices
+    fn vertices<'a>(&'a self) -> Self::VertexIterator<'a>
+    where
+        T: 'a,
     {
         self.vertices.iter()
     }
 
+    type VertexIteratorMut<'a>
+        = std::slice::IterMut<'a, T::Vertex>
+    where
+        T: 'a;
+
     /// Returns an mutable iterator over all non-deleted vertices
-    fn vertices_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T::Vertex>
+    fn vertices_mut<'a>(&'a mut self) -> Self::VertexIteratorMut<'a>
     where
         T::Vertex: 'a,
     {
@@ -189,7 +214,7 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
 
     /// Returns the id of the half edge from `v` to `w` or `None` if they are not neighbors.
     /// Runs in O(n) time since it iterates over all edges of `v`.
-    fn shared_edge(&self, v: T::V, w: T::V) -> Option<T::Edge> {
+    fn shared_edge(&self, v: T::V, w: T::V) -> Option<&T::Edge> {
         self.vertex(v).edges_out(self).find_map(|e| {
             if e.target_id(self) == w {
                 Some(e)

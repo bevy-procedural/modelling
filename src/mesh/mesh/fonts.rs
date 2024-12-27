@@ -7,7 +7,7 @@ use crate::{
     },
 };
 
-use super::{EuclideanMeshType, MeshHalfEdgeBuilder, MeshType, MeshTypeHalfEdge};
+use super::{EuclideanMeshType, MeshType, MeshTypeHalfEdge};
 
 /// A font that can be used to render text.
 pub struct Font<'a> {

@@ -1,10 +1,13 @@
 use super::{BackwardEdgeIterator, ForwardEdgeIterator, HalfEdgeImpl, HalfEdgeImplMeshType};
 use crate::{
     math::IndexType,
-    mesh::{EdgeBasics, EdgePayload, HalfEdge, MeshBasics},
+    mesh::{EdgeBasics, EdgePayload, HalfEdge, MeshBasics, MeshType},
 };
 
-impl<T: HalfEdgeImplMeshType> EdgeBasics<T> for HalfEdgeImpl<T> {
+impl<T: MeshType<Edge = Self>> EdgeBasics<T> for HalfEdgeImpl<T>
+where
+    T: HalfEdgeImplMeshType<Edge = Self>,
+{
     #[inline(always)]
     fn id(&self) -> T::E {
         self.id
@@ -40,22 +43,37 @@ impl<T: HalfEdgeImplMeshType> EdgeBasics<T> for HalfEdgeImpl<T> {
         self.payload.as_mut()
     }
 
-    /// Iterates all half-edges incident to the same face (counter-clockwise)
-    #[inline(always)]
-    #[allow(refining_impl_trait)]
-    fn edges_face<'a>(&'a self, mesh: &'a T::Mesh) -> ForwardEdgeIterator<'a, T> {
-        ForwardEdgeIterator::new(self.clone(), mesh)
-    }
-
-    /// Iterates all half-edges incident to the same face (clockwise)
-    #[inline(always)]
-    #[allow(refining_impl_trait)]
-    fn edges_face_back<'a>(&'a self, mesh: &'a T::Mesh) -> BackwardEdgeIterator<'a, T> {
-        BackwardEdgeIterator::new(self.clone(), mesh)
-    }
+    type FaceEdgesIterator<'a>
+        = ForwardEdgeIterator<'a, T>
+    where
+        T: 'a;
 
     #[inline(always)]
-    fn face_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::F> {
+    fn edges_face<'a>(&'a self, mesh: &'a T::Mesh) -> Self::FaceEdgesIterator<'a>
+    where
+        T: 'a,
+    {
+        ForwardEdgeIterator::<'a, T>::new(self, mesh)
+    }
+
+    type FaceEdgesIteratorBack<'a>
+        = BackwardEdgeIterator<'a, T>
+    where
+        T: 'a;
+
+    #[inline(always)]
+    #[allow(refining_impl_trait)]
+    fn edges_face_back<'a>(&'a self, mesh: &'a T::Mesh) -> Self::FaceEdgesIteratorBack<'a> {
+        BackwardEdgeIterator::new(self, mesh)
+    }
+
+    type FaceIdsIterator<'a>
+        = std::vec::IntoIter<T::F>
+    where
+        T: 'a;
+
+    #[inline(always)]
+    fn face_ids<'a>(&'a self, mesh: &'a T::Mesh) -> Self::FaceIdsIterator<'a> {
         // TODO: only works for manifold meshes
         let mut res = Vec::new();
         let id = self.face_id();

@@ -1,8 +1,8 @@
 use crate::{
     math::{HasPosition, IndexType, Scalar, Vector},
     mesh::{
-        DefaultEdgePayload, DefaultFacePayload, HalfEdge, HalfEdgeSemiBuilder, MeshType3D,
-        MeshTypeHalfEdge, SlerpVertexInterpolator,
+        DefaultEdgePayload, DefaultFacePayload, HalfEdge, MeshType3D, MeshTypeHalfEdge,
+        SlerpVertexInterpolator,
     },
     operations::{MeshExtrude, MeshLoft, MeshSubdivision, SubdivisionDescription},
     primitives::{Make2dShape, MakePrismatoid},
@@ -119,7 +119,7 @@ where
             ],
         );
 
-        mesh.close_hole(start_bottom, Default::default(), false);
+        mesh.insert_face(start_bottom, Default::default());
 
         mesh
     }
@@ -173,18 +173,12 @@ where
     }*/
 
     /// An alias for `geodesic_icosahedron`.
-    fn icosphere(radius: T::S, n: usize) -> Self
-    where
-        T::Mesh: HalfEdgeSemiBuilder<T>,
-    {
+    fn icosphere(radius: T::S, n: usize) -> Self {
         Self::geodesic_icosahedron(radius, n)
     }
 
     /// Create a geodesic icosahedron (aka icosphere) with a given `radius` and `n` subdivisions.
-    fn geodesic_icosahedron(radius: T::S, n: usize) -> Self
-    where
-        T::Mesh: HalfEdgeSemiBuilder<T>,
-    {
+    fn geodesic_icosahedron(radius: T::S, n: usize) -> Self {
         let mut mesh = Self::regular_icosahedron(icosahedron_r2a(radius));
         debug_assert!(mesh.centroid().is_about(&T::Vec::zero(), T::S::EPS));
         mesh.subdivision_frequency(
@@ -195,10 +189,7 @@ where
     }
 
     /// Create a geodesic tetrahedron with a given `radius` and `n` subdivisions.
-    fn geodesic_tetrahedron(radius: T::S, n: usize) -> Self
-    where
-        T::Mesh: HalfEdgeSemiBuilder<T>,
-    {
+    fn geodesic_tetrahedron(radius: T::S, n: usize) -> Self {
         let mut mesh = Self::regular_tetrahedron(radius);
         debug_assert!(mesh.centroid().is_about(&T::Vec::zero(), T::S::EPS));
         mesh.subdivision_frequency(
@@ -209,10 +200,7 @@ where
     }
 
     /// Create a geodesic octahedron with a given `radius` and `n` subdivisions.
-    fn geodesic_octahedron(radius: T::S, n: usize) -> Self
-    where
-        T::Mesh: HalfEdgeSemiBuilder<T>,
-    {
+    fn geodesic_octahedron(radius: T::S, n: usize) -> Self {
         let mut mesh = Self::regular_octahedron(radius);
         debug_assert!(mesh.centroid().is_about(&T::Vec::zero(), T::S::EPS));
         mesh.subdivision_frequency(

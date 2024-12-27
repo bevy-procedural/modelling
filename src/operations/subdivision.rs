@@ -1,6 +1,5 @@
 use crate::mesh::{
-    DefaultEdgePayload, EdgeBasics, FaceBasics, HalfEdge, HalfEdgeSemiBuilder, MeshTypeHalfEdge,
-    VertexInterpolator,
+    DefaultEdgePayload, EdgeBasics, FaceBasics, HalfEdge, MeshTypeHalfEdge, VertexInterpolator,
 };
 
 /// Describes how to subdivide a mesh.
@@ -50,10 +49,7 @@ where
     /// Returns a new mesh.
     ///
     /// based on an algorithm developed by Charles Loop in 1987
-    fn loop_subdivision(&mut self, vp_builder: &impl VertexInterpolator<3, T>) -> &mut Self
-    where
-        T::Mesh: HalfEdgeSemiBuilder<T>,
-    {
+    fn loop_subdivision(&mut self, vp_builder: &impl VertexInterpolator<3, T>) -> &mut Self {
         // TODO: See https://github.com/OptimisticPeach/hexasphere
         let fs = self.faces().map(|f| f.id()).collect::<Vec<_>>();
         for face in &fs {
@@ -132,10 +128,7 @@ where
         &mut self,
         des: SubdivisionDescription,
         vp_builder: impl VertexInterpolator<3, T>,
-    ) -> &mut Self
-    where
-        T::Mesh: HalfEdgeSemiBuilder<T>,
-    {
+    ) -> &mut Self {
         // TODO: for c != 0 we have to shift the triangle. This means we have to build a completely new graph and things become much more complicated
         assert!(des.c == 0);
 
