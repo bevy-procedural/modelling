@@ -81,7 +81,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     fn check_edges_are_loops(&self) -> Result<(), String> {
         if let Some(bad_edge) = self
             .edges()
-            .find(|e| !e.next(self).same_face(self, e.origin_id()))
+            .find(|e| e.next(self).same_boundary(self, e.origin_id()).is_none())
         {
             return Err(format!(
                 "Successor of edge {} cannot reach it's origin {} during forward search",
@@ -90,10 +90,11 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
             ));
         }
 
-        if let Some(bad_edge) = self
-            .edges()
-            .find(|e| !e.prev(self).same_face_back(self, e.target_id(self)))
-        {
+        if let Some(bad_edge) = self.edges().find(|e| {
+            e.prev(self)
+                .same_boundary_back(self, e.target_id(self))
+                .is_none()
+        }) {
             return Err(format!(
                 "Precursor of edge {} cannot reach it's target {} during backward search",
                 bad_edge.id(),

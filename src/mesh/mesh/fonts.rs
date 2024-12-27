@@ -3,7 +3,8 @@ use ab_glyph::{Font as AbFont, FontRef, GlyphId, ScaleFont};
 use crate::{
     math::{HasPosition, IndexType, Vector},
     mesh::{
-        CurvedEdge, CurvedEdgeType, DefaultEdgePayload, DefaultFacePayload, MeshBasics, MeshBuilder,
+        CurvedEdge, CurvedEdgeType, DefaultEdgePayload, DefaultFacePayload, HalfEdge, MeshBasics,
+        MeshBuilder,
     },
 };
 
@@ -78,6 +79,7 @@ impl<'a> Font<'a> {
         mesh: &mut T::Mesh,
     ) where
         T::Edge: CurvedEdge<D, T>,
+        T::Edge: HalfEdge<T>,
         T: EuclideanMeshType<D> + MeshTypeHalfEdge,
         T::EP: DefaultEdgePayload,
         T::FP: DefaultFacePayload,
@@ -136,15 +138,15 @@ impl<'a> Font<'a> {
             if let Some(_p) = cur {
                 // TODO: don't use eq but similarity
                 if first.unwrap() == p1 {
-                    let (_, _, e) = mesh.close_face_vertices(
-                        prev_v,
-                        Default::default(),
-                        cur_v,
-                        Default::default(),
-                        start_v,
-                        Default::default(),
-                        false,
-                    );
+                    let (e, _) = mesh
+                        .close_face_vv(
+                            prev_v,
+                            cur_v,
+                            start_v,
+                            Default::default(),
+                            Default::default(),
+                        )
+                        .unwrap(); // TODO: error handling
                     cur_v = IndexType::max();
                     prev_v = IndexType::max();
                     start_v = IndexType::max();
@@ -153,8 +155,13 @@ impl<'a> Font<'a> {
                     cur_e = e;
                 } else {
                     //assert!(p0 == p || p1 == first.unwrap(), "Expected {:?} but got {:?}", p, p0);
-                    let (v, e, _) = mesh
-                        .insert_vertex_v(cur_v, T::VP::from_pos(p1 * scale + trans));
+                    let (e, v) = mesh
+                        .insert_vertex_v(
+                            cur_v,
+                            T::VP::from_pos(p1 * scale + trans),
+                            Default::default(),
+                        )
+                        .unwrap(); // TODO: error handling
                     cur_e = e;
                     prev_v = cur_v;
                     cur_v = v;
@@ -163,10 +170,13 @@ impl<'a> Font<'a> {
             } else {
                 first = Some(p0);
                 cur = Some(p1);
-                let (v0, v1) = mesh.insert_isolated_edge(
+                let e = mesh.insert_isolated_edge(
                     T::VP::from_pos(p0 * scale + trans),
                     T::VP::from_pos(p1 * scale + trans),
+                    Default::default(),
                 );
+                let v0 = mesh.edge(e).origin_id();
+                let v1 = mesh.edge(e).target_id(mesh);
                 cur_v = v1;
                 prev_v = v0;
                 start_v = v0;

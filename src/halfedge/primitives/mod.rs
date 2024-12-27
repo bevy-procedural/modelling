@@ -15,14 +15,14 @@ where
 {
     fn insert_polygon(&mut self, vp: impl IntoIterator<Item = T::VP>) -> T::E {
         // TODO: assertions
-        let first = self.insert_loop(vp);
-        self.close_hole(first, Default::default(), false);
+        let first = self.insert_loop_default(vp);
+        self.insert_face(first, Default::default());
         self.edge(first).twin_id()
     }
 
     fn insert_dihedron(&mut self, vp: impl IntoIterator<Item = T::VP>) -> T::E {
         let first = self.insert_polygon(vp);
-        self.close_hole(self.edge(first).twin_id(), Default::default(), false);
+        self.insert_face(self.edge(first).twin_id(), Default::default());
         first
     }
 }

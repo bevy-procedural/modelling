@@ -136,7 +136,7 @@ mod tests {
         for face in mesh.faces() {
             face.edges(&mesh).for_each(|e1| {
                 face.edges(&mesh).for_each(|e2| {
-                    assert!(e1.same_boundary(&mesh, e2.origin_id()));
+                    assert!(e1.same_boundary(&mesh, e2.origin_id()).is_some());
                 });
             });
         }

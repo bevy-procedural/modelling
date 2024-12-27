@@ -6,7 +6,6 @@ use crate::{
     mesh::{
         EdgeBasics, FaceBasics, HalfEdge, MeshBasics, Triangulation, VertexBasics, VertexPayload,
     },
-    util::Deletable,
 };
 
 impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
@@ -123,26 +122,16 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         panic!("No payload found for edge {}", edge.id());
     }
 
-    type VertexIterator<'a>
-        = std::slice::Iter<'a, T::Vertex>
-    where
-        T: 'a;
-
     /// Returns an iterator over all non-deleted vertices
-    fn vertices<'a>(&'a self) -> Self::VertexIterator<'a>
+    fn vertices<'a>(&'a self) -> impl Iterator<Item = &'a T::Vertex>
     where
         T: 'a,
     {
         self.vertices.iter()
     }
 
-    type VertexIteratorMut<'a>
-        = std::slice::IterMut<'a, T::Vertex>
-    where
-        T: 'a;
-
     /// Returns an mutable iterator over all non-deleted vertices
-    fn vertices_mut<'a>(&'a mut self) -> Self::VertexIteratorMut<'a>
+    fn vertices_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T::Vertex>
     where
         T::Vertex: 'a,
     {

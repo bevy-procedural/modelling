@@ -36,7 +36,7 @@ where
 
         if shift && pos.is_some() {
             let output = self.edge(input).next_id();
-            self.add_vertex_via_edge_default(input, output, pos.unwrap());
+            self.insert_vertex_e(input, pos.unwrap(), Default::default());
             first = false;
             ret = self.edge(output).prev_id();
             pos = iter.next();
@@ -44,14 +44,14 @@ where
 
         while pos.is_some() {
             let output = self.edge(input).next_id();
-            self.add_vertex_via_edge_default(input, output, pos.unwrap());
+            self.insert_vertex_e(input, pos.unwrap(), Default::default());
 
             let input_next = self.edge(input).next_id();
             input = self.edge(input).prev_id();
 
             // the first one shouldn't connect to the previous
             if !first {
-                self.close_face_default(output, input_next, false);
+                self.close_face_ee(output, input_next, Default::default(), Default::default());
             } else {
                 ret = self.edge(output).prev_id();
             }
@@ -59,7 +59,7 @@ where
             pos = iter.next();
             // the last one also shouldn't connect to the next
             if pos.is_some() || shift {
-                self.close_face_default(input_next, input, false);
+                self.close_face_ee(input_next, input, Default::default(), Default::default());
             }
 
             first = false;
@@ -72,8 +72,18 @@ where
     fn loft_tri_back_closed(&mut self, start: T::E, vp: impl IntoIterator<Item = T::VP>) -> T::E {
         let e = self.loft_tri_back(start, false, vp);
         let outside = self.edge(e).prev_id();
-        self.close_face_default(self.edge(e).next(self).next_id(), e, false);
-        self.close_face_default(self.edge(e).next_id(), outside, false);
+        self.close_face_ee(
+            self.edge(e).next(self).next_id(),
+            e,
+            Default::default(),
+            Default::default(),
+        );
+        self.close_face_ee(
+            self.edge(e).next_id(),
+            outside,
+            Default::default(),
+            Default::default(),
+        );
         e
     }
 
@@ -102,7 +112,7 @@ where
 
         if shift && pos.is_some() {
             let input = self.edge(output).prev_id();
-            self.add_vertex_via_edge_default(input, output, pos.unwrap());
+            self.insert_vertex_e(input, pos.unwrap(), Default::default());
             first = false;
             ret = self.edge(output).prev_id();
             pos = iter.next();
@@ -110,14 +120,15 @@ where
 
         while pos.is_some() {
             let input = self.edge(output).prev_id();
-            self.add_vertex_via_edge_default(input, output, pos.unwrap());
+            self.insert_vertex_e(input, pos.unwrap(), Default::default());
 
             // the first one shouldn't connect to the previous
             if !first {
-                self.close_face_default(
+                self.close_face_ee(
                     self.edge(input).next_id(),
                     self.edge(input).prev_id(),
-                    false,
+                    Default::default(),
+                    Default::default(),
                 );
             } else {
                 ret = self.edge(output).prev_id();
@@ -130,7 +141,12 @@ where
 
             // the last one also shouldn't connect to the next
             if pos.is_some() || shift {
-                self.close_face_default(output, self.edge(output).prev(self).prev_id(), false);
+                self.close_face_ee(
+                    output,
+                    self.edge(output).prev(self).prev_id(),
+                    Default::default(),
+                    Default::default(),
+                );
             }
 
             // advance output to the next edge on the boundary
@@ -148,8 +164,13 @@ where
         let e = self.loft_tri(start, false, vp);
         let inside = self.edge(e).twin(self).prev_id();
         let outside = self.edge(inside).prev(self).prev_id();
-        self.close_face_default(inside, outside, false);
-        self.close_face_default(self.edge(e).twin_id(), outside, false);
+        self.close_face_ee(inside, outside, Default::default(), Default::default());
+        self.close_face_ee(
+            self.edge(e).twin_id(),
+            outside,
+            Default::default(),
+            Default::default(),
+        );
         self.edge(outside).next(self).next_id()
     }
 
@@ -181,7 +202,7 @@ where
         let mut input = start;
         let start_vertex = self.edge(start).target_id(self);
         if let Some(vp) = iter.next() {
-            self.add_vertex_via_edge_default(input, self.edge(start).next_id(), vp);
+            self.insert_vertex_e(input, vp, Default::default());
         }
 
         let mut ret = start;
@@ -193,8 +214,9 @@ where
                 let Some(vp) = iter.next() else {
                     return ret;
                 };
-                let (_, e1, _) =
-                    self.add_vertex_via_edge_default(inside, self.edge(inside).next_id(), vp);
+                let (e1, _) = self
+                    .insert_vertex_e(inside, vp, Default::default())
+                    .unwrap(); // TODO: error handling
                 inside = e1;
 
                 // the edge pointing to the first generated vertex
@@ -210,13 +232,23 @@ where
             let Some(vp) = iter.next() else {
                 if start_vertex == self.edge(input).target_id(self) {
                     // reached the start again - close the last vertex!
-                    self.close_face_default(inside, self.edge(input).prev_id(), false);
+                    self.close_face_ee(
+                        inside,
+                        self.edge(input).prev_id(),
+                        Default::default(),
+                        Default::default(),
+                    );
                 }
                 return ret;
             };
 
-            self.add_vertex_via_edge_default(input, self.edge(input).next_id(), vp);
-            self.close_face_default(inside, self.edge(input).next_id(), false);
+            self.insert_vertex_e(input, vp, Default::default());
+            self.close_face_ee(
+                inside,
+                self.edge(input).next_id(),
+                Default::default(),
+                Default::default(),
+            );
 
             // when n==2, we cannot set the `ret` until now
             if ret == start {
@@ -253,7 +285,7 @@ where
         let mut input = start;
         let start_vertex = self.edge(start).origin_id();
         if let Some(vp) = iter.next() {
-            self.add_vertex_via_edge_default(self.edge(start).prev_id(), input, vp);
+            self.insert_vertex_e(self.edge(start).prev_id(), vp, Default::default());
         }
 
         let mut ret = start;
@@ -271,8 +303,9 @@ where
                     return ret;
                 };
                 // Insert vertex between `inside`'s previous edge and `inside`
-                let prev_edge = self.edge(inside).prev_id();
-                let (_, e1, _) = self.add_vertex_via_edge_default(prev_edge, inside, vp);
+                let (e1, _) = self
+                    .insert_vertex_e(self.edge(inside).prev_id(), vp, Default::default())
+                    .unwrap(); // TODO: error handling
                 inside = e1;
 
                 // Set `ret` to the edge pointing to the first generated vertex
@@ -292,18 +325,24 @@ where
             let Some(vp) = iter.next() else {
                 if start_vertex == self.edge(input).origin_id() {
                     // Reached the start again - close the last face
-                    self.close_face_default(input, self.edge(inside).prev_id(), false);
+                    self.close_face_ee(
+                        input,
+                        self.edge(inside).prev_id(),
+                        Default::default(),
+                        Default::default(),
+                    );
                 }
                 return ret;
             };
             // Insert a new vertex between the previous edge of `input` and `input`
-            self.add_vertex_via_edge_default(self.edge(input).prev_id(), input, vp);
+            self.insert_vertex_e(self.edge(input).prev_id(), vp, Default::default());
 
             // Close the face between `inside` and the new vertex
-            self.close_face_default(
+            self.close_face_ee(
                 self.edge(input).prev(self).twin_id(),
                 self.edge(inside).prev_id(),
-                false,
+                Default::default(),
+                Default::default(),
             );
 
             // When `n == 2`, we cannot set `ret` until now

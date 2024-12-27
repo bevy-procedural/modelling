@@ -102,7 +102,7 @@ where
     ) -> T::E {
         let first = self.insert_polygon(vp);
         let e = self.loft_tri_closed(first, vp2);
-        self.close_hole(e, Default::default(), false);
+        self.insert_face(e, Default::default());
         e
     }
 
@@ -139,7 +139,7 @@ where
     ) -> T::E {
         let first = self.insert_polygon(base);
         let top_edge = self.loft_polygon(first, 2, 2, top);
-        self.close_hole(top_edge, Default::default(), false);
+        self.insert_face(top_edge, Default::default());
         // TODO: smooth
         assert!(!smooth, "Smooth frustums not yet implemented");
         top_edge
@@ -179,7 +179,7 @@ where
                 vp(-p.x(), p.y(), p.z()),
             ],
         );
-        mesh.close_hole_default(top_edge);
+        mesh.insert_face(top_edge, Default::default());
         mesh
     }
 

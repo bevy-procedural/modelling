@@ -96,10 +96,10 @@ impl<T: HalfEdgeImplMeshType> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T> {
 
     fn subdivide_halfedge_try_fixup(&mut self, e: T::E, ep: T::EP) -> Option<T::E> {
         let old_edge = self.edge(e).clone();
-        let other_old = old_edge.twin(self);
+        let other_old = old_edge.twin(self).id();
 
         // find the "other_new". It has the characteristic property of sharing the same twin with the old edge.
-        let mut other_new = other_old.next(self);
+        let mut other_new = old_edge.twin(self).next(self);
         let first_other_new_origin = other_new.origin_id();
         loop {
             if other_new.twin_id() == e {
@@ -110,11 +110,13 @@ impl<T: HalfEdgeImplMeshType> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T> {
                 // Not a valid wheel
                 return None;
             }
-            if other_new.prev_id() == other_old.id() {
+            if other_new.prev_id() == other_old {
                 // Went a full round
                 return None;
             }
         }
+        let ono = other_new.origin_id();
+        let oi = other_new.id();
 
         // Insert the new edge
         let new_edge = self.halfedges.allocate();
@@ -122,17 +124,17 @@ impl<T: HalfEdgeImplMeshType> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T> {
             new_edge,
             HalfEdgeImpl::new(
                 old_edge.next_id(),
-                other_old.id(),
+                other_old,
                 old_edge.id(),
-                other_new.origin_id(),
+                ono,
                 old_edge.face_id(),
                 Some(ep),
             ),
         );
 
         // update the neighbors
-        self.edge_mut(old_edge.id()).set_twin(other_new.id());
-        self.edge_mut(other_old.id()).set_twin(new_edge);
+        self.edge_mut(old_edge.id()).set_twin(oi);
+        self.edge_mut(other_old).set_twin(new_edge);
         self.edge_mut(old_edge.next_id()).set_prev(new_edge);
         self.edge_mut(old_edge.id()).set_next(new_edge);
 
@@ -154,22 +156,22 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
         backward_face: T::F,
         should_be_valid: bool,
     ) -> (T::E, T::E) {
-        let e_inside = self.edge(inside);
-        let e_outside = self.edge(outside);
-        let v = e_inside.target(self).id();
-        let w = e_outside.target(self).id();
-
-        let other_inside = e_outside.next(self);
-        let other_outside = e_inside.next(self);
+        let (fv, fw, v, w) = {
+            let e_inside = self.edge(inside);
+            let e_outside = self.edge(outside);
+            let v = e_inside.target(self).id();
+            let w = e_outside.target(self).id();
+            (e_inside.next(self).id(), e_outside.next(self).id(), v, w)
+        };
 
         let (e1, e2) = if should_be_valid {
             self.insert_halfedge_pair(
                 inside,
                 v,
-                other_inside.id(),
+                fv,
                 outside,
                 w,
-                other_inside.id(),
+                fw,
                 forward_face,
                 backward_face,
                 ep,
@@ -178,18 +180,18 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
             self.insert_halfedge_pair_forced(
                 inside,
                 v,
-                other_inside.id(),
+                fv,
                 outside,
                 w,
-                other_inside.id(),
+                fw,
                 forward_face,
                 backward_face,
                 ep,
             )
         };
 
-        self.edge_mut(other_inside.id()).set_prev(e1);
-        self.edge_mut(other_outside.id()).set_prev(e2);
+        self.edge_mut(fv).set_prev(e1);
+        self.edge_mut(fw).set_prev(e2);
         self.edge_mut(inside).set_next(e1);
         self.edge_mut(outside).set_next(e2);
 

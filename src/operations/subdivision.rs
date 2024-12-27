@@ -54,14 +54,14 @@ where
         let fs = self.faces().map(|f| f.id()).collect::<Vec<_>>();
         for face in &fs {
             // get the edge chain
-            let edges = self.face(*face).edges(self).collect::<Vec<_>>();
+            let edges = self.face(*face).edges(self).cloned().collect::<Vec<_>>();
             let vs = edges.iter().map(|e| e.origin_id()).collect::<Vec<_>>();
             assert!(edges.len() == 3);
 
             // insert an additional vertex for each edge
             for i in 0..3 {
                 if self
-                    .subdivide_unsafe_try_fixup(edges[i].id(), Default::default())
+                    .subdivide_halfedge_try_fixup(edges[i].id(), Default::default())
                     .is_some()
                 {
                     // edge is already subdivided
@@ -96,26 +96,26 @@ where
                         ),
                     ],
                 );
-                self.subdivide_unsafe(edges[i].id(), vp, Default::default());
+                self.subdivide_halfedge(edges[i].id(), vp, Default::default());
             }
 
             // remove the original face
-            let fp = self.remove_face(*face);
+            let fp = self.face(*face).payload().clone();
+            self.remove_face(*face);
 
             // TODO: cannot clone fp like that!
 
             // insert the new edges and faces
             for e in &edges {
-                self.insert_edge_no_check(
+                self.insert_edge_ee(
                     e.id(),
-                    Default::default(),
                     self.edge(e.id()).prev(self).prev_id(),
                     Default::default(),
                 );
-                self.close_hole(e.id(), fp, false);
+                self.insert_face(e.id(), fp);
             }
             // fill the center hole
-            self.close_hole(self.edge(edges[0].id()).next(self).twin_id(), fp, false);
+            self.insert_face(self.edge(edges[0].id()).next(self).twin_id(), fp);
         }
 
         self

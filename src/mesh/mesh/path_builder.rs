@@ -2,7 +2,7 @@ use crate::{
     math::{HasPosition, IndexType, TransformTrait, Transformable},
     mesh::{
         CurvedEdge, CurvedEdgeType, DefaultEdgePayload, EdgeBasics, HalfEdge, MeshBasics,
-        MeshBuilder, MeshHalfEdgeBuilder, MeshType, VertexBasics,
+        MeshBuilder, MeshType, VertexBasics,
     },
 };
 
@@ -211,14 +211,13 @@ where
     pub fn close(&mut self, fp: T::FP) -> T::F
     where
         T::Edge: HalfEdge<T>,
-        T::Mesh: MeshHalfEdgeBuilder<T>,
         T::EP: DefaultEdgePayload,
     {
         self.has_face = true;
 
         if self.is_closed() {
             let start_inner = self.start_edges().expect("The path is empty.").0;
-            return self.mesh().close_hole(start_inner, fp, false);
+            return self.mesh().insert_face(start_inner, fp).unwrap(); // TODO: handle error
         }
 
         let Some((current_inner, current_outer)) = self.current_edges() else {
@@ -233,10 +232,8 @@ where
             return IndexType::max();
         };
 
-        let end_of_path = self
-            .mesh()
-            .edge(current_inner)
-            .clone()
+        let ed = self.mesh().edge(current_inner).clone();
+        let end_of_path = ed
             .edges_face(self.mesh())
             .find(|e| e.id() == current_outer || e.id() == start_inner)
             .expect("The path is malformed.");
@@ -258,7 +255,7 @@ where
         .find(|e| e.id() == start_inner)
         .is_some());*/
 
-        self.mesh().close_hole(start_inner, fp, false)
+        self.mesh().insert_face(start_inner, fp).unwrap() // TODO: handle error
     }
 
     /// Add a vertex or return the index of the start vertex if the position is the same.
@@ -327,14 +324,14 @@ where
 
     /// Draws a straight line from the current vertex to a new vertex with the given payload.
     #[inline(always)]
-    pub fn line_ex<const D: usize>(&mut self, vp: T::VP, ep0: T::EP, ep1: T::EP) -> &mut Self
+    pub fn line_ex<const D: usize>(&mut self, vp: T::VP, ep: T::EP) -> &mut Self
     where
         T: EuclideanMeshType<D, Trans = Transform> + MeshTypeHalfEdge,
         Transform: TransformTrait<T::S, D, Vec = T::Vec>,
     {
         let vp2 = vp.transformed(&self.transform);
         let v = self.mesh().insert_vertex(vp2);
-        self.line_to_ex(v, ep0, ep1);
+        self.line_to_ex(v, ep);
         self
     }
 
@@ -376,18 +373,16 @@ where
     pub fn line_to(&mut self, v: T::V) -> &mut Self
     where
         T::Edge: HalfEdge<T>,
-        T::Mesh: MeshHalfEdgeBuilder<T>,
         T::EP: DefaultEdgePayload,
     {
-        self.line_to_ex(v, Default::default(), Default::default())
+        self.line_to_ex(v, Default::default())
     }
 
     /// Draws a straight line from the current vertex to the given vertex.
     /// The vertex must have no edges at all or must only be adjacent to one "outside".
-    pub fn line_to_ex(&mut self, v: T::V, ep0: T::EP, ep1: T::EP) -> &mut Self
+    pub fn line_to_ex(&mut self, v: T::V, ep: T::EP) -> &mut Self
     where
         T::Edge: HalfEdge<T>,
-        T::Mesh: MeshHalfEdgeBuilder<T>,
     {
         assert!(!self.is_closed(), "The path is already closed.");
         if v == self.start_vertex() {
@@ -399,17 +394,17 @@ where
         if let Some((_inside, _)) = self.current_edges {
             //let edges = self.mesh().insert_edge(inside, ep0, outside, ep1);
             let origin = self.current_vertex();
-            let edges = self.mesh().insert_edge_between(origin, ep0, v, ep1);
-            self.current_edges = Some(edges);
+            let edge = self.mesh().insert_edge_vv(origin, v, ep).unwrap(); // TODO: handle error
+            self.current_edges = Some((edge, self.mesh().edge(edge).twin_id()));
         } else {
             // The current vertex doesn't have any edges yet.
             assert!(self.start_edges().is_none());
             assert!(self.start_vertex() == self.current_vertex());
             let origin = self.current_vertex();
-            let edges = self.mesh().insert_edge_between(origin, ep0, v, ep1);
-            // TODO: make some tests to see whether inside and outside are always correct
-            self.current_edges = Some((edges.1, edges.0));
-            self.start_edges = Some((edges.1, edges.0));
+            let edge = self.mesh().insert_edge_vv(origin, v, ep).unwrap(); // TODO: handle error
+                                                                           // TODO: make some tests to see whether inside and outside are always correct
+            self.current_edges = Some((edge, self.mesh().edge(edge).twin_id()));
+            self.start_edges = self.current_edges;
         }
 
         self.current_vertex = v;

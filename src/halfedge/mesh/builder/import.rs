@@ -1,6 +1,6 @@
 use crate::{
     math::IndexType,
-    mesh::{FaceBasics, HalfEdge, MeshBasics, MeshType, VertexBasics},
+    mesh::{EdgeBasics, FaceBasics, HalfEdge, MeshBasics, MeshType, VertexBasics},
     prelude::{HalfEdgeFaceImpl, HalfEdgeImplMeshType, HalfEdgeMeshImpl, HalfEdgeVertexImpl},
 };
 
@@ -13,7 +13,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
         fm: FM,
     ) -> Self
     where
-        FE: Fn(&T2::EP) -> T::EP,
+        FE: Fn(&T2::EP) -> Option<T::EP>,
         FV: Fn(&T2::VP) -> T::VP,
         FF: Fn(&T2::FP) -> T::FP,
         FM: Fn(&T2::MP) -> T::MP,

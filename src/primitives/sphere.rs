@@ -54,7 +54,7 @@ where
         };
 
         // top pole
-        let mut prev = mesh.insert_loop((0..m).map(|j| make_vp(1, j)));
+        let mut prev = mesh.insert_loop((0..m).map(|j| (Default::default(), make_vp(1, j))));
         mesh.fill_hole_apex(mesh.edge(prev).twin_id(), make_vp(0, 0));
 
         // normal squares
@@ -133,7 +133,7 @@ where
 
         let mut mesh = Self::default();
 
-        let start = mesh.insert_loop([
+        let start = mesh.insert_loop_default([
             make_vp(zero, long, -short),
             make_vp(long, short, zero),
             make_vp(short, zero, long),

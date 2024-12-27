@@ -102,13 +102,8 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     /// This function returns the cloned compact vertices and maps the indices to the new compact buffer.
     fn dense_vertices(&self, indices: &mut Vec<T::V>) -> Vec<T::VP>;
 
-    type VertexIterator<'a>: Iterator<Item = &'a T::Vertex>
-    where
-        Self: 'a,
-        T: 'a;
-
     /// Returns an iterator over all non-deleted vertices
-    fn vertices<'a>(&'a self) -> Self::VertexIterator<'a>
+    fn vertices<'a>(&'a self) -> impl Iterator<Item = &'a T::Vertex>
     where
         T: 'a;
 
@@ -120,14 +115,8 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
         self.vertices().map(|v| v.id())
     }
 
-    // TODO: Do i need these types?
-    type VertexIteratorMut<'a>: Iterator<Item = &'a mut T::Vertex>
-    where
-        Self: 'a,
-        T: 'a;
-
     /// Returns an mutable iterator over all non-deleted vertices
-    fn vertices_mut<'a>(&'a mut self) -> Self::VertexIteratorMut<'a>
+    fn vertices_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T::Vertex>
     where
         T: 'a;
 
@@ -215,8 +204,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
                 }
                 self.subdivide_edge(
                     *e,
-                    vs.iter()
-                        .map(|v| (T::EP::default(), T::EP::default(), T::VP::from_pos(*v))),
+                    vs.iter().map(|v| (T::EP::default(), T::VP::from_pos(*v))),
                 );
             }
         }

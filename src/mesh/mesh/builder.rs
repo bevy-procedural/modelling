@@ -1,6 +1,8 @@
 use super::{MeshBasics, MeshType};
 use crate::mesh::{DefaultEdgePayload, EdgeBasics, VertexBasics};
 
+// TODO: Make sure return values are used for the failable methods! 
+
 /// Some basic operations to build meshes.
 pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// add a new vertex and return it's id
@@ -214,7 +216,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
                let mut input = first.id();
                let mut output = first.twin_id();
                for pos in iter {
-                   self.add_vertex_via_edge_default(input, output, pos);
+                   self.insert_vertex_e(input, output, pos);
                    let n = self.edge(input).next(self);
                    input = n.id();
                    output = n.twin_id();
@@ -228,12 +230,17 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Same as `insert_path` but closes the path by connecting the last vertex with the first one.
     /// Also, returns the first edge (outer boundary of the loop when constructed ccw).
     /// The first edge's target is the first vertex of the loop.
+    /// Panics if the iterator has a length of less than 2.
     fn insert_loop(&mut self, iter: impl IntoIterator<Item = (T::EP, T::VP)>) -> T::E {
         let mut iter = iter.into_iter();
         let (ep, vp) = iter.next().unwrap();
         let (e, last_v) = self.insert_path(vp, iter);
-        self.insert_edge_vv(last_v, self.edge(e).origin(self).id(), ep)
-            .unwrap()
+        self.insert_edge_vv(
+            last_v,
+            self.edge(e.expect("Iterator too short")).origin(self).id(),
+            ep,
+        )
+        .unwrap()
 
         /*
                  fn insert_loop(&mut self, vp: impl IntoIterator<Item = T::VP>) -> T::E
@@ -246,14 +253,21 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         } */
     }
 
-    /// Insert a face with the given vertices.
-    /// If some edges to construct this face are missing, they will be created.
-    /// Uses the default edge payload.
-    fn insert_face_v(&mut self, fp: T::FP, vs: impl IntoIterator<Item = T::V>) -> Option<T::F>
+    fn insert_loop_default(&mut self, iter: impl IntoIterator<Item = T::VP>) -> T::E
     where
         T::EP: DefaultEdgePayload,
     {
-        let iter = vs.into_iter();
+        self.insert_loop(iter.into_iter().map(|v| (Default::default(), v)))
+    }
+
+    /// Insert a face with the given vertices.
+    /// If some edges to construct this face are missing, they will be created.
+    /// Uses the default edge payload.
+    fn insert_face_v(&mut self, _fp: T::FP, vs: impl IntoIterator<Item = T::V>) -> Option<T::F>
+    where
+        T::EP: DefaultEdgePayload,
+    {
+        let _iter = vs.into_iter();
         // use insert_edge_ee to avoid ambiguity
 
         todo!()

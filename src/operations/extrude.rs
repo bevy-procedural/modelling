@@ -49,7 +49,7 @@ where
             .map(|v| v.origin(self).payload().transformed(&transform))
             .collect();
         let start = self.loft_polygon_back(e, 2, 2, vps);
-        self.close_hole(start, Default::default(), false);
+        self.insert_face(start, Default::default());
         start
     }
 
@@ -91,7 +91,7 @@ where
             .map(|v| v.origin(self).payload().transformed(&transform))
             .collect();
         let start = self.loft_tri_closed(e, vps);
-        self.close_hole(start, Default::default(), false);
+        self.insert_face(start, Default::default());
         start
     }
 
@@ -117,7 +117,7 @@ where
             .collect();
         vps.rotate_right(1);
         let start = self.loft_tri_closed(e, vps);
-        self.close_hole(start, Default::default(), false);
+        self.insert_face(start, Default::default());
         start
     }
 
@@ -129,16 +129,23 @@ where
         let e0 = self.edge(start);
         let origin = e0.origin_id();
         let mut input = self.edge(start).prev_id();
-        let (v, _, _) = self.add_vertex_via_edge_default(input, start, apex);
+        let (_, v) = self
+            .insert_vertex_e(input, apex, Default::default())
+            .unwrap(); // TODO: error handling
         loop {
             let e = self.edge(input);
             if e.origin_id() == origin {
                 break;
             }
             input = e.prev_id();
-            self.close_face_default(self.edge(input).next(&self).next_id(), input, false);
+            self.close_face_ee(
+                self.edge(input).next(&self).next_id(),
+                input,
+                Default::default(),
+                Default::default(),
+            );
         }
-        self.close_hole(input, Default::default(), false);
+        self.insert_face(input, Default::default());
         v
     }
 }

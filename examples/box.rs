@@ -39,7 +39,7 @@ fn cuboid_from_vertices(size: Vec3) -> BevyMesh3d {
     mesh.close_face_vertices_default(v3, v7, v6, false);
     mesh.close_face_vertices_default(v2, v5, v7, false);
     mesh.close_face_vertices_default(v0, v6, v4, false);
-    mesh.close_hole_default(mesh.shared_edge(v6, v7).unwrap().id());
+    mesh.insert_face(mesh.shared_edge(v6, v7).unwrap().id(), Default::default());
     mesh
 }
 
@@ -76,7 +76,7 @@ fn cuboid_from_loft(size: Vec3) -> BevyMesh3d {
     let top_edge = mesh.loft_polygon(bottom_edge, 2, 2, vs.iter().map(|(x, y)| vp(*x, *y, p.z())));
 
     // close the top face
-    mesh.close_hole_default(top_edge);
+    mesh.insert_face(top_edge, Default::default());
     mesh
 }
 

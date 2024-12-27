@@ -1,6 +1,4 @@
-use crate::mesh::{
-    EdgeBasics, HalfEdge, MeshBasics, MeshTypeHalfEdge, VertexBasics,
-};
+use crate::mesh::{EdgeBasics, HalfEdge, MeshBasics, MeshTypeHalfEdge};
 
 /// Some low-level operations to build meshes with halfedges.
 pub trait MeshHalfEdgeBuilder<T: MeshTypeHalfEdge<Mesh = Self>>: MeshBasics<T> {
@@ -22,7 +20,7 @@ pub trait MeshHalfEdgeBuilder<T: MeshTypeHalfEdge<Mesh = Self>>: MeshBasics<T> {
     /// Allocates and inserts a pair of half-edges and returns the ids.
     /// This will not update the neighbors and will not check whether the operation is allowed!
     /// After this operation, the mesh might be in an inconsistent state.
-    /// 
+    ///
     /// You can set `to_target`, `to_origin`, `from_target`, and `from_origin` to `IndexType::max()`
     /// to use the resp. twin in theses places.
     ///

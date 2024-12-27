@@ -2,7 +2,7 @@ use crate::{
     halfedge::{HalfEdgeImplMeshType, HalfEdgeMeshImpl},
     math::IndexType,
     mesh::{
-        EdgeBasics, EdgePayload, FaceBasics, HalfEdge, HalfEdgeVertex, MeshBasics, MeshBuilder,
+        EdgeBasics, EdgePayload, HalfEdge, HalfEdgeVertex, MeshBasics, MeshBuilder,
         MeshHalfEdgeBuilder, VertexBasics,
     },
 };
@@ -207,7 +207,7 @@ impl<T: HalfEdgeImplMeshType> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
             }
 
             // find outgoing edges that are boundary and can reach the other vertex
-            let m = None;
+            let mut m = None;
             for e in av.edges_out(self) {
                 if !e.is_boundary_self() {
                     return None;
@@ -229,15 +229,15 @@ impl<T: HalfEdgeImplMeshType> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     }
 
     fn insert_edge_ev(&mut self, e: T::E, v: T::V, ep: T::EP) -> Option<T::E> {
-        todo!()
+        todo!("{}{}{:?}", e, v, ep)
     }
 
     fn try_remove_face(&mut self, f: T::F) -> bool {
-        todo!()
+        todo!("{}{:?}", f, self.face(f))
     }
 
     fn insert_face(&mut self, e: T::E, fp: T::FP) -> Option<T::F> {
-        todo!()
+        todo!("{}{:?}", e, fp)
     }
 
     fn close_face_ee(
@@ -247,7 +247,7 @@ impl<T: HalfEdgeImplMeshType> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         ep: T::EP,
         fp: T::FP,
     ) -> Option<(T::E, T::F)> {
-        todo!()
+        todo!("{}{}{:?}{:?}", from, to, ep, fp)
     }
 
     fn close_face_vv(
@@ -258,14 +258,14 @@ impl<T: HalfEdgeImplMeshType> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         ep: T::EP,
         fp: T::FP,
     ) -> Option<(T::E, T::F)> {
-        todo!()
+        todo!("{}{}{}{:?}{:?}", prev, from, to, ep, fp)
     }
 
-    fn subdivide_edge<I: Iterator<Item = (T::EP, T::VP)>>(&mut self, e: T::E, vs: I) -> T::E {
-        todo!()
+    fn subdivide_edge<I: Iterator<Item = (T::EP, T::VP)>>(&mut self, e: T::E, _vs: I) -> T::E {
+        todo!("{}", e)
     }
 
-    /*fn add_vertex_via_edge_default(
+    /*fn insert_vertex_e(
          &mut self,
          input: T::E,
          output: T::E,
@@ -597,7 +597,7 @@ impl<T: HalfEdgeImplMeshType> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
              return self.close_face(inside, ep1, outside, ep2, fp, curved);
          }
 
-         fn close_face_default(
+         fn close_face_ee(
              &mut self,
              inside: T::E,
              outside: T::E,

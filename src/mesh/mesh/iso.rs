@@ -93,7 +93,9 @@ mod tests {
         let (_, v2) = mesh
             .insert_vertex_v(v1, vp(-x, -y, z), Default::default())
             .unwrap();
-        let (_, v3) = mesh.insert_vertex_v(v2, vp(x, -y, z), Default::default()).0;
+        let (_, v3) = mesh
+            .insert_vertex_v(v2, vp(x, -y, z), Default::default())
+            .unwrap();
         mesh.close_face_vv(v2, v3, v0, Default::default(), Default::default());
         let (_, v4) = mesh
             .insert_vertex_v(v1, vp(-x, y, -z), Default::default())
