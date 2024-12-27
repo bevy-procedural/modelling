@@ -4,10 +4,7 @@ use crate::{
     mesh::{EdgeBasics, EdgePayload, HalfEdge, MeshBasics, MeshType},
 };
 
-impl<T: MeshType<Edge = Self>> EdgeBasics<T> for HalfEdgeImpl<T>
-where
-    T: HalfEdgeImplMeshType<Edge = Self>,
-{
+impl<T: HalfEdgeImplMeshType> EdgeBasics<T> for HalfEdgeImpl<T> {
     #[inline(always)]
     fn id(&self) -> T::E {
         self.id

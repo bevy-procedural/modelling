@@ -4,7 +4,8 @@ use super::{HalfEdgeImplMeshType, HalfEdgeMeshImpl};
 use crate::{
     math::IndexType,
     mesh::{
-        EdgeBasics, FaceBasics, HalfEdge, MeshBasics, Triangulation, VertexBasics, VertexPayload,
+        EdgeBasics, FaceBasics, HalfEdge, MeshBasics, MeshType, Triangulation, VertexBasics,
+        VertexPayload,
     },
 };
 
@@ -125,7 +126,7 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     /// Returns an iterator over all non-deleted vertices
     fn vertices<'a>(&'a self) -> impl Iterator<Item = &'a T::Vertex>
     where
-        T: 'a,
+        T::Vertex: 'a,
     {
         self.vertices.iter()
     }
