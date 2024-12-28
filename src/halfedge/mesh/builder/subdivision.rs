@@ -3,9 +3,4 @@ use crate::{
     mesh::{DefaultEdgePayload, EdgeBasics, HalfEdge, MeshBasics},
 };
 
-impl<T: HalfEdgeMeshType> HalfEdgeMeshImpl<T>
-where
-    T::EP: DefaultEdgePayload,
-{
-   
-}
+impl<T: HalfEdgeMeshType> HalfEdgeMeshImpl<T> where T::EP: DefaultEdgePayload {}

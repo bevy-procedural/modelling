@@ -4,8 +4,11 @@ use crate::{
     },
     math::{HasPosition, Vector},
     mesh::{
-        CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EdgePayload, EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshType, MeshTypeHalfEdge
+        CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EdgePayload, EmptyEdgePayload,
+        EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshBasicsPlus,
+        MeshType, MeshTypeHalfEdge,
     },
+    prelude::HalfEdgeImplMeshTypePlus,
 };
 
 use super::{MeshNd64, NdAffine, NdRotate, Polygon2d, VecN, VertexPayloadPNU};
@@ -45,6 +48,7 @@ impl EuclideanMeshType<2> for MeshType2d64PNUCurved {
 
 impl HalfEdgeImplMeshType for MeshType2d64PNUCurved {}
 impl MeshTypeHalfEdge for MeshType2d64PNUCurved {}
+impl HalfEdgeImplMeshTypePlus for MeshType2d64PNUCurved {}
 
 impl CurvedEdge<2, MeshType2d64PNUCurved> for HalfEdgeImpl<MeshType2d64PNUCurved> {
     fn curve_type(&self, mesh: &Mesh2d64Curved) -> CurvedEdgeType<2, MeshType2d64PNUCurved> {

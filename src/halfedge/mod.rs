@@ -16,11 +16,18 @@ use crate::mesh::{MeshType, MeshTypeHalfEdge};
 /// This trait defines the associated types used in this half-edge mesh implementation and puts them into relation.
 pub trait HalfEdgeImplMeshType:
     MeshType<
-        Mesh = HalfEdgeMeshImpl<Self>,
-        Vertex = HalfEdgeVertexImpl<Self>,
-        Edge = HalfEdgeImpl<Self>,
-        Face = HalfEdgeFaceImpl<Self>,
-    > + MeshTypeHalfEdge<
+    Mesh = HalfEdgeMeshImpl<Self>,
+    Vertex = HalfEdgeVertexImpl<Self>,
+    Edge = HalfEdgeImpl<Self>,
+    Face = HalfEdgeFaceImpl<Self>,
+>
+{
+}
+
+/// This trait extends the `HalfEdgeImplMeshType` trait
+pub trait HalfEdgeImplMeshTypePlus:
+    HalfEdgeImplMeshType
+    + MeshTypeHalfEdge<
         Mesh = HalfEdgeMeshImpl<Self>,
         Vertex = HalfEdgeVertexImpl<Self>,
         Edge = HalfEdgeImpl<Self>,

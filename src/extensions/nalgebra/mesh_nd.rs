@@ -6,6 +6,7 @@ use crate::{
         EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshType,
         MeshType3D, MeshTypeHalfEdge,
     },
+    prelude::HalfEdgeImplMeshTypePlus,
 };
 
 use super::{NdAffine, NdRotate, Polygon2d, VecN, VertexPayloadPNU};
@@ -47,6 +48,7 @@ impl<const D: usize> EuclideanMeshType<D> for MeshTypeNd64PNU<D> {
     type Poly = Polygon2d<f64>;
 }
 impl<const D: usize> HalfEdgeImplMeshType for MeshTypeNd64PNU<D> {}
+impl<const D: usize> HalfEdgeImplMeshTypePlus for MeshTypeNd64PNU<D> {}
 impl<const D: usize> MeshTypeHalfEdge for MeshTypeNd64PNU<D> {}
 impl MeshType3D for MeshTypeNd64PNU<3> {}
 

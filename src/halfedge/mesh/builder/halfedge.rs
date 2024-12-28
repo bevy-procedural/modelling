@@ -1,10 +1,10 @@
 use crate::{
-    halfedge::{HalfEdgeImpl, HalfEdgeImplMeshType, HalfEdgeMeshImpl, HalfEdgeVertexImpl},
+    halfedge::{HalfEdgeImpl, HalfEdgeImplMeshTypePlus, HalfEdgeMeshImpl, HalfEdgeVertexImpl},
     math::IndexType,
     mesh::{EdgeBasics, HalfEdge, MeshBasics, MeshHalfEdgeBuilder, VertexBasics},
 };
 
-impl<T: HalfEdgeImplMeshType> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T> {
+impl<T: HalfEdgeImplMeshTypePlus> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T> {
     #[inline(always)]
     fn insert_halfedge_pair_forced(
         &mut self,
@@ -142,7 +142,7 @@ impl<T: HalfEdgeImplMeshType> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T> {
     }
 }
 
-impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
+impl<T: HalfEdgeImplMeshTypePlus> HalfEdgeMeshImpl<T> {
     /// Inserts a half-edge pair with the given ids.
     /// Updates the neighbors.
     /// Doesn't check whether the operation is allowed!

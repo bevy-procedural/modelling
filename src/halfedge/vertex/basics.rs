@@ -1,10 +1,13 @@
 use super::{HalfEdgeImplMeshType, HalfEdgeVertexImpl, IncidentToVertexIterator};
 use crate::{
     math::IndexType,
-    mesh::{EdgeBasics, HalfEdge, MeshBasics, VertexBasics},
+    mesh::{EdgeBasics, HalfEdge, MeshBasics, MeshType, VertexBasics},
 };
 
-impl<T: HalfEdgeImplMeshType> VertexBasics<T> for HalfEdgeVertexImpl<T> {
+impl<T: MeshType> VertexBasics<T> for HalfEdgeVertexImpl<T>
+where
+    T: HalfEdgeImplMeshType,
+{
     /// Returns the index of the vertex
     #[inline(always)]
     fn id(&self) -> T::V {
@@ -59,47 +62,49 @@ impl<T: HalfEdgeImplMeshType> VertexBasics<T> for HalfEdgeVertexImpl<T> {
 
     /// Returns an outgoing half-edge incident to the vertex
     #[inline(always)]
-    fn edge(&self, mesh: &T::Mesh) -> Option<T::Edge> {
+    fn edge<'a>(&'a self, mesh: &'a T::Mesh) -> Option<&'a T::Edge> {
         // PERF: avoid clone
         if self.edge == IndexType::max() {
             None
         } else {
-            Some(mesh.edge(self.edge).clone())
+            Some(mesh.edge(self.edge))
         }
     }
 
     /// Iterates all vertices adjacent to the vertex in the same manifold edge wheel (clockwise)
     #[inline(always)]
-    fn vertices<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Vertex> + 'a {
-        // TODO: slightly inefficient because of the clone and target being indirect
-        self.edges_out(mesh).map(|e| e.target(mesh).clone())
+    fn vertices<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Vertex>
+    where
+        T: 'a,
+    {
+        self.edges_out(mesh).map(|e| e.target(mesh))
     }
 
     /// Iterates all faces adjacent to this vertex in the same manifold edge wheel (clockwise)
     #[inline(always)]
-    fn faces<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Face> + 'a
+    fn faces<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Face>
     where
         T: 'a,
     {
-        self.edges_out(mesh).filter_map(|e| e.face(mesh).cloned())
+        self.edges_out(mesh).filter_map(|e| e.face(mesh))
     }
 
     #[inline(always)]
     fn edges_out<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge>
     where
-        T::Edge: 'a,
+        T: 'a,
     {
         if let Some(e) = self.edge(mesh) {
-            IncidentToVertexIterator::<T>::new(e, mesh)
+            IncidentToVertexIterator::<'a, T>::new(e, mesh)
         } else {
-            return IncidentToVertexIterator::<T>::empty(mesh);
+            IncidentToVertexIterator::<'a, T>::empty(mesh)
         }
     }
 
     #[inline(always)]
     fn edges_in<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge>
     where
-        T::Edge: 'a,
+        T: 'a,
     {
         (if let Some(e) = self.edge(mesh) {
             IncidentToVertexIterator::<T>::new(e, mesh)

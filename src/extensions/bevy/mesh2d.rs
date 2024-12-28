@@ -5,10 +5,11 @@ use crate::{
     },
     math::HasPosition,
     mesh::{
-        CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EdgeBasics, EmptyEdgePayload,
-        EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshType,
+        CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EmptyEdgePayload, EmptyFacePayload,
+        EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshBasicsPlus, MeshType,
         MeshTypeHalfEdge,
     },
+    prelude::HalfEdgeImplMeshTypePlus,
 };
 use bevy::math::{Affine2, Vec2, Vec3};
 
@@ -45,6 +46,7 @@ impl EuclideanMeshType<2> for BevyMeshType2d32 {
 }
 
 impl HalfEdgeImplMeshType for BevyMeshType2d32 {}
+impl HalfEdgeImplMeshTypePlus for BevyMeshType2d32 {}
 impl MeshTypeHalfEdge for BevyMeshType2d32 {}
 
 impl CurvedEdge<2, BevyMeshType2d32> for HalfEdgeImpl<BevyMeshType2d32> {

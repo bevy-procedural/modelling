@@ -1,4 +1,4 @@
 mod builder;
 mod halfedge;
-mod vertex;
 mod import;
+mod vertex;

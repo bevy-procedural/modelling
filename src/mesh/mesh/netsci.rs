@@ -1,10 +1,8 @@
 use crate::{
     math::{IndexType, Scalar, Vector},
-    mesh::{EdgeBasics, MeshBasics, MeshType, VertexBasics},
+    mesh::{EdgeBasics, EuclideanMeshType, MeshBasics, MeshType, VertexBasics},
 };
 use std::collections::HashMap;
-
-use super::EuclideanMeshType;
 
 /// Basic Network science functionality for a mesh
 pub trait NetworkScience<T: MeshType<Mesh = Self>>: MeshBasics<T> {

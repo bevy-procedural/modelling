@@ -1,4 +1,4 @@
-use super::{HalfEdgeImplMeshType, HalfEdgeMeshImpl};
+use super::{HalfEdgeImplMeshType, HalfEdgeImplMeshTypePlus, HalfEdgeMeshImpl};
 use crate::{
     mesh::{
         DefaultEdgePayload, DefaultFacePayload, EdgeBasics, EuclideanMeshType, FaceBasics,
@@ -8,7 +8,7 @@ use crate::{
     primitives::{Make2dShape, MakePlane, MakePrismatoid, MakeSphere},
 };
 
-impl<T: HalfEdgeImplMeshType<Mesh = Self>> Make2dShape<T> for HalfEdgeMeshImpl<T>
+impl<T: HalfEdgeImplMeshTypePlus<Mesh = Self>> Make2dShape<T> for HalfEdgeMeshImpl<T>
 where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,

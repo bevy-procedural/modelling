@@ -139,7 +139,7 @@ pub trait CurvedEdge<const D: usize, T: EuclideanMeshType<D, Edge = Self>>: Edge
     fn curve_type(&self, mesh: &T::Mesh) -> CurvedEdgeType<D, T>;
 
     /// Overwrites the curve type of the edge. Notice that the given edge instance is not modified.
-    /// 
+    ///
     /// TODO: This is confusing. Should probably be defined on the mesh, not the edge.
     fn set_curve_type_in_mesh(&self, mesh: &mut T::Mesh, curve_type: CurvedEdgeType<D, T>);
 

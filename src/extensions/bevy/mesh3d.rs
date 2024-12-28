@@ -8,6 +8,7 @@ use crate::{
         EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshType,
         MeshType3D, MeshTypeHalfEdge, Triangulateable,
     },
+    prelude::HalfEdgeImplMeshTypePlus,
     tesselate::TriangulationAlgorithm,
 };
 use bevy::{
@@ -48,6 +49,7 @@ impl EuclideanMeshType<3> for BevyMeshType3d32 {
     type Poly = Polygon2dBevy;
 }
 impl HalfEdgeImplMeshType for BevyMeshType3d32 {}
+impl HalfEdgeImplMeshTypePlus for BevyMeshType3d32 {}
 impl MeshTypeHalfEdge for BevyMeshType3d32 {}
 impl MeshType3D for BevyMeshType3d32 {}
 

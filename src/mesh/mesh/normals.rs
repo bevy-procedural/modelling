@@ -1,8 +1,10 @@
 use crate::{
     math::{HasNormal, Scalar, Vector, VectorIteratorExt},
-    mesh::{EuclideanMeshType, Face3d, FaceBasics, MeshBasics, MeshType3D, VertexBasics},
+    mesh::{EuclideanMeshType, Face3d, FaceBasics, MeshType3D, VertexBasics},
 };
 use std::collections::HashMap;
+
+use super::MeshBasics;
 
 /// The algorithm to use for generating normals.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

@@ -1,10 +1,11 @@
 use crate::{
+    halfedge::{HalfEdgeFaceImpl, HalfEdgeMeshImpl, HalfEdgeVertexImpl},
     math::IndexType,
     mesh::{EdgeBasics, FaceBasics, HalfEdge, MeshBasics, MeshType, VertexBasics},
-    prelude::{HalfEdgeFaceImpl, HalfEdgeImplMeshType, HalfEdgeMeshImpl, HalfEdgeVertexImpl},
+    prelude::HalfEdgeImplMeshTypePlus,
 };
 
-impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
+impl<T: HalfEdgeImplMeshTypePlus> HalfEdgeMeshImpl<T> {
     pub(crate) fn import_mesh<FE, FV, FF, FM, T2: MeshType>(
         mesh: &T2::Mesh,
         fv: FV,

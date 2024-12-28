@@ -83,9 +83,9 @@ pub trait EuclideanMeshType<const D: usize>:
 /// A `MeshType` specialized for half-edge meshes
 pub trait MeshTypeHalfEdge:
     MeshType<
-    Mesh: MeshBuilder<Self> + HalfEdgeMesh<Self> + MeshHalfEdgeBuilder<Self>,
-    Edge: HalfEdge<Self>,
-    Vertex: HalfEdgeVertex<Self>,
+    Mesh: HalfEdgeMesh<Self> + MeshHalfEdgeBuilder<Self> + MeshBuilder<Self>,
+    Edge: Edge<T = Self> + HalfEdge<Self>,
+    Vertex: Vertex<T = Self> + HalfEdgeVertex<Self>,
 >
 {
 }

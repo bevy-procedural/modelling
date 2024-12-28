@@ -2,8 +2,7 @@ use super::{ChainDirection, MonotoneTriangulator};
 use crate::{
     math::{IndexType, Polygon, Vector2D},
     mesh::{IndexedVertex2D, Triangulation},
-    prelude::try_min_weight_small_direct,
-    tesselate::minweight_dynamic_direct,
+    tesselate::{minweight_dynamic_direct, try_min_weight_small_direct},
 };
 
 // TODO: Use the fact that we can find the min-weight triangulation of a x-monotone polygon in O(n^2) time using dynamic programming.

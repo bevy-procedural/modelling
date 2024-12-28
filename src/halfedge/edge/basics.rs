@@ -1,7 +1,7 @@
 use super::{BackwardEdgeIterator, ForwardEdgeIterator, HalfEdgeImpl, HalfEdgeImplMeshType};
 use crate::{
     math::IndexType,
-    mesh::{EdgeBasics, EdgePayload, HalfEdge, MeshBasics, MeshType},
+    mesh::{EdgeBasics, EdgePayload, HalfEdge, MeshBasics},
 };
 
 impl<T: HalfEdgeImplMeshType> EdgeBasics<T> for HalfEdgeImpl<T> {

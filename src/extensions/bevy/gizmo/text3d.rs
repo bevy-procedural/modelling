@@ -41,7 +41,7 @@ fn update_text_positions(
         else {
             continue;
         };
-        
+
         node.top = Val::Px(viewport_position.y - text_3d.font_size / 2.0);
         node.left = Val::Px(viewport_position.x);
     }

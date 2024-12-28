@@ -1,7 +1,6 @@
-use super::{basics::MeshBasics, EuclideanMeshType};
 use crate::{
     math::{Vector, VectorIteratorExt},
-    mesh::VertexBasics,
+    mesh::{EuclideanMeshType, MeshBasics, VertexBasics},
 };
 
 /// Methods for transforming meshes.
@@ -13,7 +12,7 @@ pub trait MeshPosition<const D: usize, T: EuclideanMeshType<D, Mesh = Self>>:
         self.vertices().map(|v| v.pos()).stable_mean()
     }
 
-    /// Returns the closest vertex to a given position. 
+    /// Returns the closest vertex to a given position.
     /// Without a spatial data structure, this takes O(n) time.
     fn closest_vertex<'a>(&'a self, pos: T::Vec) -> Option<&'a T::Vertex>
     where

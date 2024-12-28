@@ -1,10 +1,8 @@
-use itertools::Itertools;
-
-use super::{basics::MeshBasics, EuclideanMeshType};
 use crate::{
     math::Transformable,
-    mesh::{FaceBasics, VertexBasics},
+    mesh::{EuclideanMeshType, FaceBasics, MeshBasics, VertexBasics},
 };
+use itertools::Itertools;
 
 /// Methods for transforming meshes.
 pub trait TransformableMesh<const D: usize, T: EuclideanMeshType<D, Mesh = Self>>:

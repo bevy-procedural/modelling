@@ -14,7 +14,7 @@ pub struct IncidentToVertexIterator<'a, T: HalfEdgeImplMeshType + 'a> {
 
 impl<'a, T: HalfEdgeImplMeshType> IncidentToVertexIterator<'a, T> {
     /// Creates a new iterator
-    pub fn new(first: T::Edge, mesh: &'a T::Mesh) -> Self {
+    pub fn new(first: &T::Edge, mesh: &'a T::Mesh) -> Self {
         Self {
             first: first.id(),
             current: first.id(),

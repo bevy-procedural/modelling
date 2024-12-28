@@ -1,5 +1,5 @@
 use crate::{
-    halfedge::{HalfEdgeImplMeshType, HalfEdgeMeshImpl},
+    halfedge::{HalfEdgeImplMeshTypePlus, HalfEdgeMeshImpl},
     math::IndexType,
     mesh::{
         EdgeBasics, EdgePayload, HalfEdge, HalfEdgeVertex, MeshBasics, MeshBuilder,
@@ -51,7 +51,7 @@ impl<T:HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
 
 }*/
 
-impl<T: HalfEdgeImplMeshType> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
+impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     fn insert_vertex(&mut self, vp: T::VP) -> T::V {
         let new = self.vertices.allocate();
         self.vertices.set(new, T::Vertex::new(IndexType::max(), vp));

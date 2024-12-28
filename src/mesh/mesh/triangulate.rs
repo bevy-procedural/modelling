@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::{basics::MeshBasics, MeshType, MeshType3D};
+use super::{MeshBasics, MeshType, MeshType3D};
 use crate::{
     math::{HasNormal, IndexType, Vector},
     mesh::{Face3d, FaceBasics, Triangulation, VertexBasics},

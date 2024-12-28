@@ -2,9 +2,10 @@ use std::collections::HashMap;
 
 use super::{HalfEdgeImplMeshType, HalfEdgeMeshImpl};
 use crate::{
+    halfedge::HalfEdgeImplMeshTypePlus,
     math::IndexType,
     mesh::{
-        EdgeBasics, FaceBasics, HalfEdge, MeshBasics, MeshType, Triangulation, VertexBasics,
+        EdgeBasics, FaceBasics, HalfEdge, MeshBasics, MeshBasicsPlus, Triangulation, VertexBasics,
         VertexPayload,
     },
 };
@@ -173,6 +174,22 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         self.halfedges.iter_mut()
     }
 
+    /// Returns the id of the half edge from `v` to `w` or `None` if they are not neighbors.
+    /// Runs in O(n) time since it iterates over all edges of `v`.
+    fn shared_edge(&self, v: T::V, w: T::V) -> Option<&T::Edge> {
+        self.vertex(v).edges_out(self).find_map(|e| {
+            if e.target_id(self) == w {
+                Some(e)
+            } else {
+                None
+            }
+        })
+    }
+
+    fn shared_edge_id(&self, v: T::V, w: T::V) -> Option<T::E> {
+        self.shared_edge(v, w).map(|e| e.id())
+    }
+
     /// Since the vertex payloads in the `Deletable` can be sparse,
     /// we need to compact the vertices when converting them to a dense vector.
     /// This function returns the cloned compact vertices and maps the indices to the new compact buffer.
@@ -201,30 +218,16 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
 
         vertices
     }
+}
 
-    /// Returns the id of the half edge from `v` to `w` or `None` if they are not neighbors.
-    /// Runs in O(n) time since it iterates over all edges of `v`.
-    fn shared_edge(&self, v: T::V, w: T::V) -> Option<&T::Edge> {
-        self.vertex(v).edges_out(self).find_map(|e| {
-            if e.target_id(self) == w {
-                Some(e)
-            } else {
-                None
-            }
-        })
-    }
-
-    fn shared_edge_id(&self, v: T::V, w: T::V) -> Option<T::E> {
-        self.shared_edge(v, w).map(|e| e.id())
-    }
-
+impl<T: HalfEdgeImplMeshTypePlus> MeshBasicsPlus<T> for HalfEdgeMeshImpl<T> {
     /// Returns the face shared by the two vertices or `None`.
     /// TODO: Currently cannot distinguish between holes and "the outside"
     fn shared_face(&self, v0: T::V, v1: T::V) -> Option<T::F> {
         let w0 = self.vertex(v0);
         let w1 = self.vertex(v1);
         w0.faces(self).find_map(|f0| {
-            w1.faces(self).find_map(|f1: T::Face| {
+            w1.faces(self).find_map(|f1: &T::Face| {
                 if f0.id() == f1.id() {
                     Some(f0.id())
                 } else {

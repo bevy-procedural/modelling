@@ -1,7 +1,7 @@
 use super::{MeshBasics, MeshType};
 use crate::mesh::{DefaultEdgePayload, EdgeBasics, VertexBasics};
 
-// TODO: Make sure return values are used for the failable methods! 
+// TODO: Make sure return values are used for the failable methods!
 
 /// Some basic operations to build meshes.
 pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
@@ -253,6 +253,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         } */
     }
 
+    /// Same as `insert_loop` but uses the default edge payload.
     fn insert_loop_default(&mut self, iter: impl IntoIterator<Item = T::VP>) -> T::E
     where
         T::EP: DefaultEdgePayload,

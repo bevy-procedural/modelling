@@ -33,7 +33,7 @@ pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone {
     fn edge_id(&self, mesh: &T::Mesh) -> T::E;
 
     /// Returns an outgoing edge incident to the vertex
-    fn edge(&self, mesh: &T::Mesh) -> Option<T::Edge>;
+    fn edge<'a>(&'a self, mesh: &'a T::Mesh) -> Option<&'a T::Edge>;
 
     /// Returns whether the vertex is a boundary vertex
     fn is_boundary(&self, mesh: &T::Mesh) -> bool;
@@ -42,15 +42,20 @@ pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone {
     fn has_only_one_edge(&self, mesh: &T::Mesh) -> bool;
 
     /// Iterates all vertices adjacent to the vertex in the same manifold edge wheel (clockwise)
-    fn vertices<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Vertex> + 'a;
+    fn vertices<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Vertex>
+    where
+        T: 'a;
 
     /// Iterates all faces adjacent to this vertex in the same manifold edge wheel (clockwise)
-    fn faces<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::Face> + 'a
+    fn faces<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Face> + 'a
     where
         T: 'a;
 
     /// Iterates the ids of all neighbors of the vertex
-    fn neighbor_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::V> + 'a {
+    fn neighbor_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::V> + 'a
+    where
+        T: 'a,
+    {
         self.vertices(mesh).map(|v| v.id())
     }
 
@@ -63,13 +68,13 @@ pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone {
     /// if undirected) incident to this vertex (clockwise)
     fn edges_out<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge>
     where
-        T::Edge: 'a;
+        T: 'a;
 
     /// Iterates all ingoing (half)edges (resp. all edges in inwards-direction
     /// if undirected) incident to this vertex (clockwise)
     fn edges_in<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge>
     where
-        T::Edge: 'a;
+        T: 'a;
 
     /*
     /// Iterates the wheel of vertices (will have length one if the vertex is manifold)
