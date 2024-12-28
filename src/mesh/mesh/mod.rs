@@ -2,6 +2,7 @@
 mod basics;
 mod builder;
 mod check;
+mod curved;
 mod halfedge;
 mod halfedge_builder;
 mod iso;
@@ -17,6 +18,7 @@ mod triangulate;
 pub use basics::*;
 pub use builder::*;
 pub use check::*;
+pub use curved::*;
 pub use halfedge::*;
 pub use halfedge_builder::*;
 pub use iso::*;

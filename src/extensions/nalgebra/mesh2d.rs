@@ -5,7 +5,7 @@ use crate::{
     math::{HasPosition, Vector},
     mesh::{
         CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EdgePayload, EmptyEdgePayload,
-        EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshBasicsPlus,
+        EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshBasicsCurved,
         MeshType, MeshTypeHalfEdge,
     },
     prelude::HalfEdgeImplMeshTypePlus,

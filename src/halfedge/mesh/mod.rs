@@ -4,11 +4,12 @@ mod check;
 mod halfedge;
 mod pseudo_winged;
 
-use super::HalfEdgeImplMeshType;
+use super::{HalfEdgeImplMeshType, HalfEdgeImplMeshTypePlus};
 use crate::{
     math::{HasNormal, Scalar, Transformable, Vector},
     mesh::{
-        EuclideanMeshType, MeshTopology, MeshTrait, TransformableMesh, Triangulateable, WithNormals,
+        EuclideanMeshType, MeshBasicsCurved, MeshIsomorphism, MeshTopology, MeshTrait,
+        TransformableMesh, Triangulateable, WithNormals,
     },
     util::DeletableVector,
 };
@@ -77,3 +78,6 @@ impl<T: HalfEdgeImplMeshType> MeshTrait for HalfEdgeMeshImpl<T> {
 
 #[cfg(feature = "netsci")]
 impl<T: HalfEdgeImplMeshType> crate::mesh::NetworkScience<T> for HalfEdgeMeshImpl<T> {}
+
+impl<T: HalfEdgeImplMeshTypePlus> MeshBasicsCurved<T> for HalfEdgeMeshImpl<T> {}
+impl<T: HalfEdgeImplMeshTypePlus> MeshIsomorphism<T> for HalfEdgeMeshImpl<T> {}

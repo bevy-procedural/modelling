@@ -6,7 +6,7 @@ use crate::{
     math::HasPosition,
     mesh::{
         CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EmptyEdgePayload, EmptyFacePayload,
-        EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshBasicsPlus, MeshType,
+        EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshBasicsCurved, MeshType,
         MeshTypeHalfEdge,
     },
     prelude::HalfEdgeImplMeshTypePlus,

@@ -1,14 +1,11 @@
-use std::collections::HashMap;
-
 use super::{HalfEdgeImplMeshType, HalfEdgeMeshImpl};
 use crate::{
-    halfedge::HalfEdgeImplMeshTypePlus,
     math::IndexType,
     mesh::{
-        EdgeBasics, FaceBasics, HalfEdge, MeshBasics, MeshBasicsPlus, Triangulation, VertexBasics,
-        VertexPayload,
+        EdgeBasics, FaceBasics, HalfEdge, MeshBasics, Triangulation, VertexBasics, VertexPayload,
     },
 };
+use std::collections::HashMap;
 
 impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     #[inline(always)]
@@ -218,9 +215,7 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
 
         vertices
     }
-}
 
-impl<T: HalfEdgeImplMeshTypePlus> MeshBasicsPlus<T> for HalfEdgeMeshImpl<T> {
     /// Returns the face shared by the two vertices or `None`.
     /// TODO: Currently cannot distinguish between holes and "the outside"
     fn shared_face(&self, v0: T::V, v1: T::V) -> Option<T::F> {
