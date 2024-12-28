@@ -21,9 +21,6 @@ pub struct HalfEdgeFaceImpl<T: HalfEdgeImplMeshType> {
     /// a half-edge incident to the face (outer component)
     edge: T::E,
 
-    /// whether the face is curved, i.e., not planar
-    curved: bool,
-
     /// Some user-defined payload
     payload: T::FP,
 }
@@ -41,6 +38,11 @@ impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
         self.edge
     }
 
+    fn may_be_curved(&self) -> bool {
+        false
+        // TODO
+    }
+
     #[inline(always)]
     fn set_edge(&mut self, edge: T::E) {
         self.edge = edge;
@@ -49,10 +51,6 @@ impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
     #[inline(always)]
     fn id(&self) -> T::F {
         self.id
-    }
-
-    fn may_be_curved(&self) -> bool {
-        self.curved
     }
 
     fn num_edges(&self, mesh: &T::Mesh) -> usize {
@@ -131,12 +129,11 @@ impl<T: HalfEdgeImplMeshType> Face for HalfEdgeFaceImpl<T> {
 
 impl<T: HalfEdgeImplMeshType> HalfEdgeFaceImpl<T> {
     /// Creates a new face.
-    pub fn new(edge: T::E, curved: bool, payload: T::FP) -> Self {
+    pub fn new(edge: T::E, payload: T::FP) -> Self {
         assert!(edge != IndexType::max());
         Self {
             id: IndexType::max(),
             edge,
-            curved,
             payload,
         }
     }
@@ -174,7 +171,6 @@ impl<T: HalfEdgeImplMeshType> Deletable<T::F> for HalfEdgeFaceImpl<T> {
         Self {
             id: IndexType::max(),
             edge: IndexType::max(),
-            curved: false,
             payload: T::FP::allocate(),
         }
     }
@@ -189,7 +185,6 @@ where
         Self {
             id: IndexType::max(),
             edge: IndexType::max(),
-            curved: false,
             payload: T::FP::default(),
         }
     }

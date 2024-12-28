@@ -38,6 +38,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// For half-edge meshes, the payload will be added to the outgoing half-edge
     /// from the current vertex to the new vertex. This is also the half-edge that is returned.
     #[inline(always)]
+    #[must_use]
     fn insert_vertex_v(&mut self, v: T::V, vp: T::VP, ep: T::EP) -> Option<(T::E, T::V)> {
         let w = self.insert_vertex(vp);
         if let Some(e) = self.insert_edge_vv(v, w, ep) {
@@ -56,6 +57,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// For half-edge meshes, the payload will be added to the outgoing half-edge
     /// from the current vertex to the new vertex. This is also the half-edge that is returned.
     #[inline(always)]
+    #[must_use]
     fn insert_vertex_e(&mut self, e: T::E, vp: T::VP, ep: T::EP) -> Option<(T::E, T::V)> {
         let v = self.insert_vertex(vp);
         self.insert_edge_ev(e, v, ep).map(|e| (e, v))
@@ -75,6 +77,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     ///
     /// For half-edge meshes, the payload will be added to the outgoing half-edge
     /// from the `a` to `b`. This is also the half-edge that is returned.
+    #[must_use]
     fn insert_edge_vv(&mut self, a: T::V, b: T::V, ep: T::EP) -> Option<T::E>;
 
     /// Inserts an edge from the target of `input` to the origin of `output`.
@@ -84,6 +87,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     ///
     /// For half-edge meshes, the payload will be added to the half-edge
     /// from the `input` to `output`. This is also the half-edge that is returned.
+    #[must_use]
     fn insert_edge_ee(&mut self, input: T::E, output: T::E, ep: T::EP) -> Option<T::E>;
 
     /// Inserts an edge from the target of `input` to the origin of `output`.
@@ -95,6 +99,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Inserts an edge from the target of `e` to the vertex `v`.
     ///
     /// Connectivity at `v` is inferred from the graph. Behaves similar to `insert_edge_vv`.
+    #[must_use]
     fn insert_edge_ev(&mut self, e: T::E, v: T::V, ep: T::EP) -> Option<T::E>;
 
     /// Removes the edge `e`.
@@ -128,6 +133,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
 
     /// Close the open boundary with a single face. Doesn't create new edges or vertices.
     /// Fails if there is already a face using the boundary.
+    #[must_use]
     fn insert_face(&mut self, e: T::E, fp: T::FP) -> Option<T::F>;
 
     /// Close the given boundary by inserting an edge from `from.target` to
@@ -138,6 +144,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     ///
     /// Returns the new face and edge id. For half-edge meshes, this should be the half-edge
     /// on the inside of the face, i.e., the half-edge directed from `from.target` to `to.origin`.
+    #[must_use]
     fn close_face_ee(&mut self, from: T::E, to: T::E, ep: T::EP, fp: T::FP)
         -> Option<(T::E, T::F)>;
 
@@ -150,6 +157,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     ///
     /// Returns the new face and edge id. For half-edge meshes, this should be the half-edge
     /// on the inside of the face, i.e., the half-edge directed from `from` to `to`.
+    #[must_use]
     fn close_face_vv(
         &mut self,
         prev: T::V,
@@ -171,6 +179,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Append a chain of edges to the vertex `v` from the finite iterator of vertices and edges.
     /// Returns the first edge inserted after `v` as well as the last vertex's id.
     /// If the iterator is empty, the method will return only the vertex `v`.
+    #[must_use]
     fn append_path(
         &mut self,
         v: T::V,
@@ -191,6 +200,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Insert a path of vertices and edges starting at `vp`.
     /// Returns the first edge  inserted after `vp` as well as the last vertex's id.
     /// If the iterator is empty, the method will return only the vertex `vp`.
+    #[must_use]
     fn insert_path(
         &mut self,
         vp: T::VP,
@@ -264,6 +274,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Insert a face with the given vertices.
     /// If some edges to construct this face are missing, they will be created.
     /// Uses the default edge payload.
+    #[must_use]
     fn insert_face_v(&mut self, _fp: T::FP, vs: impl IntoIterator<Item = T::V>) -> Option<T::F>
     where
         T::EP: DefaultEdgePayload,

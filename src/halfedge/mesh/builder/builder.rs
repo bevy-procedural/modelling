@@ -5,6 +5,7 @@ use crate::{
         EdgeBasics, EdgePayload, HalfEdge, HalfEdgeVertex, MeshBasics, MeshBuilder,
         MeshHalfEdgeBuilder, VertexBasics,
     },
+    prelude::HalfEdgeFaceImpl,
 };
 
 /*
@@ -229,7 +230,33 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     }
 
     fn insert_edge_ev(&mut self, e: T::E, v: T::V, ep: T::EP) -> Option<T::E> {
-        todo!("{}{}{:?}", e, v, ep)
+        if self.vertex(v).is_isolated(self) {
+            // Trivial case where the connectivity is already given
+            let (e1, _e2) = self.insert_halfedge_pair_forced(
+                e,
+                self.edge(e).target_id(self),
+                self.edge(e).next_id(),
+                IndexType::max(),
+                v,
+                IndexType::max(),
+                IndexType::max(),
+                IndexType::max(),
+                ep,
+            );
+            return Some(e1);
+        }
+
+        // If there is only one boundary through `v`, use that one
+        if let Some(outgoing) = self.vertex(v).outgoing_boundary_edge(self) {
+            return self.insert_edge_ee(e, outgoing, ep);
+        };
+
+        // Otherwise, find a unique boundary from e to v
+        if let Some(outgoing) = self.edge(e).same_boundary(self, v) {
+            return self.insert_edge_ee(e, outgoing, ep);
+        }
+
+        None
     }
 
     fn try_remove_face(&mut self, f: T::F) -> bool {
@@ -237,7 +264,16 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     }
 
     fn insert_face(&mut self, e: T::E, fp: T::FP) -> Option<T::F> {
-        todo!("{}{:?}", e, fp)
+        if self.has_edge(e) {
+            return None;
+        }
+        let edge = self.edge(e).clone();
+        if edge.face_id() != IndexType::max() {
+            return None;
+        }
+        let f = self.faces.push(HalfEdgeFaceImpl::new(e, fp));
+        edge.edges_face_mut(self).for_each(|e| e.set_face(f));
+        return Some(f);
     }
 
     fn close_face_ee(
@@ -247,7 +283,19 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         ep: T::EP,
         fp: T::FP,
     ) -> Option<(T::E, T::F)> {
-        todo!("{}{}{:?}{:?}", from, to, ep, fp)
+        if !self.has_edge(from) || !self.has_edge(to) {
+            return None;
+        }
+        let from_edge = self.edge(from).clone();
+        let to_edge = self.edge(to).clone();
+        if from_edge.face_id() != IndexType::max() || to_edge.face_id() != IndexType::max() {
+            return None;
+        }
+        let Some(e) = self.insert_edge_ee(from, to, ep) else {
+            return None;
+        };
+        let f = self.insert_face(e, fp).unwrap();
+        Some((e, f))
     }
 
     fn close_face_vv(

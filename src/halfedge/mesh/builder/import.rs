@@ -51,11 +51,7 @@ impl<T: HalfEdgeImplMeshTypePlus> HalfEdgeMeshImpl<T> {
         for face in MeshBasics::faces(mesh) {
             res.faces.set(
                 face_map[&face.id()],
-                HalfEdgeFaceImpl::new(
-                    edge_map[&FaceBasics::edge_id(face)],
-                    false,
-                    ff(face.payload()),
-                ),
+                HalfEdgeFaceImpl::new(edge_map[&FaceBasics::edge_id(face)], ff(face.payload())),
             );
         }
 
