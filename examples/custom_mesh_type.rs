@@ -85,6 +85,7 @@ impl<const D: usize> EuclideanMeshType<D> for MeshTypeColored<D> {
 
 // enable half-edge-specific functionality  
 impl<const D: usize> HalfEdgeImplMeshType for MeshTypeColored<D> {}
+impl<const D: usize> HalfEdgeImplMeshTypePlus for MeshTypeColored<D> {}
 impl<const D: usize> MeshTypeHalfEdge for MeshTypeColored<D> {}
 
 // enable some extra functionality for 3d meshes
