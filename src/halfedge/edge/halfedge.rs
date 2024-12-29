@@ -1,8 +1,10 @@
+use itertools::Itertools;
+
 use super::HalfEdgeImpl;
 use crate::{
     halfedge::{HalfEdgeImplMeshType, HalfEdgeMeshImpl},
     math::IndexType,
-    mesh::{FaceBasics, HalfEdge, HalfEdgeVertex, MeshBasics},
+    mesh::{FaceBasics, HalfEdge, HalfEdgeVertex, MeshBasics, VertexBasics},
 };
 
 impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
@@ -164,17 +166,73 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
         }
     }
 
-    fn is_valid(&self, mesh: &T::Mesh) -> bool {
+    fn is_valid(&self, mesh: &T::Mesh) -> Result<(), String> {
         let oi = self.origin_id();
         let ti = self.target_id(mesh);
-        self.next(mesh).prev_id() == self.id
-            && self.prev(mesh).next_id() == self.id
-            && self.twin(mesh).twin_id() == self.id
-            && oi != IndexType::max()
-            && ti != IndexType::max()
-            && mesh.has_vertex(oi)
-            && mesh.has_vertex(ti)
-            && (self.face_id() == IndexType::max() || mesh.has_face(self.face_id()))
-            && oi != ti
+        let prev = self.prev(mesh);
+        let next = self.next(mesh);
+        let twin = self.twin(mesh);
+        let id = self.id;
+        if next.prev_id() != id {
+            return Err(format!("next.prev {} != id {}", next.prev_id(), id));
+        }
+        if prev.next_id() != id {
+            return Err(format!("prev.next {} != id {}", prev.next_id(), id));
+        }
+        if twin.twin_id() != id {
+            return Err(format!("twin.twin {} != id {}", twin.twin_id(), id));
+        }
+        if self.next_id() == id || self.prev_id() == id {
+            return Err(format!(
+                "Trivial self-loop in half-edge prev {} id {} next {}",
+                self.prev_id(),
+                id,
+                self.next_id()
+            ));
+        }
+        if oi == IndexType::max() {
+            return Err("Origin vertex is invalid".to_string());
+        }
+        if ti == IndexType::max() {
+            return Err("Target vertex is invalid".to_string());
+        }
+        if self.face_id() != IndexType::max() {
+            if !mesh.has_face(self.face_id()) {
+                return Err(format!(
+                    "Face {} is defined but doesn't exist",
+                    self.face_id()
+                ));
+            }
+        }
+        if next.face_id() != self.face_id() {
+            return Err(format!(
+                "Next edge {} has different face {}",
+                self.next_id(),
+                next.face_id()
+            ));
+        }
+        if prev.face_id() != self.face_id() {
+            return Err(format!(
+                "Prev edge {} has different face {}",
+                self.prev_id(),
+                prev.face_id()
+            ));
+        }
+        if !mesh.has_vertex(oi) {
+            return Err(format!("Origin vertex {} doesn't exist", oi));
+        }
+        if !mesh.has_vertex(ti) {
+            return Err(format!("Target vertex {} doesn't exist", ti));
+        }
+        if oi == ti {
+            return Err(format!("Origin and target vertices are the same {}", oi));
+        }
+        if !mesh.vertex(oi).edges_out(mesh).any(|e| e.id == id) {
+            return Err(format!("Origin vertex {} doesn't have edge {}", oi, id));
+        }
+        if !mesh.vertex(ti).edges_in(mesh).any(|e| e.id == id) {
+            return Err(format!("Target vertex {} doesn't have edge {}", ti, id));
+        }
+        Ok(())
     }
 }

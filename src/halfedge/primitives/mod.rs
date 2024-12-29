@@ -16,7 +16,7 @@ where
     fn insert_polygon(&mut self, vp: impl IntoIterator<Item = T::VP>) -> T::E {
         // TODO: assertions
         let first = self.insert_loop_default(vp);
-        self.insert_face(first, Default::default());
+        self.insert_face(first, Default::default()).unwrap();
         self.edge(first).twin_id()
     }
 

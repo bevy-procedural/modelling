@@ -87,8 +87,12 @@ pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
     /// Updates the neighboring edges, vertices, and faces.
     fn flip(e: T::E, mesh: &mut T::Mesh);
 
-    /// Checks whether the neighbors and twin exist and don't contradict the current edge.
-    fn is_valid(&self, mesh: &T::Mesh) -> bool;
+    /// Checks whether the adjacent edges, the face and the twin exist and don't 
+    /// contradict the current edge regarding the neighbors, face, and origin.
+    /// Returns an error message if the edge is invalid.
+    /// 
+    /// Iterates the edge wheels of the origin and target vertices! So this is not O(1).
+    fn is_valid(&self, mesh: &T::Mesh) -> Result<(), String>;
 }
 
 #[cfg(test)]

@@ -1,7 +1,7 @@
 use crate::{
     halfedge::{HalfEdgeImpl, HalfEdgeImplMeshTypePlus, HalfEdgeMeshImpl, HalfEdgeVertexImpl},
     math::IndexType,
-    mesh::{EdgeBasics, HalfEdge, MeshBasics, MeshHalfEdgeBuilder, VertexBasics},
+    mesh::{EdgeBasics, HalfEdge, HalfEdgeVertex, MeshBasics, MeshHalfEdgeBuilder, VertexBasics},
 };
 
 impl<T: HalfEdgeImplMeshTypePlus> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T> {
@@ -149,51 +149,36 @@ impl<T: HalfEdgeImplMeshTypePlus> HalfEdgeMeshImpl<T> {
     #[inline(always)]
     pub(super) fn insert_edge_unchecked(
         &mut self,
-        inside: T::E,
-        outside: T::E,
+        input: T::E,
+        output: T::E,
         ep: T::EP,
-        forward_face: T::F,
-        backward_face: T::F,
+        f_face: T::F,
+        b_face: T::F,
         should_be_valid: bool,
     ) -> (T::E, T::E) {
-        let (fv, fw, v, w) = {
-            let e_inside = self.edge(inside);
-            let e_outside = self.edge(outside);
-            let v = e_inside.target(self).id();
-            let w = e_outside.target(self).id();
-            (e_inside.next(self).id(), e_outside.next(self).id(), v, w)
+        let (fv, tw, v, w) = {
+            let e_input = self.edge(input);
+            let e_output = self.edge(output);
+            let v = e_input.target_id(self);
+            let w = e_output.origin_id();
+            (e_input.next_id(), e_output.prev_id(), v, w)
         };
+
+        debug_assert_eq!(self.edge(input).target_id(self), v);
+        debug_assert_eq!(self.edge(output).origin_id(), w);
 
         let (e1, e2) = if should_be_valid {
-            self.insert_halfedge_pair(
-                inside,
-                v,
-                fv,
-                outside,
-                w,
-                fw,
-                forward_face,
-                backward_face,
-                ep,
-            )
+            self.insert_halfedge_pair(input, v, fv, tw, w, output, f_face, b_face, ep)
         } else {
-            self.insert_halfedge_pair_forced(
-                inside,
-                v,
-                fv,
-                outside,
-                w,
-                fw,
-                forward_face,
-                backward_face,
-                ep,
-            )
+            self.insert_halfedge_pair_forced(input, v, fv, tw, w, output, f_face, b_face, ep)
         };
 
-        self.edge_mut(fv).set_prev(e1);
-        self.edge_mut(fw).set_prev(e2);
-        self.edge_mut(inside).set_next(e1);
-        self.edge_mut(outside).set_next(e2);
+        self.edge_mut(fv).set_prev(e2);
+        self.edge_mut(tw).set_next(e2);
+        self.edge_mut(output).set_prev(e1);
+        self.edge_mut(input).set_next(e1);
+        self.vertex_mut(v).set_edge(e1);
+        self.vertex_mut(w).set_edge(e2);
 
         (e1, e2)
     }

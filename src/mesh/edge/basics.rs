@@ -70,6 +70,7 @@ mod tests {
         let edge = mesh.edge(0);
         assert_eq!(edge.origin(&mesh).id(), 0);
         assert_eq!(edge.target(&mesh).id(), 1);
+        assert_eq!(edge.twin(&mesh).id(), 1);
         assert_eq!(edge.is_boundary(&mesh), true);
         assert_eq!(mesh.edge_payload(edge).is_empty(), true);
         assert_eq!(edge.face_ids(&mesh).collect::<Vec<_>>(), vec![0]);

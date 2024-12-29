@@ -55,6 +55,8 @@ impl<'a, T: HalfEdgeImplMeshType> Iterator for IncidentToVertexIterator<'a, T> {
         if next.id() == self.first {
             return None;
         } else {
+            // self-loop edge
+            assert!(self.current != next.id());
             self.current = next.id();
             return Some(next);
         }
