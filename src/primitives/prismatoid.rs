@@ -119,7 +119,7 @@ where
     /// Creates a pyramid by connecting the polygon given by `vp` with the point `apex`.
     fn insert_pyramid(&mut self, base: impl IntoIterator<Item = T::VP>, apex: T::VP) -> T::E {
         let first = self.insert_polygon(base);
-        self.fill_hole_apex(first, apex);
+        self.windmill(first, apex);
         self.edge(first).twin_id()
     }
 
@@ -235,7 +235,7 @@ where
             T::VP::from_pos(T::Vec::from_xyz(zero, h, zero)),
         );
         mesh.remove_face(mesh.edge(e).face_id());
-        mesh.fill_hole_apex(e, T::VP::from_pos(T::Vec::from_xyz(zero, -h, zero)));
+        mesh.windmill(e, T::VP::from_pos(T::Vec::from_xyz(zero, -h, zero)));
         mesh
     }
 

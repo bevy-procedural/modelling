@@ -174,13 +174,13 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
         let twin = self.twin(mesh);
         let id = self.id;
         if next.prev_id() != id {
-            return Err(format!("next.prev {} != id {}", next.prev_id(), id));
+            return Err(format!("prev(next) = {} != {} = id", next.prev_id(), id));
         }
         if prev.next_id() != id {
-            return Err(format!("prev.next {} != id {}", prev.next_id(), id));
+            return Err(format!("next(prev) = {} != {} = id", prev.next_id(), id));
         }
         if twin.twin_id() != id {
-            return Err(format!("twin.twin {} != id {}", twin.twin_id(), id));
+            return Err(format!("twin(twin) = {} != {} = id", twin.twin_id(), id));
         }
         if self.next_id() == id || self.prev_id() == id {
             return Err(format!(

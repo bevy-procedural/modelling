@@ -242,10 +242,13 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     fn insert_edge_ev(&mut self, e: T::E, v: T::V, ep: T::EP) -> Option<T::E> {
         if self.vertex(v).is_isolated(self) {
             // Trivial case where the connectivity is already given
-            let (e1, _e2) = self.insert_halfedge_pair_forced(
+            let edge = self.edge(e);
+            let origin = edge.target_id(self);
+            let fo = self.edge(e).next_id();
+            let (e1, e2) = self.insert_halfedge_pair_forced(
                 e,
-                self.edge(e).target_id(self),
-                self.edge(e).next_id(),
+                origin,
+                fo,
                 IndexType::max(),
                 v,
                 IndexType::max(),
@@ -253,6 +256,17 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
                 IndexType::max(),
                 ep,
             );
+            self.edge_mut(e).set_next(e1);
+            self.edge_mut(fo).set_prev(e2);
+            self.vertex_mut(v).set_edge(e2);
+
+            debug_assert_eq!(self.edge(e1).is_valid(self), Ok(()));
+            debug_assert_eq!(self.edge(e2).is_valid(self), Ok(()));
+            debug_assert_eq!(self.edge(e).is_valid(self), Ok(()));
+            debug_assert_eq!(self.edge(e1).target_id(self), v);
+            debug_assert_eq!(self.edge(e1).origin_id(), self.edge(e).target_id(self));
+            debug_assert_eq!(self.edge(e2).origin_id(), v);
+
             return Some(e1);
         }
 
@@ -284,6 +298,16 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         let f = self.faces.push(HalfEdgeFaceImpl::new(e, fp));
         edge.edges_face_mut(self).for_each(|e| e.set_face(f));
         return Some(f);
+    }
+
+    fn close_face_ee_legacy(
+        &mut self,
+        from: T::E,
+        to: T::E,
+        ep: T::EP,
+        fp: T::FP,
+    ) -> Option<(T::E, T::F)> {
+        self.close_face_ee(from, self.edge(to).next_id(), ep, fp)
     }
 
     fn close_face_ee(

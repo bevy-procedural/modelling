@@ -51,7 +51,7 @@ where
 
             // the first one shouldn't connect to the previous
             if !first {
-                self.close_face_ee(output, input_next, Default::default(), Default::default());
+                self.close_face_ee_legacy(output, input_next, Default::default(), Default::default());
             } else {
                 ret = self.edge(output).prev_id();
             }
@@ -59,7 +59,7 @@ where
             pos = iter.next();
             // the last one also shouldn't connect to the next
             if pos.is_some() || shift {
-                self.close_face_ee(input_next, input, Default::default(), Default::default());
+                self.close_face_ee_legacy(input_next, input, Default::default(), Default::default());
             }
 
             first = false;
@@ -72,13 +72,13 @@ where
     fn loft_tri_back_closed(&mut self, start: T::E, vp: impl IntoIterator<Item = T::VP>) -> T::E {
         let e = self.loft_tri_back(start, false, vp);
         let outside = self.edge(e).prev_id();
-        self.close_face_ee(
+        self.close_face_ee_legacy(
             self.edge(e).next(self).next_id(),
             e,
             Default::default(),
             Default::default(),
         );
-        self.close_face_ee(
+        self.close_face_ee_legacy(
             self.edge(e).next_id(),
             outside,
             Default::default(),
@@ -124,7 +124,7 @@ where
 
             // the first one shouldn't connect to the previous
             if !first {
-                self.close_face_ee(
+                self.close_face_ee_legacy(
                     self.edge(input).next_id(),
                     self.edge(input).prev_id(),
                     Default::default(),
@@ -141,7 +141,7 @@ where
 
             // the last one also shouldn't connect to the next
             if pos.is_some() || shift {
-                self.close_face_ee(
+                self.close_face_ee_legacy(
                     output,
                     self.edge(output).prev(self).prev_id(),
                     Default::default(),
@@ -164,8 +164,8 @@ where
         let e = self.loft_tri(start, false, vp);
         let inside = self.edge(e).twin(self).prev_id();
         let outside = self.edge(inside).prev(self).prev_id();
-        self.close_face_ee(inside, outside, Default::default(), Default::default());
-        self.close_face_ee(
+        self.close_face_ee_legacy(inside, outside, Default::default(), Default::default());
+        self.close_face_ee_legacy(
             self.edge(e).twin_id(),
             outside,
             Default::default(),
@@ -232,7 +232,7 @@ where
             let Some(vp) = iter.next() else {
                 if start_vertex == self.edge(input).target_id(self) {
                     // reached the start again - close the last vertex!
-                    self.close_face_ee(
+                    self.close_face_ee_legacy(
                         inside,
                         self.edge(input).prev_id(),
                         Default::default(),
@@ -243,7 +243,7 @@ where
             };
 
             self.insert_vertex_e(input, vp, Default::default());
-            self.close_face_ee(
+            self.close_face_ee_legacy(
                 inside,
                 self.edge(input).next_id(),
                 Default::default(),
@@ -325,7 +325,7 @@ where
             let Some(vp) = iter.next() else {
                 if start_vertex == self.edge(input).origin_id() {
                     // Reached the start again - close the last face
-                    self.close_face_ee(
+                    self.close_face_ee_legacy(
                         input,
                         self.edge(inside).prev_id(),
                         Default::default(),
@@ -338,7 +338,7 @@ where
             self.insert_vertex_e(self.edge(input).prev_id(), vp, Default::default());
 
             // Close the face between `inside` and the new vertex
-            self.close_face_ee(
+            self.close_face_ee_legacy(
                 self.edge(input).prev(self).twin_id(),
                 self.edge(inside).prev_id(),
                 Default::default(),

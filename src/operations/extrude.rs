@@ -122,15 +122,17 @@ where
     }
 
     /// Assumes `start` is on the boundary of the edge.
-    /// Will insert a vertex `apex` with the given vp and fill the hole along the boundary with triangles connected to the apex vertex.
-    /// Returns the id of the apex vertex.
-    fn fill_hole_apex(&mut self, start: T::E, apex: T::VP) -> T::V {
+    /// Will insert a vertex `hub` with the given vp and fill the hole along the boundary with triangles connected to the hub vertex.
+    /// Returns the id of the hub vertex.
+    /// 
+    /// The result will be a windmill with triangular blades.
+    fn windmill(&mut self, start: T::E, hub: T::VP) -> T::V {
         // TODO: replace with loft n=1
         let e0 = self.edge(start);
         let origin = e0.origin_id();
         let mut input = self.edge(start).prev_id();
         let (_, v) = self
-            .insert_vertex_e(input, apex, Default::default())
+            .insert_vertex_e(input, hub, Default::default())
             .unwrap(); // TODO: error handling
         loop {
             let e = self.edge(input);
@@ -138,7 +140,7 @@ where
                 break;
             }
             input = e.prev_id();
-            self.close_face_ee(
+            self.close_face_ee_legacy(
                 self.edge(input).next(&self).next_id(),
                 input,
                 Default::default(),

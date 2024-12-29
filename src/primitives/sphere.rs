@@ -55,7 +55,7 @@ where
 
         // top pole
         let mut prev = mesh.insert_loop((0..m).map(|j| (Default::default(), make_vp(1, j))));
-        mesh.fill_hole_apex(mesh.edge(prev).twin_id(), make_vp(0, 0));
+        mesh.windmill(mesh.edge(prev).twin_id(), make_vp(0, 0));
 
         // normal squares
         for i in 1..(n - 1) {
@@ -63,7 +63,7 @@ where
         }
 
         // bottom pole
-        mesh.fill_hole_apex(prev, make_vp(n, 0));
+        mesh.windmill(prev, make_vp(n, 0));
 
         mesh
     }
@@ -141,7 +141,7 @@ where
             make_vp(-long, short, zero),
         ]);
 
-        mesh.fill_hole_apex(start, make_vp(zero, long, short));
+        mesh.windmill(start, make_vp(zero, long, short));
 
         let end = mesh.loft_tri_closed(
             mesh.edge(start).twin_id(),
@@ -154,7 +154,7 @@ where
             ],
         );
 
-        mesh.fill_hole_apex(end, make_vp(zero, -long, -short));
+        mesh.windmill(end, make_vp(zero, -long, -short));
 
         mesh
     }

@@ -139,7 +139,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Close the given boundary by inserting an edge from `from.target` to
     /// `to.origin` and insert a face.
     ///
-    /// There must be exactly one boundary path from `to` to `from` without a face.
+    /// There must be exactly one boundary path from `from` to `to` without a face.
     /// This boundary will be used to construct the face.
     ///
     /// Returns the new face and edge id. For half-edge meshes, this should be the half-edge
@@ -147,6 +147,15 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     #[must_use]
     fn close_face_ee(&mut self, from: T::E, to: T::E, ep: T::EP, fp: T::FP)
         -> Option<(T::E, T::F)>;
+
+    #[must_use]
+    fn close_face_ee_legacy(
+        &mut self,
+        from: T::E,
+        to: T::E,
+        ep: T::EP,
+        fp: T::FP,
+    ) -> Option<(T::E, T::F)>;
 
     /// Close the given boundary by inserting an edge from `from` to `to` and insert a face.
     /// The vertex `prev` must also lie on the face with an edge from `prev` to `from`. That way

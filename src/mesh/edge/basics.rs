@@ -60,14 +60,14 @@ pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone {
 #[cfg(test)]
 #[cfg(feature = "nalgebra")]
 mod tests {
-    use itertools::Itertools;
-
     use crate::{extensions::nalgebra::*, prelude::*};
+    use itertools::Itertools;
 
     #[test]
     fn test_edge_basics_triangle() {
         let mesh = Mesh3d64::regular_polygon(1.0, 3);
         let edge = mesh.edge(0);
+        assert_eq!(mesh.check(), Ok(()));
         assert_eq!(edge.origin(&mesh).id(), 0);
         assert_eq!(edge.target(&mesh).id(), 1);
         assert_eq!(edge.twin(&mesh).id(), 1);
@@ -102,6 +102,7 @@ mod tests {
     #[test]
     fn test_edge_basics_cube() {
         let mesh = Mesh3d64::cube(1.0);
+        assert_eq!(mesh.check(), Ok(()));
         for edge in mesh.edges() {
             assert!(!edge.is_boundary(&mesh));
             assert_eq!(edge.face_ids(&mesh).count(), 2);

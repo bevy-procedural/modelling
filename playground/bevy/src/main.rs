@@ -3,6 +3,7 @@
 //! When developing tests, we recommend:
 //! cargo watch -w src -x "test --profile fast-dev"
 //! cargo llvm-cov --html
+//! $env:RUST_BACKTRACE=1;cargo test
 
 use bevy::{
     pbr::{

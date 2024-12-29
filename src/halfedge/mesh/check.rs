@@ -8,52 +8,8 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     /// Checks whether the twin of the twin is always the edge itself,
     /// the precursor to the next edge is the same, and the successor of the previous.
     fn check_edge_invariants(&self) -> Result<(), String> {
-        if let Some(unmatched_twin) = self.edges().find(|e| e.twin(self).twin_id() != e.id()) {
-            return Err(format!(
-                "HalfEdge {} has a twin {} with twin {}",
-                unmatched_twin.id(),
-                unmatched_twin.twin_id(),
-                unmatched_twin.twin(self).twin_id()
-            ));
-        }
-
-        if let Some(prev_next) = self
-            .edges()
-            .find(|e| e.next(self).prev(self).id() != e.id() || e.prev(self).next_id() != e.id())
-        {
-            return Err(format!(
-                "HalfEdge {} has prev(next) {} and next(prev) {}",
-                prev_next.id(),
-                prev_next.next(self).prev_id(),
-                prev_next.prev(self).next_id()
-            ));
-        }
-
-        if let Some(face_next) = self.edges().find(|e| {
-            let f1 = e.face(self);
-            let f2 = e.next(self).face(self).cloned();
-            (f1.is_none() ^ f2.is_none())
-                || (f1.is_some() && f2.is_some() && f1.unwrap().id() != f2.unwrap().id())
-        }) {
-            return Err(format!(
-                "HalfEdge {} has face {} but next has face {}",
-                face_next.id(),
-                face_next.face_id(),
-                face_next.next(self).face_id()
-            ));
-        }
-
-        if let Some(bad_edge) = self.edges().find(|e| {
-            e.next(self).origin_id() != e.twin(self).origin_id()
-                || e.target_id(self) != e.twin(self).origin_id()
-        }) {
-            return Err(format!(
-                "HalfEdge {} has next origin {} and target {} but twin origin {}",
-                bad_edge.id(),
-                bad_edge.next(self).origin_id(),
-                bad_edge.target_id(self),
-                bad_edge.twin(self).origin_id()
-            ));
+        for edge in self.edges() {
+            edge.is_valid(self)?;
         }
 
         Ok(())
