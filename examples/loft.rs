@@ -7,7 +7,7 @@ mod bevy_examples;
 
 // TODO: demonstrate other configurations
 
-fn lofted_polygon(sides: usize, m: usize, n: usize) -> BevyMesh3d {
+fn lofted_polygon(sides: usize, n: usize, m: usize) -> BevyMesh3d {
     let circle_iter = |n: usize, r: f32, shift: f32| {
         let npi2: f32 = 2.0 / (n as f32) * std::f32::consts::PI;
         (0..n).map(move |i| {
@@ -24,7 +24,17 @@ fn lofted_polygon(sides: usize, m: usize, n: usize) -> BevyMesh3d {
     println!("{:?}", mesh);
     mesh.flip_yz()
         .translate(&Vec3::new(0.0, 0.1, 0.0))
-        .loft_polygon_back(e, 3, 2, circle_iter(2*sides, 2.0, 0.0).take(16));
+        .loft_polygon_back(
+            e,
+            n,
+            m,
+            circle_iter(
+                (((n - 1) as f32) / ((m - 1) as f32) * sides as f32) as usize,
+                2.0,
+                0.0,
+            )
+            .take(16),
+        );
     mesh
 }
 
@@ -34,7 +44,7 @@ fn generate_mesh(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut texts: ResMut<Text3dGizmos>,
 ) {
-    let mesh = lofted_polygon(8, 2, 2);
+    let mesh = lofted_polygon(8, 3, 3);
 
     show_vertex_indices(&mut texts, &mesh);
     show_edges(&mut texts, &mesh, 0.1);

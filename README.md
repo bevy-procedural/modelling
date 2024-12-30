@@ -42,6 +42,7 @@ mesh.to_bevy(RenderAssetUsages::default())
  TODO: bevy-procedural.org -->
 
 -   [box](https://github.com/bevy-procedural/modelling/blob/main/examples/box.rs) demonstrates different methods to build a cube from scratch. This is a good place to get started with this crate!
+-   [loft](https://github.com/bevy-procedural/modelling/blob/main/examples/loft.rs) demonstrates the usage of `loft` and `extrude`. These functions are extremely versatile and you should definitely look at this example when you plan to constructively model your meshes.
 -   [path](https://github.com/bevy-procedural/modelling/blob/main/examples/path.rs) demonstrates the path builder with bezier curves.
 -   [text](https://github.com/bevy-procedural/modelling/blob/main/examples/text.rs) demonstrates how to insert text into a mesh.
 -   [zoo](https://github.com/bevy-procedural/modelling/blob/main/examples/zoo.rs) showcases a variety of different predefined 3d shapes.
