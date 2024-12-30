@@ -59,7 +59,9 @@ where
 
         // normal squares
         for i in 1..(n - 1) {
-            prev = mesh.loft_polygon_back(prev, 2, 2, (0..m).map(|j| make_vp(i + 1, j)));
+            prev = mesh
+                .loft_polygon_back(prev, 2, 2, (0..m).map(|j| make_vp(i + 1, j)))
+                .unwrap();
         }
 
         // bottom pole
@@ -88,36 +90,40 @@ where
 
         // TODO: polygon should return something more helpful
         let start = mesh.shared_edge_id(T::V::new(1), T::V::new(0)).unwrap();
-        let start_middle = mesh.loft_polygon_back(
-            start,
-            3,
-            2,
-            [
-                make_vp(phi, iphi, zero),   // pink
-                make_vp(one, one, -one),    // orange
-                make_vp(zero, phi, -iphi),  // green
-                make_vp(-one, one, -one),   // orange
-                make_vp(-phi, iphi, zero),  // pink
-                make_vp(-phi, -iphi, zero), // pink
-                make_vp(-one, -one, one),   // orange
-                make_vp(zero, -phi, iphi),  // green
-                make_vp(one, -one, one),    // orange
-                make_vp(phi, -iphi, zero),  // pink
-            ],
-        );
+        let start_middle = mesh
+            .loft_polygon_back(
+                start,
+                3,
+                2,
+                [
+                    make_vp(phi, iphi, zero),   // pink
+                    make_vp(one, one, -one),    // orange
+                    make_vp(zero, phi, -iphi),  // green
+                    make_vp(-one, one, -one),   // orange
+                    make_vp(-phi, iphi, zero),  // pink
+                    make_vp(-phi, -iphi, zero), // pink
+                    make_vp(-one, -one, one),   // orange
+                    make_vp(zero, -phi, iphi),  // green
+                    make_vp(one, -one, one),    // orange
+                    make_vp(phi, -iphi, zero),  // pink
+                ],
+            )
+            .unwrap();
 
-        let start_bottom = mesh.loft_polygon_back(
-            mesh.edge(start_middle).next_id(),
-            2,
-            3,
-            [
-                make_vp(one, -one, -one),   // orange
-                make_vp(iphi, zero, -phi),  // blue
-                make_vp(-iphi, zero, -phi), // blue
-                make_vp(-one, -one, -one),  // orange
-                make_vp(zero, -phi, -iphi), // green
-            ],
-        );
+        let start_bottom = mesh
+            .loft_polygon_back(
+                mesh.edge(start_middle).next_id(),
+                2,
+                3,
+                [
+                    make_vp(one, -one, -one),   // orange
+                    make_vp(iphi, zero, -phi),  // blue
+                    make_vp(-iphi, zero, -phi), // blue
+                    make_vp(-one, -one, -one),  // orange
+                    make_vp(zero, -phi, -iphi), // green
+                ],
+            )
+            .unwrap();
 
         mesh.insert_face(start_bottom, Default::default()).unwrap();
 

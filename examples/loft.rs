@@ -24,7 +24,7 @@ fn lofted_polygon(sides: usize, m: usize, n: usize) -> BevyMesh3d {
     println!("{:?}", mesh);
     mesh.flip_yz()
         .translate(&Vec3::new(0.0, 0.1, 0.0))
-        .loft_polygon(e, 3, 2, circle_iter(2*sides, 2.0, -2.0).take(7));
+        .loft_polygon_back(e, 3, 2, circle_iter(2*sides, 2.0, 0.0).take(16));
     mesh
 }
 

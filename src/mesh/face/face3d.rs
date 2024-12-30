@@ -89,7 +89,7 @@ pub trait Face3d<T: MeshType3D<Face = Self>>: FaceBasics<T> {
         // TODO: overload this in a way that allows different dimensions
         // TODO: allows only for slight curvature...
 
-        println!("Normal of face {:?} {:?}", self.id(), self.vertices(mesh).map(|v| v.pos()).collect::<Vec<_>>());
+        // println!("Normal of face {:?} {:?}", self.id(), self.vertices(mesh).map(|v| v.pos()).collect::<Vec<_>>());
 
         debug_assert!(
             self.may_be_curved() || self.is_planar2(mesh),

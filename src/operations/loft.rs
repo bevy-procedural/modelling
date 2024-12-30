@@ -1,5 +1,6 @@
-use crate::mesh::{
-    DefaultEdgePayload, DefaultFacePayload, HalfEdge, MeshBuilder, MeshTypeHalfEdge,
+use crate::{
+    math::IndexType,
+    mesh::{DefaultEdgePayload, DefaultFacePayload, HalfEdge, MeshBuilder, MeshTypeHalfEdge},
 };
 
 // TODO: Adjust this to not be halfedge-specific
@@ -186,25 +187,101 @@ where
         self.edge(outside).next(self).next_id()
     }
 
-    /// Walks clockwise along the boundary given by `start` and adds a "hem" made from polygon faces.
-    /// Each face consists of `n` vertices from the iterator
-    /// and `m` vertices from the boundary of the existing mesh.
-    /// Hence, it will create polygon faces with `n+m` vertices each.
-    ///
-    /// If the iterator is exactly the right length to go once around the mesh, the "hem" will be closed.
-    ///
-    /// Returns the edge pointing from the second inserted vertex to the first inserted vertex.
-    ///
-    /// For example, to create a quad loft, use `loft_polygon(start, 2, 2, vp)`.
-    /// Pentagons with the tip pointing to the boundary can be created with `loft_polygon(start, 3, 2, vp)`
-    /// while pentagons with the tip pointing away from the boundary can be created with `loft_polygon(start, 2, 3, vp)`.
+    /// Like `loft_polygon`, but walks the boundary backwards.
     fn loft_polygon_back(
         &mut self,
         start: T::E,
         n: usize,
         m: usize,
+
         vp: impl IntoIterator<Item = T::VP>,
-    ) -> T::E {
+    ) -> Option<T::E> {
+        assert!(n >= 2);
+        assert!(m >= 2);
+        // TODO: implement the special cases of n=1 (insert one vertex only and generate tip) and m=1 (use only one vertex of the boundary and create a fan around it), and even n=0 (without iterator; bridge every second edge with a face) and m=0 (without start; generate a line strip)
+        // TODO: replace all loft methods with this one. Quad is just n=2, m=2, triangle is two lofts: n=2, m=1 and n=0, m=2
+
+        // TODO: Make this optional?
+        let autoclose = true;
+
+        // PERF: Instead of insert_face, we could directly insert the face indices when creating the edges
+
+        // insert the outer boundary
+        let mut iter = vp.into_iter();
+        /*let vp = iter.next()?;
+        let (Some(mut outer), _) = self.insert_path(vp, iter.map(|vp| (Default::default(), vp)))
+        else {
+            return None;
+        };*/
+
+        let mut inner = self.edge(start).prev_id();
+
+        let mut last = false;
+
+        // insert first bow
+        let (mut outer, _) = self.insert_vertex_e(inner, iter.next()?, Default::default())?;
+        let last_inner = self.edge(outer).twin_id();
+        for _ in 1..n {
+            let Some(vp) = iter.next() else {
+                last = true;
+                break;
+            };
+            let (e, _) = self.insert_vertex_e(outer, vp, Default::default())?;
+            outer = e;
+        }
+
+        loop {
+            // Skip the center edges
+            // TODO: Walk the center first so we can stop early! If there is not enough space, don't insert the next bow!
+            for _ in 1..m {
+                if inner == last_inner {
+                    // We reached the start again - so we are done!
+                    // TODO: test this!
+                    return None; // TODO: return the right edge
+                }
+                inner = self.edge(inner).prev_id();
+            }
+
+            if autoclose && last && inner == last_inner {
+                // automatically close the shape
+                inner = self.edge(inner).prev_id();
+            }
+
+            outer = self.insert_edge_ee(inner, self.edge(outer).next_id(), Default::default())?;
+            self.insert_face(self.edge(outer).twin_id(), Default::default())?;
+
+            // TODO: Why is this not the same as above?
+            /*let (e, f) = self.close_face_ee(
+                inner,
+                self.edge(outer).next_id(),
+                Default::default(),
+                Default::default(),
+            )?;
+            outer = self.edge(e).twin_id();*/
+
+            if last {
+                return None; // TODO: return the right edge
+            }
+
+            // Insert next bow
+            for i in 1..n {
+                let Some(vp) = iter.next() else {
+                    if i == 1 {
+                        // We are done - the iterator ended just after the last bow
+                        return None; // TODO: return the right edge
+                    }
+                    // We are done - the iterator ended in the middle of the bow. Close it!
+                    last = true;
+                    break;
+                };
+                let (e, _) = self.insert_vertex_e(outer, vp, Default::default())?;
+                outer = e;
+            }
+        }
+
+        return None;
+
+        /*
         assert!(n >= 2);
         assert!(m >= 2);
         // TODO: implement the special cases of n=1 (insert one vertex only and generate tip) and m=1 (use only one vertex of the boundary and create a fan around it), and even n=0 (without iterator; bridge every second edge with a face) and m=0 (without start; generate a line strip)
@@ -266,7 +343,7 @@ where
             if ret == start {
                 ret = self.edge(inside).next(self).twin_id();
             }
-        }
+        }*/
     }
 
     /// Walks counter-clockwise along the given boundary and adds a "hem" made from polygon faces.
@@ -274,12 +351,14 @@ where
     /// and `m` vertices from the boundary of the existing mesh.
     /// Hence, it will create polygon faces with `n+m` vertices each.
     ///
-    /// If the iterator is long enough to go once around the mesh, the "hem" will be automatically closed.
+    /// If the iterator is long enough to go once around the boundary,
+    /// the "hem" will be automatically closed.
     ///
     /// Returns the edge pointing from the second inserted vertex to the first inserted vertex.
     /// Will return `None` if the boundary was weird or the iterator was empty. Will not complain
     /// about an iterator of length 1 or an iterator that is too short or too long. If the iterator
-    /// is too long, all additional vertices will be ignored.
+    /// is too long, all additional vertices will be ignored. If it is too short and not divisible by `n`,
+    /// the last face will be smaller.
     ///
     /// Some examples (see `--example loft`):
     /// - To create a quad loft, use `loft_polygon(start, 2, 2, vp)`.
@@ -290,6 +369,7 @@ where
     /// - n=0: without iterator; bridge every second edge with a face
     /// - m=0: without start; generate a line strip
     /// - a really long iterator that spirals around the original mesh in multiple layers
+    /// - Iterator of length 1: will insert one vertex and make a face with the `m` next vertices of the boundary
     #[must_use]
     fn loft_polygon(
         &mut self,
@@ -308,12 +388,38 @@ where
 
         // insert the outer boundary
         let mut iter = vp.into_iter();
-        let vp = iter.next()?;
+        /*let vp = iter.next()?;
         let (Some(mut outer), _) = self.insert_path(vp, iter.map(|vp| (Default::default(), vp)))
         else {
             return None;
-        };
+        };*/
+
         let mut inner = start;
+
+        // insert first bow
+        let (mut outer, _) =
+            self.insert_vertex_e(self.edge(inner).prev_id(), iter.next()?, Default::default())?;
+        for _ in 1..n {
+            let Some(vp) = iter.next() else {
+                break;
+            };
+            let (e, _) = self.insert_vertex_e(outer, vp, Default::default())?;
+            outer = e;
+        }
+
+        loop {
+            for _ in 1..m {
+                inner = self.edge(inner).next_id();
+            }
+
+            println!("inner: {} {}", inner, outer);
+            let inserted_edge = self.insert_edge_ee(inner, outer, Default::default())?;
+            self.insert_face(self.edge(inserted_edge).twin_id(), Default::default())?;
+
+            break;
+        }
+
+        return None;
 
         // TODO: We should not use insert_path but rather insert vertices while making the other ones so we can stop once we're full
         // TODO: this is backwards.
@@ -323,6 +429,8 @@ where
 
         // Now, make connections and insert the faces
         loop {
+            // Insert the outer bow
+
             println!("inner: {} {}", inner, outer);
             let inserted_edge = self.insert_edge_ee(inner, outer, Default::default())?;
 
