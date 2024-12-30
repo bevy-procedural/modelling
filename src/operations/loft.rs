@@ -320,13 +320,14 @@ mod tests {
     use itertools::Itertools;
     use std::{collections::HashSet, hash::RandomState};
 
+    #[derive(Clone, Debug)]
     struct LoftTestConfig {
         n: usize,
         m: usize,
         backwards: bool,
         autoclose: bool,
         open: bool,
-        mesh_start: (Mesh3d64, usize),
+        mesh: (Mesh3d64, usize),
         vp: Vec<VertexPayloadPNU<f64, 3>>,
 
         // the following are expected results
@@ -340,12 +341,19 @@ mod tests {
         num_true_boundary: usize,
         num_diagonals: usize,
         connected: bool,
+        first_edge_is_diagonal: bool,
+        last_first_adjacent: bool,
+        first_last_reach_old_boundary: bool,
+        first_edge_is_start: bool,
+        last_edge_is_start: bool,
     }
 
     fn run_crochet_test(config: LoftTestConfig) {
-        let mut mesh = config.mesh_start.0.clone();
+        println!("{:?}", config);
+
+        let mut mesh = config.mesh.0.clone();
         let res = mesh.crochet(
-            config.mesh_start.1,
+            config.mesh.1,
             config.n,
             config.m,
             config.backwards,
@@ -357,9 +365,10 @@ mod tests {
         assert_eq!(mesh.check(), Ok(()));
 
         println!("{:?}", mesh);
+        println!("Result: {:?}", res);
 
         let old_vertices: HashSet<usize, RandomState> =
-            HashSet::from_iter(config.mesh_start.0.vertex_ids());
+            HashSet::from_iter(config.mesh.0.vertex_ids());
         let new_vertices: HashSet<usize, RandomState> = HashSet::from_iter(mesh.vertex_ids());
         assert!(old_vertices.is_subset(&new_vertices));
         let inserted_vertices: HashSet<usize, RandomState> =
@@ -367,15 +376,14 @@ mod tests {
         assert_eq!(inserted_vertices.len(), config.num_inserted_vertices);
 
         let old_halfedges: HashSet<usize, RandomState> =
-            HashSet::from_iter(config.mesh_start.0.edge_ids());
+            HashSet::from_iter(config.mesh.0.edge_ids());
         let new_halfedges: HashSet<usize, RandomState> = HashSet::from_iter(mesh.edge_ids());
         assert!(old_halfedges.is_subset(&new_halfedges));
         let inserted_halfedges: HashSet<usize, RandomState> =
             HashSet::from_iter(new_halfedges.symmetric_difference(&old_halfedges).cloned());
         assert_eq!(inserted_halfedges.len(), 2 * config.num_appended_edges);
 
-        let old_faces: HashSet<usize, RandomState> =
-            HashSet::from_iter(config.mesh_start.0.face_ids());
+        let old_faces: HashSet<usize, RandomState> = HashSet::from_iter(config.mesh.0.face_ids());
         let new_faces: HashSet<usize, RandomState> = HashSet::from_iter(mesh.face_ids());
         assert!(old_faces.is_subset(&new_faces));
         let inserted_faces: HashSet<usize, RandomState> =
@@ -398,7 +406,7 @@ mod tests {
 
         let old_boundary: HashSet<usize, RandomState> = HashSet::from_iter(
             config
-                .mesh_start
+                .mesh
                 .0
                 .edges()
                 .filter(|e| e.is_boundary_self())
@@ -457,6 +465,29 @@ mod tests {
             }
             assert!(mesh.edge(first_edge).is_boundary_self());
             assert!(mesh.edge(last_edge).is_boundary_self());
+            assert_eq!(
+                mesh.edge(first_edge)
+                    .same_boundary_back(&mesh, mesh.edge(last_edge).origin_id()),
+                Some(last_edge)
+            );
+            assert_eq!(first_edge == config.mesh.1, config.first_edge_is_start);
+            assert_eq!(last_edge == config.mesh.1, config.last_edge_is_start);
+            assert_eq!(
+                diagonals.contains(&first_edge),
+                config.first_edge_is_diagonal
+            );
+            assert_eq!(
+                mesh.edge(last_edge).prev_id() == first_edge,
+                config.last_first_adjacent
+            );
+            assert_eq!(
+                old_boundary.contains(&mesh.edge(last_edge).prev(&mesh).prev_id()),
+                config.first_last_reach_old_boundary
+            );
+            assert_eq!(
+                old_boundary.contains(&mesh.edge(first_edge).next(&mesh).next_id()),
+                config.first_last_reach_old_boundary
+            );
         }
     }
 
@@ -465,6 +496,8 @@ mod tests {
         let e = mesh.insert_regular_polygon(1.0, n);
         (mesh, e)
     }
+
+    // area of the trapezoid wedge between two regular polygons with radius 1 and 2
     fn wedge_area(n: usize) -> f64 {
         (regular_polygon_area(2.0, n) - regular_polygon_area(1.0, n)) / (n as f64)
     }
@@ -479,7 +512,7 @@ mod tests {
                     backwards: true,
                     autoclose: false,
                     open: false,
-                    mesh_start: regular_polygon(n),
+                    mesh: regular_polygon(n),
                     vp: circle_iter::<3, MeshType3d64PNU>(n, 2.0, 0.0).collect_vec(),
                     return_none: false,
                     area_in_appended_faces: Some(wedge_area(n)),
@@ -491,6 +524,11 @@ mod tests {
                     num_diagonals: n,
                     num_true_boundary: n - 1,
                     connected: true,
+                    first_edge_is_diagonal: false,
+                    last_first_adjacent: false,
+                    first_last_reach_old_boundary: true,
+                    first_edge_is_start: false,
+                    last_edge_is_start: false,
                 },
                 LoftTestConfig {
                     n: 2,
@@ -498,7 +536,7 @@ mod tests {
                     backwards: true,
                     autoclose: true,
                     open: false,
-                    mesh_start: regular_polygon(n),
+                    mesh: regular_polygon(n),
                     vp: circle_iter::<3, MeshType3d64PNU>(n, 2.0, 0.0).collect_vec(),
                     return_none: false,
                     area_in_appended_faces: Some(wedge_area(n)),
@@ -510,6 +548,11 @@ mod tests {
                     num_diagonals: n,
                     num_true_boundary: n,
                     connected: true,
+                    first_edge_is_diagonal: false,
+                    last_first_adjacent: true,
+                    first_last_reach_old_boundary: false,
+                    first_edge_is_start: false,
+                    last_edge_is_start: false,
                 },
             ] {
                 run_crochet_test(c);
