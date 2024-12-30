@@ -11,95 +11,6 @@ where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
 {
-    /// This will walk clockwise (backwards) along the given boundary and add a "hem" made from triangles.
-    /// The payloads are given using the iterator.
-    ///
-    /// `start` must be an edge on the boundary pointing to the first vertex to be connected with the hem.
-    ///
-    /// Returns the edge pointing from the first inserted vertex to the target of `start`.
-    /// If the iterator is empty, return `start` instead.
-    ///
-    /// If `shift` is true, the first inserted triangle will be with the tip pointing to the target of `start`.
-    /// Otherwise, the first triangle will include the edge `start`.
-    /// This doesn't affect the number of triangles but shifts the "hem" by one.
-    fn loft_tri_back(
-        &mut self,
-        start: T::E,
-        shift: bool,
-        vp: impl IntoIterator<Item = T::VP>,
-    ) -> T::E {
-        // TODO: a more efficient implementation could bulk-insert everything at once
-        // TODO: assertions
-
-        let mut input = start;
-        let mut first = true;
-        let mut iter = vp.into_iter();
-        let mut pos = iter.next();
-        let mut ret = start;
-
-        if shift && pos.is_some() {
-            let output = self.edge(input).next_id();
-            self.insert_vertex_e(input, pos.unwrap(), Default::default());
-            first = false;
-            ret = self.edge(output).prev_id();
-            pos = iter.next();
-        }
-
-        while pos.is_some() {
-            let output = self.edge(input).next_id();
-            self.insert_vertex_e(input, pos.unwrap(), Default::default());
-
-            let input_next = self.edge(input).next_id();
-            input = self.edge(input).prev_id();
-
-            // the first one shouldn't connect to the previous
-            if !first {
-                self.close_face_ee_legacy(
-                    output,
-                    input_next,
-                    Default::default(),
-                    Default::default(),
-                );
-            } else {
-                ret = self.edge(output).prev_id();
-            }
-
-            pos = iter.next();
-            // the last one also shouldn't connect to the next
-            if pos.is_some() || shift {
-                self.close_face_ee_legacy(
-                    input_next,
-                    input,
-                    Default::default(),
-                    Default::default(),
-                );
-            }
-
-            first = false;
-        }
-
-        ret
-    }
-
-    /// Like `loft_tri_back` but closes the "hem" with a face.
-    fn loft_tri_back_closed(&mut self, start: T::E, vp: impl IntoIterator<Item = T::VP>) -> T::E {
-        let e = self.loft_tri_back(start, false, vp);
-        let outside = self.edge(e).prev_id();
-        self.close_face_ee_legacy(
-            self.edge(e).next(self).next_id(),
-            e,
-            Default::default(),
-            Default::default(),
-        );
-        self.close_face_ee_legacy(
-            self.edge(e).next_id(),
-            outside,
-            Default::default(),
-            Default::default(),
-        );
-        e
-    }
-
     /// This will walk counter-clockwise along the given boundary and add a "hem" made from triangles.
     /// The payloads are given using the iterator.
     ///
@@ -193,7 +104,6 @@ where
         start: T::E,
         n: usize,
         m: usize,
-
         vp: impl IntoIterator<Item = T::VP>,
     ) -> Option<T::E> {
         assert!(n >= 2);
@@ -354,10 +264,10 @@ where
     /// about an iterator of length 1 or an iterator that is too short or too long. If the iterator
     /// is too long, all additional vertices will be ignored. If it is too short and not divisible by `n`,
     /// the last face will be smaller.
-    /// 
+    ///
     /// If the boundary is too short to fit the next `n` new vertices, none of them will be inserted.
     /// e.g., if you have a triangle and insert with `m=2`, then at most one face will be created since
-    /// two won't fit. 
+    /// two won't fit.
     ///
     /// Some examples (see `--example loft`):
     /// - To create a quad loft, use `loft_polygon(start, 2, 2, vp)`.
