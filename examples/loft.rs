@@ -44,24 +44,30 @@ fn generate_mesh(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut texts: ResMut<Text3dGizmos>,
 ) {
-    let mesh = lofted_polygon(8, 3, 3);
+    for (i, mut mesh) in [lofted_polygon(8, 3, 3), lofted_polygon(4, 2, 2)]
+        .iter()
+        .cloned()
+        .enumerate()
+    {
+        mesh.translate(&Vec3::new((i as f32 - 0.5) * 4.0, 0.0, 0.0));
 
-    show_vertex_indices(&mut texts, &mesh);
-    show_edges(&mut texts, &mesh, 0.1);
-    show_faces(&mut texts, &mesh);
+        show_vertex_indices(&mut texts, &mesh);
+        //show_edges(&mut texts, &mesh, 0.1);
+        //show_faces(&mut texts, &mesh);
 
-    commands.spawn((
-        Mesh3d(meshes.add(mesh.to_bevy_ex(
-            RenderAssetUsages::all(),
-            // slowest triangulation, but looks nice for small examples
-            TriangulationAlgorithm::MinWeight,
-            true,
-        ))),
-        MeshMaterial3d(materials.add(StandardMaterial {
-            base_color: Color::srgb(0.9, 0.85, 0.1),
-            ..default()
-        })),
-    ));
+        commands.spawn((
+            Mesh3d(meshes.add(mesh.to_bevy_ex(
+                RenderAssetUsages::all(),
+                // slowest triangulation, but looks nice for small examples
+                TriangulationAlgorithm::MinWeight,
+                true,
+            ))),
+            MeshMaterial3d(materials.add(StandardMaterial {
+                base_color: Color::srgb(0.9, 0.85, 0.1),
+                ..default()
+            })),
+        ));
+    }
 }
 
 fn main() {
