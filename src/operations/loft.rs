@@ -370,6 +370,7 @@ mod tests {
         num_diagonals: usize,
         connected: bool,
         first_edge_is_diagonal: bool,
+        last_edge_is_diagonal: bool,
         last_first_adjacent: bool,
         first_last_reach_old_boundary: bool,
         first_edge_is_start: bool,
@@ -520,6 +521,7 @@ mod tests {
                 diagonals.contains(&first_edge),
                 config.first_edge_is_diagonal
             );
+            assert_eq!(diagonals.contains(&last_edge), config.last_edge_is_diagonal);
 
             if config.backwards {
                 assert_eq!(
@@ -602,6 +604,7 @@ mod tests {
                         num_true_boundary: n - 1,
                         connected: true,
                         first_edge_is_diagonal: false,
+                        last_edge_is_diagonal: false,
                         last_first_adjacent: false,
                         first_last_reach_old_boundary: true,
                         first_edge_is_start: false,
@@ -627,6 +630,7 @@ mod tests {
                         num_true_boundary: n,
                         connected: true,
                         first_edge_is_diagonal: false,
+                        last_edge_is_diagonal: false,
                         last_first_adjacent: true,
                         first_last_reach_old_boundary: false,
                         first_edge_is_start: false,
@@ -641,8 +645,8 @@ mod tests {
 
     #[test]
     fn test_crochet_3_3() {
-        for n in [4] {
-            for backwards in [true] {
+        for n in [4, 6, 8, 10] {
+            for backwards in [true, false] {
                 let vp = if backwards {
                     circle_iter::<3, MeshType3d64PNU>(n, 2.0, 0.0).collect_vec()
                 } else {
@@ -669,12 +673,13 @@ mod tests {
                         num_true_boundary: n - 1,
                         connected: true,
                         first_edge_is_diagonal: false,
+                        last_edge_is_diagonal: false,
                         last_first_adjacent: false,
-                        first_last_reach_old_boundary: true,
+                        first_last_reach_old_boundary: false,
                         first_edge_is_start: false,
                         last_edge_is_start: false,
                     },
-                    /*LoftTestConfig {
+                    LoftTestConfig {
                         n: 3,
                         m: 3,
                         backwards,
@@ -683,21 +688,23 @@ mod tests {
                         mesh: regular_polygon(n),
                         vp: vp.clone(),
                         return_none: false,
-                        area_in_appended_faces: Some(wedge_area(n)),
-                        num_appended_edges: 2 * n,
-                        num_appended_faces: n,
+                        area_in_appended_faces: Some(2.0 * wedge_area(n)),
+                        num_appended_edges: n + n / 2,
+                        num_appended_faces: n / 2,
+                        small_face_size: 0,
                         num_inserted_vertices: n,
                         num_boundary_edges: n,
-                        num_inner_edges: 2 * n,
-                        num_diagonals: n,
+                        num_inner_edges: n + n / 2,
+                        num_diagonals: n / 2,
                         num_true_boundary: n,
                         connected: true,
                         first_edge_is_diagonal: false,
+                        last_edge_is_diagonal: false,
                         last_first_adjacent: true,
                         first_last_reach_old_boundary: false,
                         first_edge_is_start: false,
                         last_edge_is_start: false,
-                    },*/
+                    },
                 ] {
                     run_crochet_test(c);
                 }
