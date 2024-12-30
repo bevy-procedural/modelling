@@ -202,17 +202,28 @@ where
         // TODO
         assert!(m >= 2);
         // TODO
-        assert!(backwards);
-        // TODO
         assert!(!open);
 
         // PERF: Instead of insert_face, we could directly insert the face indices when creating the edges
+
+        let walk_edge = |mesh: &T::Mesh, edge: T::E| {
+            if backwards {
+                mesh.edge(edge).prev_id()
+            } else {
+                mesh.edge(edge).next_id()
+            }
+        };
 
         // insert the outer boundary
         let mut iter = vp.into_iter();
         let mut inner = self.edge(start).prev_id();
         let mut last = false;
-        let mut last_inner = start;
+        let mut last_inner = if backwards {
+            start
+        } else {
+            // TODO: This is suspicious
+            self.edge(start).next_id()
+        };
         let current_inner = inner;
         let mut outer = IndexType::max();
         let mut first_edge = start;
@@ -223,16 +234,22 @@ where
             for _ in 1..m {
                 if inner == last_inner {
                     // We reached the start again - so we are done!
+                    println!("Reached start again");
                     return Some((first_edge, last_edge));
                 }
-                inner = self.edge(inner).prev_id();
+                inner = walk_edge(self, inner);
             }
 
             // insert first diagonal towards bow in the first iteration
             if outer == IndexType::max() {
-                let (e, _) =
-                    self.insert_vertex_e(current_inner, iter.next()?, Default::default())?;
-                last_inner = self.edge(e).twin_id();
+                // TODO: or return None?
+                let vp = iter.next()?;
+                let (e, _) = self.insert_vertex_e(current_inner, vp, Default::default())?;
+                last_inner = if backwards {
+                    self.edge(e).twin_id()
+                } else {
+                    self.edge(e).prev_id()
+                };
                 outer = e;
             }
 
@@ -250,26 +267,37 @@ where
                 let (e, _) = self.insert_vertex_e(outer, vp, Default::default())?;
                 outer = e;
 
-                let e_twin = self.edge(e).twin_id();
-                if first_edge == start {
-                    first_edge = e_twin;
+                if backwards {
+                    last_edge = self.edge(e).twin_id();
+                } else {
+                    last_edge = e;
                 }
-                last_edge = e_twin;
+                if first_edge == start {
+                    first_edge = last_edge;
+                }
             }
 
             let autoclose_now = autoclose && last && inner == last_inner;
             if autoclose_now {
                 // automatically close the shape
-                inner = self.edge(inner).prev_id();
+                inner = walk_edge(self, inner);
             }
 
             // Insert the diagonal between inner and outer and create a face
-            outer = self.insert_edge_ee(inner, self.edge(outer).next_id(), Default::default())?;
-            self.insert_face(self.edge(outer).twin_id(), Default::default())?;
+            let inserted =
+                self.insert_edge_ee(inner, self.edge(outer).next_id(), Default::default())?;
+            let inserted_twin = self.edge(inserted).twin_id();
+            if backwards {
+                outer = inserted;
+                self.insert_face(inserted_twin, Default::default())?;
+            } else {
+                inner = inserted_twin;
+                self.insert_face(inserted, Default::default())?;
+            }
 
             if autoclose_now {
                 // the last face was closed; this counts as the last boundary!
-                last_edge = outer;
+                last_edge = if backwards { outer } else { inserted_twin };
             }
 
             // TODO: Why is this not the same as above?
@@ -465,29 +493,51 @@ mod tests {
             }
             assert!(mesh.edge(first_edge).is_boundary_self());
             assert!(mesh.edge(last_edge).is_boundary_self());
-            assert_eq!(
-                mesh.edge(first_edge)
-                    .same_boundary_back(&mesh, mesh.edge(last_edge).origin_id()),
-                Some(last_edge)
-            );
+
             assert_eq!(first_edge == config.mesh.1, config.first_edge_is_start);
             assert_eq!(last_edge == config.mesh.1, config.last_edge_is_start);
             assert_eq!(
                 diagonals.contains(&first_edge),
                 config.first_edge_is_diagonal
             );
-            assert_eq!(
-                mesh.edge(last_edge).prev_id() == first_edge,
-                config.last_first_adjacent
-            );
-            assert_eq!(
-                old_boundary.contains(&mesh.edge(last_edge).prev(&mesh).prev_id()),
-                config.first_last_reach_old_boundary
-            );
-            assert_eq!(
-                old_boundary.contains(&mesh.edge(first_edge).next(&mesh).next_id()),
-                config.first_last_reach_old_boundary
-            );
+
+            if config.backwards {
+                assert_eq!(
+                    mesh.edge(first_edge)
+                        .same_boundary_back(&mesh, mesh.edge(last_edge).origin_id()),
+                    Some(last_edge)
+                );
+                assert_eq!(
+                    mesh.edge(last_edge).prev_id() == first_edge,
+                    config.last_first_adjacent
+                );
+                assert_eq!(
+                    old_boundary.contains(&mesh.edge(last_edge).prev(&mesh).prev_id()),
+                    config.first_last_reach_old_boundary
+                );
+                assert_eq!(
+                    old_boundary.contains(&mesh.edge(first_edge).next(&mesh).next_id()),
+                    config.first_last_reach_old_boundary
+                );
+            } else {
+                assert_eq!(
+                    mesh.edge(first_edge)
+                        .same_boundary(&mesh, mesh.edge(last_edge).origin_id()),
+                    Some(last_edge)
+                );
+                assert_eq!(
+                    mesh.edge(last_edge).next_id() == first_edge,
+                    config.last_first_adjacent
+                );
+                assert_eq!(
+                    old_boundary.contains(&mesh.edge(last_edge).next(&mesh).next_id()),
+                    config.first_last_reach_old_boundary
+                );
+                assert_eq!(
+                    old_boundary.contains(&mesh.edge(first_edge).prev(&mesh).prev_id()),
+                    config.first_last_reach_old_boundary
+                );
+            }
         }
     }
 
@@ -505,57 +555,64 @@ mod tests {
     #[test]
     fn test_crochet_2_2() {
         for n in [3, 4, 6, 7, 20] {
-            for c in [
-                LoftTestConfig {
-                    n: 2,
-                    m: 2,
-                    backwards: true,
-                    autoclose: false,
-                    open: false,
-                    mesh: regular_polygon(n),
-                    vp: circle_iter::<3, MeshType3d64PNU>(n, 2.0, 0.0).collect_vec(),
-                    return_none: false,
-                    area_in_appended_faces: Some(wedge_area(n)),
-                    num_appended_edges: 2 * (n - 1) + 1,
-                    num_appended_faces: n - 1,
-                    num_inserted_vertices: n,
-                    num_boundary_edges: n + 2,
-                    num_inner_edges: n - 1 + n - 2,
-                    num_diagonals: n,
-                    num_true_boundary: n - 1,
-                    connected: true,
-                    first_edge_is_diagonal: false,
-                    last_first_adjacent: false,
-                    first_last_reach_old_boundary: true,
-                    first_edge_is_start: false,
-                    last_edge_is_start: false,
-                },
-                LoftTestConfig {
-                    n: 2,
-                    m: 2,
-                    backwards: true,
-                    autoclose: true,
-                    open: false,
-                    mesh: regular_polygon(n),
-                    vp: circle_iter::<3, MeshType3d64PNU>(n, 2.0, 0.0).collect_vec(),
-                    return_none: false,
-                    area_in_appended_faces: Some(wedge_area(n)),
-                    num_appended_edges: 2 * n,
-                    num_appended_faces: n,
-                    num_inserted_vertices: n,
-                    num_boundary_edges: n,
-                    num_inner_edges: 2 * n,
-                    num_diagonals: n,
-                    num_true_boundary: n,
-                    connected: true,
-                    first_edge_is_diagonal: false,
-                    last_first_adjacent: true,
-                    first_last_reach_old_boundary: false,
-                    first_edge_is_start: false,
-                    last_edge_is_start: false,
-                },
-            ] {
-                run_crochet_test(c);
+            for backwards in [true, false] {
+                let vp = if backwards {
+                    circle_iter::<3, MeshType3d64PNU>(n, 2.0, 0.0).collect_vec()
+                } else {
+                    circle_iter_back::<3, MeshType3d64PNU>(n, 2.0, 0.0).collect_vec()
+                };
+                for c in [
+                    LoftTestConfig {
+                        n: 2,
+                        m: 2,
+                        backwards,
+                        autoclose: false,
+                        open: false,
+                        mesh: regular_polygon(n),
+                        vp: vp.clone(),
+                        return_none: false,
+                        area_in_appended_faces: Some(wedge_area(n)),
+                        num_appended_edges: 2 * (n - 1) + 1,
+                        num_appended_faces: n - 1,
+                        num_inserted_vertices: n,
+                        num_boundary_edges: n + 2,
+                        num_inner_edges: n - 1 + n - 2,
+                        num_diagonals: n,
+                        num_true_boundary: n - 1,
+                        connected: true,
+                        first_edge_is_diagonal: false,
+                        last_first_adjacent: false,
+                        first_last_reach_old_boundary: true,
+                        first_edge_is_start: false,
+                        last_edge_is_start: false,
+                    },
+                    LoftTestConfig {
+                        n: 2,
+                        m: 2,
+                        backwards,
+                        autoclose: true,
+                        open: false,
+                        mesh: regular_polygon(n),
+                        vp: vp.clone(),
+                        return_none: false,
+                        area_in_appended_faces: Some(wedge_area(n)),
+                        num_appended_edges: 2 * n,
+                        num_appended_faces: n,
+                        num_inserted_vertices: n,
+                        num_boundary_edges: n,
+                        num_inner_edges: 2 * n,
+                        num_diagonals: n,
+                        num_true_boundary: n,
+                        connected: true,
+                        first_edge_is_diagonal: false,
+                        last_first_adjacent: true,
+                        first_last_reach_old_boundary: false,
+                        first_edge_is_start: false,
+                        last_edge_is_start: false,
+                    },
+                ] {
+                    run_crochet_test(c);
+                }
             }
         }
     }
