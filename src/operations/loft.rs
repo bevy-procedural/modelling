@@ -98,21 +98,107 @@ where
         self.edge(outside).next(self).next_id()
     }
 
-    /// Like `loft_polygon`, but walks the boundary backwards.
-    fn loft_polygon_back(
+    /// Walks along the given boundary and "crochet" a "hem" made from polygon faces.
+    /// Each face consists of `n` vertices from the iterator
+    /// and `m` vertices from the boundary of the existing mesh.
+    /// Hence, it will create polygon faces with `n+m` vertices each.
+    ///
+    /// If the iterator is long enough to go once around the boundary,
+    /// the "hem" will be automatically closed if `autoclose` is true.
+    ///
+    /// If the boundary is too short to fit the next `n` new vertices, none of them will be inserted.
+    /// e.g., if you have a triangle and insert with `m=2`, then at most one face will be created since
+    /// two won't fit.
+    ///
+    /// It returns the first and last edge on the new boundary, e.g.,
+    /// - if `n>=2`: the edge between the first inserted vertex and the second inserted
+    ///   vertex and the edge between the last to the second to last. The direction will
+    ///   be chosen such that it is the edge that is not part of the inserted face. If the
+    ///   hem is autoclosed, the last edge will be the edge from the last inserted vertex
+    ///   to the first instead, so the edges will actually be neighbors.
+    /// - if `n=0`: the edge between the first boundary vertex to the `n`th if `m=0`.
+    /// If there is no new boundary edge, it will return `start` instead.
+    /// The function will return `None` if the boundary had unclear connectivity
+    /// (which shouldn't happen on half-edge meshes).
+    ///
+    /// The operation is guaranteed to not insert edges that are not incident to any face.
+    ///
+    /// Parameters:
+    /// - `start`: the edge on the boundary pointing from the first vertex used in the hem to the second.
+    ///    Iff `m=0`, the edge will be ignored and can be safely set to `IndexType::max()`.
+    /// - `n`: the number of vertices in the iterator that will be inserted in each face.
+    /// - `m`: the number of vertices from the boundary that will be used in each face.
+    ///   Notice that `n+m` must be at least 3.
+    /// - `backwards`: if true, the boundary is walked backwards instead of forwards.
+    ///    The `target` of `start` will be used instead of the `origin` to build the first face.
+    /// - `autoclose`: if true and the iterator is long enough, the hem will be automatically closed.
+    /// - `open`: if true, the hem will be connected back to the inner boundary in every iteration.
+    ///   Hence, the newly created boundary will be longer by `2` edges per created face.
+    ///   `open` cannot be `true` if `autoclose` is `true`.
+    /// - `vp`: the iterator of vertices to be inserted in each face.
+    ///   - If the iterator is too long to fit everything along the boundary, all additional vertices will be ignored.
+    ///     Hence, it is always safe to provide an infinite iterator.
+    ///   - If `n=0`, the iterator is ignored.
+    ///   - If the iterator is too short and doesn't end with a completed face, the last face will have less vertices.
+    ///   - If the iterator is too short and there is exactly one vertex left and `open` is `true`, there would be a single edge not connected to a face,
+    ///     which is considered invalid. Hence, in that specific situation the last vertex will be ignored!
+    ///   - If the iterator is empty but `n>0`, the function will return `start` instead.
+    ///   - If the iterator has only length `1` and `m <= 11`, the function will return `start` instead.
+    ///
+    ///
+    /// Some examples to illustrate special cases (also see `--example loft`):
+    /// - `n=0, m>=3`: append faces by using `m` vertices from the boundary and ignoring the iterator.
+    ///    The value of `open` doesn't matter in this case.
+    /// - `n=1, m=1, open`: Create a star graph (not a star polygon).
+    ///    i.e., the first vertex (depending on `backwards` the `origin` or `target` of `start`)
+    ///    is connected to all vertices of the iterators without inserting any faces.
+    ///    This parameter combination is currently not supported since it doesn't insert any faces.
+    /// - `n=1, m=2, open`: append triangles by using two vertices from the boundary and one from the iterator each,
+    ///    e.g., if you start with a regular polygon, you'll get a star where the tips are from the iterator.
+    /// - `n=1, m=2, !open`: insert only one vertex from the iterator and create a windmill around it,
+    ///    e.g., if you start with a regular polygon, the result will be a pyramid.
+    /// - `n>=2, m=1, !open`: Use only one vertex from the boundary and create a fan around it.
+    ///    When `backwards` is true, this will be the target of `start`, otherwise the origin.
+    ///   `autoclose` doesn't have any effect here, since it could only come into effect if the mesh was a single isolated vertex.
+    /// - `n>=2, m=1, !open`: Like above, but the triangles are disconnected.
+    /// - `n=2, m=2, open`: append disconnected quads to the boundary
+    /// - `n=2, m=2, !open`: append a quad loft to the boundary
+    /// - `n=2, m=3, !open`: create a hem of pentagons. The "tip" of each pentagon points inwards.
+    /// - `n>=3, m=0, open`: insert disconnected polygons with `n` vertices each. Ignores `start`.
+    /// - `n>=3, m=0, !open`: Generate a polygon strip. Ignores `start`.
+    ///    Each polygon will have `n` vertices from the iterator and will be
+    ///    connected with it's first vertex to the previous' polygons last vertex.
+    ///    When `autoclose` is true, the last polygon will be connected to the first.
+    /// - `n=3, m=2, !open`: create a hem of pentagons. The "tip" of each pentagon points outwards.
+    #[must_use]
+    #[inline(always)]
+    fn crochet(
         &mut self,
         start: T::E,
         n: usize,
         m: usize,
+        backwards: bool,
+        autoclose: bool,
+        open: bool,
         vp: impl IntoIterator<Item = T::VP>,
     ) -> Option<T::E> {
+        assert!(n + m >= 3, "n+m must be at least 3");
+        assert!(
+            !autoclose || !open,
+            "autoclose and open cannot be true at the same time"
+        );
+
+        // TODO
         assert!(n >= 2);
+        // TODO
         assert!(m >= 2);
+        // TODO
+        assert!(backwards);
+        // TODO
+        assert!(!open);
+
         // TODO: implement the special cases of n=1 (insert one vertex only and generate tip) and m=1 (use only one vertex of the boundary and create a fan around it), and even n=0 (without iterator; bridge every second edge with a face) and m=0 (without start; generate a line strip)
         // TODO: replace all loft methods with this one. Quad is just n=2, m=2, triangle is two lofts: n=2, m=1 and n=0, m=2
-
-        // TODO: Make this optional?
-        let autoclose = true;
 
         // PERF: Instead of insert_face, we could directly insert the face indices when creating the edges
 
@@ -147,7 +233,7 @@ where
             // Insert next bow
             for i in 1..n {
                 let Some(vp) = iter.next() else {
-                    if i == 1 {
+                    if i == 1 && (n >= 3 || !autoclose) {
                         // We are done - the iterator ended just after the last bow
                         return res;
                     }
@@ -185,6 +271,17 @@ where
                 return res;
             }
         }
+    }
+
+    /// see `crochet(start, n, m, true, true, false, vp)`
+    fn loft_polygon_back(
+        &mut self,
+        start: T::E,
+        n: usize,
+        m: usize,
+        vp: impl IntoIterator<Item = T::VP>,
+    ) -> Option<T::E> {
+        self.crochet(start, n, m, true, true, false, vp)
 
         /*
         assert!(n >= 2);
@@ -251,34 +348,7 @@ where
         }*/
     }
 
-    /// Walks counter-clockwise along the given boundary and adds a "hem" made from polygon faces.
-    /// Each face consists of `n` vertices from the iterator
-    /// and `m` vertices from the boundary of the existing mesh.
-    /// Hence, it will create polygon faces with `n+m` vertices each.
-    ///
-    /// If the iterator is long enough to go once around the boundary,
-    /// the "hem" will be automatically closed.
-    ///
-    /// Returns the edge pointing from the second inserted vertex to the first inserted vertex.
-    /// Will return `None` if the boundary was weird or the iterator was empty. Will not complain
-    /// about an iterator of length 1 or an iterator that is too short or too long. If the iterator
-    /// is too long, all additional vertices will be ignored. If it is too short and not divisible by `n`,
-    /// the last face will be smaller.
-    ///
-    /// If the boundary is too short to fit the next `n` new vertices, none of them will be inserted.
-    /// e.g., if you have a triangle and insert with `m=2`, then at most one face will be created since
-    /// two won't fit.
-    ///
-    /// Some examples (see `--example loft`):
-    /// - To create a quad loft, use `loft_polygon(start, 2, 2, vp)`.
-    /// - Pentagons with the tip pointing to the boundary can be created with `loft_polygon(start, 3, 2, vp)`
-    /// - while pentagons with the tip pointing away from the boundary can be created with `loft_polygon(start, 2, 3, vp)`.
-    /// - n=1: insert one vertex only and generate tip
-    /// - m=1: use only one vertex of the boundary and create a fan around it.
-    /// - n=0: without iterator; bridge every second edge with a face
-    /// - m=0: without start; generate a line strip
-    /// - a really long iterator that spirals around the original mesh in multiple layers
-    /// - Iterator of length 1: will insert one vertex and make a face with the `m` next vertices of the boundary
+    /// see `crochet(start, n, m, true, false, false, vp)`
     #[must_use]
     fn loft_polygon(
         &mut self,
@@ -290,86 +360,7 @@ where
     where
         T::Mesh: MeshBuilder<T>,
     {
-        assert!(n >= 2);
-        assert!(m >= 2);
-
-        return None;
-
-        /*assert!(n >= 2);
-        assert!(m >= 2);
-        // TODO: implement the special cases of n=1 (insert one vertex only and generate tip) and m=1 (use only one vertex of the boundary and create a fan around it), and even n=0 (without iterator; bridge every second edge with a face) and m=0 (without start; generate a line strip)
-        // TODO: replace all loft methods with this one. Quad is just n=2, m=2, triangle is two lofts: n=2, m=1 and n=0, m=2
-
-        let mut iter = vp.into_iter();
-        let mut input = start;
-        let start_vertex = self.edge(start).origin_id();
-        let Some(vp) = iter.next() else {
-            return None;
-        };
-        let (first_edge, first_vertex) = self.insert_vertex_e(self.edge(start).prev_id(), vp, Default::default())?;
-        println!("first_edge: {} {}", first_edge, first_vertex);
-
-        let mut ret = start;
-        loop {
-            // Move `input` forward along the boundary
-            input = self.edge(input).next_id();
-
-            // TODO: only provisory impl!
-            assert!(n == 2);
-
-            // Initialize `inside` edge
-            let mut inside = self.edge(input).prev(self).prev_id();
-            for _ in 2..n {
-                let Some(vp) = iter.next() else {
-                    return Some(ret);
-                };
-                // Insert vertex between `inside`'s previous edge and `inside`
-                let (e1, _) =
-                    self.insert_vertex_e(self.edge(inside).prev_id(), vp, Default::default())?;
-                inside = e1;
-
-                // Set `ret` to the edge pointing to the first generated vertex
-                if ret == start {
-                    ret = self.edge(e1).twin_id();
-                }
-            }
-
-            // TODO: only provisory impl!
-            assert!(m == 2);
-
-            // Move `input` forward along the boundary for `m - 2` steps
-            for _ in 2..m {
-                input = self.edge(input).next_id();
-            }
-
-            let Some(vp) = iter.next() else {
-                if start_vertex == self.edge(input).origin_id() {
-                    // Reached the start again - close the last face
-                    self.close_face_ee_legacy(
-                        input,
-                        self.edge(inside).prev_id(),
-                        Default::default(),
-                        Default::default(),
-                    )?;
-                }
-                return Some(ret);
-            };
-            // Insert a new vertex between the previous edge of `input` and `input`
-            self.insert_vertex_e(self.edge(input).prev_id(), vp, Default::default())?;
-
-            // Close the face between `inside` and the new vertex
-            self.close_face_ee_legacy(
-                self.edge(input).prev(self).twin_id(),
-                self.edge(inside).prev_id(),
-                Default::default(),
-                Default::default(),
-            )?;
-
-            // When `n == 2`, we cannot set `ret` until now
-            if ret == start {
-                ret = self.edge(inside).prev(self).twin_id();
-            }
-        }*/
+        self.crochet(start, n, m, true, false, false, vp)
     }
 }
 
