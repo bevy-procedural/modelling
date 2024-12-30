@@ -594,7 +594,7 @@ mod tests {
                         vp: vp.clone(),
                         return_none: false,
                         area_in_appended_faces: Some(wedge_area(n)),
-                        num_appended_edges: 2 * (n - 1) + 1,
+                        num_appended_edges: 2 * n - 1,
                         num_appended_faces: n - 1,
                         small_face_size: 0,
                         num_inserted_vertices: n,
