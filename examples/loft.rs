@@ -12,7 +12,7 @@ fn lofted_polygon(sides: usize, n: usize, m: usize, autoclose: bool, open: bool)
     let e = mesh.insert_regular_polygon(1.0, sides);
     println!("{:?}", mesh);
     println!("{:?}", e);
-    /*mesh.crochet(
+    mesh.crochet(
         e,
         n,
         m,
@@ -25,8 +25,8 @@ fn lofted_polygon(sides: usize, n: usize, m: usize, autoclose: bool, open: bool)
             0.0,
         )
         .take(16),
-    );*/
-    mesh.crochet(
+    );
+    /*mesh.crochet(
         e,
         n,
         m,
@@ -39,7 +39,7 @@ fn lofted_polygon(sides: usize, n: usize, m: usize, autoclose: bool, open: bool)
             0.0,
         )
         .take(16),
-    );
+    );*/
     mesh.flip_yz().translate(&Vec3::new(0.0, 0.1, 0.0));
 
     for face in mesh.faces() {
@@ -58,8 +58,8 @@ fn generate_mesh(
 ) {
     for (i, mut mesh) in [
         lofted_polygon(8, 3, 3, true, false),
-        lofted_polygon(3, 2, 2, true, false),
-        lofted_polygon(3, 2, 2, false, false),
+        lofted_polygon(4, 3, 3, true, false),
+        lofted_polygon(4, 3, 3, false, false),
     ]
     .iter()
     .cloned()

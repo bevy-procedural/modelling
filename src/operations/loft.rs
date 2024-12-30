@@ -193,7 +193,7 @@ where
     ) -> Option<(T::E, T::E)> {
         assert!(n + m >= 3, "n+m must be at least 3");
         assert!(
-            !autoclose || !open,
+            !(autoclose && open),
             "autoclose and open cannot be true at the same time"
         );
 
@@ -206,23 +206,14 @@ where
 
         // PERF: Instead of insert_face, we could directly insert the face indices when creating the edges
 
-        let walk_edge = |mesh: &T::Mesh, edge: T::E| {
-            if backwards {
-                mesh.edge(edge).prev_id()
-            } else {
-                mesh.edge(edge).next_id()
-            }
-        };
-
         // insert the outer boundary
         let mut iter = vp.into_iter();
         let mut inner = self.edge(start).prev_id();
         let mut last = false;
         let mut last_inner = if backwards {
-            start
+            self.edge(inner).next_id()
         } else {
-            // TODO: This is suspicious
-            self.edge(start).next_id()
+            self.edge(inner).prev_id()
         };
         let current_inner = inner;
         let mut outer = IndexType::max();
@@ -237,7 +228,11 @@ where
                     println!("Reached start again");
                     return Some((first_edge, last_edge));
                 }
-                inner = walk_edge(self, inner);
+                inner = if backwards {
+                    self.edge(inner).prev_id()
+                } else {
+                    self.edge(inner).next_id()
+                };
             }
 
             // insert first diagonal towards bow in the first iteration
@@ -280,7 +275,11 @@ where
             let autoclose_now = autoclose && last && inner == last_inner;
             if autoclose_now {
                 // automatically close the shape
-                inner = walk_edge(self, inner);
+                inner = if backwards {
+                    self.edge(inner).prev_id()
+                } else {
+                    self.edge(inner).next_id()
+                }
             }
 
             // Insert the diagonal between inner and outer and create a face
@@ -364,6 +363,7 @@ mod tests {
         num_appended_edges: usize,
         num_boundary_edges: usize,
         num_appended_faces: usize,
+        small_face_size: usize,
         num_inserted_vertices: usize,
         num_inner_edges: usize,
         num_true_boundary: usize,
@@ -465,9 +465,29 @@ mod tests {
             inserted_halfedges.len() / 2
         );
 
-        for face in inserted_faces {
-            assert_eq!(mesh.face(face).vertices(&mesh).count(), config.n + config.m);
+        let small_face = inserted_faces
+            .iter()
+            .find(|f| mesh.face(**f).vertices(&mesh).count() < config.n + config.m)
+            .cloned();
+        assert_eq!(
+            inserted_faces
+                .iter()
+                .filter(|f| mesh.face(**f).vertices(&mesh).count() == config.n + config.m)
+                .count(),
+            config.num_appended_faces - if config.small_face_size > 0 { 1 } else { 0 }
+        );
+        assert_eq!(small_face.is_some(), config.small_face_size > 0);
+        if small_face.is_some() {
+            assert_eq!(
+                mesh.face(small_face.unwrap()).vertices(&mesh).count(),
+                config.small_face_size,
+            );
+        }
 
+        for face in inserted_faces {
+            if Some(face) == small_face {
+                continue;
+            }
             if let Some(a) = config.area_in_appended_faces {
                 let poly = mesh.face(face).as_polygon(&mesh);
                 assert!(
@@ -574,6 +594,7 @@ mod tests {
                         area_in_appended_faces: Some(wedge_area(n)),
                         num_appended_edges: 2 * (n - 1) + 1,
                         num_appended_faces: n - 1,
+                        small_face_size: 0,
                         num_inserted_vertices: n,
                         num_boundary_edges: n + 2,
                         num_inner_edges: n - 1 + n - 2,
@@ -598,6 +619,7 @@ mod tests {
                         area_in_appended_faces: Some(wedge_area(n)),
                         num_appended_edges: 2 * n,
                         num_appended_faces: n,
+                        small_face_size: 0,
                         num_inserted_vertices: n,
                         num_boundary_edges: n,
                         num_inner_edges: 2 * n,
@@ -610,6 +632,72 @@ mod tests {
                         first_edge_is_start: false,
                         last_edge_is_start: false,
                     },
+                ] {
+                    run_crochet_test(c);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_crochet_3_3() {
+        for n in [4] {
+            for backwards in [true] {
+                let vp = if backwards {
+                    circle_iter::<3, MeshType3d64PNU>(n, 2.0, 0.0).collect_vec()
+                } else {
+                    circle_iter_back::<3, MeshType3d64PNU>(n, 2.0, 0.0).collect_vec()
+                };
+                for c in [
+                    LoftTestConfig {
+                        n: 3,
+                        m: 3,
+                        backwards,
+                        autoclose: false,
+                        open: false,
+                        mesh: regular_polygon(n),
+                        vp: vp.clone(),
+                        return_none: false,
+                        area_in_appended_faces: Some(2.0 * wedge_area(n)),
+                        num_appended_edges: n + n / 2,
+                        num_appended_faces: n / 2,
+                        small_face_size: 5,
+                        num_inserted_vertices: n,
+                        num_boundary_edges: n + 1,
+                        num_inner_edges: n + n / 2 - 1,
+                        num_diagonals: n / 2 + 1,
+                        num_true_boundary: n - 1,
+                        connected: true,
+                        first_edge_is_diagonal: false,
+                        last_first_adjacent: false,
+                        first_last_reach_old_boundary: true,
+                        first_edge_is_start: false,
+                        last_edge_is_start: false,
+                    },
+                    /*LoftTestConfig {
+                        n: 3,
+                        m: 3,
+                        backwards,
+                        autoclose: true,
+                        open: false,
+                        mesh: regular_polygon(n),
+                        vp: vp.clone(),
+                        return_none: false,
+                        area_in_appended_faces: Some(wedge_area(n)),
+                        num_appended_edges: 2 * n,
+                        num_appended_faces: n,
+                        num_inserted_vertices: n,
+                        num_boundary_edges: n,
+                        num_inner_edges: 2 * n,
+                        num_diagonals: n,
+                        num_true_boundary: n,
+                        connected: true,
+                        first_edge_is_diagonal: false,
+                        last_first_adjacent: true,
+                        first_last_reach_old_boundary: false,
+                        first_edge_is_start: false,
+                        last_edge_is_start: false,
+                    },*/
                 ] {
                     run_crochet_test(c);
                 }
