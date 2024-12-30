@@ -2,6 +2,7 @@ use crate::{
     math::IndexType,
     mesh::{EdgeBasics, FaceBasics, MeshType, VertexBasics},
 };
+use std::collections::HashSet;
 
 /// Some basic operations to retrieve information about the mesh.
 pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clone {
@@ -158,4 +159,87 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     ///
     /// TODO: Currently cannot distinguish between holes and "the outside"
     fn shared_face(&self, v0: T::V, v1: T::V) -> Option<T::F>;
+
+    /// Returns whether the mesh is connected, i.e., has only one connected component.
+    fn is_connected(&self) -> bool {
+        let mut seen = HashSet::<T::V>::new();
+        let mut stack = Vec::<T::V>::new();
+        if let Some(v) = self.vertices().next() {
+            stack.push(v.id());
+            seen.insert(v.id());
+        } else {
+            return true;
+        }
+        while let Some(v) = stack.pop() {
+            for e in self.vertex(v).edges_out(self) {
+                let w = e.target(self).id();
+                if !seen.contains(&w) {
+                    stack.push(w);
+                    seen.insert(w);
+                }
+            }
+        }
+        seen.len() == self.num_vertices()
+    }
+
+    /// Returns the connected components of the mesh.
+    fn connected_components(&self) -> Vec<Self> {
+        // TODO: test
+        let mut components = Vec::<Self>::new();
+        let mut seen = HashSet::<T::V>::new();
+        for v in self.vertices() {
+            if seen.contains(&v.id()) {
+                continue;
+            }
+            let mut stack = Vec::<T::V>::new();
+            stack.push(v.id());
+            seen.insert(v.id());
+            let mut component = Vec::<T::V>::new();
+            while let Some(v) = stack.pop() {
+                component.push(v);
+                for e in self.vertex(v).edges_out(self) {
+                    let w = e.target(self).id();
+                    if !seen.contains(&w) {
+                        stack.push(w);
+                        seen.insert(w);
+                    }
+                }
+            }
+            // PERF: `submesh` is slow because it doesn't know that we want the whole connected component so it has to iterate over much more vertices.
+            components.push(self.submesh(component.into_iter()));
+        }
+        components
+    }
+
+    /// Returns the subgraph induced by the given vertices.
+    fn submesh<Iter: Iterator<Item = T::V>>(&self, vertices: Iter) -> Self {
+        // TODO: test
+        todo!("{:?}", vertices.collect::<Vec<_>>())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{extensions::nalgebra::*, prelude::*};
+
+    #[test]
+    fn test_mesh_connected() {
+        let mut mesh = Mesh3d64::default();
+        assert!(mesh.is_connected());
+        mesh.insert_regular_polygon(1.0, 10);
+        assert!(mesh.is_connected());
+        let v = mesh.insert_vertex(VertexPayloadPNU::from_pos(Vec3::default()));
+        assert!(!mesh.is_connected());
+        mesh.remove_vertex(v);
+        assert!(mesh.is_connected());
+        mesh.insert_regular_polygon(1.0, 10);
+        assert!(!mesh.is_connected());
+
+        let mut mesh = Mesh3d64::cube(1.0);
+        assert!(mesh.is_connected());
+        mesh.insert_regular_polygon(1.0, 3);
+        assert!(!mesh.is_connected());
+        mesh.insert_regular_polygon(1.0, 3);
+        assert!(!mesh.is_connected());
+    }
 }

@@ -22,6 +22,7 @@ where
     /// If `shift` is true, the first inserted triangle will be with the tip pointing to the target of `start`.
     /// Otherwise, the first triangle will include the edge `start`.
     /// This doesn't affect the number of triangles but shifts the "hem" by one.
+    #[deprecated(note = "Use `crochet` instead")]
     fn loft_tri(&mut self, start: T::E, shift: bool, vp: impl IntoIterator<Item = T::VP>) -> T::E {
         // TODO: a more efficient implementation could bulk-insert everything at once
         // TODO: assertions
@@ -84,6 +85,7 @@ where
 
     /// Like `loft_tri` but closes the "hem" with a face.
     /// Returns the edge pointing from the first inserted vertex to the second inserted vertex.
+    #[deprecated(note = "Use `crochet` instead")]
     fn loft_tri_closed(&mut self, start: T::E, vp: impl IntoIterator<Item = T::VP>) -> T::E {
         let e = self.loft_tri(start, false, vp);
         let inside = self.edge(e).twin(self).prev_id();
@@ -181,7 +183,7 @@ where
         autoclose: bool,
         open: bool,
         vp: impl IntoIterator<Item = T::VP>,
-    ) -> Option<T::E> {
+    ) -> Option<(T::E, T::E)> {
         assert!(n + m >= 3, "n+m must be at least 3");
         assert!(
             !autoclose || !open,
@@ -196,9 +198,6 @@ where
         assert!(backwards);
         // TODO
         assert!(!open);
-
-        // TODO: implement the special cases of n=1 (insert one vertex only and generate tip) and m=1 (use only one vertex of the boundary and create a fan around it), and even n=0 (without iterator; bridge every second edge with a face) and m=0 (without start; generate a line strip)
-        // TODO: replace all loft methods with this one. Quad is just n=2, m=2, triangle is two lofts: n=2, m=1 and n=0, m=2
 
         // PERF: Instead of insert_face, we could directly insert the face indices when creating the edges
 
@@ -245,7 +244,7 @@ where
                 outer = e;
 
                 if res == None {
-                    res = Some(e);
+                    res = Some((e, e)); // TODO:
                 }
             }
 
@@ -280,72 +279,8 @@ where
         n: usize,
         m: usize,
         vp: impl IntoIterator<Item = T::VP>,
-    ) -> Option<T::E> {
+    ) -> Option<(T::E, T::E)> {
         self.crochet(start, n, m, true, true, false, vp)
-
-        /*
-        assert!(n >= 2);
-        assert!(m >= 2);
-        // TODO: implement the special cases of n=1 (insert one vertex only and generate tip) and m=1 (use only one vertex of the boundary and create a fan around it), and even n=0 (without iterator; bridge every second edge with a face) and m=0 (without start; generate a line strip)
-        // TODO: replace all loft methods with this one. Quad is just n=2, m=2, triangle is two lofts: n=2, m=1 and n=0, m=2
-
-        let mut iter = vp.into_iter();
-        let mut input = start;
-        let start_vertex = self.edge(start).target_id(self);
-        if let Some(vp) = iter.next() {
-            self.insert_vertex_e(input, vp, Default::default());
-        }
-
-        let mut ret = start;
-        loop {
-            input = self.edge(input).prev_id();
-
-            let mut inside = self.edge(input).next(self).next_id();
-            for _ in 2..n {
-                let Some(vp) = iter.next() else {
-                    return ret;
-                };
-                let (e1, _) = self
-                    .insert_vertex_e(inside, vp, Default::default())
-                    .unwrap(); // TODO: error handling
-                inside = e1;
-
-                // the edge pointing to the first generated vertex
-                if ret == start {
-                    ret = self.edge(e1).twin_id();
-                }
-            }
-
-            for _ in 2..m {
-                input = self.edge(input).prev_id();
-            }
-
-            let Some(vp) = iter.next() else {
-                if start_vertex == self.edge(input).target_id(self) {
-                    // reached the start again - close the last vertex!
-                    self.close_face_ee_legacy(
-                        inside,
-                        self.edge(input).prev_id(),
-                        Default::default(),
-                        Default::default(),
-                    );
-                }
-                return ret;
-            };
-
-            self.insert_vertex_e(input, vp, Default::default());
-            self.close_face_ee_legacy(
-                inside,
-                self.edge(input).next_id(),
-                Default::default(),
-                Default::default(),
-            );
-
-            // when n==2, we cannot set the `ret` until now
-            if ret == start {
-                ret = self.edge(inside).next(self).twin_id();
-            }
-        }*/
     }
 
     /// see `crochet(start, n, m, true, false, false, vp)`
@@ -356,7 +291,7 @@ where
         n: usize,
         m: usize,
         vp: impl IntoIterator<Item = T::VP>,
-    ) -> Option<T::E>
+    ) -> Option<(T::E, T::E)>
     where
         T::Mesh: MeshBuilder<T>,
     {
@@ -364,4 +299,162 @@ where
     }
 }
 
-// TODO: tests!
+#[cfg(test)]
+mod tests {
+    use crate::{extensions::nalgebra::*, prelude::*};
+    use itertools::Itertools;
+    use std::{collections::HashSet, hash::RandomState};
+
+    struct LoftTestConfig {
+        n: usize,
+        m: usize,
+        backwards: bool,
+        autoclose: bool,
+        open: bool,
+        mesh_start: (Mesh3d64, usize),
+        vp: Vec<VertexPayloadPNU<f64, 3>>,
+
+        // the following are expected results
+        return_none: bool,
+        area_in_appended_faces: Option<f64>,
+        num_appended_edges: usize,
+        num_boundary_edges: usize,
+        num_appended_faces: usize,
+        num_inserted_vertices: usize,
+        num_inner_edges: usize,
+        connected: bool, // TODO:
+    }
+
+    fn run_loft_test(config: LoftTestConfig) {
+        let mut mesh = config.mesh_start.0.clone();
+        let res = mesh.crochet(
+            config.mesh_start.1,
+            config.n,
+            config.m,
+            config.backwards,
+            config.autoclose,
+            config.open,
+            config.vp,
+        );
+        assert_eq!(res.is_none(), config.return_none);
+        assert_eq!(mesh.check(), Ok(()));
+
+        println!("{:?}", mesh);
+
+        let old_vertices: HashSet<usize, RandomState> =
+            HashSet::from_iter(config.mesh_start.0.vertex_ids());
+        let new_vertices: HashSet<usize, RandomState> = HashSet::from_iter(mesh.vertex_ids());
+        assert!(old_vertices.is_subset(&new_vertices));
+        let inserted_vertices: HashSet<usize, RandomState> =
+            HashSet::from_iter(new_vertices.symmetric_difference(&old_vertices).cloned());
+        assert_eq!(inserted_vertices.len(), config.num_inserted_vertices);
+
+        let old_edges: HashSet<usize, RandomState> =
+            HashSet::from_iter(config.mesh_start.0.edge_ids());
+        let new_edges: HashSet<usize, RandomState> = HashSet::from_iter(mesh.edge_ids());
+        assert!(old_edges.is_subset(&new_edges));
+        let inserted_edges: HashSet<usize, RandomState> =
+            HashSet::from_iter(new_edges.symmetric_difference(&old_edges).cloned());
+        assert_eq!(inserted_edges.len(), 2 * config.num_appended_edges);
+
+        let old_faces: HashSet<usize, RandomState> =
+            HashSet::from_iter(config.mesh_start.0.face_ids());
+        let new_faces: HashSet<usize, RandomState> = HashSet::from_iter(mesh.face_ids());
+        assert!(old_faces.is_subset(&new_faces));
+        let inserted_faces: HashSet<usize, RandomState> =
+            HashSet::from_iter(new_faces.symmetric_difference(&old_faces).cloned());
+        assert_eq!(inserted_faces.len(), config.num_appended_faces);
+
+        let boundary_edges = mesh
+            .edges()
+            .filter(|e| e.is_boundary_self())
+            .map(|e| e.id())
+            .collect_vec();
+        assert_eq!(boundary_edges.len(), config.num_boundary_edges);
+
+        let inner_edges = mesh
+            .twin_edges()
+            .filter(|(e, _)| !e.is_boundary(&mesh))
+            .map(|(e, ee)| (e.id(), ee.id()))
+            .collect_vec();
+        assert_eq!(inner_edges.len(), config.num_inner_edges);
+
+        for face in inserted_faces {
+            assert_eq!(mesh.face(face).vertices(&mesh).count(), config.n + config.m);
+
+            if let Some(a) = config.area_in_appended_faces {
+                let poly = mesh.face(face).as_polygon(&mesh);
+                assert!(
+                    poly.signed_area().is_about(a, 1e-6),
+                    "face {}: {} != {}, {:?}",
+                    face,
+                    poly.signed_area(),
+                    a,
+                    mesh.face(face).vertex_ids(&mesh).collect_vec()
+                );
+            };
+        }
+
+        assert_eq!(mesh.is_connected(), config.connected);
+
+        if !config.return_none {
+           
+
+        let (first_edge, last_edge) = res.unwrap();
+        //assert!(boundary_edges.contains(&first_edge));
+        //assert!(boundary_edges.contains(&last_edge));
+        }
+    }
+
+    fn regular_polygon(n: usize) -> (Mesh3d64, usize) {
+        let mut mesh = Mesh3d64::default();
+        let e = mesh.insert_regular_polygon(1.0, n);
+        (mesh, e)
+    }
+
+    #[test]
+    fn test_crochet_2_2() {
+        let wedge_area =
+            |n: usize| (regular_polygon_area(2.0, n) - regular_polygon_area(1.0, n)) / (n as f64);
+        for n in [3, 4, 6, 7, 20] {
+            for c in [
+                LoftTestConfig {
+                    n: 2,
+                    m: 2,
+                    backwards: true,
+                    autoclose: false,
+                    open: false,
+                    mesh_start: regular_polygon(n),
+                    vp: circle_iter::<3, MeshType3d64PNU>(n, 2.0, 0.0).collect_vec(),
+                    return_none: false,
+                    area_in_appended_faces: Some(wedge_area(n)),
+                    num_appended_edges: 2 * (n - 1) + 1,
+                    num_appended_faces: n - 1,
+                    num_inserted_vertices: n,
+                    num_boundary_edges: n + 2,
+                    num_inner_edges: n - 1 + n - 2,
+                    connected: true,
+                },
+                LoftTestConfig {
+                    n: 2,
+                    m: 2,
+                    backwards: true,
+                    autoclose: true,
+                    open: false,
+                    mesh_start: regular_polygon(n),
+                    vp: circle_iter::<3, MeshType3d64PNU>(n, 2.0, 0.0).collect_vec(),
+                    return_none: false,
+                    area_in_appended_faces: Some(wedge_area(n)),
+                    num_appended_edges: 2 * n,
+                    num_appended_faces: n,
+                    num_inserted_vertices: n,
+                    num_boundary_edges: n,
+                    num_inner_edges: 2 * n,
+                    connected: true,
+                },
+            ] {
+                run_loft_test(c);
+            }
+        }
+    }
+}

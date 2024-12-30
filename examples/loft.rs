@@ -1,40 +1,39 @@
 //! In this example, we demonstrate different uses of the loft and extrude methods.
 
 use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
-use procedural_modelling::{extensions::bevy::*, mesh, prelude::*};
+use procedural_modelling::{extensions::bevy::*, math::Polygon, mesh, prelude::*};
 #[path = "common/bevy.rs"]
 mod bevy_examples;
 
 // TODO: demonstrate other configurations
 
-fn lofted_polygon(sides: usize, n: usize, m: usize) -> BevyMesh3d {
-    let circle_iter = |n: usize, r: f32, shift: f32| {
-        let npi2: f32 = 2.0 / (n as f32) * std::f32::consts::PI;
-        (0..n).map(move |i| {
-            BevyVertexPayload3d::from_pos(Vec3::new(
-                ((i as f32 + shift) * npi2).sin() * r,
-                0.1,
-                ((i as f32 + shift) * npi2).cos() * r,
-            ))
-        })
-    };
-
+fn lofted_polygon(sides: usize, n: usize, m: usize, autoclose: bool, open: bool) -> BevyMesh3d {
     let mut mesh = BevyMesh3d::default();
     let e = mesh.insert_regular_polygon(1.0, sides);
     println!("{:?}", mesh);
-    mesh.flip_yz()
-        .translate(&Vec3::new(0.0, 0.1, 0.0))
-        .loft_polygon_back(
-            e,
-            n,
-            m,
-            circle_iter(
-                (((n - 1) as f32) / ((m - 1) as f32) * sides as f32) as usize,
-                2.0,
-                0.0,
-            )
-            .take(16),
-        );
+    println!("{:?}", e);
+    mesh.crochet(
+        e,
+        n,
+        m,
+        true,
+        autoclose,
+        open,
+        circle_iter::<3, BevyMeshType3d32>(
+            (((n - 1) as f32) / ((m - 1) as f32) * sides as f32) as usize,
+            2.0,
+            0.0,
+        )
+        .take(16),
+    )
+    .unwrap();
+    mesh.flip_yz().translate(&Vec3::new(0.0, 0.1, 0.0));
+
+    for face in mesh.faces() {
+        let poly = face.as_polygon(&mesh);
+        println!("{:?}", poly.area());
+    }
+
     mesh
 }
 
@@ -44,12 +43,16 @@ fn generate_mesh(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut texts: ResMut<Text3dGizmos>,
 ) {
-    for (i, mut mesh) in [lofted_polygon(8, 3, 3), lofted_polygon(4, 2, 2)]
-        .iter()
-        .cloned()
-        .enumerate()
+    for (i, mut mesh) in [
+        lofted_polygon(8, 3, 3, true, false),
+        lofted_polygon(4, 2, 2, true, false),
+        lofted_polygon(4, 2, 2, false, false),
+    ]
+    .iter()
+    .cloned()
+    .enumerate()
     {
-        mesh.translate(&Vec3::new((i as f32 - 0.5) * 4.0, 0.0, 0.0));
+        mesh.translate(&Vec3::new(((i as f32 - 1.0) - 0.5) * 4.0, 0.0, 0.0));
 
         show_vertex_indices(&mut texts, &mesh);
         //show_edges(&mut texts, &mesh, 0.1);

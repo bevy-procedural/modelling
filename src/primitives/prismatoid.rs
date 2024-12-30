@@ -138,7 +138,7 @@ where
         smooth: bool,
     ) -> T::E {
         let first = self.insert_polygon(base);
-        let top_edge = self.loft_polygon(first, 2, 2, top).unwrap();
+        let top_edge = self.loft_polygon(first, 2, 2, top).unwrap().0;
         self.insert_face(top_edge, Default::default());
         // TODO: smooth
         assert!(!smooth, "Smooth frustums not yet implemented");
@@ -178,8 +178,8 @@ where
                 vp(p.x(), p.y(), p.z()),
                 vp(-p.x(), p.y(), p.z()),
             ],
-        );
-        mesh.insert_face(top_edge.unwrap(), Default::default());
+        ).unwrap().0;
+        mesh.insert_face(top_edge, Default::default());
         mesh
     }
 

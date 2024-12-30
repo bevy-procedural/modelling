@@ -61,7 +61,7 @@ where
         for i in 1..(n - 1) {
             prev = mesh
                 .loft_polygon_back(prev, 2, 2, (0..m).map(|j| make_vp(i + 1, j)))
-                .unwrap();
+                .unwrap().0;
         }
 
         // bottom pole
@@ -90,7 +90,7 @@ where
 
         // TODO: polygon should return something more helpful
         let start = mesh.shared_edge_id(T::V::new(1), T::V::new(0)).unwrap();
-        let start_middle = mesh
+        let (start_middle, _) = mesh
             .loft_polygon_back(
                 start,
                 3,
@@ -110,7 +110,7 @@ where
             )
             .unwrap();
 
-        let start_bottom = mesh
+        let (start_bottom, _) = mesh
             .loft_polygon_back(
                 mesh.edge(start_middle).next_id(),
                 2,

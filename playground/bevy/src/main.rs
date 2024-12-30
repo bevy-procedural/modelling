@@ -1,9 +1,8 @@
 //! cargo watch -w playground -w src -x "run -p playground_bevy --profile fast-dev"
 //!
 //! When developing tests, we recommend:
-//! cargo watch -w src -x "test --profile fast-dev"
+//! $env:RUST_BACKTRACE=1;cargo watch -w src -x "test some_test"
 //! cargo llvm-cov --html
-//! $env:RUST_BACKTRACE=1;cargo test
 //! cargo watch -w src -w examples -x "run --example loft --profile fast-dev --features bevy_example"
 
 use bevy::{
