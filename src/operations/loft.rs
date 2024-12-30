@@ -112,7 +112,7 @@ where
     /// e.g., if you have a triangle and insert with `m=2`, then at most one face will be created since
     /// two won't fit.
     ///
-    /// It returns the first and last edge on the new boundary, e.g.,
+    /// It returns the first and last edge on the new boundary, with one edge distance to the boundary, e.g.,
     /// - if `n>=2`: the edge between the first inserted vertex and the second inserted
     ///   vertex and the edge between the last to the second to last. The direction will
     ///   be chosen such that it is the edge that is not part of the inserted face. If the
@@ -122,6 +122,13 @@ where
     /// If there is no new boundary edge, it will return `start` instead.
     /// The function will return `None` if the boundary had unclear connectivity
     /// (which shouldn't happen on half-edge meshes).
+    ///
+    /// The distance to the boundary makes the behavior easier to understand when using `open=false` or `autoclose=true`.
+    /// Think of the mesh constructing the new "true" boundary around the existing boundary and connecting
+    /// it with diagonals to the old boundary to form smaller faces in the room between the new and old boundary.
+    /// When the mesh is autoclosed, all diagonals are inner edges
+    /// while with `open=true` all diagonals are boundary edges.
+    /// The returned edges are always from the "true" boundary and never diagonals.
     ///
     /// The operation is guaranteed to not insert edges that are not incident to any face.
     ///
@@ -148,7 +155,7 @@ where
     ///   - If the iterator has only length `1` and `m <= 11`, the function will return `start` instead.
     ///
     ///
-    /// Some examples to illustrate special cases (also see `--example loft`):
+    /// Some examples to illustrate special cases (see the `loft` example):
     /// - `n=0, m>=3`: append faces by using `m` vertices from the boundary and ignoring the iterator.
     ///    The value of `open` doesn't matter in this case.
     /// - `n=1, m=1, open`: Create a star graph (not a star polygon).
@@ -208,15 +215,15 @@ where
         let mut last_inner = start;
         let current_inner = inner;
         let mut outer = IndexType::max();
-        let mut res = None;
+        let mut first_edge = start;
+        let mut last_edge = start;
 
         loop {
             // Skip the center edges
             for _ in 1..m {
                 if inner == last_inner {
                     // We reached the start again - so we are done!
-                    // TODO: test this!
-                    return res;
+                    return Some((first_edge, last_edge));
                 }
                 inner = self.edge(inner).prev_id();
             }
@@ -234,7 +241,7 @@ where
                 let Some(vp) = iter.next() else {
                     if i == 1 && (n >= 3 || !autoclose) {
                         // We are done - the iterator ended just after the last bow
-                        return res;
+                        return Some((first_edge, last_edge));
                     }
                     // We are done - the iterator ended in the middle of the bow. Close it!
                     last = true;
@@ -243,12 +250,15 @@ where
                 let (e, _) = self.insert_vertex_e(outer, vp, Default::default())?;
                 outer = e;
 
-                if res == None {
-                    res = Some((e, e)); // TODO:
+                let e_twin = self.edge(e).twin_id();
+                if first_edge == start {
+                    first_edge = e_twin;
                 }
+                last_edge = e_twin;
             }
 
-            if autoclose && last && inner == last_inner {
+            let autoclose_now = autoclose && last && inner == last_inner;
+            if autoclose_now {
                 // automatically close the shape
                 inner = self.edge(inner).prev_id();
             }
@@ -256,6 +266,11 @@ where
             // Insert the diagonal between inner and outer and create a face
             outer = self.insert_edge_ee(inner, self.edge(outer).next_id(), Default::default())?;
             self.insert_face(self.edge(outer).twin_id(), Default::default())?;
+
+            if autoclose_now {
+                // the last face was closed; this counts as the last boundary!
+                last_edge = outer;
+            }
 
             // TODO: Why is this not the same as above?
             /*let (e, f) = self.close_face_ee(
@@ -267,7 +282,7 @@ where
             outer = self.edge(e).twin_id();*/
 
             if last {
-                return res;
+                return Some((first_edge, last_edge));
             }
         }
     }
@@ -322,10 +337,12 @@ mod tests {
         num_appended_faces: usize,
         num_inserted_vertices: usize,
         num_inner_edges: usize,
-        connected: bool, // TODO:
+        num_true_boundary: usize,
+        num_diagonals: usize,
+        connected: bool,
     }
 
-    fn run_loft_test(config: LoftTestConfig) {
+    fn run_crochet_test(config: LoftTestConfig) {
         let mut mesh = config.mesh_start.0.clone();
         let res = mesh.crochet(
             config.mesh_start.1,
@@ -349,13 +366,13 @@ mod tests {
             HashSet::from_iter(new_vertices.symmetric_difference(&old_vertices).cloned());
         assert_eq!(inserted_vertices.len(), config.num_inserted_vertices);
 
-        let old_edges: HashSet<usize, RandomState> =
+        let old_halfedges: HashSet<usize, RandomState> =
             HashSet::from_iter(config.mesh_start.0.edge_ids());
-        let new_edges: HashSet<usize, RandomState> = HashSet::from_iter(mesh.edge_ids());
-        assert!(old_edges.is_subset(&new_edges));
-        let inserted_edges: HashSet<usize, RandomState> =
-            HashSet::from_iter(new_edges.symmetric_difference(&old_edges).cloned());
-        assert_eq!(inserted_edges.len(), 2 * config.num_appended_edges);
+        let new_halfedges: HashSet<usize, RandomState> = HashSet::from_iter(mesh.edge_ids());
+        assert!(old_halfedges.is_subset(&new_halfedges));
+        let inserted_halfedges: HashSet<usize, RandomState> =
+            HashSet::from_iter(new_halfedges.symmetric_difference(&old_halfedges).cloned());
+        assert_eq!(inserted_halfedges.len(), 2 * config.num_appended_edges);
 
         let old_faces: HashSet<usize, RandomState> =
             HashSet::from_iter(config.mesh_start.0.face_ids());
@@ -379,6 +396,39 @@ mod tests {
             .collect_vec();
         assert_eq!(inner_edges.len(), config.num_inner_edges);
 
+        let old_boundary: HashSet<usize, RandomState> = HashSet::from_iter(
+            config
+                .mesh_start
+                .0
+                .edges()
+                .filter(|e| e.is_boundary_self())
+                .map(|e| e.id())
+                .collect_vec(),
+        );
+        let old_boundary_vertices: HashSet<usize, RandomState> =
+            HashSet::from_iter(old_boundary.iter().map(|e| mesh.edge(*e).origin_id()));
+        let diagonals: HashSet<usize, RandomState> = HashSet::from_iter(
+            inserted_halfedges
+                .iter()
+                .filter(|e| old_boundary_vertices.contains(&mesh.edge(**e).origin_id()))
+                .cloned(),
+        );
+        assert_eq!(diagonals.len(), config.num_diagonals);
+        let true_boundary: HashSet<usize, RandomState> = HashSet::from_iter(
+            boundary_edges
+                .iter()
+                .filter(|e| {
+                    !(diagonals.contains(e) || diagonals.contains(&mesh.edge(**e).twin_id()))
+                        && inserted_halfedges.contains(e)
+                })
+                .cloned(),
+        );
+        assert_eq!(true_boundary.len(), config.num_true_boundary);
+        assert_eq!(
+            true_boundary.len() + diagonals.len(),
+            inserted_halfedges.len() / 2
+        );
+
         for face in inserted_faces {
             assert_eq!(mesh.face(face).vertices(&mesh).count(), config.n + config.m);
 
@@ -398,11 +448,15 @@ mod tests {
         assert_eq!(mesh.is_connected(), config.connected);
 
         if !config.return_none {
-           
-
-        let (first_edge, last_edge) = res.unwrap();
-        //assert!(boundary_edges.contains(&first_edge));
-        //assert!(boundary_edges.contains(&last_edge));
+            let (first_edge, last_edge) = res.unwrap();
+            assert!(boundary_edges.contains(&first_edge));
+            assert!(boundary_edges.contains(&last_edge));
+            if true_boundary.len() > 0 {
+                assert!(true_boundary.contains(&first_edge));
+                assert!(true_boundary.contains(&last_edge));
+            }
+            assert!(mesh.edge(first_edge).is_boundary_self());
+            assert!(mesh.edge(last_edge).is_boundary_self());
         }
     }
 
@@ -411,11 +465,12 @@ mod tests {
         let e = mesh.insert_regular_polygon(1.0, n);
         (mesh, e)
     }
+    fn wedge_area(n: usize) -> f64 {
+        (regular_polygon_area(2.0, n) - regular_polygon_area(1.0, n)) / (n as f64)
+    }
 
     #[test]
     fn test_crochet_2_2() {
-        let wedge_area =
-            |n: usize| (regular_polygon_area(2.0, n) - regular_polygon_area(1.0, n)) / (n as f64);
         for n in [3, 4, 6, 7, 20] {
             for c in [
                 LoftTestConfig {
@@ -433,6 +488,8 @@ mod tests {
                     num_inserted_vertices: n,
                     num_boundary_edges: n + 2,
                     num_inner_edges: n - 1 + n - 2,
+                    num_diagonals: n,
+                    num_true_boundary: n - 1,
                     connected: true,
                 },
                 LoftTestConfig {
@@ -450,10 +507,12 @@ mod tests {
                     num_inserted_vertices: n,
                     num_boundary_edges: n,
                     num_inner_edges: 2 * n,
+                    num_diagonals: n,
+                    num_true_boundary: n,
                     connected: true,
                 },
             ] {
-                run_loft_test(c);
+                run_crochet_test(c);
             }
         }
     }
