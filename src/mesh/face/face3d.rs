@@ -88,6 +88,9 @@ pub trait Face3d<T: MeshType3D<Face = Self>>: FaceBasics<T> {
     fn normal(&self, mesh: &T::Mesh) -> T::Vec {
         // TODO: overload this in a way that allows different dimensions
         // TODO: allows only for slight curvature...
+
+        println!("Normal of face {:?} {:?}", self.id(), self.vertices(mesh).map(|v| v.pos()).collect::<Vec<_>>());
+
         debug_assert!(
             self.may_be_curved() || self.is_planar2(mesh),
             "Face is not planar {:?}",
@@ -96,12 +99,12 @@ pub trait Face3d<T: MeshType3D<Face = Self>>: FaceBasics<T> {
 
         let normal = self.vertices(mesh).map(|v| v.pos()).normal();
 
-        /* assert!(
+        debug_assert!(
             normal.length_squared() >= T::S::EPS,
             "Degenerated face {} {:?}",
             self.id(),
             self.vertices(mesh).map(|v| v.pos()).collect::<Vec<_>>()
-        );*/
+        );
 
         normal
     }
@@ -119,6 +122,8 @@ pub trait Face3d<T: MeshType3D<Face = Self>>: FaceBasics<T> {
         assert!(T::Vec::dimensions() == 2);
         self.vertices(mesh).map(|v| *v.vertex())
     }*/
+
+    // TODO: move the vec2 / polygon functions to a general trait
 
     /// Get an iterator over the 2d vertices of the face rotated to the XY plane.
     fn vertices_2d<'a>(
@@ -140,6 +145,11 @@ pub trait Face3d<T: MeshType3D<Face = Self>>: FaceBasics<T> {
         self.vertices_2d(mesh)
             .map(|(p, i)| IndexedVertex2D::<T::V, T::Vec2>::new(p, i))
             .collect()
+    }
+
+    /// Returns the vertices as a polygon.
+    fn polygon<const D: usize>(&self, mesh: &T::Mesh) -> T::Poly {
+        T::Poly::from_iter(self.vertices_2d(mesh).map(|(v, _)| v))
     }
 
     /// Returns the polygon of the face rotated to the XY plane.

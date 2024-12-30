@@ -4,6 +4,7 @@
 //! cargo watch -w src -x "test --profile fast-dev"
 //! cargo llvm-cov --html
 //! $env:RUST_BACKTRACE=1;cargo test
+//! cargo watch -w src -w examples -x "run --example loft --profile fast-dev --features bevy_example"
 
 use bevy::{
     pbr::{
@@ -19,7 +20,7 @@ use bevy_inspector_egui::{
     InspectorOptions,
 };
 use bevy_panorbit_camera::*;
-use procedural_modelling::{extensions::bevy::*, prelude::*};
+use procedural_modelling::{extensions::bevy::*, mesh::MeshBuilder, prelude::*};
 use std::{env, f32::consts::PI};
 
 #[derive(Reflect, Resource, InspectorOptions)]
@@ -36,7 +37,31 @@ impl Default for GlobalSettings {
 }
 
 fn make_mesh(_settings: &GlobalSettings) -> BevyMesh3d {
-    BevyMesh3d::regular_polygon(2.0, 600)
+    //BevyMesh3d::regular_polygon(2.0, 600)
+    //BevyMesh3d::cube(1.0)
+    let p = Vec3::splat(1.0) * 0.5;
+    let mut mesh = BevyMesh3d::default();
+    let vp = |x, y, z| BevyVertexPayload3d::from_pos(Vec3::new(x, y, z));
+
+    let bottom_edge = mesh.insert_polygon([
+        vp(-p.x(), -p.y(), -p.z()),
+        vp(p.x(), -p.y(), -p.z()),
+        vp(p.x(), p.y(), -p.z()),
+        vp(-p.x(), p.y(), -p.z()),
+    ]);
+    let top_edge = mesh.loft_polygon(
+        bottom_edge,
+        2,
+        2,
+        [
+            vp(-p.x(), -p.y(), p.z()),
+            vp(p.x(), -p.y(), p.z()),
+            /*vp(p.x(), p.y(), p.z()),
+            vp(-p.x(), p.y(), p.z()),*/
+        ],
+    );
+    //mesh.insert_face(top_edge, Default::default());
+    mesh
 }
 
 pub fn main() {

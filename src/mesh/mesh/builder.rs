@@ -49,7 +49,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         }
     }
 
-    /// Creates a new vertex based on `vp` and connects it to edge `e`.
+    /// Creates a new vertex based on `vp` and connects it to (the target of) edge `e`.
     /// Returns the new edge and vertex id.
     ///
     /// Shouldn't fail for half-edge meshes since the connectivity is never ambiguous.
@@ -149,6 +149,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         -> Option<(T::E, T::F)>;
 
     #[must_use]
+    #[deprecated(note = "Use close_face_ee instead")]
     fn close_face_ee_legacy(
         &mut self,
         from: T::E,
@@ -209,7 +210,6 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Insert a path of vertices and edges starting at `vp`.
     /// Returns the first edge  inserted after `vp` as well as the last vertex's id.
     /// If the iterator is empty, the method will return only the vertex `vp`.
-    #[must_use]
     fn insert_path(
         &mut self,
         vp: T::VP,
@@ -254,12 +254,20 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         let mut iter = iter.into_iter();
         let (ep, vp) = iter.next().unwrap();
         let (e, last_v) = self.insert_path(vp, iter);
-        self.insert_edge_vv(
-            last_v,
-            self.edge(e.expect("Iterator too short")).origin(self).id(),
-            ep,
-        )
-        .unwrap()
+        let first_edge = self
+            .insert_edge_vv(
+                last_v,
+                self.edge(e.expect("Iterator too short")).origin(self).id(),
+                ep,
+            )
+            .unwrap();
+
+        debug_assert_eq!(
+            self.edge(first_edge).target(self).id(),
+            self.edge(e.unwrap()).origin(self).id()
+        );
+
+        first_edge
 
         /*
                  fn insert_loop(&mut self, vp: impl IntoIterator<Item = T::VP>) -> T::E

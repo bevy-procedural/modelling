@@ -1,4 +1,6 @@
-use crate::mesh::{DefaultEdgePayload, DefaultFacePayload, HalfEdge, MeshTypeHalfEdge};
+use crate::mesh::{
+    DefaultEdgePayload, DefaultFacePayload, HalfEdge, MeshBuilder, MeshTypeHalfEdge,
+};
 
 // TODO: Adjust this to not be halfedge-specific
 
@@ -51,7 +53,12 @@ where
 
             // the first one shouldn't connect to the previous
             if !first {
-                self.close_face_ee_legacy(output, input_next, Default::default(), Default::default());
+                self.close_face_ee_legacy(
+                    output,
+                    input_next,
+                    Default::default(),
+                    Default::default(),
+                );
             } else {
                 ret = self.edge(output).prev_id();
             }
@@ -59,7 +66,12 @@ where
             pos = iter.next();
             // the last one also shouldn't connect to the next
             if pos.is_some() || shift {
-                self.close_face_ee_legacy(input_next, input, Default::default(), Default::default());
+                self.close_face_ee_legacy(
+                    input_next,
+                    input,
+                    Default::default(),
+                    Default::default(),
+                );
             }
 
             first = false;
@@ -262,21 +274,84 @@ where
     /// and `m` vertices from the boundary of the existing mesh.
     /// Hence, it will create polygon faces with `n+m` vertices each.
     ///
-    /// If the iterator is exactly the right length to go once around the mesh, the "hem" will be closed.
+    /// If the iterator is long enough to go once around the mesh, the "hem" will be automatically closed.
     ///
     /// Returns the edge pointing from the second inserted vertex to the first inserted vertex.
+    /// Will return `None` if the boundary was weird or the iterator was empty. Will not complain
+    /// about an iterator of length 1 or an iterator that is too short or too long. If the iterator
+    /// is too long, all additional vertices will be ignored.
     ///
-    /// For example, to create a quad loft, use `loft_polygon(start, 2, 2, vp)`.
-    /// Pentagons with the tip pointing to the boundary can be created with `loft_polygon(start, 3, 2, vp)`
-    /// while pentagons with the tip pointing away from the boundary can be created with `loft_polygon(start, 2, 3, vp)`.
+    /// Some examples (see `--example loft`):
+    /// - To create a quad loft, use `loft_polygon(start, 2, 2, vp)`.
+    /// - Pentagons with the tip pointing to the boundary can be created with `loft_polygon(start, 3, 2, vp)`
+    /// - while pentagons with the tip pointing away from the boundary can be created with `loft_polygon(start, 2, 3, vp)`.
+    /// - n=1: insert one vertex only and generate tip
+    /// - m=1: use only one vertex of the boundary and create a fan around it.
+    /// - n=0: without iterator; bridge every second edge with a face
+    /// - m=0: without start; generate a line strip
+    /// - a really long iterator that spirals around the original mesh in multiple layers
+    #[must_use]
     fn loft_polygon(
         &mut self,
         start: T::E,
         n: usize,
         m: usize,
         vp: impl IntoIterator<Item = T::VP>,
-    ) -> T::E {
+    ) -> Option<T::E>
+    where
+        T::Mesh: MeshBuilder<T>,
+    {
         assert!(n >= 2);
+        assert!(m >= 2);
+        // TODO: implement the special cases of n=1 (insert one vertex only and generate tip) and m=1 (use only one vertex of the boundary and create a fan around it), and even n=0 (without iterator; bridge every second edge with a face) and m=0 (without start; generate a line strip)
+        // TODO: replace all loft methods with this one. Quad is just n=2, m=2, triangle is two lofts: n=2, m=1 and n=0, m=2
+
+        // insert the outer boundary
+        let mut iter = vp.into_iter();
+        let vp = iter.next()?;
+        let (Some(mut outer), _) = self.insert_path(vp, iter.map(|vp| (Default::default(), vp)))
+        else {
+            return None;
+        };
+        let mut inner = start;
+
+        // TODO: We should not use insert_path but rather insert vertices while making the other ones so we can stop once we're full
+        // TODO: this is backwards.
+
+        let mut first = true;
+        let mut last = false;
+
+        // Now, make connections and insert the faces
+        loop {
+            println!("inner: {} {}", inner, outer);
+            let inserted_edge = self.insert_edge_ee(inner, outer, Default::default())?;
+
+            if first {
+                first = false;
+            } else {
+                self.insert_face(self.edge(inserted_edge).twin_id(), Default::default())?;
+            }
+
+            if last {
+                return None; // TODO
+            }
+
+            for _ in 1..n {
+                let o = self.edge(outer);
+                if o.next_id() == o.twin_id() {
+                    // there is a tail, but we cannot close it
+                    last = true; // return None; // TODO
+                }
+                outer = o.next_id();
+            }
+            for _ in 1..m {
+                inner = self.edge(inner).prev_id();
+            }
+        }
+
+        None
+
+        /*assert!(n >= 2);
         assert!(m >= 2);
         // TODO: implement the special cases of n=1 (insert one vertex only and generate tip) and m=1 (use only one vertex of the boundary and create a fan around it), and even n=0 (without iterator; bridge every second edge with a face) and m=0 (without start; generate a line strip)
         // TODO: replace all loft methods with this one. Quad is just n=2, m=2, triangle is two lofts: n=2, m=1 and n=0, m=2
@@ -284,9 +359,11 @@ where
         let mut iter = vp.into_iter();
         let mut input = start;
         let start_vertex = self.edge(start).origin_id();
-        if let Some(vp) = iter.next() {
-            self.insert_vertex_e(self.edge(start).prev_id(), vp, Default::default());
-        }
+        let Some(vp) = iter.next() else {
+            return None;
+        };
+        let (first_edge, first_vertex) = self.insert_vertex_e(self.edge(start).prev_id(), vp, Default::default())?;
+        println!("first_edge: {} {}", first_edge, first_vertex);
 
         let mut ret = start;
         loop {
@@ -300,12 +377,11 @@ where
             let mut inside = self.edge(input).prev(self).prev_id();
             for _ in 2..n {
                 let Some(vp) = iter.next() else {
-                    return ret;
+                    return Some(ret);
                 };
                 // Insert vertex between `inside`'s previous edge and `inside`
-                let (e1, _) = self
-                    .insert_vertex_e(self.edge(inside).prev_id(), vp, Default::default())
-                    .unwrap(); // TODO: error handling
+                let (e1, _) =
+                    self.insert_vertex_e(self.edge(inside).prev_id(), vp, Default::default())?;
                 inside = e1;
 
                 // Set `ret` to the edge pointing to the first generated vertex
@@ -330,12 +406,12 @@ where
                         self.edge(inside).prev_id(),
                         Default::default(),
                         Default::default(),
-                    );
+                    )?;
                 }
-                return ret;
+                return Some(ret);
             };
             // Insert a new vertex between the previous edge of `input` and `input`
-            self.insert_vertex_e(self.edge(input).prev_id(), vp, Default::default());
+            self.insert_vertex_e(self.edge(input).prev_id(), vp, Default::default())?;
 
             // Close the face between `inside` and the new vertex
             self.close_face_ee_legacy(
@@ -343,13 +419,13 @@ where
                 self.edge(inside).prev_id(),
                 Default::default(),
                 Default::default(),
-            );
+            )?;
 
             // When `n == 2`, we cannot set `ret` until now
             if ret == start {
                 ret = self.edge(inside).prev(self).twin_id();
             }
-        }
+        }*/
     }
 }
 

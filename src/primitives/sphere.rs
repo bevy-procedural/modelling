@@ -119,7 +119,7 @@ where
             ],
         );
 
-        mesh.insert_face(start_bottom, Default::default());
+        mesh.insert_face(start_bottom, Default::default()).unwrap();
 
         mesh
     }

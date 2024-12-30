@@ -29,6 +29,7 @@ where
     }
 
     /// Returns a transformed clone of the mesh
+    #[must_use]
     fn transformed(&self, t: &T::Trans) -> Self {
         let mut mesh = self.clone();
         mesh.transform(t);
@@ -51,6 +52,7 @@ where
     }
 
     /// Returns a translated clone of the mesh
+    #[must_use]
     fn translated(&self, t: &T::Vec) -> Self {
         let mut mesh = self.clone();
         mesh.translate(t);
@@ -73,6 +75,7 @@ where
     }
 
     /// Returns a rotated clone of the mesh
+    #[must_use]
     fn rotated(&self, rotation: &T::Rot) -> Self {
         let mut mesh = self.clone();
         mesh.rotate(rotation);
@@ -95,6 +98,7 @@ where
     }
 
     /// Returns a scaled clone of the mesh
+    #[must_use]
     fn scaled(&self, scale: &T::Vec) -> Self {
         let mut mesh = self.clone();
         mesh.scale(scale);

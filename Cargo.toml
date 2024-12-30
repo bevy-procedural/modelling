@@ -100,6 +100,12 @@ doc-scrape-examples = true
 required-features = ["bevy_example"]
 
 [[example]]
+name = "loft"
+path = "examples/loft.rs"
+doc-scrape-examples = true
+required-features = ["bevy_example"]
+
+[[example]]
 name = "path"
 path = "examples/path.rs"
 doc-scrape-examples = true

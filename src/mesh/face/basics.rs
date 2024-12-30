@@ -1,4 +1,7 @@
-use crate::mesh::{EdgeBasics, VertexBasics};
+use crate::{
+    math::{Polygon, Vector2D},
+    mesh::{EdgeBasics, EuclideanMeshType, VertexBasics},
+};
 
 use super::MeshType;
 

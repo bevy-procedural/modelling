@@ -108,6 +108,12 @@ mod tests {
             assert_eq!(edge.face_ids(&mesh).count(), 2);
             assert!(edge.edges_face(&mesh).count() == 4);
             assert!(edge.edges_face_back(&mesh).count() == 4);
+            assert!(edge
+                .face(&mesh)
+                .unwrap()
+                .polygon::<2>(&mesh)
+                .area()
+                .is_about(1.0, 1e-6));
         }
     }
 }

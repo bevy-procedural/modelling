@@ -15,6 +15,7 @@ pub trait Transformable<const D: usize>: Sized + Clone {
     type S: Scalar;
 
     /// Returns the coordinates of the payload as a reference.
+    #[must_use]
     fn transformed(&self, t: &Self::Trans) -> Self {
         let mut c = self.clone();
         c.transform(t);
@@ -22,6 +23,7 @@ pub trait Transformable<const D: usize>: Sized + Clone {
     }
 
     /// Returns a translated clone of the payload.
+    #[must_use]
     fn translated(&self, v: &Self::Vec) -> Self {
         let mut c = self.clone();
         c.translate(v);
@@ -29,6 +31,7 @@ pub trait Transformable<const D: usize>: Sized + Clone {
     }
 
     /// Returns the scaled clone of the payload.
+    #[must_use]
     fn scaled(&self, s: &Self::Vec) -> Self {
         let mut c = self.clone();
         c.scale(s);
@@ -36,6 +39,7 @@ pub trait Transformable<const D: usize>: Sized + Clone {
     }
 
     /// Returns the rotated clone of the payload.
+    #[must_use]
     fn rotated(&self, r: &Self::Rot) -> Self {
         let mut c = self.clone();
         c.rotate(r);
@@ -43,6 +47,7 @@ pub trait Transformable<const D: usize>: Sized + Clone {
     }
 
     /// Interpolates between two payloads.
+    #[must_use]
     fn lerped(&self, other: &Self, t: Self::S) -> Self {
         let mut c = self.clone();
         c.lerp(other, t);

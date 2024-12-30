@@ -22,7 +22,9 @@ where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
 {
-    /// Construct a polygon from the given vertices and return the first edge on the outside boundary.
+    /// Construct a polygon from the given vertices and
+    /// return the first edge on the outside boundary
+    /// (assuming ccw orientation).
     fn insert_polygon(&mut self, vp: impl IntoIterator<Item = T::VP>) -> T::E;
 
     /// Calls `insert_polygon` on a default mesh.
@@ -65,6 +67,14 @@ where
                 r * T::S::from(angle.cos()),
             ))
         }))
+    }
+
+    /// Inserts a regular polygon with `n` sides and a given `radius`.
+    fn insert_regular_polygon<const D: usize>(&mut self, radius: T::S, n: usize) -> T::E
+    where
+        T: EuclideanMeshType<D>,
+    {
+        self.insert_regular_star(radius, radius, n)
     }
 
     /// create a regular polygon

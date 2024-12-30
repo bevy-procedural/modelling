@@ -1,5 +1,3 @@
-use itertools::Itertools;
-
 use super::HalfEdgeImpl;
 use crate::{
     halfedge::{HalfEdgeImplMeshType, HalfEdgeMeshImpl},
