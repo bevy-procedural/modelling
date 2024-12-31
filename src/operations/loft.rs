@@ -192,10 +192,7 @@ where
         vp: impl IntoIterator<Item = T::VP>,
     ) -> Option<(T::E, T::E)> {
         assert!(n + m >= 3, "n+m must be at least 3");
-        assert!(
-            !(autoclose && open),
-            "autoclose and open cannot be true at the same time"
-        );
+        assert!(!(autoclose && open), "cannot autoclose an open crochet");
 
         // TODO
         assert!(n >= 2);
