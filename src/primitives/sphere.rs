@@ -60,7 +60,7 @@ where
         // normal squares
         for i in 1..(n - 1) {
             prev = mesh
-                .loft_polygon_back(prev, 2, 2, (0..m).map(|j| make_vp(i + 1, j)))
+                .loft_back(prev, 2, 2, (0..m).map(|j| make_vp(i + 1, j)))
                 .unwrap().0;
         }
 
@@ -91,7 +91,7 @@ where
         // TODO: polygon should return something more helpful
         let start = mesh.shared_edge_id(T::V::new(1), T::V::new(0)).unwrap();
         let (start_middle, _) = mesh
-            .loft_polygon_back(
+            .loft_back(
                 start,
                 3,
                 2,
@@ -111,7 +111,7 @@ where
             .unwrap();
 
         let (start_bottom, _) = mesh
-            .loft_polygon_back(
+            .loft_back(
                 mesh.edge(start_middle).next_id(),
                 2,
                 3,

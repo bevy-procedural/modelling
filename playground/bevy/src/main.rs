@@ -48,7 +48,7 @@ fn make_mesh(_settings: &GlobalSettings) -> BevyMesh3d {
         vp(p.x(), p.y(), -p.z()),
         vp(-p.x(), p.y(), -p.z()),
     ]);
-    let top_edge = mesh.loft_polygon(
+    let top_edge = mesh.loft(
         bottom_edge,
         2,
         2,

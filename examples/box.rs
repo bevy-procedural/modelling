@@ -73,7 +73,7 @@ fn cuboid_from_loft(size: Vec3) -> BevyMesh3d {
 
     // The parameters 2 and 2 specify that the loft should create polygons
     // with 2 vertices at the top and 2 at the bottom, i.e., rectangles.
-    let top_edge = mesh.loft_polygon(bottom_edge, 2, 2, vs.iter().map(|(x, y)| vp(*x, *y, p.z())));
+    let top_edge = mesh.loft(bottom_edge, 2, 2, vs.iter().map(|(x, y)| vp(*x, *y, p.z())));
 
     // close the top face
     mesh.insert_face(top_edge, Default::default());

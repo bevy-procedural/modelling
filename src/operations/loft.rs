@@ -316,7 +316,7 @@ where
     }
 
     /// see `crochet(start, n, m, true, true, false, vp)`
-    fn loft_polygon_back(
+    fn loft_back(
         &mut self,
         start: T::E,
         n: usize,
@@ -328,7 +328,7 @@ where
 
     /// see `crochet(start, n, m, true, false, false, vp)`
     #[must_use]
-    fn loft_polygon(
+    fn loft(
         &mut self,
         start: T::E,
         n: usize,
