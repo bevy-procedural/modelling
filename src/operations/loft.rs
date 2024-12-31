@@ -352,8 +352,8 @@ mod tests {
     struct LoftTestConfig {
         n: usize,
         m: usize,
-        backwards: bool,
-        autoclose: bool,
+        backwards: Option<bool>, // if None, test both
+        autoclose: Option<bool>, // if None, test both
         open: bool,
         mesh: (Mesh3d64, usize),
         vp: Vec<VertexPayloadPNU<f64, 3>>,
@@ -381,13 +381,33 @@ mod tests {
     fn run_crochet_test(config: LoftTestConfig) {
         println!("{:?}", config);
 
+        if config.autoclose.is_none() {
+            let mut c = config.clone();
+            c.autoclose = Some(true);
+            run_crochet_test(c);
+            let mut c = config.clone();
+            c.autoclose = Some(false);
+            run_crochet_test(c);
+            return;
+        }
+        if config.backwards.is_none() {
+            let mut c = config.clone();
+            c.backwards = Some(true);
+            run_crochet_test(c);
+            let mut c = config.clone();
+            c.backwards = Some(false);
+            c.vp = c.vp.iter().rev().cloned().collect_vec();
+            run_crochet_test(c);
+            return;
+        }
+
         let mut mesh = config.mesh.0.clone();
         let res = mesh.crochet(
             config.mesh.1,
             config.n,
             config.m,
-            config.backwards,
-            config.autoclose,
+            config.backwards.unwrap(),
+            config.autoclose.unwrap(),
             config.open,
             config.vp,
         );
@@ -524,7 +544,7 @@ mod tests {
             );
             assert_eq!(diagonals.contains(&last_edge), config.last_edge_is_diagonal);
 
-            if config.backwards {
+            if config.backwards.unwrap() {
                 assert_eq!(
                     mesh.edge(first_edge)
                         .same_boundary_back(&mesh, mesh.edge(last_edge).origin_id()),
@@ -578,120 +598,88 @@ mod tests {
     #[test]
     fn test_crochet_2_2() {
         for n in [3, 4, 6, 7, 20] {
-            for backwards in [true, false] {
-                let vp = if backwards {
-                    circle_iter::<3, MeshType3d64PNU>(n, 2.0, 0.0).collect_vec()
-                } else {
-                    circle_iter_back::<3, MeshType3d64PNU>(n, 2.0, 0.0).collect_vec()
-                };
-                for c in [
-                    LoftTestConfig {
-                        n: 2,
-                        m: 2,
-                        backwards,
-                        autoclose: false,
-                        open: false,
-                        mesh: regular_polygon(n),
-                        vp: vp.clone(),
-                        return_none: false,
-                        area_in_appended_faces: Some(wedge_area(n)),
-                        num_appended_edges: 2 * n - 1,
-                        num_appended_faces: n - 1,
-                        small_face_size: 0,
-                        num_inserted_vertices: n,
-                        num_boundary_edges: n + 2,
-                        num_inner_edges: n - 1 + n - 2,
-                        num_diagonals: n,
-                        num_true_boundary: n - 1,
-                        connected: true,
-                        first_edge_is_diagonal: false,
-                        last_edge_is_diagonal: false,
-                        last_first_adjacent: false,
-                        first_last_reach_old_boundary: true,
-                        first_edge_is_start: false,
-                        last_edge_is_start: false,
-                    },
-                    LoftTestConfig {
-                        n: 2,
-                        m: 2,
-                        backwards,
-                        autoclose: true,
-                        open: false,
-                        mesh: regular_polygon(n),
-                        vp: vp.clone(),
-                        return_none: false,
-                        area_in_appended_faces: Some(wedge_area(n)),
-                        num_appended_edges: 2 * n,
-                        num_appended_faces: n,
-                        small_face_size: 0,
-                        num_inserted_vertices: n,
-                        num_boundary_edges: n,
-                        num_inner_edges: 2 * n,
-                        num_diagonals: n,
-                        num_true_boundary: n,
-                        connected: true,
-                        first_edge_is_diagonal: false,
-                        last_edge_is_diagonal: false,
-                        last_first_adjacent: true,
-                        first_last_reach_old_boundary: false,
-                        first_edge_is_start: false,
-                        last_edge_is_start: false,
-                    },
-                    LoftTestConfig {
-                        n: 2,
-                        m: 2,
-                        backwards,
-                        autoclose: false,
-                        open: false,
-                        mesh: regular_polygon(n),
-                        vp: vp.iter().take(n - 1).cloned().collect_vec(),
-                        return_none: false,
-                        area_in_appended_faces: Some(wedge_area(n)),
-                        num_appended_edges: 2 * (n - 1) - 1,
-                        num_appended_faces: n - 2,
-                        small_face_size: 0,
-                        num_inserted_vertices: n - 1,
-                        num_boundary_edges: n + 2,
-                        num_inner_edges: 2 * (n - 2) - 1,
-                        num_diagonals: n - 1,
-                        num_true_boundary: n - 2,
-                        connected: true,
-                        first_edge_is_diagonal: false,
-                        last_edge_is_diagonal: false,
-                        last_first_adjacent: false,
-                        first_last_reach_old_boundary: true,
-                        first_edge_is_start: false,
-                        last_edge_is_start: false,
-                    },
-                    LoftTestConfig {
-                        n: 2,
-                        m: 2,
-                        backwards,
-                        autoclose: true,
-                        open: false,
-                        mesh: regular_polygon(n),
-                        vp: vp.iter().take(n - 1).cloned().collect_vec(),
-                        return_none: false,
-                        area_in_appended_faces: Some(wedge_area(n)),
-                        num_appended_edges: 2 * (n - 1) - 1,
-                        num_appended_faces: n - 2,
-                        small_face_size: 0,
-                        num_inserted_vertices: n - 1,
-                        num_boundary_edges: n + 2,
-                        num_inner_edges: 2 * (n - 2) - 1,
-                        num_diagonals: n - 1,
-                        num_true_boundary: n - 2,
-                        connected: true,
-                        first_edge_is_diagonal: false,
-                        last_edge_is_diagonal: false,
-                        last_first_adjacent: false,
-                        first_last_reach_old_boundary: true,
-                        first_edge_is_start: false,
-                        last_edge_is_start: false,
-                    },
-                ] {
-                    run_crochet_test(c);
-                }
+            let vp = circle_iter::<3, MeshType3d64PNU>(n, 2.0, 0.0).collect_vec();
+            for c in [
+                LoftTestConfig {
+                    n: 2,
+                    m: 2,
+                    backwards: None,
+                    autoclose: Some(false),
+                    open: false,
+                    mesh: regular_polygon(n),
+                    vp: vp.clone(),
+                    return_none: false,
+                    area_in_appended_faces: Some(wedge_area(n)),
+                    num_appended_edges: 2 * n - 1,
+                    num_appended_faces: n - 1,
+                    small_face_size: 0,
+                    num_inserted_vertices: n,
+                    num_boundary_edges: n + 2,
+                    num_inner_edges: n - 1 + n - 2,
+                    num_diagonals: n,
+                    num_true_boundary: n - 1,
+                    connected: true,
+                    first_edge_is_diagonal: false,
+                    last_edge_is_diagonal: false,
+                    last_first_adjacent: false,
+                    first_last_reach_old_boundary: true,
+                    first_edge_is_start: false,
+                    last_edge_is_start: false,
+                },
+                LoftTestConfig {
+                    n: 2,
+                    m: 2,
+                    backwards: None,
+                    autoclose: Some(true),
+                    open: false,
+                    mesh: regular_polygon(n),
+                    vp: vp.clone(),
+                    return_none: false,
+                    area_in_appended_faces: Some(wedge_area(n)),
+                    num_appended_edges: 2 * n,
+                    num_appended_faces: n,
+                    small_face_size: 0,
+                    num_inserted_vertices: n,
+                    num_boundary_edges: n,
+                    num_inner_edges: 2 * n,
+                    num_diagonals: n,
+                    num_true_boundary: n,
+                    connected: true,
+                    first_edge_is_diagonal: false,
+                    last_edge_is_diagonal: false,
+                    last_first_adjacent: true,
+                    first_last_reach_old_boundary: false,
+                    first_edge_is_start: false,
+                    last_edge_is_start: false,
+                },
+                LoftTestConfig {
+                    n: 2,
+                    m: 2,
+                    backwards: None,
+                    autoclose: None,
+                    open: false,
+                    mesh: regular_polygon(n),
+                    vp: vp.iter().take(n - 1).cloned().collect_vec(),
+                    return_none: false,
+                    area_in_appended_faces: Some(wedge_area(n)),
+                    num_appended_edges: 2 * (n - 1) - 1,
+                    num_appended_faces: n - 2,
+                    small_face_size: 0,
+                    num_inserted_vertices: n - 1,
+                    num_boundary_edges: n + 2,
+                    num_inner_edges: 2 * (n - 2) - 1,
+                    num_diagonals: n - 1,
+                    num_true_boundary: n - 2,
+                    connected: true,
+                    first_edge_is_diagonal: false,
+                    last_edge_is_diagonal: false,
+                    last_first_adjacent: false,
+                    first_last_reach_old_boundary: true,
+                    first_edge_is_start: false,
+                    last_edge_is_start: false,
+                },
+            ] {
+                run_crochet_test(c);
             }
         }
     }
@@ -699,68 +687,114 @@ mod tests {
     #[test]
     fn test_crochet_3_3() {
         for n in [4, 6, 8, 10] {
-            for backwards in [true, false] {
-                let vp = if backwards {
-                    circle_iter::<3, MeshType3d64PNU>(n, 2.0, 0.0).collect_vec()
-                } else {
-                    circle_iter_back::<3, MeshType3d64PNU>(n, 2.0, 0.0).collect_vec()
-                };
-                for c in [
-                    LoftTestConfig {
-                        n: 3,
-                        m: 3,
-                        backwards,
-                        autoclose: false,
-                        open: false,
-                        mesh: regular_polygon(n),
-                        vp: vp.clone(),
-                        return_none: false,
-                        area_in_appended_faces: Some(2.0 * wedge_area(n)),
-                        num_appended_edges: n + n / 2,
-                        num_appended_faces: n / 2,
-                        small_face_size: 5,
-                        num_inserted_vertices: n,
-                        num_boundary_edges: n + 1,
-                        num_inner_edges: n + n / 2 - 1,
-                        num_diagonals: n / 2 + 1,
-                        num_true_boundary: n - 1,
-                        connected: true,
-                        first_edge_is_diagonal: false,
-                        last_edge_is_diagonal: false,
-                        last_first_adjacent: false,
-                        first_last_reach_old_boundary: false,
-                        first_edge_is_start: false,
-                        last_edge_is_start: false,
-                    },
-                    LoftTestConfig {
-                        n: 3,
-                        m: 3,
-                        backwards,
-                        autoclose: true,
-                        open: false,
-                        mesh: regular_polygon(n),
-                        vp: vp.clone(),
-                        return_none: false,
-                        area_in_appended_faces: Some(2.0 * wedge_area(n)),
-                        num_appended_edges: n + n / 2,
-                        num_appended_faces: n / 2,
-                        small_face_size: 0,
-                        num_inserted_vertices: n,
-                        num_boundary_edges: n,
-                        num_inner_edges: n + n / 2,
-                        num_diagonals: n / 2,
-                        num_true_boundary: n,
-                        connected: true,
-                        first_edge_is_diagonal: false,
-                        last_edge_is_diagonal: false,
-                        last_first_adjacent: true,
-                        first_last_reach_old_boundary: false,
-                        first_edge_is_start: false,
-                        last_edge_is_start: false,
-                    },
-                ] {
-                    run_crochet_test(c);
-                }
+            let vp = circle_iter::<3, MeshType3d64PNU>(n, 2.0, 0.0).collect_vec();
+            for c in [
+                LoftTestConfig {
+                    n: 3,
+                    m: 3,
+                    backwards: None,
+                    autoclose: Some(false),
+                    open: false,
+                    mesh: regular_polygon(n),
+                    vp: vp.clone(),
+                    return_none: false,
+                    area_in_appended_faces: Some(2.0 * wedge_area(n)),
+                    num_appended_edges: n + n / 2,
+                    num_appended_faces: n / 2,
+                    small_face_size: 5,
+                    num_inserted_vertices: n,
+                    num_boundary_edges: n + 1,
+                    num_inner_edges: n + n / 2 - 1,
+                    num_diagonals: n / 2 + 1,
+                    num_true_boundary: n - 1,
+                    connected: true,
+                    first_edge_is_diagonal: false,
+                    last_edge_is_diagonal: false,
+                    last_first_adjacent: false,
+                    first_last_reach_old_boundary: false,
+                    first_edge_is_start: false,
+                    last_edge_is_start: false,
+                },
+                LoftTestConfig {
+                    n: 3,
+                    m: 3,
+                    backwards: None,
+                    autoclose: Some(true),
+                    open: false,
+                    mesh: regular_polygon(n),
+                    vp: vp.clone(),
+                    return_none: false,
+                    area_in_appended_faces: Some(2.0 * wedge_area(n)),
+                    num_appended_edges: n + n / 2,
+                    num_appended_faces: n / 2,
+                    small_face_size: 0,
+                    num_inserted_vertices: n,
+                    num_boundary_edges: n,
+                    num_inner_edges: n + n / 2,
+                    num_diagonals: n / 2,
+                    num_true_boundary: n,
+                    connected: true,
+                    first_edge_is_diagonal: false,
+                    last_edge_is_diagonal: false,
+                    last_first_adjacent: true,
+                    first_last_reach_old_boundary: false,
+                    first_edge_is_start: false,
+                    last_edge_is_start: false,
+                },
+                LoftTestConfig {
+                    n: 3,
+                    m: 3,
+                    backwards: None,
+                    autoclose: None,
+                    open: false,
+                    mesh: regular_polygon(n),
+                    vp: vp.iter().take(n - 1).cloned().collect_vec(),
+                    return_none: false,
+                    area_in_appended_faces: Some(2.0 * wedge_area(n)),
+                    num_appended_edges: n + n / 2 - 2,
+                    num_appended_faces: n / 2 - 1,
+                    small_face_size: 0,
+                    num_inserted_vertices: n - 1,
+                    num_boundary_edges: n + 2,
+                    num_inner_edges: n + n / 2 - 4,
+                    num_diagonals: n / 2,
+                    num_true_boundary: n - 2,
+                    connected: true,
+                    first_edge_is_diagonal: false,
+                    last_edge_is_diagonal: false,
+                    last_first_adjacent: false,
+                    first_last_reach_old_boundary: true,
+                    first_edge_is_start: false,
+                    last_edge_is_start: false,
+                },
+                LoftTestConfig {
+                    n: 3,
+                    m: 3,
+                    backwards: None,
+                    autoclose: None,
+                    open: false,
+                    mesh: regular_polygon(n),
+                    vp: vp.iter().take(n - 2).cloned().collect_vec(),
+                    return_none: false,
+                    area_in_appended_faces: Some(2.0 * wedge_area(n)),
+                    num_appended_edges: n + n / 2 - 3,
+                    num_appended_faces: n / 2 - 1,
+                    small_face_size: 5,
+                    num_inserted_vertices: n - 2,
+                    num_boundary_edges: n + 1,
+                    num_inner_edges: n + n / 2 - 4,
+                    num_diagonals: n / 2,
+                    num_true_boundary: n - 3,
+                    connected: true,
+                    first_edge_is_diagonal: false,
+                    last_edge_is_diagonal: false,
+                    last_first_adjacent: false,
+                    first_last_reach_old_boundary: true,
+                    first_edge_is_start: false,
+                    last_edge_is_start: false,
+                },
+            ] {
+                run_crochet_test(c);
             }
         }
     }
