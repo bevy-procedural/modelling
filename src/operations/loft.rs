@@ -799,4 +799,51 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn test_crochet_2_1() {
+        for n in [3, 4, 5, 10] {
+            for fan in [2, 3, 4, 10] {
+                let vp = (0..fan)
+                    .into_iter()
+                    .map(|i| {
+                        VertexPayloadPNU::from_pos(Vec3::<f64>::new(
+                            (2 * i) as f64 / ((fan - 1) as f64) - 1.0,
+                            2.0,
+                            0.0,
+                        ))
+                    })
+                    .collect_vec();
+                println!("{:?}", vp);
+                for c in [LoftTestConfig {
+                    n: 2,
+                    m: 1,
+                    backwards: Some(true), // TODO: forward is not working!
+                    autoclose: None,
+                    open: false,
+                    mesh: regular_polygon(n),
+                    vp: vp.clone(),
+                    return_none: false,
+                    area_in_appended_faces: None, // TODO: calculate area!
+                    num_appended_edges: 2 * fan - 1,
+                    num_appended_faces: fan - 1,
+                    small_face_size: 0,
+                    num_inserted_vertices: fan,
+                    num_boundary_edges: fan + 1 + n,
+                    num_inner_edges: fan - 2,
+                    num_diagonals: fan,
+                    num_true_boundary: fan - 1,
+                    connected: true,
+                    first_edge_is_diagonal: false,
+                    last_edge_is_diagonal: false,
+                    last_first_adjacent: false,
+                    first_last_reach_old_boundary: true,
+                    first_edge_is_start: false,
+                    last_edge_is_start: false,
+                }] {
+                    run_crochet_test(c);
+                }
+            }
+        }
+    }
 }
