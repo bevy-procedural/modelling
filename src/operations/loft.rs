@@ -200,7 +200,7 @@ where
         // TODO
         assert!(n >= 2);
         // TODO
-        assert!(m >= 2);
+        assert!(m >= 1);
         // TODO
         assert!(!open);
 
@@ -237,8 +237,9 @@ where
 
             // insert first diagonal towards bow in the first iteration
             if outer == IndexType::max() {
-                // TODO: or return None?
-                let vp = iter.next()?;
+                let Some(vp) = iter.next() else {
+                    return Some((start, start));
+                };
                 let (e, _) = self.insert_vertex_e(current_inner, vp, Default::default())?;
                 last_inner = if backwards {
                     self.edge(e).twin_id()
