@@ -251,8 +251,9 @@ where
             // Insert next bow
             for i in 1..n {
                 let Some(vp) = iter.next() else {
-                    if i == 1 && (n >= 3 || !autoclose) {
+                    if i == 1 && !(n == 2 && autoclose && inner == last_inner) {
                         // We are done - the iterator ended just after the last bow
+                        // Unless this is a autoclosed length-2 bow, we are done
                         return Some((first_edge, last_edge));
                     }
                     // We are done - the iterator ended in the middle of the bow. Close it!
@@ -633,6 +634,58 @@ mod tests {
                         last_edge_is_diagonal: false,
                         last_first_adjacent: true,
                         first_last_reach_old_boundary: false,
+                        first_edge_is_start: false,
+                        last_edge_is_start: false,
+                    },
+                    LoftTestConfig {
+                        n: 2,
+                        m: 2,
+                        backwards,
+                        autoclose: false,
+                        open: false,
+                        mesh: regular_polygon(n),
+                        vp: vp.iter().take(n - 1).cloned().collect_vec(),
+                        return_none: false,
+                        area_in_appended_faces: Some(wedge_area(n)),
+                        num_appended_edges: 2 * (n - 1) - 1,
+                        num_appended_faces: n - 2,
+                        small_face_size: 0,
+                        num_inserted_vertices: n - 1,
+                        num_boundary_edges: n + 2,
+                        num_inner_edges: 2 * (n - 2) - 1,
+                        num_diagonals: n - 1,
+                        num_true_boundary: n - 2,
+                        connected: true,
+                        first_edge_is_diagonal: false,
+                        last_edge_is_diagonal: false,
+                        last_first_adjacent: false,
+                        first_last_reach_old_boundary: true,
+                        first_edge_is_start: false,
+                        last_edge_is_start: false,
+                    },
+                    LoftTestConfig {
+                        n: 2,
+                        m: 2,
+                        backwards,
+                        autoclose: true,
+                        open: false,
+                        mesh: regular_polygon(n),
+                        vp: vp.iter().take(n - 1).cloned().collect_vec(),
+                        return_none: false,
+                        area_in_appended_faces: Some(wedge_area(n)),
+                        num_appended_edges: 2 * (n - 1) - 1,
+                        num_appended_faces: n - 2,
+                        small_face_size: 0,
+                        num_inserted_vertices: n - 1,
+                        num_boundary_edges: n + 2,
+                        num_inner_edges: 2 * (n - 2) - 1,
+                        num_diagonals: n - 1,
+                        num_true_boundary: n - 2,
+                        connected: true,
+                        first_edge_is_diagonal: false,
+                        last_edge_is_diagonal: false,
+                        last_first_adjacent: false,
+                        first_last_reach_old_boundary: true,
                         first_edge_is_start: false,
                         last_edge_is_start: false,
                     },
