@@ -225,7 +225,6 @@ where
             for _ in 1..m {
                 if inner == last_inner {
                     // We reached the start again - so we are done!
-                    println!("Reached start again");
                     return Some((first_edge, last_edge));
                 }
                 inner = if backwards {
