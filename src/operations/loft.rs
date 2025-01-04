@@ -1,16 +1,22 @@
 use crate::{
     math::IndexType,
-    mesh::{DefaultEdgePayload, DefaultFacePayload, HalfEdge, MeshBuilder, MeshTypeHalfEdge},
+    mesh::{DefaultEdgePayload, DefaultFacePayload, HalfEdge, MeshTypeHalfEdge},
 };
 
-// TODO: Adjust this to not be halfedge-specific
+/// Different ways how faces cannot be connected.
+pub enum FaceConnection {
+    /// The faces are not connected.
+    NotConnected,
+    /// The faces are connected by sharing a vertex, given by the index of the vertex in the face.
+    SharedVertex(usize, usize),
+    /// The faces are connected by sharing one or more edges, given by the index of the edge in the face.
+    SharedEdge(usize, usize),
+}
+
+// TODO: Is it possible to make this non-halfedge specific?
 
 /// A trait for lofting a mesh.
-pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>>
-where
-    T::EP: DefaultEdgePayload,
-    T::FP: DefaultFacePayload,
-{
+pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
     /// This will walk counter-clockwise along the given boundary and add a "hem" made from triangles.
     /// The payloads are given using the iterator.
     ///
@@ -23,7 +29,11 @@ where
     /// Otherwise, the first triangle will include the edge `start`.
     /// This doesn't affect the number of triangles but shifts the "hem" by one.
     #[deprecated(note = "Use `crochet` instead")]
-    fn loft_tri(&mut self, start: T::E, shift: bool, vp: impl IntoIterator<Item = T::VP>) -> T::E {
+    fn loft_tri(&mut self, start: T::E, shift: bool, vp: impl IntoIterator<Item = T::VP>) -> T::E
+    where
+        T::EP: DefaultEdgePayload,
+        T::FP: DefaultFacePayload,
+    {
         // TODO: a more efficient implementation could bulk-insert everything at once
         // TODO: assertions
 
@@ -86,18 +96,58 @@ where
     /// Like `loft_tri` but closes the "hem" with a face.
     /// Returns the edge pointing from the first inserted vertex to the second inserted vertex.
     #[deprecated(note = "Use `crochet` instead")]
-    fn loft_tri_closed(&mut self, start: T::E, vp: impl IntoIterator<Item = T::VP>) -> T::E {
+    fn loft_tri_closed(&mut self, start: T::E, vp: impl IntoIterator<Item = T::VP>) -> T::E
+    where
+        T::EP: DefaultEdgePayload,
+        T::FP: DefaultFacePayload,
+    {
+        // TODO: Realize forward and backward tri_loft with crochet! Also make it autoclose. There are 2 methods to achieve this:
+        // 1. Use crochet with n=1, m=2, open=true and then crochet n=0, m=3
+        // 2. Use crochet with n=2, m=2, and then subdivide the faces
+
         let e = self.loft_tri(start, false, vp);
         let inside = self.edge(e).twin(self).prev_id();
         let outside = self.edge(inside).prev(self).prev_id();
         self.close_face_ee_legacy(inside, outside, Default::default(), Default::default());
         self.close_face_ee_legacy(
             self.edge(e).twin_id(),
-            outside,
+            self.edge(outside).next_id(),
             Default::default(),
             Default::default(),
         );
         self.edge(outside).next(self).next_id()
+    }
+
+    /// Create polygons with `n` vertices each using the iterator `vp`.
+    /// It's always a vertex payload and the edge payload starting at that vertex.
+    /// If the iterator doesn't have the right length, the last polygon will have fewer vertices.
+    fn polygon_strip(
+        &mut self,
+        _start: T::E,
+        _n: usize,
+        _connect: FaceConnection,
+        _vp: impl IntoIterator<Item = (T::VP, T::EP)>,
+    ) -> Option<(T::E, T::E)> {
+        todo!()
+    }
+
+    /// Adds faces along the boundary by skipping `m` edges and then connecting an edge back.
+    /// Hence, the faces will always share one vertex.
+    /// Note that `m` must be at least `2`.
+    /// - The edge `start` must be on the boundary and will be include inside the first created face.
+    /// - If `n` is given, the function will stop after `n` edges have been consumed from the boundary.
+    /// - If `n` is `None`, the function will continue until the first edge is reached again.
+    /// - If `n` doesn't align with the requested number of edges per face, the last face will have fewer edges.
+    /// - If `backwards` is true, the boundary is walked backwards instead of forwards.
+    fn skip_connect_faces(
+        &mut self,
+        _start: T::E,
+        m: usize,
+        _n: Option<usize>,
+        _backwards: bool,
+    ) -> Option<(T::E, T::E)> {
+        assert!(m >= 2, "m must be at least 2");
+        todo!()
     }
 
     /// Walks along the given boundary and "crochet" a "hem" made from polygon faces.
@@ -190,14 +240,35 @@ where
         autoclose: bool,
         open: bool,
         vp: impl IntoIterator<Item = T::VP>,
-    ) -> Option<(T::E, T::E)> {
+    ) -> Option<(T::E, T::E)>
+    where
+        T::EP: DefaultEdgePayload,
+        T::FP: DefaultFacePayload,
+    {
+        // TODO: add crochet to the mesh cursor! It should return another cursor set to the first edge. That way, we can keep crocheting!
         assert!(n + m >= 3, "n+m must be at least 3");
+
+        if m == 0 {
+            return self.polygon_strip(
+                start,
+                n,
+                if open {
+                    FaceConnection::NotConnected
+                } else {
+                    FaceConnection::SharedVertex(0, n - 1)
+                },
+                vp.into_iter().map(|vp| (vp, Default::default())),
+            );
+        }
+
+        if n == 0 {
+            return self.skip_connect_faces(start, m, None, backwards);
+        }
+
         assert!(!(autoclose && open), "cannot autoclose an open crochet");
 
         // TODO
         assert!(n >= 2);
-        // TODO
-        assert!(m >= 1);
         // TODO
         assert!(!open);
 
@@ -319,7 +390,11 @@ where
         n: usize,
         m: usize,
         vp: impl IntoIterator<Item = T::VP>,
-    ) -> Option<(T::E, T::E)> {
+    ) -> Option<(T::E, T::E)>
+    where
+        T::EP: DefaultEdgePayload,
+        T::FP: DefaultFacePayload,
+    {
         self.crochet(start, n, m, true, true, false, vp)
     }
 
@@ -333,7 +408,8 @@ where
         vp: impl IntoIterator<Item = T::VP>,
     ) -> Option<(T::E, T::E)>
     where
-        T::Mesh: MeshBuilder<T>,
+        T::EP: DefaultEdgePayload,
+        T::FP: DefaultFacePayload,
     {
         self.crochet(start, n, m, true, false, false, vp)
     }
