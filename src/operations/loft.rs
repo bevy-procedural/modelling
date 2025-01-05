@@ -8,9 +8,9 @@ pub enum FaceConnection {
     /// The faces are not connected.
     NotConnected,
     /// The faces are connected by sharing a vertex, given by the index of the vertex in the face.
-    SharedVertex(usize, usize),
+    SharedVertex(usize),
     /// The faces are connected by sharing one or more edges, given by the index of the edge in the face.
-    SharedEdge(usize, usize),
+    SharedEdge(usize),
 }
 
 // TODO: Is it possible to make this non-halfedge specific?
@@ -255,7 +255,7 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
                 if open {
                     FaceConnection::NotConnected
                 } else {
-                    FaceConnection::SharedVertex(0, n - 1)
+                    FaceConnection::SharedVertex(n - 1)
                 },
                 vp.into_iter().map(|vp| (vp, Default::default())),
             );
