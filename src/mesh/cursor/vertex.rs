@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use crate::mesh::{MeshBasics, MeshType, MeshTypeHalfEdge};
+use crate::{math::IndexType, mesh::{MeshBasics, MeshType, MeshTypeHalfEdge}};
 
 use super::{EdgeCursor, EdgeCursorData, EdgeCursorMut};
 
@@ -39,7 +39,44 @@ impl<'a, T: MeshType> VertexCursorMut<'a, T> {
 pub trait VertexCursorData<'a, T: MeshType + 'a>: Sized + Debug {
     type EC: EdgeCursorData<'a, T>;
     fn id(&self) -> T::V;
-    fn vertex<'b>(&'b self) -> &'b T::Vertex;
+
+    
+    #[inline(always)]
+    fn unwrap<'b>(&'b self) -> &'b T::Vertex
+    where
+        'a: 'b,
+    {
+        MeshBasics::vertex(self.mesh(), self.id())
+    }
+
+    #[inline(always)]
+    fn is_none(&self) -> bool {
+        self.id() == IndexType::max() || !self.mesh().has_vertex(self.id())
+    }
+
+    #[inline(always)]
+    fn get<'b>(&'b self) -> Option<&'b T::Vertex>
+    where
+        'a: 'b,
+    {
+        // TODO: use try_vertex instead of is_none to avoid to lookups
+        if self.is_none() {
+            None
+        } else {
+            Some(self.unwrap())
+        }
+    }
+
+    #[inline(always)]
+    fn map<F: FnOnce(&T::Vertex) -> T::V>(self, f: F) -> Self {
+        let id = if let Some(e) = self.get() {
+            f(e)
+        } else {
+            IndexType::max()
+        };
+        self.derive(id)
+    }
+
     fn mesh<'b>(&'b self) -> &'b T::Mesh;
     fn derive(self, id: T::V) -> Self;
     fn derive_ec(self, id: T::E) -> Self::EC;
@@ -51,11 +88,6 @@ impl<'a, T: MeshType + 'a> VertexCursorData<'a, T> for VertexCursor<'a, T> {
     #[inline(always)]
     fn id(&self) -> T::V {
         self.vertex
-    }
-
-    #[inline(always)]
-    fn vertex<'b>(&'b self) -> &'b T::Vertex {
-        self.mesh.vertex(self.vertex)
     }
 
     #[inline(always)]
@@ -80,11 +112,6 @@ impl<'a, T: MeshType + 'a> VertexCursorData<'a, T> for VertexCursorMut<'a, T> {
     #[inline(always)]
     fn id(&self) -> T::V {
         self.vertex
-    }
-
-    #[inline(always)]
-    fn vertex<'b>(&'b self) -> &'b T::Vertex {
-        self.mesh.vertex(self.vertex)
     }
 
     #[inline(always)]
