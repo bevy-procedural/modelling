@@ -18,11 +18,20 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     /// Returns a reference to the requested vertex
     fn vertex(&self, index: T::V) -> &T::Vertex;
 
+    /// Returns a reference to the requested vertex or `None` if it does not exist.
+    fn get_vertex(&self, index: T::V) -> Option<&T::Vertex>;
+
     /// Returns a reference to the requested edge
     fn edge<'a>(&'a self, index: T::E) -> &'a T::Edge;
 
+    /// Returns a reference to the requested edge or `None` if it does not exist.
+    fn get_edge<'a>(&'a self, index: T::E) -> Option<&'a T::Edge>;
+
     /// Returns a reference to the requested face
     fn face(&self, index: T::F) -> &T::Face;
+
+    /// Returns a reference to the requested face or `None` if it does not exist.
+    fn get_face(&self, index: T::F) -> Option<&T::Face>;
 
     /// Returns a mutable reference to the requested vertex
     fn vertex_mut(&mut self, index: T::V) -> &mut T::Vertex;

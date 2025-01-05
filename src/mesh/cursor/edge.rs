@@ -28,6 +28,7 @@ impl<'a, T: MeshType> EdgeCursor<'a, T> {
 
 impl<'a, T: MeshType> PartialEq for EdgeCursor<'a, T> {
     fn eq(&self, other: &Self) -> bool {
+        // same edge id and pointing to the same mesh instance
         self.edge == other.edge && self.mesh as *const _ == other.mesh as *const _
     }
 }
@@ -73,12 +74,7 @@ pub trait EdgeCursorData<'a, T: MeshType + 'a>: Sized + Debug {
     where
         'a: 'b,
     {
-        // TODO: use try_edge instead of is_none to avoid to lookups
-        if self.is_none() {
-            None
-        } else {
-            Some(self.unwrap())
-        }
+        self.mesh().get_edge(self.id())
     }
 
     #[inline(always)]
@@ -202,13 +198,14 @@ mod tests {
     use crate::{extensions::nalgebra::*, prelude::*};
 
     #[test]
-    fn test_cursor() {
+    fn test_edge_cursor() {
         let mut mesh = Mesh3d64::cube(1.0);
         let c1: EdgeCursor<'_, MeshType3d64PNU> =
             EdgeCursor::new(&mesh, mesh.edge_ids().next().unwrap()).next();
         let c2 = c1.clone().next();
         let c3 = c1.clone().next().prev().next();
-        assert!(c1 != c2);
-        assert!(c1 == c3);
+        assert_ne!(c1, c2);
+        assert_eq!(c1, c1);
+        assert_eq!(c2, c3);
     }
 }

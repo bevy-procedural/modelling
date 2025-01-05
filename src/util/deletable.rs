@@ -59,6 +59,18 @@ impl<T: Deletable<I>, I: IndexType> DeletableVector<T, I> {
         );
         v
     }
+    /// Returns the requested element or `None` if it doesn't exist or is deleted.
+    pub fn try_get(&self, index: I) -> Option<&T> {
+        let i = index.index();
+        if i >= self.data.len() {
+            return None;
+        }
+        let v = &self.data[i];
+        if v.is_deleted() {
+            return None;
+        }
+        Some(v)
+    }
 
     /// Returns whether the element exists and is not deleted.
     pub fn has(&self, index: I) -> bool {

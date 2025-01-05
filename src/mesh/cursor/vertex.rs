@@ -59,12 +59,7 @@ pub trait VertexCursorData<'a, T: MeshType + 'a>: Sized + Debug {
     where
         'a: 'b,
     {
-        // TODO: use try_vertex instead of is_none to avoid to lookups
-        if self.is_none() {
-            None
-        } else {
-            Some(self.unwrap())
-        }
+        self.mesh().get_vertex(self.id())
     }
 
     #[inline(always)]

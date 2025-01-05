@@ -29,13 +29,27 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     }
 
     #[inline(always)]
+    fn get_vertex(&self, index: T::V) -> Option<&T::Vertex> {
+        self.vertices.try_get(index)
+    }
+
+    #[inline(always)]
     fn edge<'a>(&'a self, index: T::E) -> &'a T::Edge {
         self.halfedges.get(index)
     }
 
     #[inline(always)]
+    fn get_edge(&self, index: T::E) -> Option<&T::Edge> {
+        self.halfedges.try_get(index)
+    }
+
+    #[inline(always)]
     fn face(&self, index: T::F) -> &T::Face {
         self.faces.get(index)
+    }
+
+    fn get_face(&self, index: T::F) -> Option<&T::Face> {
+        self.faces.try_get(index)
     }
 
     #[inline(always)]
