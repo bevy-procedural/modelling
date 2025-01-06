@@ -61,6 +61,7 @@ impl<T: Deletable<I>, I: IndexType> DeletableVector<T, I> {
     }
     /// Returns the requested element or `None` if it doesn't exist or is deleted.
     pub fn try_get(&self, index: I) -> Option<&T> {
+        // PERF: We could add `unlikely` to these two conditions, but the compiler does a good job already.
         let i = index.index();
         if i >= self.data.len() {
             return None;
