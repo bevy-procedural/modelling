@@ -33,14 +33,14 @@ impl<S: ScalarPlus, const D: usize> Transformable<D> for VertexPayloadPNU<S, D> 
     type Trans = NdAffine<S, D>;
     type Rot = NdRotate<S, D>;
 
-    #[inline(always)]
+    #[inline]
     fn translate(&mut self, v: &Self::Vec) -> &mut Self {
         self.position += *v;
         // TODO: should the uv be translated as well?
         self
     }
 
-    #[inline(always)]
+    #[inline]
     fn transform(&mut self, t: &Self::Trans) -> &mut Self {
         self.position = t.apply(self.position);
         self.normal = t.apply_vec(self.normal);
@@ -48,7 +48,7 @@ impl<S: ScalarPlus, const D: usize> Transformable<D> for VertexPayloadPNU<S, D> 
         self
     }
 
-    #[inline(always)]
+    #[inline]
     fn lerp(&mut self, _other: &Self, t: Self::S) -> &mut Self {
         self.position = self.position.lerp(&_other.position, t);
         self.normal = self.normal.lerp(&_other.normal, t);
@@ -60,7 +60,7 @@ impl<S: ScalarPlus, const D: usize> Transformable<D> for VertexPayloadPNU<S, D> 
 impl<S: Scalar, const D: usize> HasPosition<D, VecN<S, D>> for VertexPayloadPNU<S, D> {
     type S = S;
 
-    #[inline(always)]
+    #[inline]
     fn from_pos(v: VecN<S, D>) -> Self {
         Self {
             position: v,
@@ -69,12 +69,12 @@ impl<S: Scalar, const D: usize> HasPosition<D, VecN<S, D>> for VertexPayloadPNU<
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn pos(&self) -> &VecN<S, D> {
         &self.position
     }
 
-    #[inline(always)]
+    #[inline]
     fn set_pos(&mut self, v: VecN<S, D>) {
         self.position = v;
     }
@@ -93,12 +93,12 @@ impl<S: Scalar, const D: usize> std::fmt::Debug for VertexPayloadPNU<S, D> {
 impl<S: Scalar, const D: usize> HasNormal<D, VecN<S, D>> for VertexPayloadPNU<S, D> {
     type S = S;
 
-    #[inline(always)]
+    #[inline]
     fn normal(&self) -> &VecN<S, D> {
         &self.normal
     }
 
-    #[inline(always)]
+    #[inline]
     fn set_normal(&mut self, normal: VecN<S, D>) {
         self.normal = normal;
     }
@@ -107,12 +107,12 @@ impl<S: Scalar, const D: usize> HasNormal<D, VecN<S, D>> for VertexPayloadPNU<S,
 impl<S: Scalar, const D: usize> HasUV<VecN<S, 2>> for VertexPayloadPNU<S, D> {
     type S = S;
 
-    #[inline(always)]
+    #[inline]
     fn uv(&self) -> &VecN<S, 2> {
         &self.uv
     }
 
-    #[inline(always)]
+    #[inline]
     fn set_uv(&mut self, uv: VecN<S, 2>) {
         self.uv = uv;
     }

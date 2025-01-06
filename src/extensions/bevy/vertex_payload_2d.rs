@@ -31,32 +31,32 @@ impl Transformable<2> for BevyVertexPayload2d {
     type Trans = bevy::math::Affine2;
     type Rot = f32;
 
-    #[inline(always)]
+    #[inline]
     fn translate(&mut self, v: &Self::Vec) -> &mut Self {
         self.position += *v;
         // TODO: should the uv be translated as well?
         self
     }
 
-    #[inline(always)]
+    #[inline]
     fn transform(&mut self, t: &Self::Trans) -> &mut Self {
         self.position = t.apply(self.position);
         // TODO: should the uv be transformed as well?
         self
     }
 
-    #[inline(always)]
+    #[inline]
     fn rotate(&mut self, _r: &Self::Rot) -> &mut Self {
         todo!("rotate")
     }
 
-    #[inline(always)]
+    #[inline]
     fn scale(&mut self, s: &Self::Vec) -> &mut Self {
         self.position *= *s;
         self
     }
 
-    #[inline(always)]
+    #[inline]
     fn lerp(&mut self, other: &Self, t: Self::S) -> &mut Self {
         self.position = self.position.lerp(other.position, t);
         self.uv = self.uv.lerp(other.uv, t);
@@ -67,7 +67,7 @@ impl Transformable<2> for BevyVertexPayload2d {
 impl HasPosition<2, Vec2> for BevyVertexPayload2d {
     type S = f32;
 
-    #[inline(always)]
+    #[inline]
     fn from_pos(v: Vec2) -> Self {
         Self {
             position: v,
@@ -75,12 +75,12 @@ impl HasPosition<2, Vec2> for BevyVertexPayload2d {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn pos(&self) -> &Vec2 {
         &self.position
     }
 
-    #[inline(always)]
+    #[inline]
     fn set_pos(&mut self, v: Vec2) {
         self.position = v;
     }

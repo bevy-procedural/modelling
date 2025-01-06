@@ -28,12 +28,12 @@ pub struct HalfEdgeFaceImpl<T: HalfEdgeImplMeshType> {
 impl<T: HalfEdgeImplMeshType + MeshType3D> Face3d<T> for HalfEdgeFaceImpl<T> {}
 
 impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
-    #[inline(always)]
+    #[inline]
     fn edge<'a>(&'a self, mesh: &'a T::Mesh) -> &'a T::Edge {
         mesh.edge(self.edge)
     }
 
-    #[inline(always)]
+    #[inline]
     fn edge_id(&self) -> T::E {
         self.edge
     }
@@ -43,12 +43,12 @@ impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
         // TODO
     }
 
-    #[inline(always)]
+    #[inline]
     fn set_edge(&mut self, edge: T::E) {
         self.edge = edge;
     }
 
-    #[inline(always)]
+    #[inline]
     fn id(&self) -> T::F {
         self.id
     }
@@ -75,7 +75,7 @@ impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
         &mut self.payload
     }
 
-    #[inline(always)]
+    #[inline]
     fn vertices<'a>(
         &'a self,
         mesh: &'a T::Mesh,
@@ -83,7 +83,7 @@ impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
         self.edges(mesh).map(|e| e.target(mesh).clone())
     }
 
-    #[inline(always)]
+    #[inline]
     #[allow(refining_impl_trait)]
     fn edges<'a>(&'a self, mesh: &'a T::Mesh) -> ForwardEdgeIterator<'a, T>
     where

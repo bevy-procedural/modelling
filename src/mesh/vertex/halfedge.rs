@@ -17,7 +17,7 @@ where
             .filter(|e| e.is_boundary_self())
             .exactly_one()
         {
-            debug_assert_eq!(e.origin_id(), self.id());
+            debug_assert_eq!(e.origin_id(mesh), self.id());
             Some(e.id())
         } else {
             None

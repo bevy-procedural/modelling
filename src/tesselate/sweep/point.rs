@@ -63,7 +63,7 @@ impl<Vec2: Vector2D> std::cmp::PartialOrd for EventPoint<Vec2> {
 }
 
 impl<Vec2: Vector2D> std::cmp::Ord for EventPoint<Vec2> {
-    #[inline(always)]
+    #[inline]
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         // TODO: Undefined behavior if float comparison is not defined
         if let Some(res) = other.vec.y().partial_cmp(&self.vec.y()) {

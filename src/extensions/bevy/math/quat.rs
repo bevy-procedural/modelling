@@ -6,29 +6,29 @@ impl Quarternion for Quat {
     type Vec3 = Vec3;
     type Vec4 = Vec4;
 
-    #[inline(always)]
+    #[inline]
     fn identity() -> Self {
         Quat::IDENTITY
     }
 
-    #[inline(always)]
+    #[inline]
     fn from_rotation_arc(from: Vec3, to: Vec3) -> Self {
         //assert!((from.length() - 1.0).abs() < 0.01);
         //assert!((to.length() - 1.0).abs() < 0.01);
         Quat::from_rotation_arc(from, to)
     }
 
-    #[inline(always)]
+    #[inline]
     fn from_axis_angle(axis: Self::Vec3, angle: Self::S) -> Self {
         Quat::from_axis_angle(axis, angle)
     }
 
-    #[inline(always)]
+    #[inline]
     fn axis_angle(&self) -> (Self::Vec3, Self::S) {
         self.to_axis_angle()
     }
 
-    #[inline(always)]
+    #[inline]
     fn vec4(&self) -> Vec4 {
         Vec4::new(self.x, self.y, self.z, self.w)
     }

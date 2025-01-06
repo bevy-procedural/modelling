@@ -230,7 +230,7 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
     ///    When `autoclose` is true, the last polygon will be connected to the first.
     /// - `n=3, m=2, !open`: create a hem of pentagons. The "tip" of each pentagon points outwards.
     #[must_use]
-    #[inline(always)]
+    #[inline]
     fn crochet(
         &mut self,
         start: T::E,
@@ -537,11 +537,11 @@ mod tests {
                 .collect_vec(),
         );
         let old_boundary_vertices: HashSet<usize, RandomState> =
-            HashSet::from_iter(old_boundary.iter().map(|e| mesh.edge(*e).origin_id()));
+            HashSet::from_iter(old_boundary.iter().map(|e| mesh.edge(*e).origin_id(&mesh)));
         let diagonals: HashSet<usize, RandomState> = HashSet::from_iter(
             inserted_halfedges
                 .iter()
-                .filter(|e| old_boundary_vertices.contains(&mesh.edge(**e).origin_id()))
+                .filter(|e| old_boundary_vertices.contains(&mesh.edge(**e).origin_id(&mesh)))
                 .cloned(),
         );
         assert_eq!(diagonals.len(), config.num_diagonals);
@@ -620,7 +620,7 @@ mod tests {
             if config.backwards.unwrap() {
                 assert_eq!(
                     mesh.edge(first_edge)
-                        .same_boundary_back(&mesh, mesh.edge(last_edge).origin_id()),
+                        .same_boundary_back(&mesh, mesh.edge(last_edge).origin_id(&mesh)),
                     Some(last_edge)
                 );
                 assert_eq!(
@@ -638,7 +638,7 @@ mod tests {
             } else {
                 assert_eq!(
                     mesh.edge(first_edge)
-                        .same_boundary(&mesh, mesh.edge(last_edge).origin_id()),
+                        .same_boundary(&mesh, mesh.edge(last_edge).origin_id(&mesh)),
                     Some(last_edge)
                 );
                 assert_eq!(

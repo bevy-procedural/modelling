@@ -49,12 +49,6 @@ pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
     /// Returns the prev id
     fn prev_id(&self) -> T::E;
 
-    /// Returns the source vertex of the half-edge
-    fn origin_id(&self) -> T::V;
-
-    /// Returns the target vertex id of the half-edge. Reached via the next half-edge, not the twin.
-    fn target_id(&self, mesh: &T::Mesh) -> T::V;
-
     /// Returns the face the half-edge is incident to
     fn face<'a>(&'a self, mesh: &'a T::Mesh) -> Option<&'a T::Face>;
 
@@ -72,14 +66,14 @@ pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
     /// The returned edge's origin is `v`.
     fn same_boundary(&self, mesh: &T::Mesh, v: T::V) -> Option<T::E> {
         self.edges_face(mesh)
-            .find(|e| e.origin_id() == v)
+            .find(|e| e.origin_id(mesh) == v)
             .map(|e| e.id())
     }
     /// Like `same_boundary` but searches clockwise.
     /// The returned edge's origin is `v`.
     fn same_boundary_back(&self, mesh: &T::Mesh, v: T::V) -> Option<T::E> {
         self.edges_face_back(mesh)
-            .find(|e| e.origin_id() == v)
+            .find(|e| e.origin_id(mesh) == v)
             .map(|e| e.id())
     }
 
@@ -140,7 +134,7 @@ mod tests {
         for face in mesh.faces() {
             face.edges(&mesh).for_each(|e1| {
                 face.edges(&mesh).for_each(|e2| {
-                    assert!(e1.same_boundary(&mesh, e2.origin_id()).is_some());
+                    assert!(e1.same_boundary(&mesh, e2.origin_id(&mesh)).is_some());
                 });
             });
         }

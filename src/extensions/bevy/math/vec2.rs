@@ -3,95 +3,95 @@ use bevy::math::{Affine2, Vec2};
 
 impl Vector<f32, 2> for Vec2 {
     // Don't use the bevy implementation since it is approximate!
-    /*#[inline(always)]
+    /*#[inline]
     fn angle_between(&self, other: Self) -> f32 {
         Vec2::angle_to(*self, other)
     }*/
 
-    #[inline(always)]
+    #[inline]
     fn distance(&self, other: &Self) -> f32 {
         Vec2::distance(*self, *other)
     }
 
-    #[inline(always)]
+    #[inline]
     fn distance_squared(&self, other: &Self) -> f32 {
         Vec2::distance_squared(*self, *other)
     }
 
-    #[inline(always)]
+    #[inline]
     fn length(&self) -> f32 {
         Vec2::length(*self)
     }
 
-    #[inline(always)]
+    #[inline]
     fn length_squared(&self) -> f32 {
         Vec2::length_squared(*self)
     }
 
-    #[inline(always)]
+    #[inline]
     fn dot(&self, other: &Self) -> f32 {
         Vec2::dot(*self, *other)
     }
 
-    #[inline(always)]
+    #[inline]
     fn x(&self) -> f32 {
         self.x
     }
 
-    #[inline(always)]
+    #[inline]
     fn y(&self) -> f32 {
         self.y
     }
 
-    #[inline(always)]
+    #[inline]
     fn z(&self) -> f32 {
         0.0
     }
 
-    #[inline(always)]
+    #[inline]
     fn w(&self) -> f32 {
         0.0
     }
 
-    #[inline(always)]
+    #[inline]
     fn normalize(&self) -> Self {
         Vec2::normalize(*self)
     }
 
-    #[inline(always)]
+    #[inline]
     fn splat(value: f32) -> Self {
         Vec2::splat(value)
     }
 
-    #[inline(always)]
+    #[inline]
     fn from_x(x: f32) -> Self {
         Vec2::new(x, 0.0)
     }
 
-    #[inline(always)]
+    #[inline]
     fn from_xy(x: f32, y: f32) -> Self {
         Vec2::new(x, y)
     }
 
     /// drop the z coordinate
-    #[inline(always)]
+    #[inline]
     fn from_xyz(x: f32, y: f32, _: f32) -> Self {
         Vec2::new(x, y)
     }
 
-    #[inline(always)]
+    #[inline]
     fn is_about(&self, other: &Self, epsilon: f32) -> bool {
         self.x.is_about(other.x, epsilon) && self.y.is_about(other.y, epsilon)
     }
 }
 
 impl HasZero for Vec2 {
-    #[inline(always)]
+    #[inline]
     fn zero() -> Self {
         Vec2::ZERO
     }
 
-    #[inline(always)]
+    #[inline]
     fn is_zero(&self) -> bool {
         *self == Vec2::ZERO
     }
@@ -100,7 +100,7 @@ impl HasZero for Vec2 {
 impl Vector2D for Vec2 {
     type S = f32;
 
-    #[inline(always)]
+    #[inline]
     fn new(x: f32, y: f32) -> Self {
         Vec2::new(x, y)
     }
@@ -114,7 +114,7 @@ impl TransformTrait<f32, 2> for Affine2 {
     type Vec = Vec2;
     type Rot = f32;
 
-    #[inline(always)]
+    #[inline]
     fn identity() -> Self {
         Affine2::IDENTITY
     }
@@ -123,42 +123,42 @@ impl TransformTrait<f32, 2> for Affine2 {
         bevy::math::Affine2::from_angle(angle)
     }
 
-    #[inline(always)]
+    #[inline]
     fn from_rotation_arc(from: Vec2, to: Vec2) -> Self {
         bevy::math::Affine2::from_angle(from.angle_to(to))
     }
 
-    #[inline(always)]
+    #[inline]
     fn from_translation(v: Vec2) -> Self {
         bevy::math::Affine2::from_translation(v)
     }
 
-    #[inline(always)]
+    #[inline]
     fn from_scale(v: Vec2) -> Self {
         bevy::math::Affine2::from_scale(v)
     }
 
-    #[inline(always)]
+    #[inline]
     fn with_scale(&self, scale: Self::Vec) -> Self {
         bevy::math::Affine2::from_scale(scale) * *self
     }
 
-    #[inline(always)]
+    #[inline]
     fn with_translation(&self, v: Self::Vec) -> Self {
         bevy::math::Affine2::from_translation(v) * *self
     }
 
-    #[inline(always)]
+    #[inline]
     fn apply(&self, v: Vec2) -> Vec2 {
         bevy::math::Affine2::transform_point2(self, v)
     }
 
-    #[inline(always)]
+    #[inline]
     fn apply_vec(&self, v: Vec2) -> Vec2 {
         bevy::math::Affine2::transform_vector2(self, v)
     }
 
-    #[inline(always)]
+    #[inline]
     fn chain(&self, other: &Self) -> Self {
         *self * *other
     }

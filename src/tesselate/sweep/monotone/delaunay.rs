@@ -173,13 +173,13 @@ impl<V: IndexType, Vec2: Vector2D> DelaunayMonoTriangulator<V, Vec2> {
     }
 
     /// Check if an edge is constrained.
-    #[inline(always)]
+    #[inline]
     fn is_constrained_edge(&self, a: usize, b: usize) -> bool {
         self.constrained_edges.contains(&(a.min(b), a.max(b)))
     }
 
     /// Mark an edge as constrained.
-    #[inline(always)]
+    #[inline]
     fn constrain_edge(&mut self, a: usize, b: usize) {
         self.constrained_edges.insert((a.min(b), a.max(b)));
     }

@@ -3,8 +3,8 @@ use ab_glyph::{Font as AbFont, FontRef, GlyphId, ScaleFont};
 use crate::{
     math::{HasPosition, IndexType, Vector},
     mesh::{
-        CurvedEdge, CurvedEdgeType, DefaultEdgePayload, DefaultFacePayload, HalfEdge, MeshBasics,
-        MeshBuilder,
+        CurvedEdge, CurvedEdgeType, DefaultEdgePayload, DefaultFacePayload, EdgeBasics, HalfEdge,
+        MeshBasics, MeshBuilder,
     },
 };
 
@@ -175,7 +175,7 @@ impl<'a> Font<'a> {
                     T::VP::from_pos(p1 * scale + trans),
                     Default::default(),
                 );
-                let v0 = mesh.edge(e).origin_id();
+                let v0 = mesh.edge(e).origin_id(mesh);
                 let v1 = mesh.edge(e).target_id(mesh);
                 cur_v = v1;
                 prev_v = v0;

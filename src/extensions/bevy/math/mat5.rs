@@ -158,12 +158,12 @@ impl TransformTrait<f32, 4> for Mat5<f32> {
         m
     }
 
-    #[inline(always)]
+    #[inline]
     fn apply(&self, v: Self::Vec) -> Self::Vec {
         *self * v
     }
 
-    #[inline(always)]
+    #[inline]
     fn apply_vec(&self, v: Self::Vec) -> Self::Vec {
         // don't apply translation
         let mut res = Vec4::ZERO;
@@ -175,7 +175,7 @@ impl TransformTrait<f32, 4> for Mat5<f32> {
         res
     }
 
-    #[inline(always)]
+    #[inline]
     fn chain(&self, other: &Self) -> Self {
         *self * *other
     }

@@ -5,7 +5,7 @@ use crate::{
 };
 
 impl<T: HalfEdgeImplMeshTypePlus> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T> {
-    #[inline(always)]
+    #[inline]
     fn insert_halfedge_pair_forced(
         &mut self,
         to_origin: T::E,
@@ -100,13 +100,13 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T>
 
         // find the "other_new". It has the characteristic property of sharing the same twin with the old edge.
         let mut other_new = old_edge.twin(self).next(self);
-        let first_other_new_origin = other_new.origin_id();
+        let first_other_new_origin = other_new.origin_id(self);
         loop {
             if other_new.twin_id() == e {
                 break;
             }
             other_new = other_new.twin(self).next(self);
-            if other_new.origin_id() != first_other_new_origin {
+            if other_new.origin_id(self) != first_other_new_origin {
                 // Not a valid wheel
                 return None;
             }
@@ -115,7 +115,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T>
                 return None;
             }
         }
-        let ono = other_new.origin_id();
+        let ono = other_new.origin_id(self);
         let oi = other_new.id();
 
         // Insert the new edge
@@ -146,7 +146,7 @@ impl<T: HalfEdgeImplMeshTypePlus> HalfEdgeMeshImpl<T> {
     /// Inserts a half-edge pair with the given ids.
     /// Updates the neighbors.
     /// Doesn't check whether the operation is allowed!
-    #[inline(always)]
+    #[inline]
     pub(super) fn insert_edge_unchecked(
         &mut self,
         input: T::E,
@@ -160,12 +160,12 @@ impl<T: HalfEdgeImplMeshTypePlus> HalfEdgeMeshImpl<T> {
             let e_input = self.edge(input);
             let e_output = self.edge(output);
             let v = e_input.target_id(self);
-            let w = e_output.origin_id();
+            let w = e_output.origin_id(self);
             (e_input.next_id(), e_output.prev_id(), v, w)
         };
 
         debug_assert_eq!(self.edge(input).target_id(self), v);
-        debug_assert_eq!(self.edge(output).origin_id(), w);
+        debug_assert_eq!(self.edge(output).origin_id(self), w);
 
         let (e1, e2) = if should_be_valid {
             self.insert_halfedge_pair(input, v, fv, tw, w, output, f_face, b_face, ep)

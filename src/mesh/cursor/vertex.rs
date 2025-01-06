@@ -41,7 +41,7 @@ pub trait VertexCursorData<'a, T: MeshType + 'a>: Sized + Debug {
     fn id(&self) -> T::V;
 
     
-    #[inline(always)]
+    #[inline]
     fn unwrap<'b>(&'b self) -> &'b T::Vertex
     where
         'a: 'b,
@@ -49,12 +49,12 @@ pub trait VertexCursorData<'a, T: MeshType + 'a>: Sized + Debug {
         MeshBasics::vertex(self.mesh(), self.id())
     }
 
-    #[inline(always)]
+    #[inline]
     fn is_none(&self) -> bool {
         self.id() == IndexType::max() || !self.mesh().has_vertex(self.id())
     }
 
-    #[inline(always)]
+    #[inline]
     fn get<'b>(&'b self) -> Option<&'b T::Vertex>
     where
         'a: 'b,
@@ -62,7 +62,7 @@ pub trait VertexCursorData<'a, T: MeshType + 'a>: Sized + Debug {
         self.mesh().get_vertex(self.id())
     }
 
-    #[inline(always)]
+    #[inline]
     fn map<F: FnOnce(&T::Vertex) -> T::V>(self, f: F) -> Self {
         let id = if let Some(e) = self.get() {
             f(e)
@@ -80,22 +80,22 @@ pub trait VertexCursorData<'a, T: MeshType + 'a>: Sized + Debug {
 impl<'a, T: MeshType + 'a> VertexCursorData<'a, T> for VertexCursor<'a, T> {
     type EC = EdgeCursor<'a, T>;
 
-    #[inline(always)]
+    #[inline]
     fn id(&self) -> T::V {
         self.vertex
     }
 
-    #[inline(always)]
+    #[inline]
     fn mesh<'b>(&'b self) -> &'b T::Mesh {
         self.mesh
     }
 
-    #[inline(always)]
+    #[inline]
     fn derive(self, id: T::V) -> VertexCursor<'a, T> {
         Self::new(self.mesh, id)
     }
 
-    #[inline(always)]
+    #[inline]
     fn derive_ec(self, id: T::E) -> EdgeCursor<'a, T> {
         EdgeCursor::new(self.mesh, id)
     }
@@ -104,22 +104,22 @@ impl<'a, T: MeshType + 'a> VertexCursorData<'a, T> for VertexCursor<'a, T> {
 impl<'a, T: MeshType + 'a> VertexCursorData<'a, T> for VertexCursorMut<'a, T> {
     type EC = EdgeCursorMut<'a, T>;
 
-    #[inline(always)]
+    #[inline]
     fn id(&self) -> T::V {
         self.vertex
     }
 
-    #[inline(always)]
+    #[inline]
     fn mesh<'b>(&'b self) -> &'b T::Mesh {
         self.mesh
     }
 
-    #[inline(always)]
+    #[inline]
     fn derive(self, id: T::V) -> VertexCursorMut<'a, T> {
         Self::new(self.mesh, id)
     }
 
-    #[inline(always)]
+    #[inline]
     fn derive_ec(self, id: T::E) -> EdgeCursorMut<'a, T> {
         EdgeCursorMut::new(self.mesh, id)
     }

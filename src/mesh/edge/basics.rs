@@ -15,9 +15,15 @@ pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone {
     /// Returns the source vertex of the edge. If it is not directed, can be either vertex but not the same as the target.
     fn origin<'a>(&'a self, mesh: &'a T::Mesh) -> &'a T::Vertex;
 
+    /// Returns the source vertex of the half-edge
+    fn origin_id(&self, mesh: &T::Mesh) -> T::V;
+
     /// Returns the target vertex of the edge. If it is not directed, can be either vertex but not the same as the origin.
     fn target<'a>(&'a self, mesh: &'a T::Mesh) -> &'a T::Vertex;
 
+    /// Returns the target vertex id of the half-edge. Reached via the next half-edge, not the twin.
+    fn target_id(&self, mesh: &T::Mesh) -> T::V;
+    
     /// Returns whether the edge (i.e., this HalfEdge or its twin) is a boundary edge, i.e., adjacent to a hole.
     fn is_boundary(&self, mesh: &T::Mesh) -> bool;
 

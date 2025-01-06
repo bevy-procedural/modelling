@@ -18,7 +18,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     fn check_vertex_invariants(&self) -> Result<(), String> {
         if let Some(bad_vertex) = self.vertices().find(|v| {
             if let Some(e) = v.edge(self) {
-                e.origin_id() != v.id()
+                e.origin_id(self) != v.id()
             } else {
                 false
             }
@@ -27,7 +27,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
                 "Vertex {} has edge {} with origin {}",
                 bad_vertex.id(),
                 bad_vertex.edge(self).unwrap().id(),
-                bad_vertex.edge(self).unwrap().origin_id()
+                bad_vertex.edge(self).unwrap().origin_id(self)
             ));
         }
 
@@ -37,12 +37,12 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     fn check_edges_are_loops(&self) -> Result<(), String> {
         if let Some(bad_edge) = self
             .edges()
-            .find(|e| e.next(self).same_boundary(self, e.origin_id()).is_none())
+            .find(|e| e.next(self).same_boundary(self, e.origin_id(self)).is_none())
         {
             return Err(format!(
                 "Successor of edge {} cannot reach it's origin {} during forward search",
                 bad_edge.id(),
-                bad_edge.origin_id()
+                bad_edge.origin_id(self)
             ));
         }
 

@@ -17,77 +17,77 @@ impl Scalar for f64 {
     const INFINITY: Self = std::f64::INFINITY;
     const NEG_INFINITY: Self = std::f64::NEG_INFINITY;
 
-    #[inline(always)]
+    #[inline]
     fn is_positive(self) -> bool {
         self.is_sign_positive()
     }
 
-    #[inline(always)]
+    #[inline]
     fn is_negative(self) -> bool {
         self.is_sign_negative()
     }
 
-    #[inline(always)]
+    #[inline]
     fn acos(self) -> Self {
         f64::acos(self)
     }
 
-    #[inline(always)]
+    #[inline]
     fn sin(&self) -> Self {
         f64::sin(*self)
     }
 
-    #[inline(always)]
+    #[inline]
     fn cos(&self) -> Self {
         f64::cos(*self)
     }
 
-    #[inline(always)]
+    #[inline]
     fn tan(&self) -> Self {
         f64::tan(*self)
     }
 
-    #[inline(always)]
+    #[inline]
     fn cot(&self) -> Self {
         self.tan().recip()
     }
 
-    #[inline(always)]
+    #[inline]
     fn atan2(&self, other: Self) -> Self {
         f64::atan2(*self, other)
     }
 
-    #[inline(always)]
+    #[inline]
     fn as_f64(self) -> f64 {
         self
     }
 
-    #[inline(always)]
+    #[inline]
     fn from_usize(value: usize) -> Self {
         value as f64
     }
 
-    #[inline(always)]
+    #[inline]
     fn max(&self, b: Self) -> Self {
         f64::max(*self, b)
     }
 
-    #[inline(always)]
+    #[inline]
     fn min(&self, b: Self) -> Self {
         f64::min(*self, b)
     }
 
-    #[inline(always)]
+    #[inline]
     fn sqrt(self) -> Self {
         f64::sqrt(self)
     }
 
-    #[inline(always)]
+    #[inline]
     fn is_finite(self) -> bool {
         f64::is_finite(self)
     }
 
-    #[inline(always)]
+    #[inline]
     fn is_nan(self) -> bool {
         f64::is_nan(self)
     }

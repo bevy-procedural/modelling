@@ -35,14 +35,14 @@ impl Transformable<3> for BevyVertexPayload3d {
     type Trans = bevy::transform::components::Transform;
     type Rot = Quat;
 
-    #[inline(always)]
+    #[inline]
     fn translate(&mut self, v: &Self::Vec) -> &mut Self {
         self.position += *v;
         // TODO: should the uv be translated as well?
         self
     }
 
-    #[inline(always)]
+    #[inline]
     fn transform(&mut self, t: &Self::Trans) -> &mut Self {
         self.position = t.apply(self.position);
         self.normal = t.apply_vec(self.normal);
@@ -50,7 +50,7 @@ impl Transformable<3> for BevyVertexPayload3d {
         self
     }
 
-    #[inline(always)]
+    #[inline]
     fn rotate(&mut self, r: &Self::Rot) -> &mut Self {
         self.position = r.mul_vec3(self.position);
         self.normal = r.mul_vec3(self.normal);
@@ -58,13 +58,13 @@ impl Transformable<3> for BevyVertexPayload3d {
         self
     }
 
-    #[inline(always)]
+    #[inline]
     fn scale(&mut self, s: &Self::Vec) -> &mut Self {
         self.position *= *s;
         self
     }
 
-    #[inline(always)]
+    #[inline]
     fn lerp(&mut self, other: &Self, t: Self::S) -> &mut Self {
         self.position = self.position.lerp(other.position, t);
         // TODO: or reset to zero?
@@ -77,7 +77,7 @@ impl Transformable<3> for BevyVertexPayload3d {
 impl HasPosition<3, Vec3> for BevyVertexPayload3d {
     type S = f32;
 
-    #[inline(always)]
+    #[inline]
     fn from_pos(v: Vec3) -> Self {
         Self {
             position: v,
@@ -86,12 +86,12 @@ impl HasPosition<3, Vec3> for BevyVertexPayload3d {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn pos(&self) -> &Vec3 {
         &self.position
     }
 
-    #[inline(always)]
+    #[inline]
     fn set_pos(&mut self, v: Vec3) {
         self.position = v;
     }
@@ -100,12 +100,12 @@ impl HasPosition<3, Vec3> for BevyVertexPayload3d {
 impl HasNormal<3, Vec3> for BevyVertexPayload3d {
     type S = f32;
 
-    #[inline(always)]
+    #[inline]
     fn normal(&self) -> &Vec3 {
         &self.normal
     }
 
-    #[inline(always)]
+    #[inline]
     fn set_normal(&mut self, normal: Vec3) {
         self.normal = normal;
     }
@@ -114,12 +114,12 @@ impl HasNormal<3, Vec3> for BevyVertexPayload3d {
 impl HasUV<Vec2> for BevyVertexPayload3d {
     type S = f32;
 
-    #[inline(always)]
+    #[inline]
     fn uv(&self) -> &Vec2 {
         &self.uv
     }
 
-    #[inline(always)]
+    #[inline]
     fn set_uv(&mut self, uv: Vec2) {
         self.uv = uv;
     }

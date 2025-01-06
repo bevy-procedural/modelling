@@ -10,12 +10,12 @@ pub trait HasZero {
 }
 
 impl<T: num_traits::Zero + Scalar> HasZero for T {
-    #[inline(always)]
+    #[inline]
     fn zero() -> Self {
         T::zero()
     }
 
-    #[inline(always)]
+    #[inline]
     fn is_zero(&self) -> bool {
         self.is_zero()
     }

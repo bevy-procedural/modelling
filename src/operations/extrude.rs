@@ -129,14 +129,14 @@ where
     fn windmill(&mut self, start: T::E, hub: T::VP) -> T::V {
         // TODO: replace with loft n=1
         let e0 = self.edge(start);
-        let origin = e0.origin_id();
+        let origin = e0.origin_id(self);
         let mut input = self.edge(start).prev_id();
         let (_, v) = self
             .insert_vertex_e(input, hub, Default::default())
             .unwrap(); // TODO: error handling
         loop {
             let e = self.edge(input);
-            if e.origin_id() == origin {
+            if e.origin_id(self) == origin {
                 break;
             }
             input = e.prev_id();

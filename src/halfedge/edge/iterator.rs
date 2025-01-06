@@ -7,7 +7,7 @@ use crate::{
 impl<T: HalfEdgeImplMeshType> HalfEdgeImpl<T> {
     /// Iterates all half-edges incident to the same face
     /// WARNING: This method is unsafe because it allows mutable access to the mesh! Be careful!
-    #[inline(always)]
+    #[inline]
     pub fn edges_face_mut<'a>(&'a self, mesh: &'a mut T::Mesh) -> ForwardEdgeIteratorMut<'a, T> {
         ForwardEdgeIteratorMut::new(self.id(), mesh)
     }
@@ -43,7 +43,7 @@ where
 {
     type Item = &'a T::Edge;
 
-    #[inline(always)]
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         if self.is_first {
             self.is_first = false;
@@ -60,7 +60,7 @@ where
 
     /// Estimates the number of edges in the loop by traversing it.
     /// This is an O(n) operation where n is the number of edges in the face.
-    #[inline(always)]
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let mut curr = self.current;
         let mut len = 1;
@@ -97,7 +97,7 @@ impl<'a, T: HalfEdgeImplMeshType> BackwardEdgeIterator<'a, T> {
 impl<'a, T: HalfEdgeImplMeshType> Iterator for BackwardEdgeIterator<'a, T> {
     type Item = &'a HalfEdgeImpl<T>;
 
-    #[inline(always)]
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         if self.is_first {
             self.is_first = false;

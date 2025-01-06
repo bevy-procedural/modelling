@@ -2,7 +2,7 @@ use super::HalfEdgeImpl;
 use crate::{
     halfedge::{HalfEdgeImplMeshType, HalfEdgeMeshImpl},
     math::IndexType,
-    mesh::{FaceBasics, HalfEdge, HalfEdgeVertex, MeshBasics, VertexBasics},
+    mesh::{EdgeBasics, FaceBasics, HalfEdge, HalfEdgeVertex, MeshBasics, VertexBasics},
 };
 
 impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
@@ -54,47 +54,37 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
         self.origin_id = origin;
     }
 
-    #[inline(always)]
+    #[inline]
     fn next<'a>(&self, mesh: &'a HalfEdgeMeshImpl<T>) -> &'a HalfEdgeImpl<T> {
         mesh.edge(self.next)
     }
 
-    #[inline(always)]
+    #[inline]
     fn next_id(&self) -> T::E {
         self.next
     }
 
-    #[inline(always)]
+    #[inline]
     fn twin<'a>(&self, mesh: &'a HalfEdgeMeshImpl<T>) -> &'a HalfEdgeImpl<T> {
         mesh.edge(self.twin)
     }
 
-    #[inline(always)]
+    #[inline]
     fn twin_id(&self) -> T::E {
         self.twin
     }
 
-    #[inline(always)]
+    #[inline]
     fn prev<'a>(&self, mesh: &'a HalfEdgeMeshImpl<T>) -> &'a HalfEdgeImpl<T> {
         mesh.edge(self.prev)
     }
 
-    #[inline(always)]
+    #[inline]
     fn prev_id(&self) -> T::E {
         self.prev
     }
 
-    #[inline(always)]
-    fn origin_id(&self) -> T::V {
-        self.origin_id
-    }
-
-    #[inline(always)]
-    fn target_id(&self, mesh: &HalfEdgeMeshImpl<T>) -> T::V {
-        self.next(mesh).origin_id()
-    }
-
-    #[inline(always)]
+    #[inline]
     fn face<'a>(&'a self, mesh: &'a HalfEdgeMeshImpl<T>) -> Option<&'a T::Face> {
         if self.face == IndexType::max() {
             None
@@ -103,12 +93,12 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn face_id(&self) -> T::F {
         self.face
     }
 
-    #[inline(always)]
+    #[inline]
     fn other_face<'a>(&'a self, mesh: &'a HalfEdgeMeshImpl<T>) -> Option<&'a T::Face> {
         let face = self.twin(mesh).face_id();
         if face == IndexType::max() {
@@ -118,13 +108,13 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn is_boundary_self(&self) -> bool {
         self.face == IndexType::max()
     }
 
     fn flip(e: T::E, mesh: &mut HalfEdgeMeshImpl<T>) {
-        let origin_id = mesh.edge(e).origin_id();
+        let origin_id = mesh.edge(e).origin_id(mesh);
         let target_id = mesh.edge(e).target_id(mesh);
 
         let edge = mesh.edge(e);
@@ -165,7 +155,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
     }
 
     fn is_valid(&self, mesh: &T::Mesh) -> Result<(), String> {
-        let oi = self.origin_id();
+        let oi = self.origin_id(mesh);
         let ti = self.target_id(mesh);
         let prev = self.prev(mesh);
         let next = self.next(mesh);

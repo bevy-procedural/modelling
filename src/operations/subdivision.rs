@@ -55,7 +55,7 @@ where
         for face in &fs {
             // get the edge chain
             let edges = self.face(*face).edges(self).cloned().collect::<Vec<_>>();
-            let vs = edges.iter().map(|e| e.origin_id()).collect::<Vec<_>>();
+            let vs = edges.iter().map(|e| e.origin_id(self)).collect::<Vec<_>>();
             assert!(edges.len() == 3);
 
             // insert an additional vertex for each edge
@@ -71,7 +71,7 @@ where
                     self,
                     [
                         (
-                            if vs[0] == edges[i].origin_id() || vs[0] == edges[i].target_id(self) {
+                            if vs[0] == edges[i].origin_id(self) || vs[0] == edges[i].target_id(self) {
                                 1
                             } else {
                                 0
@@ -79,7 +79,7 @@ where
                             vs[0],
                         ),
                         (
-                            if vs[1] == edges[i].origin_id() || vs[1] == edges[i].target_id(self) {
+                            if vs[1] == edges[i].origin_id(self) || vs[1] == edges[i].target_id(self) {
                                 1
                             } else {
                                 0
@@ -87,7 +87,7 @@ where
                             vs[1],
                         ),
                         (
-                            if vs[2] == edges[i].origin_id() || vs[2] == edges[i].target_id(self) {
+                            if vs[2] == edges[i].origin_id(self) || vs[2] == edges[i].target_id(self) {
                                 1
                             } else {
                                 0

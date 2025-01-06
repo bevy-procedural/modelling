@@ -7,7 +7,7 @@ pub type Vec2<S> = VecN<S, 2>;
 impl<S: Scalar> Vector2D for Vec2<S> {
     type S = S;
 
-    #[inline(always)]
+    #[inline]
     fn new(x: S, y: S) -> Self {
         Self::from([x, y])
     }

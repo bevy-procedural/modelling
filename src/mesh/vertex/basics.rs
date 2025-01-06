@@ -78,7 +78,7 @@ pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone {
 
     /*
     /// Iterates the wheel of vertices (will have length one if the vertex is manifold)
-    #[inline(always)]
+    #[inline]
     pub fn wheel<'a>(
         &'a self,
         mesh: &'a T::Mesh,

@@ -87,7 +87,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         false
     }
 
-    #[inline(always)]
+    #[inline]
     fn insert_edge_ee_forced(&mut self, input: T::E, output: T::E, ep: T::EP) -> T::E {
         let (e1, _e2) = self.insert_edge_unchecked(
             input,
@@ -100,7 +100,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         e1
     }
 
-    #[inline(always)]
+    #[inline]
     fn insert_edge_ee(&mut self, input: T::E, output: T::E, ep: T::EP) -> Option<T::E> {
         /*#[cfg(debug_assertions)]
         {
@@ -121,7 +121,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         Some(e1)
     }
 
-    #[inline(always)]
+    #[inline]
     fn insert_edge_vv(&mut self, a: T::V, b: T::V, ep: T::EP) -> Option<T::E> {
         // TODO: When allowing non-manifold meshes, their vertices might not be at boundary and in the same component, e.g., we could allow an edge from one interior point to another.
 
@@ -264,8 +264,8 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
             debug_assert_eq!(self.edge(e2).is_valid(self), Ok(()));
             debug_assert_eq!(self.edge(e).is_valid(self), Ok(()));
             debug_assert_eq!(self.edge(e1).target_id(self), v);
-            debug_assert_eq!(self.edge(e1).origin_id(), self.edge(e).target_id(self));
-            debug_assert_eq!(self.edge(e2).origin_id(), v);
+            debug_assert_eq!(self.edge(e1).origin_id(self), self.edge(e).target_id(self));
+            debug_assert_eq!(self.edge(e2).origin_id(self), v);
 
             return Some(e1);
         }

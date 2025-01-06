@@ -259,7 +259,7 @@ where
     }
 
     /// Add a vertex or return the index of the start vertex if the position is the same.
-    #[inline(always)]
+    #[inline]
     pub fn add_vertex_autoclose<const D: usize>(&mut self, v: T::Vec) -> T::V
     where
         T: EuclideanMeshType<D, Trans = Transform>,
@@ -276,7 +276,7 @@ where
     }
 
     /// Draws a straight line from the current vertex to a new vertex with the given position.
-    #[inline(always)]
+    #[inline]
     pub fn line<const D: usize>(&mut self, pos: T::Vec) -> &mut Self
     where
         T: MeshTypeHalfEdge + EuclideanMeshType<D, Trans = Transform>,
@@ -323,7 +323,7 @@ where
     }
 
     /// Draws a straight line from the current vertex to a new vertex with the given payload.
-    #[inline(always)]
+    #[inline]
     pub fn line_ex<const D: usize>(&mut self, vp: T::VP, ep: T::EP) -> &mut Self
     where
         T: EuclideanMeshType<D, Trans = Transform> + MeshTypeHalfEdge,
@@ -336,7 +336,7 @@ where
     }
 
     /// Draws a quadratic bezier curve from the current vertex to a new vertex with the given payload.
-    #[inline(always)]
+    #[inline]
     pub fn quad<const D: usize>(&mut self, control: T::Vec, end: T::Vec) -> &mut Self
     where
         T::Edge: CurvedEdge<D, T>,
@@ -350,7 +350,7 @@ where
     }
 
     /// Draws a cubic bezier curve from the current vertex to a new vertex with the given payload.
-    #[inline(always)]
+    #[inline]
     pub fn cubic<const D: usize>(
         &mut self,
         control1: T::Vec,

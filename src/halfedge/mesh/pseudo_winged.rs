@@ -70,8 +70,8 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
                 PseudoWingedEdge {
                     id: edge.id(),
                     twin: twin.id(),
-                    origin: edge.origin_id(),
-                    target: twin.origin_id(),
+                    origin: edge.origin_id(self),
+                    target: twin.origin_id(self),
                     prev: edge.prev_id(),
                     face: edge.face_id(),
                     next: edge.next_id(),

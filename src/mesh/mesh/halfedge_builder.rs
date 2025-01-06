@@ -4,7 +4,7 @@ use crate::mesh::{EdgeBasics, HalfEdge, MeshBasics, MeshTypeHalfEdge};
 pub trait MeshHalfEdgeBuilder<T: MeshTypeHalfEdge<Mesh = Self>>: MeshBasics<T> {
     /// Removes a half-edge from the mesh.
     /// Panics if the half-edge is not found or still connected to a face.
-    #[inline(always)]
+    #[inline]
     fn remove_halfedge(&mut self, e: T::E) {
         assert!(
             self.try_remove_halfedge(e),
@@ -44,7 +44,7 @@ pub trait MeshHalfEdgeBuilder<T: MeshTypeHalfEdge<Mesh = Self>>: MeshBasics<T> {
     ///
     /// Only on debug builds, this method will check that the operation makes
     /// sense, i.e., the vertices exist and the edges are correctly connected.
-    /// Doesn't care about the faces.    #[inline(always)]
+    /// Doesn't care about the faces.    #[inline]
     fn try_insert_halfedge_pair(
         &mut self,
         to_origin: T::E,
@@ -115,10 +115,10 @@ pub trait MeshHalfEdgeBuilder<T: MeshTypeHalfEdge<Mesh = Self>>: MeshBasics<T> {
                     origin
                 ));
             }
-            if from_origin.origin_id() != origin {
+            if from_origin.origin_id(self) != origin {
                 return Err(format!(
                     "from_origin.origin_id() != origin: {} != {}",
-                    from_origin.origin_id(),
+                    from_origin.origin_id(self),
                     origin
                 ));
             }
@@ -129,10 +129,10 @@ pub trait MeshHalfEdgeBuilder<T: MeshTypeHalfEdge<Mesh = Self>>: MeshBasics<T> {
                     target
                 ));
             }
-            if from_target.origin_id() != target {
+            if from_target.origin_id(self) != target {
                 return Err(format!(
                     "from_target.origin_id() != target: {} != {}",
-                    from_target.origin_id(),
+                    from_target.origin_id(self),
                     target
                 ));
             }
@@ -158,7 +158,7 @@ pub trait MeshHalfEdgeBuilder<T: MeshTypeHalfEdge<Mesh = Self>>: MeshBasics<T> {
     /// sense, i.e., the vertices exist and the edges are correctly connected.
     /// Doesn't care about the faces.
     /// On failure, it will panic.
-    #[inline(always)]
+    #[inline]
     fn insert_halfedge_pair(
         &mut self,
         to_origin: T::E,

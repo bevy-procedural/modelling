@@ -11,43 +11,43 @@ pub struct LineSegment2D<Vec2: Vector2D> {
 
 impl<Vec2: Vector2D> LineSegment2D<Vec2> {
     /// Creates a new line segment from two points.
-    #[inline(always)]
+    #[inline]
     pub fn new(start: Vec2, end: Vec2) -> Self {
         Self { start, end }
     }
 
     /// Returns the start point of the line segment.
-    #[inline(always)]
+    #[inline]
     pub fn start(&self) -> Vec2 {
         self.start
     }
 
     /// Returns the end point of the line segment.
-    #[inline(always)]
+    #[inline]
     pub fn end(&self) -> Vec2 {
         self.end
     }
 
     /// Returns the length of the line segment.
-    #[inline(always)]
+    #[inline]
     pub fn length(&self) -> Vec2::S {
         self.start().distance(&self.end())
     }
 
     /// Returns the squared length of the line segment.
-    #[inline(always)]
+    #[inline]
     pub fn length_squared(&self) -> Vec2::S {
         self.start().distance_squared(&self.end())
     }
 
     /// Returns the midpoint of the line segment.
-    #[inline(always)]
+    #[inline]
     pub fn midpoint(&self) -> Vec2 {
         self.start() + (self.end() - self.start()) * Vec2::S::HALF
     }
 
     /// Returns the direction of the line segment.
-    #[inline(always)]
+    #[inline]
     pub fn direction(&self) -> Vec2 {
         (self.end() - self.start()).normalize()
     }

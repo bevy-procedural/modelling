@@ -55,7 +55,7 @@ pub fn try_min_weight_small_direct<V: IndexType, Vec2: Vector2D, Poly: Polygon<V
 }
 
 /// Quickly min-weight triangulates a (not necessarily convex) quadrilateral.
-#[inline(always)]
+#[inline]
 pub fn min_weight_quad<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2>>(
     vs: &Vec<IndexedVertex2D<V, Vec2>>,
     indices: &mut Triangulation<V>,
@@ -96,7 +96,7 @@ pub fn min_weight_quad<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2>>(
 }
 
 /// Quickly min-weight triangulates a (not necessarily convex) pentagon.
-#[inline(always)]
+#[inline]
 pub fn min_weight_pent<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec2>>(
     vs: &Vec<IndexedVertex2D<V, Vec2>>,
     _indices: &mut Triangulation<V>,

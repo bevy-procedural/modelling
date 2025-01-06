@@ -10,7 +10,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
 
     /// Removes the vertex `v`.
     /// Panics if the vertex doesn't exist or if it is not isolated.
-    #[inline(always)]
+    #[inline]
     fn remove_vertex(&mut self, v: T::V) {
         assert!(self.try_remove_vertex(v), "Could not remove vertex {}", v);
     }
@@ -23,7 +23,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     ///
     /// For half-edge meshes, the payload will be added to the outgoing half-edge
     /// from `a` to `b`. This is also the half-edge that is returned.
-    #[inline(always)]
+    #[inline]
     fn insert_isolated_edge(&mut self, a: T::VP, b: T::VP, ep: T::EP) -> T::E {
         let v = self.insert_vertex(a);
         self.insert_vertex_v(v, b, ep).unwrap().0
@@ -37,7 +37,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     ///
     /// For half-edge meshes, the payload will be added to the outgoing half-edge
     /// from the current vertex to the new vertex. This is also the half-edge that is returned.
-    #[inline(always)]
+    #[inline]
     #[must_use]
     fn insert_vertex_v(&mut self, v: T::V, vp: T::VP, ep: T::EP) -> Option<(T::E, T::V)> {
         let w = self.insert_vertex(vp);
@@ -56,7 +56,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     ///
     /// For half-edge meshes, the payload will be added to the outgoing half-edge
     /// from the current vertex to the new vertex. This is also the half-edge that is returned.
-    #[inline(always)]
+    #[inline]
     #[must_use]
     fn insert_vertex_e(&mut self, e: T::E, vp: T::VP, ep: T::EP) -> Option<(T::E, T::V)> {
         let v = self.insert_vertex(vp);
@@ -106,7 +106,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Panics if the edge doesn't exist or there are adjacent faces.
     ///
     /// On half-edge meshes, this will also remove the twin edge.
-    #[inline(always)]
+    #[inline]
     fn remove_edge(&mut self, e: T::E) {
         assert!(self.try_remove_edge(e), "Could not remove edge {}", e);
     }
@@ -122,7 +122,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
 
     /// Removes the face `f`.
     /// Panics if the face doesn't exist.
-    #[inline(always)]
+    #[inline]
     fn remove_face(&mut self, f: T::F) {
         assert!(self.try_remove_face(f), "Could not remove face {}", f);
     }

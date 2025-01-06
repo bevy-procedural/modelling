@@ -58,7 +58,7 @@ impl<T: HalfEdgeImplMeshTypePlus> HalfEdgeMeshImpl<T> {
         for edge in MeshBasics::edges(mesh) {
             res.insert_halfedge_forced(
                 edge_map[&edge.id()],
-                vertex_map[&edge.origin_id()],
+                vertex_map[&edge.origin_id(mesh)],
                 face_map[&edge.face_id()],
                 edge_map[&edge.prev_id()],
                 edge_map[&edge.twin_id()],

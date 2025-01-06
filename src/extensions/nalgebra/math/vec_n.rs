@@ -6,24 +6,24 @@ use nalgebra::SVector;
 pub type VecN<S, const D: usize> = SVector<S, D>;
 
 impl<S: Scalar, const D: usize> HasZero for VecN<S, D> {
-    #[inline(always)]
+    #[inline]
     fn zero() -> Self {
         Self::zeros()
     }
 
-    #[inline(always)]
+    #[inline]
     fn is_zero(&self) -> bool {
         self.iter().all(|&x| x.is_zero())
     }
 }
 
 impl<S: Scalar, const D: usize> Vector<S, D> for VecN<S, D> {
-    #[inline(always)]
+    #[inline]
     fn distance(&self, other: &Self) -> S {
         self.distance_squared(other).sqrt()
     }
 
-    #[inline(always)]
+    #[inline]
     fn distance_squared(&self, other: &Self) -> S {
         Scalar::stable_sum(
             self.data
@@ -34,17 +34,17 @@ impl<S: Scalar, const D: usize> Vector<S, D> for VecN<S, D> {
         )
     }
 
-    #[inline(always)]
+    #[inline]
     fn length(&self) -> S {
         self.length_squared().sqrt()
     }
 
-    #[inline(always)]
+    #[inline]
     fn length_squared(&self) -> S {
         Scalar::stable_sum(self.data.as_slice().iter().map(|a| *a * *a))
     }
 
-    #[inline(always)]
+    #[inline]
     fn dot(&self, other: &Self) -> S {
         Scalar::stable_sum(
             self.data
@@ -55,12 +55,12 @@ impl<S: Scalar, const D: usize> Vector<S, D> for VecN<S, D> {
         )
     }
 
-    #[inline(always)]
+    #[inline]
     fn x(&self) -> S {
         self[0]
     }
 
-    #[inline(always)]
+    #[inline]
     fn y(&self) -> S {
         if D >= 2 {
             self[1]
@@ -69,7 +69,7 @@ impl<S: Scalar, const D: usize> Vector<S, D> for VecN<S, D> {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn z(&self) -> S {
         if D >= 3 {
             self[2]
@@ -78,7 +78,7 @@ impl<S: Scalar, const D: usize> Vector<S, D> for VecN<S, D> {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn w(&self) -> S {
         if D >= 4 {
             self[3]
@@ -87,7 +87,7 @@ impl<S: Scalar, const D: usize> Vector<S, D> for VecN<S, D> {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn normalize(&self) -> Self {
         let length = self.length();
         if length.is_zero() {
@@ -97,19 +97,19 @@ impl<S: Scalar, const D: usize> Vector<S, D> for VecN<S, D> {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn splat(value: S) -> Self {
         Self::from([value; D])
     }
 
-    #[inline(always)]
+    #[inline]
     fn from_x(x: S) -> Self {
         let mut data = [S::ZERO; D];
         data[0] = x;
         Self::from(data)
     }
 
-    #[inline(always)]
+    #[inline]
     fn from_xy(x: S, y: S) -> Self {
         let mut data = [S::ZERO; D];
         data[0] = x;
@@ -118,7 +118,7 @@ impl<S: Scalar, const D: usize> Vector<S, D> for VecN<S, D> {
         }
         Self::from(data)
     }
-    #[inline(always)]
+    #[inline]
     fn from_xyz(x: S, y: S, z: S) -> Self {
         let mut data = [S::ZERO; D];
         data[0] = x;
@@ -131,7 +131,7 @@ impl<S: Scalar, const D: usize> Vector<S, D> for VecN<S, D> {
         Self::from(data)
     }
 
-    #[inline(always)]
+    #[inline]
     fn is_about(&self, other: &Self, eps: S) -> bool {
         self.iter()
             .zip(other.iter())

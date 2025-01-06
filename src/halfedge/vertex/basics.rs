@@ -9,7 +9,7 @@ where
     T: HalfEdgeImplMeshType,
 {
     /// Returns the index of the vertex
-    #[inline(always)]
+    #[inline]
     fn id(&self) -> T::V {
         self.id
     }
@@ -19,32 +19,32 @@ where
     }
 
     /// Returns the payload of the vertex
-    #[inline(always)]
+    #[inline]
     fn payload(&self) -> &T::VP {
         &self.payload
     }
 
     /// Returns a mutable reference to the payload of the vertex
-    #[inline(always)]
+    #[inline]
     fn payload_mut(&mut self) -> &mut T::VP {
         &mut self.payload
     }
 
     /// Returns whether the vertex is a boundary vertex
-    #[inline(always)]
+    #[inline]
     fn is_boundary(&self, mesh: &T::Mesh) -> bool {
         self.edges_out(mesh).any(|e| e.is_boundary(mesh))
     }
 
     /*
     /// Returns whether the vertex is manifold
-    #[inline(always)]
+    #[inline]
     fn is_manifold(&self) -> bool {
         self.next == IndexType::max()
     }*/
 
     /// Returns whether the vertex has only one edge incident to it
-    #[inline(always)]
+    #[inline]
     fn has_only_one_edge(&self, mesh: &T::Mesh) -> bool {
         // self.edges(mesh).count() == 1
         if let Some(e) = self.edge(mesh) {
@@ -55,13 +55,13 @@ where
     }
 
     /// Returns an outgoing half-edge incident to the vertex
-    #[inline(always)]
+    #[inline]
     fn edge_id(&self, _mesh: &T::Mesh) -> T::E {
         self.edge
     }
 
     /// Returns an outgoing half-edge incident to the vertex
-    #[inline(always)]
+    #[inline]
     fn edge<'a>(&'a self, mesh: &'a T::Mesh) -> Option<&'a T::Edge> {
         // PERF: avoid clone
         if self.edge == IndexType::max() {
@@ -72,7 +72,7 @@ where
     }
 
     /// Iterates all vertices adjacent to the vertex in the same manifold edge wheel (clockwise)
-    #[inline(always)]
+    #[inline]
     fn vertices<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Vertex>
     where
         T: 'a,
@@ -81,7 +81,7 @@ where
     }
 
     /// Iterates all faces adjacent to this vertex in the same manifold edge wheel (clockwise)
-    #[inline(always)]
+    #[inline]
     fn faces<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Face>
     where
         T: 'a,
@@ -89,7 +89,7 @@ where
         self.edges_out(mesh).filter_map(|e| e.face(mesh))
     }
 
-    #[inline(always)]
+    #[inline]
     fn edges_out<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge>
     where
         T: 'a,
@@ -101,7 +101,7 @@ where
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn edges_in<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge>
     where
         T: 'a,

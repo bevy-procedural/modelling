@@ -10,7 +10,7 @@ pub trait Vector2D: Vector<Self::S, 2> {
 
     /// True iff the vertex curr is a convex corner.
     /// Assume counter-clockwise vertex order.
-    #[inline(always)]
+    #[inline]
     fn convex(&self, prev: Self, next: Self) -> bool {
         // TODO: Numerical robustness
         (*self - prev).perp_dot(&(next - *self)).is_positive()
@@ -29,19 +29,19 @@ pub trait Vector2D: Vector<Self::S, 2> {
     }
 
     /// Returns the barycentric sign of a point in a triangle.
-    #[inline(always)]
+    #[inline]
     fn barycentric_sign(a: Self, b: Self, c: Self) -> Self::S {
         (a - c).perp_dot(&(b - c))
     }
 
     /// Returns the cross product (perpendicular dot product) of two 2d vectors.
-    #[inline(always)]
+    #[inline]
     fn perp_dot(&self, other: &Self) -> Self::S {
         self.x() * other.y() - self.y() * other.x()
     }
 
     /// Whether the point is inside the triangle.
-    #[inline(always)]
+    #[inline]
     fn is_inside_triangle(&self, a: Self, b: Self, c: Self) -> bool {
         // TODO: Numerical robustness
         // TODO: Possible remove this

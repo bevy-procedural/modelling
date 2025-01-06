@@ -1,6 +1,9 @@
 use crate::{
     math::IndexType,
-    mesh::{EdgeBasics, FaceBasics, MeshType, VertexBasics},
+    mesh::{
+        Edge, EdgeBasics, EdgeCursor, EdgeCursorMut, FaceBasics, MeshType, VertexBasics,
+        VertexCursor, VertexCursorMut,
+    },
 };
 use std::collections::HashSet;
 
@@ -18,11 +21,33 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     /// Returns a reference to the requested vertex
     fn vertex(&self, index: T::V) -> &T::Vertex;
 
+    /// Returns an immutable vertex cursor to the requested vertex. Doesn't panic, even if the vertex does not exist.
+    #[inline]
+    fn vertex_cursor(&self, index: T::V) -> VertexCursor<'_, T> {
+        VertexCursor::new(self, index)
+    }
+    /// Returns a mutable vertex cursor to the requested vertex. Doesn't panic, even if the vertex does not exist.
+    #[inline]
+    fn vertex_cursor_mut(&mut self, index: T::V) -> VertexCursorMut<'_, T> {
+        VertexCursorMut::new(self, index)
+    }
+
     /// Returns a reference to the requested vertex or `None` if it does not exist.
     fn get_vertex(&self, index: T::V) -> Option<&T::Vertex>;
 
     /// Returns a reference to the requested edge
     fn edge<'a>(&'a self, index: T::E) -> &'a T::Edge;
+
+    /// Returns an immutable edge cursor to the requested edge. Doesn't panic, even if the edge does not exist.
+    #[inline]
+    fn edge_cursor(&self, index: T::E) -> EdgeCursor<'_, T> {
+        EdgeCursor::new(self, index)
+    }
+    /// Returns a mutable edge cursor to the requested edge. Doesn't panic, even if the edge does not exist.
+    #[inline]
+    fn edge_cursor_mut(&mut self, index: T::E) -> EdgeCursorMut<'_, T> {
+        EdgeCursorMut::new(self, index)
+    }
 
     /// Returns a reference to the requested edge or `None` if it does not exist.
     fn get_edge<'a>(&'a self, index: T::E) -> Option<&'a T::Edge>;

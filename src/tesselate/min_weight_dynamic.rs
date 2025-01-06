@@ -47,7 +47,7 @@ impl<T: Clone> TriangularStore<T> {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn index(&self, i: usize, j: usize) -> TriangularStoreIndex {
         debug_assert!(j >= 1);
         debug_assert!(i < j);
@@ -60,14 +60,14 @@ impl<T: Clone> TriangularStore<T> {
 
 impl<T: Clone> std::ops::Index<(usize, usize)> for TriangularStore<T> {
     type Output = T;
-    #[inline(always)]
+    #[inline]
     fn index<'a>(&'a self, (i, j): (usize, usize)) -> &'a T {
         &self[self.index(i, j)]
     }
 }
 
 impl<T: Clone> std::ops::IndexMut<(usize, usize)> for TriangularStore<T> {
-    #[inline(always)]
+    #[inline]
     fn index_mut<'a>(&'a mut self, (i, j): (usize, usize)) -> &'a mut T {
         let k = self.index(i, j);
         &mut self[k]
@@ -76,14 +76,14 @@ impl<T: Clone> std::ops::IndexMut<(usize, usize)> for TriangularStore<T> {
 
 impl<T: Clone> std::ops::Index<TriangularStoreIndex> for TriangularStore<T> {
     type Output = T;
-    #[inline(always)]
+    #[inline]
     fn index<'a>(&'a self, i: TriangularStoreIndex) -> &'a T {
         &self.data[i.0]
     }
 }
 
 impl<T: Clone> std::ops::IndexMut<TriangularStoreIndex> for TriangularStore<T> {
-    #[inline(always)]
+    #[inline]
     fn index_mut<'a>(&'a mut self, i: TriangularStoreIndex) -> &'a mut T {
         &mut self.data[i.0]
     }
@@ -280,7 +280,7 @@ pub fn minweight_dynamic_direct2<V: IndexType, Vec2: Vector2D, Poly: Polygon<Vec
     todo!("Needs fixing!");
 }
 
-#[inline(always)]
+#[inline]
 fn expand_mij_k_on_demand<V: IndexType, Vec2: Vector2D>(
     i: usize,
     j: usize,
@@ -459,7 +459,7 @@ fn binomial(n: u32, k: u32) -> u32 {
     res
 }
 
-#[inline(always)]
+#[inline]
 fn triangle_weight<Vec2: Vector2D>(a: &Vec2, b: &Vec2, c: &Vec2) -> Vec2::S {
     a.distance(b) + b.distance(c) + c.distance(a)
 }

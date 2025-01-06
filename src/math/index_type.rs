@@ -22,71 +22,71 @@ pub trait IndexType:
 }
 
 impl IndexType for usize {
-    #[inline(always)]
+    #[inline]
     fn new(x: usize) -> Self {
         x
     }
 
-    #[inline(always)]
+    #[inline]
     fn index(&self) -> Self {
         *self
     }
 
-    #[inline(always)]
+    #[inline]
     fn max() -> Self {
         ::std::usize::MAX
     }
 }
 
 impl IndexType for u32 {
-    #[inline(always)]
+    #[inline]
     fn new(x: usize) -> Self {
         assert!(x <= ::std::u32::MAX as usize, "Index out of range: {}", x);
         x as u32
     }
 
-    #[inline(always)]
+    #[inline]
     fn index(&self) -> usize {
         *self as usize
     }
 
-    #[inline(always)]
+    #[inline]
     fn max() -> Self {
         ::std::u32::MAX
     }
 }
 
 impl IndexType for u16 {
-    #[inline(always)]
+    #[inline]
     fn new(x: usize) -> Self {
         assert!(x <= ::std::u16::MAX as usize, "Index out of range: {}", x);
         x as u16
     }
 
-    #[inline(always)]
+    #[inline]
     fn index(&self) -> usize {
         *self as usize
     }
 
-    #[inline(always)]
+    #[inline]
     fn max() -> Self {
         ::std::u16::MAX
     }
 }
 
 impl IndexType for u8 {
-    #[inline(always)]
+    #[inline]
     fn new(x: usize) -> Self {
         assert!(x <= ::std::u8::MAX as usize, "Index out of range: {}", x);
         x as u8
     }
 
-    #[inline(always)]
+    #[inline]
     fn index(&self) -> usize {
         *self as usize
     }
 
-    #[inline(always)]
+    #[inline]
     fn max() -> Self {
         ::std::u8::MAX
     }

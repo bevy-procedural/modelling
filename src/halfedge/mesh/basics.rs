@@ -8,42 +8,42 @@ use crate::{
 use std::collections::HashMap;
 
 impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
-    #[inline(always)]
+    #[inline]
     fn has_vertex(&self, index: T::V) -> bool {
         self.vertices.has(index)
     }
 
-    #[inline(always)]
+    #[inline]
     fn has_edge(&self, index: T::E) -> bool {
         self.halfedges.has(index)
     }
 
-    #[inline(always)]
+    #[inline]
     fn has_face(&self, index: T::F) -> bool {
         self.faces.has(index)
     }
 
-    #[inline(always)]
+    #[inline]
     fn vertex(&self, index: T::V) -> &T::Vertex {
         self.vertices.get(index)
     }
 
-    #[inline(always)]
+    #[inline]
     fn get_vertex(&self, index: T::V) -> Option<&T::Vertex> {
         self.vertices.try_get(index)
     }
 
-    #[inline(always)]
+    #[inline]
     fn edge<'a>(&'a self, index: T::E) -> &'a T::Edge {
         self.halfedges.get(index)
     }
 
-    #[inline(always)]
+    #[inline]
     fn get_edge(&self, index: T::E) -> Option<&T::Edge> {
         self.halfedges.try_get(index)
     }
 
-    #[inline(always)]
+    #[inline]
     fn face(&self, index: T::F) -> &T::Face {
         self.faces.get(index)
     }
@@ -52,17 +52,17 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         self.faces.try_get(index)
     }
 
-    #[inline(always)]
+    #[inline]
     fn vertex_mut(&mut self, index: T::V) -> &mut T::Vertex {
         self.vertices.get_mut(index)
     }
 
-    #[inline(always)]
+    #[inline]
     fn edge_mut<'a>(&'a mut self, index: T::E) -> &'a mut T::Edge {
         self.halfedges.get_mut(index)
     }
 
-    #[inline(always)]
+    #[inline]
     fn face_mut(&mut self, index: T::F) -> &mut T::Face {
         self.faces.get_mut(index)
     }
@@ -107,7 +107,7 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         self
     }
 
-    #[inline(always)]
+    #[inline]
     fn edge_payload<'a>(&'a self, edge: &'a T::Edge) -> &'a T::EP {
         if let Some(p) = &edge.payload_self() {
             p
@@ -118,7 +118,7 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn edge_payload_mut<'a>(&'a mut self, edge: &'a T::Edge) -> &'a mut T::EP {
         if edge.payload_self().is_some() {
             let pr: Option<&'a mut T::EP> = self.edge_mut(edge.id()).payload_self_mut();
