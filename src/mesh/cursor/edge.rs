@@ -1,11 +1,25 @@
 use super::{VertexCursor, VertexCursorData, VertexCursorMut};
 use crate::{
+    extensions::nalgebra::Mesh3d64,
     math::IndexType,
     mesh::{EdgeBasics, HalfEdge, MeshBasics, MeshBuilder, MeshType, MeshTypeHalfEdge},
 };
 use std::fmt::Debug;
 
 /// An edge cursor pointing to an edge of a mesh with an immutable reference to the mesh.
+///
+/// In my experiments, the rust compiler optimizes EdgeCursors very well.
+/// For example, when invoking `cursor.next().next().next().next()`, all function
+/// calls will be inlined leading to similar blocks each consisting of nothing else but
+/// ```ir
+/// getelementptr   ; compute address of the `id` in the `HalfEdgeImpl` in the `Vec`
+/// load            ; retrieve the `id` of the halfedge
+/// icmp + br       ; if the `id` is `IndexType::max()`, skip all further blocks (since it is deleted)
+/// getelementptr   ; compute address of the `next_id` in the `HalfEdgeImpl`
+/// load            ; retrieve the next `next_id`
+/// icmp + br       ; if the `next_id` exceeds the length of the `Vec` or is `IndexType::max()`, skip all further blocks
+/// ```
+/// (using `cargo rustc -- --emit=llvm-ir -O -C debuginfo=2`)
 #[derive(Clone, Debug, Eq)]
 pub struct EdgeCursor<'a, T: MeshType> {
     mesh: &'a T::Mesh,
@@ -324,6 +338,42 @@ impl<'a, T: MeshTypeHalfEdge + 'a> EdgeCursorMut<'a, T> {
         }
         c
     }
+}
+
+#[inline(never)]
+pub fn marker1<'a>() -> (usize, Mesh3d64) {
+    use crate::{extensions::nalgebra::*, prelude::*};
+    let mesh = Mesh3d64::cube(1.0);
+    let e0 = mesh.edge_ids().next().unwrap();
+    (e0, mesh)
+}
+
+#[inline(never)]
+pub fn marker2(x: bool) {
+    assert!(x, "test message 2");
+}
+
+#[inline(never)]
+pub fn test_inlining() {
+    use crate::prelude::*;
+
+    let (e0, mesh) = marker1();
+    let c1 = mesh
+        .edge_cursor(e0)
+        .next()
+        .next()
+        .next()
+        .next()
+        .next()
+        .next()
+        .next()
+        .next()
+        .next()
+        .next()
+        .next();
+    marker2(true);
+
+    assert_eq!(c1.origin_id(), c1.next_id());
 }
 
 #[cfg(test)]
