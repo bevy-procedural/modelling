@@ -1,6 +1,8 @@
-use super::{VertexCursor, VertexCursorData, VertexCursorMut};
+use super::{
+    CursorData, FaceCursor, FaceCursorData, FaceCursorMut, VertexCursor, VertexCursorData,
+    VertexCursorMut,
+};
 use crate::{
-    extensions::nalgebra::Mesh3d64,
     math::IndexType,
     mesh::{EdgeBasics, HalfEdge, MeshBasics, MeshBuilder, MeshType, MeshTypeHalfEdge},
 };
@@ -8,9 +10,10 @@ use std::fmt::Debug;
 
 /// An edge cursor pointing to an edge of a mesh with an immutable reference to the mesh.
 ///
-/// In my experiments, the rust compiler optimizes EdgeCursors very well.
-/// For example, when invoking `cursor.next().next().next().next()`, all function
-/// calls will be inlined leading to similar blocks each consisting of nothing else but
+/// You should prefer using Cursors over direct access to the mesh data structures whenever possible.
+/// You don't have to worry about performance, as the rust compiler will completely optimize them away.
+/// For example, when compiling `cursor.next().next().next().next()`, all function
+/// calls will be inlined leading to the same 8 commands for each call to `next`:
 /// ```ir
 /// getelementptr + load    ; compute address of and load the `id` in the `HalfEdgeImpl` in the `Vec`
 /// icmp + br               ; if the `id` is `IndexType::max()`, skip all further blocks (since it is deleted)
@@ -68,78 +71,49 @@ impl<'a, T: MeshType> EdgeCursorMut<'a, T> {
 }
 
 /// This trait defines the basic functionality for accessing the data fields of an edge cursor.
-pub trait EdgeCursorData<'a, T: MeshType + 'a>: Sized + Debug {
+pub trait EdgeCursorData<'a, T: MeshType + 'a>: CursorData<T = T, I = T::E, S = T::Edge> {
     /// The associated vertex cursor type
     type VC: VertexCursorData<'a, T>;
 
-    /// Returns the id of the edge the cursor points to.
-    fn id(&self) -> T::E;
+    /// The associated face cursor type
+    type FC: FaceCursorData<'a, T>;
 
-    /// Returns a reference to the edge the cursor points to..
-    /// Panics if the edge does not exist or is deleted.
+    /// Derives a new vertex cursor pointing to the given vertex id.
+    fn move_to_vertex(self, id: T::V) -> Self::VC;
+
+    /// Derives a new face cursor pointing to the given face id.
+    fn move_to_face(self, id: T::F) -> Self::FC;
+}
+
+impl<'a, T: MeshType + 'a> EdgeCursorData<'a, T> for EdgeCursor<'a, T> {
+    type VC = VertexCursor<'a, T>;
+    type FC = FaceCursor<'a, T>;
+
     #[inline]
-    fn unwrap<'b>(&'b self) -> &'b T::Edge
-    where
-        'a: 'b,
-    {
-        MeshBasics::edge(self.mesh(), self.id())
+    fn move_to_vertex(self, id: T::V) -> VertexCursor<'a, T> {
+        VertexCursor::new(self.mesh, id)
     }
 
-    /// Whether the cursor points to an invalid edge, i.e.,
-    /// either having the maximum index or pointing to a deleted (half)edge.
+    #[inline]
+    fn move_to_face(self, id: T::F) -> FaceCursor<'a, T> {
+        FaceCursor::new(self.mesh, id)
+    }
+}
+
+impl<'a, T: MeshType + 'a> CursorData for EdgeCursor<'a, T> {
+    type I = T::E;
+    type S = T::Edge;
+    type T = T;
+
     #[inline]
     fn is_none(&self) -> bool {
         self.id() == IndexType::max() || !self.mesh().has_edge(self.id())
     }
 
-    /// Converts the cursor to a None-cursor
     #[inline]
-    fn none(self) -> Self {
-        self.derive(IndexType::max())
-    }
-
-    /// Panics if the cursor points to an invalid edge.
-    /// Returns the same cursor otherwise.
-    #[inline]
-    fn expect(self, msg: &str) -> Self {
-        if self.is_none() {
-            panic!("{}", msg);
-        }
-        self
-    }
-
-    /// Returns a reference to the edge if it exists and is not deleted, otherwise `None`.
-    #[inline]
-    fn get<'b>(&'b self) -> Option<&'b T::Edge>
-    where
-        'a: 'b,
-    {
+    fn get<'b>(&'b self) -> Option<&'b T::Edge> {
         self.mesh().get_edge(self.id())
     }
-
-    /// Applies a closure to the edge if it exists and is not deleted, moving the cursor to the returned edge id.
-    #[inline]
-    fn map<F: FnOnce(&T::Edge) -> T::E>(self, f: F) -> Self {
-        if let Some(e) = self.get() {
-            let id = f(e);
-            self.derive(id)
-        } else {
-            self.none()
-        }
-    }
-
-    /// Returns a reference to the mesh the cursor points to.
-    fn mesh<'b>(&'b self) -> &'b T::Mesh;
-
-    /// Derives a new edge cursor pointing to the given edge id.
-    fn derive(self, id: T::E) -> Self;
-
-    /// Derives a new vertex cursor pointing to the given vertex id.
-    fn derive_vc(self, id: T::V) -> Self::VC;
-}
-
-impl<'a, T: MeshType + 'a> EdgeCursorData<'a, T> for EdgeCursor<'a, T> {
-    type VC = VertexCursor<'a, T>;
 
     #[inline]
     fn id(&self) -> T::E {
@@ -152,18 +126,40 @@ impl<'a, T: MeshType + 'a> EdgeCursorData<'a, T> for EdgeCursor<'a, T> {
     }
 
     #[inline]
-    fn derive(self, id: T::E) -> EdgeCursor<'a, T> {
+    fn move_to(self, id: T::E) -> EdgeCursor<'a, T> {
         Self::new(self.mesh, id)
-    }
-
-    #[inline]
-    fn derive_vc(self, id: T::V) -> VertexCursor<'a, T> {
-        VertexCursor::new(self.mesh, id)
     }
 }
 
 impl<'a, T: MeshType + 'a> EdgeCursorData<'a, T> for EdgeCursorMut<'a, T> {
     type VC = VertexCursorMut<'a, T>;
+    type FC = FaceCursorMut<'a, T>;
+
+    #[inline]
+    fn move_to_vertex(self, id: T::V) -> VertexCursorMut<'a, T> {
+        VertexCursorMut::new(self.mesh, id)
+    }
+
+    #[inline]
+    fn move_to_face(self, id: T::F) -> FaceCursorMut<'a, T> {
+        FaceCursorMut::new(self.mesh, id)
+    }
+}
+
+impl<'a, T: MeshType + 'a> CursorData for EdgeCursorMut<'a, T> {
+    type I = T::E;
+    type S = T::Edge;
+    type T = T;
+
+    #[inline]
+    fn is_none(&self) -> bool {
+        self.id() == IndexType::max() || !self.mesh().has_edge(self.id())
+    }
+
+    #[inline]
+    fn get<'b>(&'b self) -> Option<&'b T::Edge> {
+        self.mesh().get_edge(self.id())
+    }
 
     #[inline]
     fn id(&self) -> T::E {
@@ -176,13 +172,8 @@ impl<'a, T: MeshType + 'a> EdgeCursorData<'a, T> for EdgeCursorMut<'a, T> {
     }
 
     #[inline]
-    fn derive(self, id: T::E) -> EdgeCursorMut<'a, T> {
+    fn move_to(self, id: T::E) -> EdgeCursorMut<'a, T> {
         Self::new(self.mesh, id)
-    }
-
-    #[inline]
-    fn derive_vc(self, id: T::V) -> VertexCursorMut<'a, T> {
-        VertexCursorMut::new(self.mesh, id)
     }
 }
 
@@ -196,7 +187,7 @@ pub trait EdgeCursorBasics<'a, T: MeshType + 'a>: EdgeCursorData<'a, T> {
         } else {
             IndexType::max()
         };
-        self.derive_vc(id)
+        self.move_to_vertex(id)
     }
 
     /// Moves the cursor to the target vertex of the edge.
@@ -207,7 +198,7 @@ pub trait EdgeCursorBasics<'a, T: MeshType + 'a>: EdgeCursorData<'a, T> {
         } else {
             IndexType::max()
         };
-        self.derive_vc(id)
+        self.move_to_vertex(id)
     }
 
     /// Returns the id of the origin vertex of the edge.
@@ -277,6 +268,19 @@ pub trait EdgeCursorHalfedgeBasics<'a, T: MeshTypeHalfEdge + 'a>: EdgeCursorData
     fn prev_sibling(self) -> Self {
         self.prev().twin()
     }
+
+    /// Moves the cursor to the face of the edge.
+    #[inline]
+    fn face(self) -> Self::FC {
+        let id = self.face_id();
+        self.move_to_face(id)
+    }
+
+    /// Moves the cursor to the face of the edge.
+    #[inline]
+    fn face_id(&self) -> T::F {
+        self.get().map_or(IndexType::max(), |e| e.face_id())
+    }
 }
 
 impl<'a, T: MeshType + 'a> EdgeCursorBasics<'a, T> for EdgeCursor<'a, T> {}
@@ -290,7 +294,7 @@ impl<'a, T: MeshType + 'a> EdgeCursorMut<'a, T> {
     #[inline]
     pub fn subdivide<I: Iterator<Item = (T::EP, T::VP)>>(self, vs: I) -> Self {
         let e = self.mesh.subdivide_edge::<I>(self.edge, vs);
-        self.derive(e)
+        self.move_to(e)
     }
 
     /// Tries to remove the current edge.
@@ -311,15 +315,57 @@ impl<'a, T: MeshType + 'a> EdgeCursorMut<'a, T> {
     /// new vertex will become the "next" of the current edge and the cursor will move
     /// to this newly created halfedge.
     /// Returns the none cursor if the insertion was not successful.
+    /// See [MeshBuilder::insert_vertex_e] for more information.
     #[inline]
     pub fn insert_vertex(self, vp: T::VP, ep: T::EP) -> Self {
         let old_target = self.target_id();
         if let Some((e, _v)) = self.mesh.insert_vertex_e(self.edge, vp, ep) {
-            let c = self.derive(e);
+            let c = self.move_to(e);
             debug_assert!(old_target == c.origin_id());
             c
         } else {
             self.none()
+        }
+    }
+
+    /// Connects the current halfedge to the given halfedge.
+    /// On error, the resulting cursor will be `None`.
+    /// See [MeshBuilder::insert_edge_ee] for more information.
+    #[inline]
+    pub fn connect(self, other: T::E, ep: T::EP) -> Self {
+        if let Some(e) = self.mesh.insert_edge_ee(self.edge, other, ep) {
+            self.move_to(e)
+        } else {
+            self.none()
+        }
+    }
+
+    /// Connects the current halfedge to the given vertex.
+    /// On error, the resulting cursor will be `None`.
+    /// See [MeshBuilder::insert_edge_ev] for more information.
+    #[inline]
+    pub fn connect_v(self, other: T::V, ep: T::EP) -> Self {
+        if let Some(e) = self.mesh.insert_edge_ev(self.edge, other, ep) {
+            self.move_to(e)
+        } else {
+            self.none()
+        }
+    }
+
+    /// Inserts a face in the boundary of the current halfedge and move the cursor to the new face.
+    /// If the face already exists, move there and make the current edge the representative edge.
+    /// If there was another error, the resulting cursor will be `None`.
+    /// See [MeshBuilder::insert_face] for more information.
+    #[inline]
+    pub fn insert_face(self, fp: T::FP) -> FaceCursorMut<'a, T>
+    where
+        // TODO: We should remove this bound by implementing face_id for all edges
+        T: MeshTypeHalfEdge,
+    {
+        if let Some(f) = self.mesh.insert_face(self.edge, fp) {
+            self.move_to_face(f)
+        } else {
+            self.face()
         }
     }
 }
@@ -332,7 +378,7 @@ impl<'a, T: MeshTypeHalfEdge + 'a> EdgeCursorMut<'a, T> {
         while c.id() != id {
             let c_id = c.id();
             // execute closure, reset to the original edge and continue with the next sibling
-            c = f(c).derive(c_id).next_sibling();
+            c = f(c).move_to(c_id).next_sibling();
         }
         c
     }
@@ -346,14 +392,14 @@ mod tests {
     fn test_edge_cursor() {
         let mut mesh = Mesh3d64::cube(1.0);
         let e0 = mesh.edge_ids().next().unwrap();
-        let c1: EdgeCursor<'_, MeshType3d64PNU> = EdgeCursor::new(&mesh, e0).next();
+        let c1: EdgeCursor<'_, MeshType3d64PNU> = mesh.edge_cursor(e0).next();
         let c2 = c1.clone().next();
         let c3 = c1.clone().next().prev().next();
         assert_ne!(c1, c2);
         assert_eq!(c1, c1);
         assert_eq!(c2, c3);
 
-        let c1: EdgeCursorMut<'_, MeshType3d64PNU> = EdgeCursorMut::new(&mut mesh, e0).next();
+        let c1: EdgeCursorMut<'_, MeshType3d64PNU> = mesh.edge_cursor_mut(e0).next();
         /*c1.next()
         .subdivide(std::iter::empty())
         .next()

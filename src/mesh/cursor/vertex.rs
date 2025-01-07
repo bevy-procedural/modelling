@@ -1,9 +1,16 @@
 use std::fmt::Debug;
 
-use crate::{math::IndexType, mesh::{MeshBasics, MeshType, MeshTypeHalfEdge}};
+use crate::{
+    math::IndexType,
+    mesh::{MeshBasics, MeshType, MeshTypeHalfEdge},
+};
 
-use super::{EdgeCursor, EdgeCursorData, EdgeCursorMut};
+use super::{
+    CursorData, EdgeCursor, EdgeCursorData, EdgeCursorMut, FaceCursor, FaceCursorData,
+    FaceCursorMut,
+};
 
+/// A vertex cursor pointing to a vertex of a mesh with an immutable reference to the mesh.
 #[derive(Clone, Debug)]
 pub struct VertexCursor<'a, T: MeshType> {
     mesh: &'a T::Mesh,
@@ -11,15 +18,13 @@ pub struct VertexCursor<'a, T: MeshType> {
 }
 
 impl<'a, T: MeshType> VertexCursor<'a, T> {
+    /// Creates a new vertex cursor pointing to the given vertex.
     pub fn new(mesh: &'a T::Mesh, vertex: T::V) -> Self {
         Self { mesh, vertex }
     }
-
-    pub fn vertex(&self) -> T::V {
-        self.vertex
-    }
 }
 
+/// A vertex cursor pointing to a vertex of a mesh with a mutable reference to the mesh.
 #[derive(Debug)]
 pub struct VertexCursorMut<'a, T: MeshType> {
     mesh: &'a mut T::Mesh,
@@ -27,26 +32,62 @@ pub struct VertexCursorMut<'a, T: MeshType> {
 }
 
 impl<'a, T: MeshType> VertexCursorMut<'a, T> {
+    /// Creates a new mutable vertex cursor pointing to the given vertex.
     pub fn new(mesh: &'a mut T::Mesh, vertex: T::V) -> Self {
         Self { mesh, vertex }
     }
+}
 
-    pub fn vertex(&self) -> T::V {
-        self.vertex
+/// This trait defines the basic functionality for accessing the data fields of a vertex cursor.
+pub trait VertexCursorData<'a, T: MeshType + 'a>:
+    CursorData<T = T, I = T::V, S = T::Vertex>
+{
+    /// The associated face cursor type
+    type FC: FaceCursorData<'a, T>;
+
+    /// The associated edge cursor type
+    type EC: EdgeCursorData<'a, T>;
+
+    /// Derives a new face cursor pointing to the given face id.
+    fn move_to_face(self, id: T::F) -> Self::FC;
+
+    /// Derives a new edge cursor pointing to the given vertex id.
+    fn move_to_edge(self, id: T::E) -> Self::EC;
+}
+
+impl<'a, T: MeshType + 'a> VertexCursorData<'a, T> for VertexCursor<'a, T> {
+    type EC = EdgeCursor<'a, T>;
+    type FC = FaceCursor<'a, T>;
+
+    #[inline]
+    fn move_to_face(self, id: T::F) -> Self::FC {
+        FaceCursor::new(self.mesh, id)
+    }
+
+    #[inline]
+    fn move_to_edge(self, id: T::E) -> EdgeCursor<'a, T> {
+        EdgeCursor::new(self.mesh, id)
     }
 }
 
-pub trait VertexCursorData<'a, T: MeshType + 'a>: Sized + Debug {
-    type EC: EdgeCursorData<'a, T>;
-    fn id(&self) -> T::V;
+impl<'a, T: MeshType + 'a> CursorData for VertexCursor<'a, T> {
+    type I = T::V;
+    type S = T::Vertex;
+    type T = T;
 
-    
     #[inline]
-    fn unwrap<'b>(&'b self) -> &'b T::Vertex
-    where
-        'a: 'b,
-    {
-        MeshBasics::vertex(self.mesh(), self.id())
+    fn mesh<'b>(&'b self) -> &'b T::Mesh {
+        self.mesh
+    }
+
+    #[inline]
+    fn move_to(self, id: T::V) -> VertexCursor<'a, T> {
+        Self::new(self.mesh, id)
+    }
+
+    #[inline]
+    fn id(&self) -> T::V {
+        self.vertex
     }
 
     #[inline]
@@ -55,54 +96,30 @@ pub trait VertexCursorData<'a, T: MeshType + 'a>: Sized + Debug {
     }
 
     #[inline]
-    fn get<'b>(&'b self) -> Option<&'b T::Vertex>
-    where
-        'a: 'b,
-    {
+    fn get<'b>(&'b self) -> Option<&'b T::Vertex> {
         self.mesh().get_vertex(self.id())
-    }
-
-    #[inline]
-    fn map<F: FnOnce(&T::Vertex) -> T::V>(self, f: F) -> Self {
-        let id = if let Some(e) = self.get() {
-            f(e)
-        } else {
-            IndexType::max()
-        };
-        self.derive(id)
-    }
-
-    fn mesh<'b>(&'b self) -> &'b T::Mesh;
-    fn derive(self, id: T::V) -> Self;
-    fn derive_ec(self, id: T::E) -> Self::EC;
-}
-
-impl<'a, T: MeshType + 'a> VertexCursorData<'a, T> for VertexCursor<'a, T> {
-    type EC = EdgeCursor<'a, T>;
-
-    #[inline]
-    fn id(&self) -> T::V {
-        self.vertex
-    }
-
-    #[inline]
-    fn mesh<'b>(&'b self) -> &'b T::Mesh {
-        self.mesh
-    }
-
-    #[inline]
-    fn derive(self, id: T::V) -> VertexCursor<'a, T> {
-        Self::new(self.mesh, id)
-    }
-
-    #[inline]
-    fn derive_ec(self, id: T::E) -> EdgeCursor<'a, T> {
-        EdgeCursor::new(self.mesh, id)
     }
 }
 
 impl<'a, T: MeshType + 'a> VertexCursorData<'a, T> for VertexCursorMut<'a, T> {
     type EC = EdgeCursorMut<'a, T>;
+    type FC = FaceCursorMut<'a, T>;
+
+    #[inline]
+    fn move_to_face(self, id: T::F) -> FaceCursorMut<'a, T> {
+        FaceCursorMut::new(self.mesh, id)
+    }
+
+    #[inline]
+    fn move_to_edge(self, id: T::E) -> EdgeCursorMut<'a, T> {
+        EdgeCursorMut::new(self.mesh, id)
+    }
+}
+
+impl<'a, T: MeshType + 'a> CursorData for VertexCursorMut<'a, T> {
+    type I = T::V;
+    type S = T::Vertex;
+    type T = T;
 
     #[inline]
     fn id(&self) -> T::V {
@@ -115,20 +132,25 @@ impl<'a, T: MeshType + 'a> VertexCursorData<'a, T> for VertexCursorMut<'a, T> {
     }
 
     #[inline]
-    fn derive(self, id: T::V) -> VertexCursorMut<'a, T> {
+    fn move_to(self, id: T::V) -> VertexCursorMut<'a, T> {
         Self::new(self.mesh, id)
     }
 
     #[inline]
-    fn derive_ec(self, id: T::E) -> EdgeCursorMut<'a, T> {
-        EdgeCursorMut::new(self.mesh, id)
+    fn is_none(&self) -> bool {
+        self.id() == IndexType::max() || !self.mesh().has_vertex(self.id())
+    }
+
+    #[inline]
+    fn get<'b>(&'b self) -> Option<&'b T::Vertex> {
+        self.mesh().get_vertex(self.id())
     }
 }
 
 pub trait VertexCursorBasics<'a, T: MeshTypeHalfEdge + 'a>: VertexCursorData<'a, T> {
     fn outgoing_edge(&self) -> Self::EC {
         let edge = todo!();
-        self.derive_ec(edge)
+        self.move_to_edge(edge)
     }
 }
 
