@@ -62,6 +62,19 @@ pub trait EdgeCursorBasics<'a, T: MeshType + 'a>: EdgeCursorData<'a, T> {
     fn target_id(&self) -> T::V {
         self.unwrap().target_id(self.mesh())
     }
+
+    /// Returns the ids of all faces adjacent to the edge
+    /// (including the twin for halfedges and parallel edges' faces if the edge is non-manifold).
+    /// Panics if the edge is void.
+    #[inline]
+    #[must_use]
+    fn face_ids<'b>(&'b self) -> impl Iterator<Item = T::F> + 'b
+    where
+        T::Edge: 'b,
+        'a: 'b,
+    {
+        self.unwrap().face_ids(self.mesh())
+    }
 }
 
 /// This trait implements some basic functionality for edge cursors that works with halfedge meshes and both mutable and immutable cursors.

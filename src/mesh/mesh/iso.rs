@@ -1,8 +1,8 @@
 use crate::{
     math::{HasPosition, IndexType, Scalar, Vector},
     mesh::{
-        CursorData, CurvedEdge, EdgeBasics, EuclideanMeshType, FaceBasics, FaceCursorBasics,
-        MeshBasics, MeshType, VertexBasics,
+        CursorData, CurvedEdge, EdgeBasics, EdgeCursorBasics, EuclideanMeshType, FaceBasics,
+        FaceCursorBasics, MeshBasics, MeshType, VertexBasics,
     },
 };
 use itertools::Itertools;
@@ -183,13 +183,10 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
 
             // check which face occurs in all corresponding edges.
             // This runs in O(e*fe) since all edges are checked once per incident face
-            let mut other_faces: HashMap<T2::F, usize> = other
-                .edge_ref(es[0])
-                .face_ids(&other)
-                .map(|f| (f, 1))
-                .collect();
+            let mut other_faces: HashMap<T2::F, usize> =
+                other.edge(es[0]).face_ids().map(|f| (f, 1)).collect();
             for e in es.iter().skip(1) {
-                for other_face in other.edge_ref(*e).face_ids(&other) {
+                for other_face in other.edge(*e).face_ids() {
                     if let Some(count) = other_faces.get_mut(&other_face) {
                         *count += 1;
                     }
@@ -363,11 +360,11 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         }
 
         for e in self.edges() {
-            let other_e = other.edge_ref(e.id());
+            let other_e = other.edge(e.id());
             if e.id() != other_e.id()
-                || e.origin(self).id() != other_e.origin(self).id()
-                || e.target(self).id() != other_e.target(self).id()
-                || !compare_edge(e, other_e)
+                || e.origin(self).id() != other_e.origin_id()
+                || e.target(self).id() != other_e.target_id()
+                || !compare_edge(e, other_e.unwrap())
             {
                 return MeshEquivalenceDifference::DifferentEdges(e.id(), other_e.id());
             }

@@ -1,7 +1,9 @@
 use crate::{
     math::{HasPosition, IndexType, TransformTrait, Transformable},
     mesh::{
-        CursorData, CurvedEdge, CurvedEdgeType, DefaultEdgePayload, EdgeBasics, HalfEdge, MeshBasics, MeshBuilder, MeshType, VertexBasics, VertexCursorBasics
+        CursorData, CurvedEdge, CurvedEdgeType, DefaultEdgePayload, EdgeBasics, EdgeCursorBasics,
+        EdgeCursorHalfedgeBasics, HalfEdge, MeshBasics, MeshBuilder, MeshType, VertexBasics,
+        VertexCursorBasics,
     },
 };
 
@@ -148,9 +150,9 @@ where
     {
         // TODO: implement this without requiring `HalfEdge`
 
-        let edge = mesh.edge_ref(e);
+        let edge = mesh.edge(e);
         let start_edges = Some((e, edge.prev_id()));
-        let start_vertex = edge.target_id(mesh);
+        let start_vertex = edge.target_id();
         Self {
             closed: false,
             has_face: false,

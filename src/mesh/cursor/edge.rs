@@ -4,7 +4,7 @@ use super::{
 };
 use crate::{
     math::IndexType,
-    mesh::{HalfEdge, MeshBasics, MeshType},
+    mesh::{EdgeBasics, HalfEdge, MeshBasics, MeshType},
 };
 use std::fmt::Debug;
 
@@ -49,6 +49,21 @@ impl<'a, T: MeshType> EdgeCursor<'a, T> {
     #[must_use]
     pub fn payload(&self) -> &'a T::EP {
         self.mesh.edge_payload(self.edge)
+    }
+
+    /// Returns face cursors for all faces adjacent to the edge
+    /// (including the twin for halfedges and parallel edges' faces if the edge is non-manifold).
+    /// Panics if the edge is void.
+    #[inline]
+    #[must_use]
+    fn faces<'b>(&'b self) -> impl Iterator<Item = FaceCursor<'b, T>> + 'b
+    where
+        T::Edge: 'b,
+        'a: 'b,
+    {
+        self.unwrap()
+            .face_ids(self.mesh())
+            .map(move |id| FaceCursor::new(self.mesh, id))
     }
 }
 
