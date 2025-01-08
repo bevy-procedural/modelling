@@ -1,5 +1,5 @@
 use super::{CursorData, EdgeCursorData, VertexCursorData};
-use crate::mesh::{EuclideanMeshType, Face3d, FaceBasics, HalfEdge, MeshType, MeshType3D};
+use crate::mesh::{Face3d, FaceBasics, HalfEdge, MeshType, MeshType3D};
 
 /// This trait defines the basic functionality for accessing the data fields of a face cursor.
 pub trait FaceCursorData<'a, T: MeshType + 'a>: CursorData<T = T, I = T::F, S = T::Face> {

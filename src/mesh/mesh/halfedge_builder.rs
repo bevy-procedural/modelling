@@ -1,6 +1,5 @@
 use crate::mesh::{
-    CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, HalfEdge, MeshBasics,
-    MeshTypeHalfEdge,
+    CursorData, EdgeCursorBasics, EdgeCursorHalfedgeBasics, MeshBasics, MeshTypeHalfEdge,
 };
 
 /// Some low-level operations to build meshes with halfedges.

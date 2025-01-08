@@ -28,7 +28,12 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
     /// If `shift` is true, the first inserted triangle will be with the tip pointing to the target of `start`.
     /// Otherwise, the first triangle will include the edge `start`.
     /// This doesn't affect the number of triangles but shifts the "hem" by one.
-    fn loft_tri(&mut self, start: T::E, shift: bool, vp: impl IntoIterator<Item = T::VP>) -> T::E
+    fn loft_tri(
+        &mut self,
+        start: T::E,
+        shift: bool,
+        vp: impl IntoIterator<Item = T::VP>,
+    ) -> Option<T::E>
     where
         T::EP: DefaultEdgePayload,
         T::FP: DefaultFacePayload,
@@ -46,7 +51,7 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
 
         if shift && pos.is_some() {
             let input = self.edge(output).prev_id();
-            self.insert_vertex_e(input, pos.unwrap(), Default::default());
+            self.insert_vertex_e(input, pos.unwrap(), Default::default())?;
             first = false;
             ret = self.edge(output).prev_id();
             pos = iter.next();
@@ -54,16 +59,16 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
 
         while pos.is_some() {
             let input = self.edge(output).prev_id();
-            self.insert_vertex_e(input, pos.unwrap(), Default::default());
+            self.insert_vertex_e(input, pos.unwrap(), Default::default())?;
 
             // the first one shouldn't connect to the previous
             if !first {
-                self.close_face_ee_legacy(
+                self.close_face_ee(
                     self.edge(input).next_id(),
-                    self.edge(input).prev_id(),
+                    input,
                     Default::default(),
                     Default::default(),
-                );
+                )?;
             } else {
                 ret = self.edge(output).prev_id();
             }
@@ -75,12 +80,7 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
 
             // the last one also shouldn't connect to the next
             if pos.is_some() || shift {
-                self.close_face_ee_legacy(
-                    output,
-                    self.edge(output).prev_id(),
-                    Default::default(),
-                    Default::default(),
-                );
+                self.close_face_ee(output, output, Default::default(), Default::default())?;
             }
 
             // advance output to the next edge on the boundary
@@ -89,12 +89,12 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
             first = false;
         }
 
-        ret
+        Some(ret)
     }
 
     /// Like `loft_tri` but closes the "hem" with a face.
     /// Returns the edge pointing from the first inserted vertex to the second inserted vertex.
-    fn loft_tri_closed(&mut self, start: T::E, vp: impl IntoIterator<Item = T::VP>) -> T::E
+    fn loft_tri_closed(&mut self, start: T::E, vp: impl IntoIterator<Item = T::VP>) -> Option<T::E>
     where
         T::EP: DefaultEdgePayload,
         T::FP: DefaultFacePayload,
@@ -103,17 +103,17 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
         // 1. Use crochet with n=1, m=2, open=true and then crochet n=0, m=3
         // 2. Use crochet with n=2, m=2, and then subdivide the faces
 
-        let e = self.loft_tri(start, false, vp);
+        let e = self.loft_tri(start, false, vp)?;
         let inside = self.edge(e).twin().prev_id();
-        let outside = self.edge(inside).prev().prev_id();
-        self.close_face_ee_legacy(inside, outside, Default::default(), Default::default());
-        self.close_face_ee_legacy(
+        let outside = self.edge(inside).prev_id();
+        self.close_face_ee(inside, outside, Default::default(), Default::default())?;
+        self.close_face_ee(
             self.edge(e).twin_id(),
             self.edge(outside).next_id(),
             Default::default(),
             Default::default(),
-        );
-        self.edge(outside).next().next_id()
+        )?;
+        Some(self.edge(outside).next().next_id())
     }
 
     /// Create polygons with `n` vertices each using the iterator `vp`.

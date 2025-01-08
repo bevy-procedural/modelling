@@ -122,11 +122,11 @@ where
                     e.id(),
                     self.edge(e.id()).prev().prev_id(),
                     Default::default(),
-                );
-                self.insert_face(e.id(), fp);
+                ).unwrap();
+                self.insert_face(e.id(), fp).unwrap();
             }
             // fill the center hole
-            self.insert_face(self.edge(edges[0].id()).next().twin_id(), fp);
+            self.insert_face(self.edge(edges[0].id()).next().twin_id(), fp).unwrap();
         }
 
         self

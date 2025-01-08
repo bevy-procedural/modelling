@@ -1,5 +1,5 @@
 use super::{MeshBasics, MeshType};
-use crate::mesh::{DefaultEdgePayload, EdgeBasics, EdgeCursorBasics, VertexBasics};
+use crate::mesh::{DefaultEdgePayload, EdgeCursorBasics};
 
 // TODO: Make sure return values are used for the failable methods!
 
@@ -147,17 +147,6 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     #[must_use]
     fn close_face_ee(&mut self, from: T::E, to: T::E, ep: T::EP, fp: T::FP)
         -> Option<(T::E, T::F)>;
-
-    /// .
-    #[must_use]
-    #[deprecated(note = "Use close_face_ee instead")]
-    fn close_face_ee_legacy(
-        &mut self,
-        from: T::E,
-        to: T::E,
-        ep: T::EP,
-        fp: T::FP,
-    ) -> Option<(T::E, T::F)>;
 
     /// Close the given boundary by inserting an edge from `from` to `to` and insert a face.
     /// The vertex `prev` must also lie on the face with an edge from `prev` to `from`. That way

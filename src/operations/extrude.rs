@@ -91,7 +91,7 @@ where
             .edges_from(self.edge(e).next_id())
             .map(|v| v.origin(self).payload().transformed(&transform))
             .collect();
-        let start = self.loft_tri_closed(e, vps);
+        let start = self.loft_tri_closed(e, vps).unwrap();
         self.insert_face(start, Default::default()).unwrap();
         start
     }
@@ -117,7 +117,7 @@ where
             .map(|(a, b)| a.lerped(&b, T::S::HALF))
             .collect();
         vps.rotate_right(1);
-        let start = self.loft_tri_closed(e, vps);
+        let start = self.loft_tri_closed(e, vps).unwrap();
         self.insert_face(start, Default::default()).unwrap();
         start
     }
@@ -127,28 +127,23 @@ where
     /// Returns the id of the hub vertex.
     ///
     /// The result will be a windmill with triangular blades.
-    fn windmill(&mut self, start: T::E, hub: T::VP) -> T::V {
+    #[must_use]
+    fn windmill(&mut self, start: T::E, hub: T::VP) -> Option<T::V> {
         // TODO: replace with loft n=1
         let e0 = self.edge(start);
         let origin = e0.origin_id();
         let mut input = self.edge(start).prev_id();
-        let (_, v) = self
-            .insert_vertex_e(input, hub, Default::default())
-            .unwrap(); // TODO: error handling
+        let (_, v) = self.insert_vertex_e(input, hub, Default::default())?;
         loop {
             let e = self.edge(input);
             if e.origin_id() == origin {
                 break;
             }
             input = e.prev_id();
-            self.close_face_ee_legacy(
-                self.edge(input).next().next_id(),
-                input,
-                Default::default(),
-                Default::default(),
-            );
+            let n = self.edge(input).next();
+            self.close_face_ee(n.next_id(), n.id(), Default::default(), Default::default())?;
         }
-        self.insert_face(input, Default::default()).unwrap();
-        v
+        self.insert_face(input, Default::default())?;
+        Some(v)
     }
 }

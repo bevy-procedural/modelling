@@ -2,7 +2,7 @@ use crate::{
     math::{HasPosition, Scalar, TransformTrait, Vector},
     mesh::{
         CursorData, DefaultEdgePayload, DefaultFacePayload, EdgeCursorHalfedgeBasics, Face3d,
-        HalfEdge, MeshType3D, MeshTypeHalfEdge, VertexPayload,
+        MeshType3D, MeshTypeHalfEdge, VertexPayload,
     },
     operations::{MeshExtrude, MeshLoft, MeshSubdivision},
     primitives::polygon::Make2dShape,
@@ -101,7 +101,7 @@ where
         vp2: impl IntoIterator<Item = T::VP>,
     ) -> T::E {
         let first = self.insert_polygon(vp);
-        let e = self.loft_tri_closed(first, vp2);
+        let e = self.loft_tri_closed(first, vp2).unwrap();
         self.insert_face(e, Default::default()).unwrap();
         e
     }
@@ -119,7 +119,7 @@ where
     /// Creates a pyramid by connecting the polygon given by `vp` with the point `apex`.
     fn insert_pyramid(&mut self, base: impl IntoIterator<Item = T::VP>, apex: T::VP) -> T::E {
         let first = self.insert_polygon(base);
-        self.windmill(first, apex);
+        self.windmill(first, apex).unwrap();
         self.edge(first).twin_id()
     }
 
@@ -238,7 +238,8 @@ where
             T::VP::from_pos(T::Vec::from_xyz(zero, h, zero)),
         );
         mesh.remove_face(mesh.edge(e).face_id());
-        mesh.windmill(e, T::VP::from_pos(T::Vec::from_xyz(zero, -h, zero)));
+        mesh.windmill(e, T::VP::from_pos(T::Vec::from_xyz(zero, -h, zero)))
+            .unwrap();
         mesh
     }
 

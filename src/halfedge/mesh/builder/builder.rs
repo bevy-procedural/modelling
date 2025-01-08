@@ -3,7 +3,7 @@ use crate::{
     math::IndexType,
     mesh::{
         CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, EdgePayload, HalfEdge,
-        HalfEdgeVertex, MeshBasics, MeshBuilder, MeshHalfEdgeBuilder, VertexCursorBasics,
+        MeshBasics, MeshBuilder, MeshHalfEdgeBuilder, VertexCursorBasics,
         VertexCursorHalfedgeBasics,
     },
     prelude::HalfEdgeFaceImpl,
@@ -296,16 +296,6 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         let f = self.faces.push(HalfEdgeFaceImpl::new(e, fp));
         edge.edges_face_mut(self).for_each(|e| e.set_face(f));
         return Some(f);
-    }
-
-    fn close_face_ee_legacy(
-        &mut self,
-        from: T::E,
-        to: T::E,
-        ep: T::EP,
-        fp: T::FP,
-    ) -> Option<(T::E, T::F)> {
-        self.close_face_ee(from, self.edge(to).next_id(), ep, fp)
     }
 
     fn close_face_ee(
