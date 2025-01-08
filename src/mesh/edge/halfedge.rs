@@ -1,5 +1,5 @@
 use super::EdgeBasics;
-use crate::mesh::MeshType;
+use crate::{math::IndexType, mesh::MeshType};
 
 /// Basic halfedge traits.
 pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
@@ -13,11 +13,22 @@ pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
         payload: Option<T::EP>,
     ) -> Self;
 
-    /// Sets the face of the HalfEdge. Panics if the face is already set.
+    /// Sets the face of the HalfEdge.
+    /// Won't panic if the face is already set.
     fn set_face(&mut self, face: T::F);
 
-    /// Deletes the face of the HalfEdge
-    fn delete_face(&mut self);
+    /// Removes the face of the HalfEdge.
+    /// Won't delete the face itself.
+    /// Panics if the face is not set.
+    fn remove_face(&mut self) {
+        assert!(self.has_face());
+        self.set_face(IndexType::max());
+    }
+
+    /// Returns whether the half-edge has a face
+    fn has_face(&self) -> bool {
+        self.face_id() != IndexType::max()
+    }
 
     /// Sets the next half-edge incident to the same face (including the holes)
     fn set_next(&mut self, next: T::E);
@@ -82,10 +93,10 @@ pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
     /// Updates the neighboring edges, vertices, and faces.
     fn flip(e: T::E, mesh: &mut T::Mesh);
 
-    /// Checks whether the adjacent edges, the face and the twin exist and don't 
+    /// Checks whether the adjacent edges, the face and the twin exist and don't
     /// contradict the current edge regarding the neighbors, face, and origin.
     /// Returns an error message if the edge is invalid.
-    /// 
+    ///
     /// Iterates the edge wheels of the origin and target vertices! So this is not O(1).
     fn validate(&self, mesh: &T::Mesh) -> Result<(), String>;
 }
@@ -108,7 +119,7 @@ mod tests {
 
         let e0 = mesh.edges().find(|e| !e.is_boundary_self()).unwrap().id();
         let f0 = mesh.edge_ref(e0).face_id();
-        mesh.edge_ref_mut(e0).delete_face();
+        mesh.edge_ref_mut(e0).remove_face();
         let edge = mesh.edge_ref(e0);
         assert!(edge.is_boundary_self());
 
