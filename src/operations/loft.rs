@@ -411,7 +411,7 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
         T::EP: DefaultEdgePayload,
         T::FP: DefaultFacePayload,
     {
-        self.crochet(start, n, m, true, false, false, vp)
+        self.crochet(start, n, m, false, true, false, vp)
     }
 }
 

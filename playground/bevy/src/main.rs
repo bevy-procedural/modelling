@@ -19,7 +19,7 @@ use bevy_inspector_egui::{
     InspectorOptions,
 };
 use bevy_panorbit_camera::*;
-use procedural_modelling::{extensions::bevy::*, prelude::*};
+use procedural_modelling::{extensions::bevy::*, mesh::MeshBuilder, prelude::*};
 use std::{env, f32::consts::PI};
 
 #[derive(Reflect, Resource, InspectorOptions)]
@@ -39,27 +39,15 @@ fn make_mesh(_settings: &GlobalSettings) -> BevyMesh3d {
     //BevyMesh3d::regular_polygon(2.0, 600)
     //BevyMesh3d::cube(1.0)
     let p = Vec3::splat(1.0) * 0.5;
-    let mut mesh = BevyMesh3d::default();
-    let vp = |x, y, z| BevyVertexPayload3d::from_pos(Vec3::new(x, y, z));
+    let mut mesh = BevyMesh3d::cube(1.0);
 
-    let bottom_edge = mesh.insert_polygon([
-        vp(-p.x(), -p.y(), -p.z()),
-        vp(p.x(), -p.y(), -p.z()),
-        vp(p.x(), p.y(), -p.z()),
-        vp(-p.x(), p.y(), -p.z()),
-    ]);
-    let _top_edge = mesh.loft(
-        bottom_edge,
-        2,
-        2,
-        [
-            vp(-p.x(), -p.y(), p.z()),
-            vp(p.x(), -p.y(), p.z()),
-            /*vp(p.x(), p.y(), p.z()),
-            vp(-p.x(), p.y(), p.z()),*/
-        ],
-    );
-    //mesh.insert_face(top_edge, Default::default());
+    // place it "on the floor"
+    let min_y = mesh
+        .vertices()
+        .map(|v| v.pos().y)
+        .min_by(|a, b| a.partial_cmp(b).unwrap())
+        .unwrap_or(0.0);
+    mesh.translate(&Vec3::new(0.0, -min_y, 0.0));
     mesh
 }
 
@@ -131,14 +119,6 @@ fn update_meshes(
     for bevy_mesh in query.iter() {
         let mut mesh = make_mesh(&global_settings);
 
-        // place it "on the floor"
-        let min_y = mesh
-            .vertices()
-            .map(|v| v.pos().y)
-            .min_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap_or(0.0);
-        mesh.translate(&Vec3::new(0.0, -min_y, 0.0));
-
         mesh.generate_smooth_normals();
         mesh.bevy_set_ex(
             assets.get_mut(bevy_mesh).unwrap(),
@@ -180,7 +160,7 @@ fn setup_meshes(
         Name::new("Generated Shape"),
     ));
 
-    if false {
+    if true {
         let mesh = make_mesh(&GlobalSettings::default());
         show_vertex_indices(&mut texts, &mesh);
         show_edges(&mut texts, &mesh, 0.1);

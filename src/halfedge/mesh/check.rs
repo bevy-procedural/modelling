@@ -1,7 +1,7 @@
 use super::HalfEdgeMeshImpl;
 use crate::{
     halfedge::HalfEdgeImplMeshType,
-    mesh::{EdgeBasics, FaceBasics, FacePayload, HalfEdge, MeshBasics, MeshChecker, VertexBasics},
+    mesh::{EdgeBasics, FaceBasics, HalfEdge, MeshBasics, MeshChecker, VertexBasics},
 };
 
 impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
@@ -120,7 +120,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
         self.faces()
             .map(|f| {
                 format!(
-                    "{}) {} edges, e.g., {}  |  {:?}",
+                    "{}) {} edges, e.g., {}   {:?}",
                     f.id(),
                     f.num_edges(self),
                     f.edge_id(),
