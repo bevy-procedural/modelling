@@ -19,7 +19,7 @@ use bevy_inspector_egui::{
     InspectorOptions,
 };
 use bevy_panorbit_camera::*;
-use procedural_modelling::{extensions::bevy::*, mesh::MeshBuilder, prelude::*};
+use procedural_modelling::{extensions::bevy::*, prelude::*};
 use std::{env, f32::consts::PI};
 
 #[derive(Reflect, Resource, InspectorOptions)]
@@ -36,10 +36,7 @@ impl Default for GlobalSettings {
 }
 
 fn make_mesh(_settings: &GlobalSettings) -> BevyMesh3d {
-    //BevyMesh3d::regular_polygon(2.0, 600)
-    //BevyMesh3d::cube(1.0)
-    let p = Vec3::splat(1.0) * 0.5;
-    let mut mesh = BevyMesh3d::cube(1.0);
+    let mut mesh = BevyMesh3d::regular_icosahedron(1.0);
 
     // place it "on the floor"
     let min_y = mesh

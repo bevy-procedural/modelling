@@ -55,7 +55,8 @@ where
 
         // top pole
         let mut prev = mesh.insert_loop((0..m).map(|j| (Default::default(), make_vp(1, j))));
-        mesh.windmill(mesh.edge(prev).twin_id(), make_vp(0, 0)).unwrap();
+        mesh.windmill(mesh.edge(prev).twin_id(), make_vp(0, 0))
+            .unwrap();
 
         // normal squares
         for i in 1..(n - 1) {
@@ -151,8 +152,8 @@ where
         mesh.windmill(start, make_vp(zero, long, short)).unwrap();
 
         let end = mesh
-            .loft_tri_closed(
-                mesh.edge(start).twin_id(),
+            .loft_tri_back_closed(
+                mesh.edge(start).twin().prev_id(),
                 [
                     make_vp(short, zero, -long),
                     make_vp(long, -short, zero),

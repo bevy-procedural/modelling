@@ -17,6 +17,106 @@ pub enum FaceConnection {
 
 /// A trait for lofting a mesh.
 pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
+    /// This will walk clockwise (backwards) along the given boundary and add a "hem" made from triangles.
+    /// The payloads are given using the iterator.
+    ///
+    /// `start` must be an edge on the boundary pointing to the first vertex to be connected with the hem.
+    ///
+    /// Returns the edge pointing from the first inserted vertex to the target of `start`.
+    /// If the iterator is empty, return `start` instead.
+    ///
+    /// If `shift` is true, the first inserted triangle will be with the tip pointing to the target of `start`.
+    /// Otherwise, the first triangle will include the edge `start`.
+    /// This doesn't affect the number of triangles but shifts the "hem" by one.
+    fn loft_tri_back(
+        &mut self,
+        start: T::E,
+        shift: bool,
+        vp: impl IntoIterator<Item = T::VP>,
+    ) -> Option<T::E>
+    where
+        T::EP: DefaultEdgePayload,
+        T::FP: DefaultFacePayload,
+    {
+        // TODO: a more efficient implementation could bulk-insert everything at once
+        // TODO: assertions
+
+        let mut input = start;
+        let mut first = true;
+        let mut iter = vp.into_iter();
+        let mut pos = iter.next();
+        let mut ret = start;
+
+        if shift && pos.is_some() {
+            let output = self.edge(input).next_id();
+            self.insert_vertex_e(input, pos.unwrap(), Default::default())?;
+            first = false;
+            ret = self.edge(output).prev_id();
+            pos = iter.next();
+        }
+
+        while pos.is_some() {
+            let output = self.edge(input).next_id();
+            self.insert_vertex_e(input, pos.unwrap(), Default::default())?;
+
+            let input_next = self.edge(input).next_id();
+            input = self.edge(input).prev_id();
+
+            // the first one shouldn't connect to the previous
+            if !first {
+                self.close_face_ee(
+                    output,
+                    self.edge(input_next).next_id(),
+                    Default::default(),
+                    Default::default(),
+                )?;
+            } else {
+                ret = self.edge(output).prev_id();
+            }
+
+            pos = iter.next();
+            // the last one also shouldn't connect to the next
+            if pos.is_some() || shift {
+                self.close_face_ee(
+                    input_next,
+                    self.edge(input).next_id(),
+                    Default::default(),
+                    Default::default(),
+                )?;
+            }
+
+            first = false;
+        }
+
+        Some(ret)
+    }
+
+    /// Like `loft_tri_back` but closes the "hem" with a face.
+    fn loft_tri_back_closed(
+        &mut self,
+        start: T::E,
+        vp: impl IntoIterator<Item = T::VP>,
+    ) -> Option<T::E>
+    where
+        T::EP: DefaultEdgePayload,
+        T::FP: DefaultFacePayload,
+    {
+        let e = self.loft_tri_back(start, false, vp)?;
+        self.close_face_ee(
+            self.edge(e).next().next_id(),
+            self.edge(e).next_id(),
+            Default::default(),
+            Default::default(),
+        )?;
+        self.close_face_ee(
+            self.edge(e).next_id(),
+            e,
+            Default::default(),
+            Default::default(),
+        )?;
+        Some(self.edge(e).next().next().twin_id())
+    }
+
     /// This will walk counter-clockwise along the given boundary and add a "hem" made from triangles.
     /// The payloads are given using the iterator.
     ///
