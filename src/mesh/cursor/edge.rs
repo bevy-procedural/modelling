@@ -106,7 +106,7 @@ impl<'a, T: MeshType + 'a> CursorData for EdgeCursor<'a, T> {
     type T = T;
 
     #[inline]
-    fn is_none(&self) -> bool {
+    fn is_void(&self) -> bool {
         self.id() == IndexType::max() || !self.mesh().has_edge(self.id())
     }
 
@@ -152,7 +152,7 @@ impl<'a, T: MeshType + 'a> CursorData for EdgeCursorMut<'a, T> {
     type T = T;
 
     #[inline]
-    fn is_none(&self) -> bool {
+    fn is_void(&self) -> bool {
         self.id() == IndexType::max() || !self.mesh().has_edge(self.id())
     }
 
@@ -304,7 +304,7 @@ impl<'a, T: MeshType + 'a> EdgeCursorMut<'a, T> {
     pub fn remove(self) -> Option<Self> {
         if self.mesh.try_remove_edge(self.edge) {
             None
-        } else if self.is_none() {
+        } else if self.is_void() {
             None
         } else {
             Some(self)
@@ -314,7 +314,7 @@ impl<'a, T: MeshType + 'a> EdgeCursorMut<'a, T> {
     /// Inserts a new vertex and half-edge pair. The halfedge leading to the
     /// new vertex will become the "next" of the current edge and the cursor will move
     /// to this newly created halfedge.
-    /// Returns the none cursor if the insertion was not successful.
+    /// Returns the void cursor if the insertion was not successful.
     /// See [MeshBuilder::insert_vertex_e] for more information.
     #[inline]
     pub fn insert_vertex(self, vp: T::VP, ep: T::EP) -> Self {
@@ -324,37 +324,37 @@ impl<'a, T: MeshType + 'a> EdgeCursorMut<'a, T> {
             debug_assert!(old_target == c.origin_id());
             c
         } else {
-            self.none()
+            self.void()
         }
     }
 
     /// Connects the current halfedge to the given halfedge.
-    /// On error, the resulting cursor will be `None`.
+    /// On error, the resulting cursor will be `void`.
     /// See [MeshBuilder::insert_edge_ee] for more information.
     #[inline]
     pub fn connect(self, other: T::E, ep: T::EP) -> Self {
         if let Some(e) = self.mesh.insert_edge_ee(self.edge, other, ep) {
             self.move_to(e)
         } else {
-            self.none()
+            self.void()
         }
     }
 
     /// Connects the current halfedge to the given vertex.
-    /// On error, the resulting cursor will be `None`.
+    /// On error, the resulting cursor will be `void`.
     /// See [MeshBuilder::insert_edge_ev] for more information.
     #[inline]
     pub fn connect_v(self, other: T::V, ep: T::EP) -> Self {
         if let Some(e) = self.mesh.insert_edge_ev(self.edge, other, ep) {
             self.move_to(e)
         } else {
-            self.none()
+            self.void()
         }
     }
 
     /// Inserts a face in the boundary of the current halfedge and move the cursor to the new face.
     /// If the face already exists, move there and make the current edge the representative edge.
-    /// If there was another error, the resulting cursor will be `None`.
+    /// If there was another error, the resulting cursor will be `void`.
     /// See [MeshBuilder::insert_face] for more information.
     #[inline]
     pub fn insert_face(self, fp: T::FP) -> FaceCursorMut<'a, T>

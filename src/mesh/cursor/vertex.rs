@@ -91,7 +91,7 @@ impl<'a, T: MeshType + 'a> CursorData for VertexCursor<'a, T> {
     }
 
     #[inline]
-    fn is_none(&self) -> bool {
+    fn is_void(&self) -> bool {
         self.id() == IndexType::max() || !self.mesh().has_vertex(self.id())
     }
 
@@ -137,7 +137,7 @@ impl<'a, T: MeshType + 'a> CursorData for VertexCursorMut<'a, T> {
     }
 
     #[inline]
-    fn is_none(&self) -> bool {
+    fn is_void(&self) -> bool {
         self.id() == IndexType::max() || !self.mesh().has_vertex(self.id())
     }
 

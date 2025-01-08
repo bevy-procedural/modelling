@@ -4,7 +4,7 @@ use super::{
 };
 use crate::{
     math::IndexType,
-    mesh::{FaceBasics, MeshBasics, MeshType, MeshTypeHalfEdge},
+    mesh::{FaceBasics, MeshBasics, MeshBuilder, MeshType, MeshTypeHalfEdge},
 };
 use std::fmt::Debug;
 
@@ -92,7 +92,7 @@ impl<'a, T: MeshType + 'a> CursorData for FaceCursor<'a, T> {
     }
 
     #[inline]
-    fn is_none(&self) -> bool {
+    fn is_void(&self) -> bool {
         self.id() == IndexType::max() || !self.mesh().has_face(self.id())
     }
 
@@ -138,7 +138,7 @@ impl<'a, T: MeshType + 'a> CursorData for FaceCursorMut<'a, T> {
     }
 
     #[inline]
-    fn is_none(&self) -> bool {
+    fn is_void(&self) -> bool {
         self.id() == IndexType::max() || !self.mesh().has_face(self.id())
     }
 
@@ -174,3 +174,21 @@ impl<'a, T: MeshType + 'a> FaceCursorBasics<'a, T> for FaceCursor<'a, T> {}
 impl<'a, T: MeshType + 'a> FaceCursorBasics<'a, T> for FaceCursorMut<'a, T> {}
 impl<'a, T: MeshTypeHalfEdge + 'a> FaceCursorHalfedgeBasics<'a, T> for FaceCursor<'a, T> {}
 impl<'a, T: MeshTypeHalfEdge + 'a> FaceCursorHalfedgeBasics<'a, T> for FaceCursorMut<'a, T> {}
+
+/// This trait implements some shorthands to quickly modify a mesh without thinking about local variables,
+/// i.e., you can quickly modify the mesh multiple times and change the face etc. using a chaining syntax.
+impl<'a, T: MeshType + 'a> FaceCursorMut<'a, T> {
+    /// Removes the face the cursor is pointing to.
+    /// Returns an empty cursor if the face was removed successfully or didn't exist.
+    /// Returns the same cursor if the face couldn't be removed and still exists.
+    #[inline]
+    pub fn remove(self) -> Self {
+        if self.mesh.try_remove_face(self.face) {
+            self.void()
+        } else if self.mesh.has_face(self.face) {
+            self
+        } else {
+            self.void()
+        }
+    }
+}
