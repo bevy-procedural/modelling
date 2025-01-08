@@ -1,8 +1,7 @@
 use crate::{
     math::{HasPosition, IndexType, TransformTrait, Transformable},
     mesh::{
-        CurvedEdge, CurvedEdgeType, DefaultEdgePayload, EdgeBasics, HalfEdge, MeshBasics,
-        MeshBuilder, MeshType, VertexBasics,
+        CursorData, CurvedEdge, CurvedEdgeType, DefaultEdgePayload, EdgeBasics, HalfEdge, MeshBasics, MeshBuilder, MeshType, VertexBasics, VertexCursorBasics
     },
 };
 
@@ -75,7 +74,7 @@ where
     {
         // TODO: implement this without requiring `HalfEdge`
 
-        if let Some(edge) = mesh.vertex_ref(v).edge(mesh) {
+        if let Some(edge) = mesh.vertex(v).edge().get() {
             Self::start_at_edge(mesh, edge.prev_id())
         } else {
             Self {

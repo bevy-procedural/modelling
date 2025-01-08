@@ -1,8 +1,9 @@
 use super::{HalfEdgeImplMeshType, HalfEdgeImplMeshTypePlus, HalfEdgeMeshImpl};
 use crate::{
     mesh::{
-        DefaultEdgePayload, DefaultFacePayload, EdgeBasics, EuclideanMeshType, FaceBasics,
-        HalfEdge, MeshBasics, MeshBuilder, MeshPosition, MeshType3D, MeshTypeHalfEdge,
+        DefaultEdgePayload, DefaultFacePayload, EdgeBasics, EdgeCursorHalfedgeBasics,
+        EuclideanMeshType, FaceBasics, HalfEdge, MeshBasics, MeshBuilder, MeshPosition, MeshType3D,
+        MeshTypeHalfEdge,
     },
     operations::{MeshExtrude, MeshLoft, MeshSubdivision},
     primitives::{Make2dShape, MakePlane, MakePrismatoid, MakeSphere},
@@ -16,12 +17,13 @@ where
     fn insert_polygon(&mut self, vp: impl IntoIterator<Item = T::VP>) -> T::E {
         let first = self.insert_loop_default(vp);
         self.insert_face(first, Default::default()).unwrap();
-        self.edge_ref(first).twin_id()
+        self.edge(first).twin_id()
     }
 
     fn insert_dihedron(&mut self, vp: impl IntoIterator<Item = T::VP>) -> T::E {
         let first = self.insert_polygon(vp);
-        self.insert_face(self.edge_ref(first).twin_id(), Default::default()).unwrap();
+        self.insert_face(self.edge(first).twin_id(), Default::default())
+            .unwrap();
         first
     }
 }

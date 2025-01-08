@@ -1,8 +1,8 @@
 use crate::{
     math::{HasPosition, Scalar, TransformTrait, Vector},
     mesh::{
-        DefaultEdgePayload, DefaultFacePayload, Face3d, HalfEdge, MeshType3D, MeshTypeHalfEdge,
-        VertexPayload,
+        CursorData, DefaultEdgePayload, DefaultFacePayload, EdgeCursorHalfedgeBasics, Face3d,
+        HalfEdge, MeshType3D, MeshTypeHalfEdge, VertexPayload,
     },
     operations::{MeshExtrude, MeshLoft, MeshSubdivision},
     primitives::polygon::Make2dShape,
@@ -52,9 +52,9 @@ where
     /// Uses quads for the sides.
     fn insert_prism(&mut self, vp: impl IntoIterator<Item = T::VP>, height: T::S) -> T::E {
         let first = self.insert_polygon(vp);
-        let twin = self.edge_ref(first).twin(self);
-        let f = twin.face(self).expect("The polygon must have a face");
-        let normal = Face3d::normal(f, self).normalize();
+        let twin = self.edge(first).twin();
+        let f = twin.face().expect("The polygon must have a face");
+        let normal = Face3d::normal(f.unwrap(), self).normalize();
         let e = self.extrude(first, T::Trans::from_translation(-normal * height));
         e
     }
@@ -75,12 +75,12 @@ where
     fn insert_antiprism(&mut self, vp: impl IntoIterator<Item = T::VP>, height: T::S) -> T::E {
         let first = self.insert_polygon(vp);
         let f = self
-            .edge_ref(first)
-            .face(self)
+            .edge(first)
+            .face()
             .expect("The polygon must have a face");
-        let normal = f.normal(self).normalize();
+        let normal = f.unwrap().normal(self).normalize();
         let e = self.extrude_tri2(
-            self.edge_ref(first).twin_id(),
+            self.edge(first).twin_id(),
             T::Trans::from_translation(-normal * height),
         );
         e
@@ -120,7 +120,7 @@ where
     fn insert_pyramid(&mut self, base: impl IntoIterator<Item = T::VP>, apex: T::VP) -> T::E {
         let first = self.insert_polygon(base);
         self.windmill(first, apex);
-        self.edge_ref(first).twin_id()
+        self.edge(first).twin_id()
     }
 
     /// calls `insert_pyramid` on a new mesh
@@ -168,17 +168,20 @@ where
             vp(p.x(), p.y(), -p.z()),
             vp(-p.x(), p.y(), -p.z()),
         ]);
-        let top_edge = mesh.loft(
-            bottom_edge,
-            2,
-            2,
-            [
-                vp(-p.x(), -p.y(), p.z()),
-                vp(p.x(), -p.y(), p.z()),
-                vp(p.x(), p.y(), p.z()),
-                vp(-p.x(), p.y(), p.z()),
-            ],
-        ).unwrap().0;
+        let top_edge = mesh
+            .loft(
+                bottom_edge,
+                2,
+                2,
+                [
+                    vp(-p.x(), -p.y(), p.z()),
+                    vp(p.x(), -p.y(), p.z()),
+                    vp(p.x(), p.y(), p.z()),
+                    vp(-p.x(), p.y(), p.z()),
+                ],
+            )
+            .unwrap()
+            .0;
         mesh.insert_face(top_edge, Default::default()).unwrap();
         mesh
     }
@@ -234,7 +237,7 @@ where
             circle_iter(radius, 4, T::S::ZERO, T::S::ZERO),
             T::VP::from_pos(T::Vec::from_xyz(zero, h, zero)),
         );
-        mesh.remove_face(mesh.edge_ref(e).face_id());
+        mesh.remove_face(mesh.edge(e).face_id());
         mesh.windmill(e, T::VP::from_pos(T::Vec::from_xyz(zero, -h, zero)));
         mesh
     }

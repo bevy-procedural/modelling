@@ -118,13 +118,13 @@ mod tests {
         }
 
         let e0 = mesh.edges().find(|e| !e.is_boundary_self()).unwrap().id();
-        let f0 = mesh.edge_ref(e0).face_id();
-        mesh.edge_ref_mut(e0).remove_face();
-        let edge = mesh.edge_ref(e0);
+        let f0 = mesh.edge(e0).face_id();
+        mesh.edge_mut(e0).remove_face();
+        let edge = mesh.edge(e0);
         assert!(edge.is_boundary_self());
 
-        mesh.edge_ref_mut(e0).set_face(f0);
-        let edge = mesh.edge_ref(e0);
+        mesh.edge_mut(e0).set_face(f0);
+        let edge = mesh.edge(e0);
         assert!(!edge.is_boundary_self());
 
         assert!(mesh.flipped().check().is_ok());

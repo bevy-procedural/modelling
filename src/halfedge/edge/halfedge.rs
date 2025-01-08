@@ -3,7 +3,7 @@ use crate::{
     halfedge::{HalfEdgeImplMeshType, HalfEdgeMeshImpl},
     math::IndexType,
     mesh::{
-        EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, FaceBasics, HalfEdge,
+        CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, FaceBasics, HalfEdge,
         HalfEdgeVertex, MeshBasics, VertexBasics,
     },
 };
@@ -216,10 +216,10 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
         if oi == ti {
             return Err(format!("Origin and target vertices are the same {}", oi));
         }
-        if !mesh.vertex_ref(oi).edges_out(mesh).any(|e| e.id == id) {
+        if !mesh.vertex(oi).edges_out().any(|e| e.id() == id) {
             return Err(format!("Origin vertex {} doesn't have edge {}", oi, id));
         }
-        if !mesh.vertex_ref(ti).edges_in(mesh).any(|e| e.id == id) {
+        if !mesh.vertex(ti).edges_in().any(|e| e.id() == id) {
             return Err(format!("Target vertex {} doesn't have edge {}", ti, id));
         }
         Ok(())

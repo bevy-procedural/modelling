@@ -1,8 +1,8 @@
 use crate::{
     math::{HasPosition, IndexType, Scalar, Vector},
     mesh::{
-        DefaultEdgePayload, DefaultFacePayload, HalfEdge, MeshType3D, MeshTypeHalfEdge,
-        SlerpVertexInterpolator,
+        DefaultEdgePayload, DefaultFacePayload, EdgeCursorHalfedgeBasics, HalfEdge, MeshType3D,
+        MeshTypeHalfEdge, SlerpVertexInterpolator,
     },
     operations::{MeshExtrude, MeshLoft, MeshSubdivision, SubdivisionDescription},
     primitives::{Make2dShape, MakePrismatoid},
@@ -55,7 +55,7 @@ where
 
         // top pole
         let mut prev = mesh.insert_loop((0..m).map(|j| (Default::default(), make_vp(1, j))));
-        mesh.windmill(mesh.edge_ref(prev).twin_id(), make_vp(0, 0));
+        mesh.windmill(mesh.edge(prev).twin_id(), make_vp(0, 0));
 
         // normal squares
         for i in 1..(n - 1) {
@@ -113,7 +113,7 @@ where
 
         let (start_bottom, _) = mesh
             .loft_back(
-                mesh.edge_ref(start_middle).next_id(),
+                mesh.edge(start_middle).next_id(),
                 2,
                 3,
                 [
@@ -151,7 +151,7 @@ where
         mesh.windmill(start, make_vp(zero, long, short));
 
         let end = mesh.loft_tri_closed(
-            mesh.edge_ref(start).twin_id(),
+            mesh.edge(start).twin_id(),
             [
                 make_vp(short, zero, -long),
                 make_vp(long, -short, zero),

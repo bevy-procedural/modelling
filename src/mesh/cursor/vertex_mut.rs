@@ -26,7 +26,7 @@ impl<'a, T: MeshType> VertexCursorMut<'a, T> {
     #[inline]
     #[must_use]
     pub fn payload(&mut self) -> &mut T::VP {
-        self.mesh.vertex_ref_mut(self.vertex).payload_mut()
+        VertexBasics::payload_mut(self.mesh.vertex_ref_mut(self.try_id()))
     }
 }
 

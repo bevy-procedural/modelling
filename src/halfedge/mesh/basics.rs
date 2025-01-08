@@ -102,17 +102,6 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     }
 
     #[inline]
-    fn edge_payload_l<'a>(&'a self, edge: &'a T::Edge) -> &'a T::EP {
-        if let Some(p) = &edge.payload_self() {
-            p
-        } else if let Some(p) = &(self.edge_ref(edge.twin_id()).payload_self()) {
-            p
-        } else {
-            panic!("No payload found for edge {}", edge.id());
-        }
-    }
-
-    #[inline]
     fn edge_payload_mut<'a>(&'a mut self, e: T::E) -> &'a mut T::EP {
         if self.edge_ref(e).payload_self().is_some() {
             let pr: Option<&'a mut T::EP> = self.edge_ref_mut(e).payload_self_mut();
@@ -127,23 +116,6 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
             }
         }
         panic!("No payload found for edge {}", e);
-    }
-
-    #[inline]
-    fn edge_payload_mut_l<'a>(&'a mut self, edge: &'a T::Edge) -> &'a mut T::EP {
-        if edge.payload_self().is_some() {
-            let pr: Option<&'a mut T::EP> = self.edge_ref_mut(edge.id()).payload_self_mut();
-            if let Some(v) = pr {
-                return v;
-            }
-        } else {
-            let twin_id = edge.twin_id();
-            let pr: Option<&'a mut T::EP> = self.edge_ref_mut(twin_id).payload_self_mut();
-            if let Some(v) = pr {
-                return v;
-            }
-        }
-        panic!("No payload found for edge {}", edge.id());
     }
 
     /// Returns the id of the half edge from `v` to `w` or `None` if they are not neighbors.

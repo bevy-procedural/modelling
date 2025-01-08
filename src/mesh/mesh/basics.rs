@@ -1,8 +1,8 @@
 use crate::{
     math::IndexType,
     mesh::{
-        EdgeBasics, EdgeCursor, EdgeCursorMut, FaceBasics, FaceCursor, FaceCursorMut, MeshType,
-        VertexBasics, VertexCursor, VertexCursorMut,
+        EdgeBasics, EdgeCursor, EdgeCursorBasics, EdgeCursorMut, FaceBasics, FaceCursor,
+        FaceCursorMut, MeshType, VertexBasics, VertexCursor, VertexCursorMut,
     },
 };
 use std::collections::HashSet;
@@ -132,30 +132,10 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     /// On half-edge meshes, the payload is shared between the two half-edges.
     /// Since this means the payload is not necessarily stored in the edge,
     /// we consider the edge payload a property of the mesh.
-    #[must_use]
-    #[deprecated = "Use `edge_payload` instead"]
-    fn edge_payload_l<'a>(&'a self, edge: &'a T::Edge) -> &'a T::EP;
-
-    /// Returns the edge payload.
-    ///
-    /// On half-edge meshes, the payload is shared between the two half-edges.
-    /// Since this means the payload is not necessarily stored in the edge,
-    /// we consider the edge payload a property of the mesh.
     ///
     /// Panics if the edge is deleted or does not exist.
     #[must_use]
     fn edge_payload<'a>(&'a self, edge: T::E) -> &'a T::EP;
-
-    /// Returns a mutable reference to the edge payload.
-    ///
-    /// On half-edge meshes, the payload is shared between the two half-edges.
-    /// Since this means the payload is not necessarily stored in the edge,
-    /// we consider the edge payload a property of the mesh.
-    ///
-    /// Notice that the given edge is not modified.
-    #[must_use]
-    #[deprecated = "Use `edge_payload_mut` instead"]
-    fn edge_payload_mut_l<'a>(&'a mut self, edge: &'a T::Edge) -> &'a mut T::EP;
 
     /// Returns a mutable reference to the edge payload.
     ///
@@ -332,8 +312,8 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
             return true;
         }
         while let Some(v) = stack.pop() {
-            for e in self.vertex_ref(v).edges_out(self) {
-                let w = e.target(self).id();
+            for e in self.vertex(v).edges_out() {
+                let w = e.target_id();
                 if !seen.contains(&w) {
                     stack.push(w);
                     seen.insert(w);
@@ -359,8 +339,8 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
             let mut component = Vec::<T::V>::new();
             while let Some(v) = stack.pop() {
                 component.push(v);
-                for e in self.vertex_ref(v).edges_out(self) {
-                    let w = e.target(self).id();
+                for e in self.vertex(v).edges_out() {
+                    let w = e.target_id();
                     if !seen.contains(&w) {
                         stack.push(w);
                         seen.insert(w);

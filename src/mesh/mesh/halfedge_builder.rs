@@ -1,4 +1,7 @@
-use crate::mesh::{EdgeBasics, HalfEdge, MeshBasics, MeshTypeHalfEdge};
+use crate::mesh::{
+    CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, HalfEdge, MeshBasics,
+    MeshTypeHalfEdge,
+};
 
 /// Some low-level operations to build meshes with halfedges.
 pub trait MeshHalfEdgeBuilder<T: MeshTypeHalfEdge<Mesh = Self>>: MeshBasics<T> {
@@ -76,10 +79,10 @@ pub trait MeshHalfEdgeBuilder<T: MeshTypeHalfEdge<Mesh = Self>>: MeshBasics<T> {
             if !self.has_edge(from_target) {
                 return Err(format!("from_target Edge {} does not exist", from_target));
             }
-            let to_origin = self.edge_ref(to_origin);
-            let from_origin = self.edge_ref(from_origin);
-            let to_target = self.edge_ref(to_target);
-            let from_target = self.edge_ref(from_target);
+            let to_origin = self.edge(to_origin);
+            let from_origin = self.edge(from_origin);
+            let to_target = self.edge(to_target);
+            let from_target = self.edge(from_target);
             if to_origin.next_id() != from_origin.id() {
                 return Err(format!(
                     "to_origin.next_id() != from_origin.id(): {} != {}",
@@ -108,31 +111,31 @@ pub trait MeshHalfEdgeBuilder<T: MeshTypeHalfEdge<Mesh = Self>>: MeshBasics<T> {
                     to_target.id()
                 ));
             }
-            if to_origin.target_id(self) != origin {
+            if to_origin.target_id() != origin {
                 return Err(format!(
                     "to_origin.target_id() != origin: {} != {}",
-                    to_origin.target_id(self),
+                    to_origin.target_id(),
                     origin
                 ));
             }
-            if from_origin.origin_id(self) != origin {
+            if from_origin.origin_id() != origin {
                 return Err(format!(
                     "from_origin.origin_id() != origin: {} != {}",
-                    from_origin.origin_id(self),
+                    from_origin.origin_id(),
                     origin
                 ));
             }
-            if to_target.target_id(self) != target {
+            if to_target.target_id() != target {
                 return Err(format!(
                     "to_target.target_id() != target: {} != {}",
-                    to_target.target_id(self),
+                    to_target.target_id(),
                     target
                 ));
             }
-            if from_target.origin_id(self) != target {
+            if from_target.origin_id() != target {
                 return Err(format!(
                     "from_target.origin_id() != target: {} != {}",
-                    from_target.origin_id(self),
+                    from_target.origin_id(),
                     target
                 ));
             }

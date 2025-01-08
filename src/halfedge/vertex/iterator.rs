@@ -1,7 +1,7 @@
 use crate::{
     halfedge::HalfEdgeImplMeshType,
     math::IndexType,
-    mesh::{EdgeBasics, HalfEdge, MeshBasics},
+    mesh::{CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, MeshBasics},
 };
 
 /// Iterator over all half-edges incident to the same vertex (clockwise)
@@ -41,16 +41,16 @@ impl<'a, T: HalfEdgeImplMeshType> Iterator for IncidentToVertexIterator<'a, T> {
         if self.current == IndexType::max() {
             return None;
         }
-        let current = self.mesh.edge_ref(self.current);
+        let current = self.mesh.edge(self.current);
         if self.is_first {
             self.is_first = false;
-            return Some(current);
+            return Some(self.mesh.edge_ref(current.id()));
         }
-        let next = current.twin(self.mesh).next(self.mesh);
+        let next = current.twin().next();
         debug_assert!(
-            next.origin_id(self.mesh) == self.mesh.edge_ref(self.first).origin_id(self.mesh),
+            next.origin_id() == self.mesh.edge(self.first).origin_id(),
             "The edge wheel around vertex {} is not closed. The mesh is invalid.",
-            next.origin_id(self.mesh)
+            next.origin_id()
         );
         if next.id() == self.first {
             return None;
@@ -58,7 +58,7 @@ impl<'a, T: HalfEdgeImplMeshType> Iterator for IncidentToVertexIterator<'a, T> {
             // self-loop edge
             assert!(self.current != next.id());
             self.current = next.id();
-            return Some(next);
+            return Some(self.mesh.edge_ref(next.id()));
         }
     }
 }

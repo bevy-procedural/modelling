@@ -1,5 +1,5 @@
 use super::{MeshBasics, MeshType};
-use crate::mesh::{DefaultEdgePayload, EdgeBasics, VertexBasics};
+use crate::mesh::{DefaultEdgePayload, EdgeBasics, EdgeCursorBasics, VertexBasics};
 
 // TODO: Make sure return values are used for the failable methods!
 
@@ -258,16 +258,14 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         let first_edge = self
             .insert_edge_vv(
                 last_v,
-                self.edge_ref(e.expect("Iterator too short"))
-                    .origin(self)
-                    .id(),
+                self.edge(e.expect("Iterator too short")).origin_id(),
                 ep,
             )
             .unwrap();
 
         debug_assert_eq!(
-            self.edge_ref(first_edge).target(self).id(),
-            self.edge_ref(e.unwrap()).origin(self).id()
+            self.edge(first_edge).target_id(),
+            self.edge(e.unwrap()).origin_id()
         );
 
         first_edge

@@ -1,7 +1,7 @@
 use super::HalfEdgeImpl;
 use crate::{
     halfedge::HalfEdgeImplMeshType,
-    mesh::{EdgeBasics, HalfEdge, MeshBasics},
+    mesh::{CursorData, EdgeBasics, EdgeCursorHalfedgeBasics, HalfEdge, MeshBasics},
 };
 
 impl<T: HalfEdgeImplMeshType> HalfEdgeImpl<T> {
@@ -148,7 +148,8 @@ impl<'a, T: HalfEdgeImplMeshType> Iterator for ForwardEdgeIteratorMut<'a, T> {
                 let edge_ptr = self.mesh.edge_ref_mut(self.current) as *mut HalfEdgeImpl<T>;
                 return Some(&mut *edge_ptr);
             }
-            let next = self.mesh.edge_ref(self.current).next(self.mesh);
+
+            let next = self.mesh.edge(self.current).next();
             if next.id() == self.first {
                 return None;
             } else {

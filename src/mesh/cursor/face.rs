@@ -30,6 +30,26 @@ impl<'a, T: MeshType> FaceCursor<'a, T> {
     pub fn payload(&self) -> &T::FP {
         self.unwrap().payload()
     }
+
+    /// Returns an iterator of vertex cursors of the face.
+    /// Panics if the face is void.
+    #[inline]
+    #[must_use]
+    fn vertices(&'a self) -> impl Iterator<Item = VertexCursor<'a, T>> {
+        self.unwrap()
+            .vertex_ids(self.mesh)
+            .map(move |v| VertexCursor::new(self.mesh, v))
+    }
+
+    /// Returns an iterator of edge cursors of the face.
+    /// Panics if the face is void.
+    #[inline]
+    #[must_use]
+    fn edges(&'a self) -> impl Iterator<Item = EdgeCursor<'a, T>> {
+        self.unwrap()
+            .edge_ids(self.mesh)
+            .map(move |e| EdgeCursor::new(self.mesh, e))
+    }
 }
 
 impl<'a, T: MeshType> PartialEq for FaceCursor<'a, T> {

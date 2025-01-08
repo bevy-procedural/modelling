@@ -1,8 +1,9 @@
 use crate::{
     math::{Scalar, Transformable},
     mesh::{
-        CursorData, DefaultEdgePayload, DefaultFacePayload, EdgeBasics, EdgeCursorHalfedgeBasics,
-        EuclideanMeshType, FaceCursorHalfedgeBasics, HalfEdge, MeshTypeHalfEdge, VertexBasics,
+        CursorData, DefaultEdgePayload, DefaultFacePayload, EdgeBasics, EdgeCursorBasics,
+        EdgeCursorHalfedgeBasics, EuclideanMeshType, FaceCursorHalfedgeBasics, HalfEdge,
+        MeshTypeHalfEdge, VertexBasics,
     },
     operations::MeshLoft,
 };
@@ -128,15 +129,15 @@ where
     /// The result will be a windmill with triangular blades.
     fn windmill(&mut self, start: T::E, hub: T::VP) -> T::V {
         // TODO: replace with loft n=1
-        let e0 = self.edge_ref(start);
-        let origin = e0.origin_id(self);
+        let e0 = self.edge(start);
+        let origin = e0.origin_id();
         let mut input = self.edge(start).prev_id();
         let (_, v) = self
             .insert_vertex_e(input, hub, Default::default())
             .unwrap(); // TODO: error handling
         loop {
-            let e = self.edge_ref(input);
-            if e.origin_id(self) == origin {
+            let e = self.edge(input);
+            if e.origin_id() == origin {
                 break;
             }
             input = e.prev_id();

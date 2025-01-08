@@ -41,6 +41,17 @@ impl<'a, T: MeshType> VertexCursor<'a, T> {
             .map(move |e| EdgeCursor::new(self.mesh, e.id()))
     }
 
+    /// Iterates over the neighbors of the vertex.
+    /// Panics if the vertex is void.
+    /// See [VertexBasics::neighbors] for more information.
+    #[inline]
+    #[must_use]
+    pub fn neighbors(&'a self) -> impl Iterator<Item = VertexCursor<'a, T>> {
+        self.unwrap()
+            .neighbor_ids(self.mesh())
+            .map(move |v| VertexCursor::new(self.mesh, v))
+    }
+
     /// Returns a reference to the payload of the vertex.
     /// Panics if the vertex is void.
     #[inline]

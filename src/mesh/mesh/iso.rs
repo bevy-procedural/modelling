@@ -1,7 +1,8 @@
 use crate::{
     math::{HasPosition, IndexType, Scalar, Vector},
     mesh::{
-        CurvedEdge, EdgeBasics, EuclideanMeshType, FaceBasics, MeshBasics, MeshType, VertexBasics,
+        CursorData, CurvedEdge, EdgeBasics, EuclideanMeshType, FaceBasics, FaceCursorBasics,
+        MeshBasics, MeshType, VertexBasics,
     },
 };
 use itertools::Itertools;
@@ -116,7 +117,7 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         let mut edge_iso = IndexIsomorphism::<T::E, T2::E>::new();
 
         for v in self.vertices() {
-            let other_v: &T2::Vertex = other.vertex_ref(*iso.get(v.id()).unwrap());
+            let other_v = other.vertex(*iso.get(v.id()).unwrap());
 
             // Is there a corresponding edge?
             for e in v.edges_out(self) {
@@ -173,8 +174,8 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
             // faces are the same if they have the same edges
 
             let es = self
-                .face_ref(face)
-                .edge_ids(self)
+                .face(face)
+                .edge_ids()
                 .map(|id| *iso.get(id).unwrap())
                 .collect_vec();
 
@@ -196,7 +197,7 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
             }
 
             // when the counts are equal, those are faces on the same edge set
-            let num_edges = self.face_ref(face).num_edges(self);
+            let num_edges = self.face(face).num_edges();
             let matches = other_faces
                 .iter()
                 .filter(|(_, count)| **count == num_edges)
@@ -220,7 +221,7 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
             // This runs in O(f*fe*ef) since each edge is compared to at most ef other edges
             // where ef is the maximum number of edges per face. This simplifies to O(e*fe).
             for other_face in matches {
-                let other_es = other.face_ref(other_face).edge_ids(&other).collect_vec();
+                let other_es = other.face(other_face).edge_ids().collect_vec();
                 if equal_up_to_rotation(&es, &other_es) {
                     if face_iso.has(face) {
                         // duplicate found

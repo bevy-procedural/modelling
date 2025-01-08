@@ -1,4 +1,4 @@
-use crate::mesh::VertexBasics;
+use crate::mesh::{CursorData, VertexBasics};
 
 use super::{MeshBasics, MeshType};
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -24,15 +24,15 @@ pub trait MeshTopology<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         predecessor.insert(v1, None);
 
         while let Some(current) = queue.pop_front() {
-            for neighbor in self.vertex_ref(current).neighbor_ids(self) {
-                if visited.contains(&neighbor) {
+            for neighbor in self.vertex(current).neighbors() {
+                if visited.contains(&neighbor.id()) {
                     continue;
                 }
-                visited.insert(neighbor);
-                predecessor.insert(neighbor, Some(current));
-                queue.push_back(neighbor);
+                visited.insert(neighbor.id());
+                predecessor.insert(neighbor.id(), Some(current));
+                queue.push_back(neighbor.id());
 
-                if neighbor == v0 {
+                if neighbor.id() == v0 {
                     let mut path = Vec::new();
                     let mut step = Some(v0);
                     while let Some(vertex) = step {
