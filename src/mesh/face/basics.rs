@@ -1,9 +1,4 @@
-use crate::{
-    math::{Polygon, Vector2D},
-    mesh::{EdgeBasics, EuclideanMeshType, VertexBasics},
-};
-
-use super::MeshType;
+use crate::mesh::{EdgeBasics, MeshType, VertexBasics};
 
 /// A face in a mesh.
 ///

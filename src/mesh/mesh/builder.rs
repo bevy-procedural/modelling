@@ -148,6 +148,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     fn close_face_ee(&mut self, from: T::E, to: T::E, ep: T::EP, fp: T::FP)
         -> Option<(T::E, T::F)>;
 
+    /// .
     #[must_use]
     #[deprecated(note = "Use close_face_ee instead")]
     fn close_face_ee_legacy(
@@ -257,7 +258,9 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         let first_edge = self
             .insert_edge_vv(
                 last_v,
-                self.edge_ref(e.expect("Iterator too short")).origin(self).id(),
+                self.edge_ref(e.expect("Iterator too short"))
+                    .origin(self)
+                    .id(),
                 ep,
             )
             .unwrap();

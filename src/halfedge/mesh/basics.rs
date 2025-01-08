@@ -90,8 +90,15 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     }
 
     #[inline]
-    fn edge_payload<'a>(&'a self, edge: T::E) -> &'a T::EP {
-        self.edge_payload_l(self.edge_ref(edge))
+    fn edge_payload<'a>(&'a self, e: T::E) -> &'a T::EP {
+        let edge = self.edge_ref(e);
+        if let Some(p) = &edge.payload_self() {
+            p
+        } else if let Some(p) = &(self.edge_ref(edge.twin_id()).payload_self()) {
+            p
+        } else {
+            panic!("No payload found for edge {}", e);
+        }
     }
 
     #[inline]

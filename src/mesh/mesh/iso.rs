@@ -94,6 +94,7 @@ fn equal_up_to_rotation<T: Clone + PartialEq>(a: &Vec<T>, b: &Vec<T>) -> bool {
     false
 }
 
+/// A trait for checking isomorphisms between meshes.
 pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Finds an edge isomorphism (if there is one) given a vertex isomorphism.
     ///
@@ -181,8 +182,11 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
 
             // check which face occurs in all corresponding edges.
             // This runs in O(e*fe) since all edges are checked once per incident face
-            let mut other_faces: HashMap<T2::F, usize> =
-                other.edge_ref(es[0]).face_ids(&other).map(|f| (f, 1)).collect();
+            let mut other_faces: HashMap<T2::F, usize> = other
+                .edge_ref(es[0])
+                .face_ids(&other)
+                .map(|f| (f, 1))
+                .collect();
             for e in es.iter().skip(1) {
                 for other_face in other.edge_ref(*e).face_ids(&other) {
                     if let Some(count) = other_faces.get_mut(&other_face) {
@@ -482,7 +486,7 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
 mod tests {
     use crate::{extensions::nalgebra::*, prelude::*};
 
-    fn cuboid_from_vertices(size: Vec3<f64>) -> Mesh3d64 {
+    fn cuboid_from_vertices(size: Vec3<f64>) -> Option<Mesh3d64> {
         fn vp(x: f64, y: f64, z: f64) -> VertexPayloadPNU<f64, 3> {
             VertexPayloadPNU::from_pos(Vec3::<f64>::new(x, y, z))
         }
@@ -492,32 +496,20 @@ mod tests {
         //let (v0, v1) = mesh.insert_isolated_edge(vp(x, y, z), vp(-x, y, z));
         let v0 = mesh.insert_vertex(vp(x, y, z));
         let v1 = mesh.insert_vertex(vp(-x, y, z));
-        mesh.insert_edge_vv(v0, v1, Default::default());
-        let (_, v2) = mesh
-            .insert_vertex_v(v1, vp(-x, -y, z), Default::default())
-            .unwrap();
-        let (_, v3) = mesh
-            .insert_vertex_v(v2, vp(x, -y, z), Default::default())
-            .unwrap();
-        mesh.close_face_vv(v2, v3, v0, Default::default(), Default::default());
-        let (_, v4) = mesh
-            .insert_vertex_v(v1, vp(-x, y, -z), Default::default())
-            .unwrap();
-        let (_, v5) = mesh
-            .insert_vertex_v(v4, vp(-x, -y, -z), Default::default())
-            .unwrap();
-        mesh.close_face_vv(v4, v5, v2, Default::default(), Default::default());
-        let (_, v6) = mesh
-            .insert_vertex_v(v0, vp(x, y, -z), Default::default())
-            .unwrap();
-        let (_, v7) = mesh
-            .insert_vertex_v(v3, vp(x, -y, -z), Default::default())
-            .unwrap();
-        mesh.close_face_vv(v3, v7, v6, Default::default(), Default::default());
-        mesh.close_face_vv(v2, v5, v7, Default::default(), Default::default());
-        mesh.close_face_vv(v0, v6, v4, Default::default(), Default::default());
-        mesh.insert_face(mesh.shared_edge(v6, v7).unwrap().id(), Default::default());
-        mesh
+        mesh.insert_edge_vv(v0, v1, Default::default())?;
+        let (_, v2) = mesh.insert_vertex_v(v1, vp(-x, -y, z), Default::default())?;
+        let (_, v3) = mesh.insert_vertex_v(v2, vp(x, -y, z), Default::default())?;
+        mesh.close_face_vv(v2, v3, v0, Default::default(), Default::default())?;
+        let (_, v4) = mesh.insert_vertex_v(v1, vp(-x, y, -z), Default::default())?;
+        let (_, v5) = mesh.insert_vertex_v(v4, vp(-x, -y, -z), Default::default())?;
+        mesh.close_face_vv(v4, v5, v2, Default::default(), Default::default())?;
+        let (_, v6) = mesh.insert_vertex_v(v0, vp(x, y, -z), Default::default())?;
+        let (_, v7) = mesh.insert_vertex_v(v3, vp(x, -y, -z), Default::default())?;
+        mesh.close_face_vv(v3, v7, v6, Default::default(), Default::default())?;
+        mesh.close_face_vv(v2, v5, v7, Default::default(), Default::default())?;
+        mesh.close_face_vv(v0, v6, v4, Default::default(), Default::default())?;
+        mesh.insert_face(mesh.shared_edge(v6, v7)?.id(), Default::default())?;
+        Some(mesh)
     }
 
     #[test]
@@ -526,7 +518,7 @@ mod tests {
         let large_cube = Mesh3d64::cube(10.0);
         let mut flipped_cube = Mesh3d64::cube(1.0);
         flipped_cube.scale(&Vec3::new(1.0, -1.0, 1.0));
-        let cube_by_vertices = cuboid_from_vertices(Vec3::new(1.0, 1.0, 1.0));
+        let cube_by_vertices = cuboid_from_vertices(Vec3::new(1.0, 1.0, 1.0)).unwrap();
         let mut rotated_cube = cube.clone();
         rotated_cube.rotate(&NdRotate::from_axis_angle(Vec3::x_axis(), f64::PI));
 

@@ -1,7 +1,7 @@
 use crate::{
     halfedge::{HalfEdgeImpl, HalfEdgeImplMeshTypePlus, HalfEdgeMeshImpl, HalfEdgeVertexImpl},
     math::IndexType,
-    mesh::{EdgeBasics, HalfEdge, HalfEdgeVertex, MeshBasics, MeshHalfEdgeBuilder, VertexBasics},
+    mesh::{EdgeBasics, HalfEdge, HalfEdgeVertex, MeshBasics, MeshHalfEdgeBuilder},
 };
 
 impl<T: HalfEdgeImplMeshTypePlus> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T> {

@@ -180,7 +180,7 @@ impl<'a> Font<'a> {
                 cur_v = v1;
                 prev_v = v0;
                 start_v = v0;
-                cur_e = mesh.shared_edge_id(v0, v1).unwrap();
+                cur_e = mesh.shared_edge(v0, v1).unwrap().id();
             }
 
             if c1.is_some() {

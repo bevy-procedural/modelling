@@ -4,7 +4,7 @@ use super::{
 };
 use crate::{
     math::IndexType,
-    mesh::{Edge, EdgeBasics, HalfEdge, MeshBasics, MeshBuilder, MeshType, MeshTypeHalfEdge},
+    mesh::{EdgeBasics, HalfEdge, MeshBasics, MeshBuilder, MeshType, MeshTypeHalfEdge},
 };
 use std::fmt::Debug;
 
@@ -42,7 +42,7 @@ impl<'a, T: MeshType> EdgeCursor<'a, T> {
         assert!(self.mesh as *const _ == mesh as *const _);
         EdgeCursorMut::new(mesh, self.edge)
     }*/
-    
+
     /// Returns a reference to the payload of the edge.
     /// Panics if the edge is void.
     #[inline]
@@ -380,11 +380,11 @@ impl<'a, T: MeshTypeHalfEdge + 'a> EdgeCursorHalfedgeBasics<'a, T> for EdgeCurso
 /// This trait implements some shorthands to quickly modify a mesh without thinking about local variables,
 /// i.e., you can quickly modify the mesh multiple times and change the edge etc. using a chaining syntax.
 impl<'a, T: MeshType + 'a> EdgeCursorMut<'a, T> {
-    #[inline]
+    /*#[inline]
     pub fn subdivide<I: Iterator<Item = (T::EP, T::VP)>>(self, vs: I) -> Self {
         let e = self.mesh.subdivide_edge::<I>(self.edge, vs);
         self.move_to(e)
-    }
+    }*/
 
     /// Tries to remove the current edge.
     /// If the edge was successfully removed or didn't exist, returns `None`.
@@ -487,7 +487,7 @@ mod tests {
         assert_eq!(c1, c1);
         assert_eq!(c2, c3);
 
-        let c1: EdgeCursorMut<'_, MeshType3d64PNU> = mesh.edge_mut(e0).next();
+        let _c1: EdgeCursorMut<'_, MeshType3d64PNU> = mesh.edge_mut(e0).next();
         /*c1.next()
         .subdivide(std::iter::empty())
         .next()

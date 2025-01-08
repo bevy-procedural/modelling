@@ -1,8 +1,8 @@
 use crate::{
     math::IndexType,
     mesh::{
-        Edge, EdgeBasics, EdgeCursor, EdgeCursorMut, FaceBasics, FaceCursor, FaceCursorMut,
-        MeshType, VertexBasics, VertexCursor, VertexCursorMut,
+        EdgeBasics, EdgeCursor, EdgeCursorMut, FaceBasics, FaceCursor, FaceCursorMut, MeshType,
+        VertexBasics, VertexCursor, VertexCursorMut,
     },
 };
 use std::collections::HashSet;
@@ -141,7 +141,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     /// On half-edge meshes, the payload is shared between the two half-edges.
     /// Since this means the payload is not necessarily stored in the edge,
     /// we consider the edge payload a property of the mesh.
-    /// 
+    ///
     /// Panics if the edge is deleted or does not exist.
     #[must_use]
     fn edge_payload<'a>(&'a self, edge: T::E) -> &'a T::EP;
@@ -164,7 +164,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     /// we consider the edge payload a property of the mesh.
     ///
     /// Notice that the given edge is not modified.
-    /// 
+    ///
     /// Panics if the edge is deleted or does not exist.
     #[must_use]
     fn edge_payload_mut<'a>(&'a mut self, edge: T::E) -> &'a mut T::EP;

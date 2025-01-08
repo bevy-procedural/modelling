@@ -21,7 +21,7 @@ where
 
     fn insert_dihedron(&mut self, vp: impl IntoIterator<Item = T::VP>) -> T::E {
         let first = self.insert_polygon(vp);
-        self.insert_face(self.edge_ref(first).twin_id(), Default::default());
+        self.insert_face(self.edge_ref(first).twin_id(), Default::default()).unwrap();
         first
     }
 }

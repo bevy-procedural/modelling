@@ -19,7 +19,7 @@ use bevy_inspector_egui::{
     InspectorOptions,
 };
 use bevy_panorbit_camera::*;
-use procedural_modelling::{extensions::bevy::*, mesh::MeshBuilder, prelude::*};
+use procedural_modelling::{extensions::bevy::*, prelude::*};
 use std::{env, f32::consts::PI};
 
 #[derive(Reflect, Resource, InspectorOptions)]
@@ -48,7 +48,7 @@ fn make_mesh(_settings: &GlobalSettings) -> BevyMesh3d {
         vp(p.x(), p.y(), -p.z()),
         vp(-p.x(), p.y(), -p.z()),
     ]);
-    let top_edge = mesh.loft(
+    let _top_edge = mesh.loft(
         bottom_edge,
         2,
         2,

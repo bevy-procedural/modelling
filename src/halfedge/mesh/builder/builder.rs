@@ -3,12 +3,11 @@ use crate::{
     math::IndexType,
     mesh::{
         CursorData, EdgeBasics, EdgeCursorHalfedgeBasics, EdgePayload, HalfEdge, HalfEdgeVertex,
-        MeshBasics, MeshBuilder, MeshHalfEdgeBuilder, VertexBasics, VertexCursorBasics,
+        MeshBasics, MeshBuilder, MeshHalfEdgeBuilder, VertexCursorBasics,
         VertexCursorHalfedgeBasics,
     },
     prelude::HalfEdgeFaceImpl,
 };
-use itertools::Itertools;
 
 /*
 impl<T:HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
@@ -205,12 +204,12 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
             // check that there are only multiple edges if the payload allows it
             if !ep.allow_multigraph() {
                 if let Some(duplicate) = self.shared_edge(a, b) {
-                    if !self.edge_payload_l(&duplicate).allow_multigraph() {
+                    if !self.edge_payload(duplicate.id()).allow_multigraph() {
                         return None;
                     }
                 }
                 if let Some(duplicate) = self.shared_edge(b, a) {
-                    if !self.edge_payload_l(&duplicate).allow_multigraph() {
+                    if !self.edge_payload(duplicate.id()).allow_multigraph() {
                         return None;
                     }
                 }
@@ -333,7 +332,8 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         let f = self.insert_face(e, fp).unwrap();
         Some((e, f))
     }
-
+    
+    #[must_use]
     fn close_face_vv(
         &mut self,
         prev: T::V,

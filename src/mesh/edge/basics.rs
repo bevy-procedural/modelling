@@ -72,24 +72,26 @@ mod tests {
     #[test]
     fn test_edge_basics_triangle() {
         let mesh = Mesh3d64::regular_polygon(1.0, 3);
-        let edge = mesh.edge_ref(0);
+        let edge = mesh.edge(0);
         assert_eq!(mesh.check(), Ok(()));
-        assert_eq!(edge.origin(&mesh).id(), 0);
-        assert_eq!(edge.target(&mesh).id(), 1);
-        assert_eq!(edge.twin(&mesh).id(), 1);
-        assert_eq!(edge.is_boundary(&mesh), true);
-        assert_eq!(mesh.edge_payload_l(edge).is_empty(), true);
-        assert_eq!(edge.face_ids(&mesh).collect::<Vec<_>>(), vec![0]);
-        assert!(edge.edges_face(&mesh).count() == 3);
-        assert!(edge.edges_face_back(&mesh).count() == 3);
+        assert_eq!(edge.origin_id(), 0);
+        assert_eq!(edge.target_id(), 1);
+        assert_eq!(edge.twin_id(), 1);
+        assert_eq!(edge.is_boundary(), true);
+        assert_eq!(edge.payload().is_empty(), true);
+
+        // TODO: Cursor
+        assert_eq!(edge.unwrap().face_ids(&mesh).collect::<Vec<_>>(), vec![0]);
+        assert!(edge.unwrap().edges_face(&mesh).count() == 3);
+        assert!(edge.unwrap().edges_face_back(&mesh).count() == 3);
         assert_eq!(
-            edge.edges_face(&mesh)
+            edge.unwrap().edges_face(&mesh)
                 .map(|e| e.id())
                 .collect_vec()
                 .iter()
                 .rev()
                 .collect_vec(),
-            edge.edges_face_back(&mesh)
+            edge.unwrap().edges_face_back(&mesh)
                 .map(|e| e.id())
                 .collect_vec()
                 .iter()

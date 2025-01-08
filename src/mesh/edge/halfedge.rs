@@ -32,28 +32,24 @@ pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
     fn set_origin(&mut self, origin: T::V);
 
     /// Returns the next half-edge incident to the same face or boundary
-    #[deprecated(note = "Use cursor instead")]
     fn next<'a>(&self, mesh: &'a T::Mesh) -> &'a T::Edge;
 
     /// Returns the next id
     fn next_id(&self) -> T::E;
 
     /// Returns the other, opposite half-edge
-    #[deprecated(note = "Use cursor instead")]
     fn twin<'a>(&self, mesh: &'a T::Mesh) -> &'a T::Edge;
 
     /// Returns the twin id
     fn twin_id(&self) -> T::E;
 
     /// Returns the previous half-edge incident to the same face or boundary
-    #[deprecated(note = "Use cursor instead")]
     fn prev<'a>(&self, mesh: &'a T::Mesh) -> &'a T::Edge;
 
     /// Returns the prev id
     fn prev_id(&self) -> T::E;
 
     /// Returns the face the half-edge is incident to
-    #[deprecated(note = "Use cursor instead")]
     fn face<'a>(&'a self, mesh: &'a T::Mesh) -> Option<&'a T::Face>;
 
     /// Returns the face id

@@ -187,6 +187,7 @@ impl<'a, T: MeshType + 'a> CursorData for VertexCursorMut<'a, T> {
     }
 }
 
+/// This trait implements some basic functionality for vertex cursors that works with any type of mesh and both mutable and immutable cursors.
 pub trait VertexCursorBasics<'a, T: MeshType + 'a>: VertexCursorData<'a, T> {
     /// Returns an edge cursor pointing to a representative edge incident to the vertex.
     #[inline]
@@ -213,17 +214,18 @@ pub trait VertexCursorBasics<'a, T: MeshType + 'a>: VertexCursorData<'a, T> {
     }
 }
 
+/// This trait implements some basic functionality for vertex cursors that works with half edge meshes and both mutable and immutable cursors.
 pub trait VertexCursorHalfedgeBasics<'a, T: MeshTypeHalfEdge + 'a>:
     VertexCursorData<'a, T>
 {
-    /// Returns an edge cursor pointing to an outgoing halfedge incident to the vertex.
+    /*/// Returns an edge cursor pointing to an outgoing halfedge incident to the vertex.
     /// If the vertex is void, the edge cursor is void. Won't panic.
     #[inline]
     #[must_use]
     fn outgoing_edge(self) -> Self::EC {
         let edge = todo!();
         self.move_to_edge(edge)
-    }
+    }*/
 
     /// Returns an ingoing boundary edge incident to the vertex.
     /// Panics if the vertex is void.
@@ -248,15 +250,3 @@ impl<'a, T: MeshType + 'a> VertexCursorBasics<'a, T> for VertexCursor<'a, T> {}
 impl<'a, T: MeshType + 'a> VertexCursorBasics<'a, T> for VertexCursorMut<'a, T> {}
 impl<'a, T: MeshTypeHalfEdge + 'a> VertexCursorHalfedgeBasics<'a, T> for VertexCursor<'a, T> {}
 impl<'a, T: MeshTypeHalfEdge + 'a> VertexCursorHalfedgeBasics<'a, T> for VertexCursorMut<'a, T> {}
-
-#[cfg(test)]
-mod tests {
-    use crate::{extensions::nalgebra::*, prelude::*};
-
-    #[test]
-    fn test_cursor() {
-        let mut mesh = Mesh3d64::cube(1.0);
-        let mut cursor: VertexCursor<'_, MeshType3d64PNU> =
-            VertexCursor::new(&mesh, mesh.vertex_ids().next().unwrap());
-    }
-}

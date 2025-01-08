@@ -5,9 +5,7 @@ use crate::{
     },
     math::HasPosition,
     mesh::{
-        CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EmptyEdgePayload, EmptyFacePayload,
-        EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshBasicsCurved, MeshType,
-        MeshTypeHalfEdge,
+        CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EdgeBasics, EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshBasicsCurved, MeshType, MeshTypeHalfEdge
     },
     prelude::HalfEdgeImplMeshTypePlus,
 };
@@ -51,7 +49,7 @@ impl MeshTypeHalfEdge for BevyMeshType2d32 {}
 
 impl CurvedEdge<2, BevyMeshType2d32> for HalfEdgeImpl<BevyMeshType2d32> {
     fn curve_type(&self, mesh: &BevyMesh2d) -> CurvedEdgeType<2, BevyMeshType2d32> {
-        mesh.edge_payload_l(self).curve_type()
+        mesh.edge_payload(self.id()).curve_type()
     }
 
     fn set_curve_type_in_mesh(
@@ -59,7 +57,7 @@ impl CurvedEdge<2, BevyMeshType2d32> for HalfEdgeImpl<BevyMeshType2d32> {
         mesh: &mut BevyMesh2d,
         curve_type: CurvedEdgeType<2, BevyMeshType2d32>,
     ) {
-        mesh.edge_payload_mut_l(self).set_curve_type(curve_type);
+        mesh.edge_payload_mut(self.id()).set_curve_type(curve_type);
     }
 }
 

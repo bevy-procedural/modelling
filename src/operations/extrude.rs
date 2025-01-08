@@ -2,8 +2,7 @@ use crate::{
     math::{Scalar, Transformable},
     mesh::{
         CursorData, DefaultEdgePayload, DefaultFacePayload, EdgeBasics, EdgeCursorHalfedgeBasics,
-        EuclideanMeshType, FaceBasics, FaceCursorBasics, FaceCursorData, FaceCursorHalfedgeBasics,
-        HalfEdge, MeshTypeHalfEdge, VertexBasics,
+        EuclideanMeshType, FaceCursorHalfedgeBasics, HalfEdge, MeshTypeHalfEdge, VertexBasics,
     },
     operations::MeshLoft,
 };
@@ -92,7 +91,7 @@ where
             .map(|v| v.origin(self).payload().transformed(&transform))
             .collect();
         let start = self.loft_tri_closed(e, vps);
-        self.insert_face(start, Default::default());
+        self.insert_face(start, Default::default()).unwrap();
         start
     }
 
@@ -118,7 +117,7 @@ where
             .collect();
         vps.rotate_right(1);
         let start = self.loft_tri_closed(e, vps);
-        self.insert_face(start, Default::default());
+        self.insert_face(start, Default::default()).unwrap();
         start
     }
 
@@ -148,7 +147,7 @@ where
                 Default::default(),
             );
         }
-        self.insert_face(input, Default::default());
+        self.insert_face(input, Default::default()).unwrap();
         v
     }
 }

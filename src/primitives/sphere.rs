@@ -61,7 +61,8 @@ where
         for i in 1..(n - 1) {
             prev = mesh
                 .loft_back(prev, 2, 2, (0..m).map(|j| make_vp(i + 1, j)))
-                .unwrap().0;
+                .unwrap()
+                .0;
         }
 
         // bottom pole

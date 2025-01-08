@@ -1,5 +1,6 @@
 use crate::mesh::{
-    CursorData, DefaultEdgePayload, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, FaceBasics, HalfEdge, MeshTypeHalfEdge, VertexInterpolator
+    DefaultEdgePayload, EdgeBasics, EdgeCursorHalfedgeBasics, FaceBasics, MeshTypeHalfEdge,
+    VertexInterpolator,
 };
 
 /// Describes how to subdivide a mesh.
@@ -54,7 +55,11 @@ where
         let fs = self.faces().map(|f| f.id()).collect::<Vec<_>>();
         for face in &fs {
             // get the edge chain
-            let edges = self.face_ref(*face).edges(self).cloned().collect::<Vec<_>>();
+            let edges = self
+                .face_ref(*face)
+                .edges(self)
+                .cloned()
+                .collect::<Vec<_>>();
             let vs = edges.iter().map(|e| e.origin_id(self)).collect::<Vec<_>>();
             assert!(edges.len() == 3);
 
@@ -71,7 +76,9 @@ where
                     self,
                     [
                         (
-                            if vs[0] == edges[i].origin_id(self) || vs[0] == edges[i].target_id(self) {
+                            if vs[0] == edges[i].origin_id(self)
+                                || vs[0] == edges[i].target_id(self)
+                            {
                                 1
                             } else {
                                 0
@@ -79,7 +86,9 @@ where
                             vs[0],
                         ),
                         (
-                            if vs[1] == edges[i].origin_id(self) || vs[1] == edges[i].target_id(self) {
+                            if vs[1] == edges[i].origin_id(self)
+                                || vs[1] == edges[i].target_id(self)
+                            {
                                 1
                             } else {
                                 0
@@ -87,7 +96,9 @@ where
                             vs[1],
                         ),
                         (
-                            if vs[2] == edges[i].origin_id(self) || vs[2] == edges[i].target_id(self) {
+                            if vs[2] == edges[i].origin_id(self)
+                                || vs[2] == edges[i].target_id(self)
+                            {
                                 1
                             } else {
                                 0

@@ -2,8 +2,8 @@ use super::{ForwardEdgeIterator, HalfEdgeImplMeshType};
 use crate::{
     math::IndexType,
     mesh::{
-        DefaultFacePayload, EdgeBasics, Face, Face3d, FaceBasics, FacePayload, HalfEdge,
-        MeshBasics, MeshType3D,
+        DefaultFacePayload, EdgeBasics, Face, Face3d,
+        FaceBasics, FacePayload, HalfEdge, MeshBasics, MeshType3D, MeshTypeHalfEdge,
     },
     util::Deletable,
 };
@@ -93,7 +93,7 @@ impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
     }
 }
 
-impl<T: HalfEdgeImplMeshType> Face for HalfEdgeFaceImpl<T> {
+impl<T: HalfEdgeImplMeshType + MeshTypeHalfEdge> Face for HalfEdgeFaceImpl<T> {
     type T = T;
 
     fn triangle_touches_boundary(

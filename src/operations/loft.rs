@@ -1,9 +1,6 @@
 use crate::{
     math::IndexType,
-    mesh::{
-        DefaultEdgePayload, DefaultFacePayload, EdgeCursor, EdgeCursorBasics, EdgeCursorData,
-        EdgeCursorHalfedgeBasics, HalfEdge, MeshTypeHalfEdge,
-    },
+    mesh::{DefaultEdgePayload, DefaultFacePayload, EdgeCursorHalfedgeBasics, MeshTypeHalfEdge},
 };
 
 /// Different ways how faces cannot be connected.
@@ -31,7 +28,6 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
     /// If `shift` is true, the first inserted triangle will be with the tip pointing to the target of `start`.
     /// Otherwise, the first triangle will include the edge `start`.
     /// This doesn't affect the number of triangles but shifts the "hem" by one.
-    #[deprecated(note = "Use `crochet` instead")]
     fn loft_tri(&mut self, start: T::E, shift: bool, vp: impl IntoIterator<Item = T::VP>) -> T::E
     where
         T::EP: DefaultEdgePayload,
@@ -98,7 +94,6 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
 
     /// Like `loft_tri` but closes the "hem" with a face.
     /// Returns the edge pointing from the first inserted vertex to the second inserted vertex.
-    #[deprecated(note = "Use `crochet` instead")]
     fn loft_tri_closed(&mut self, start: T::E, vp: impl IntoIterator<Item = T::VP>) -> T::E
     where
         T::EP: DefaultEdgePayload,
