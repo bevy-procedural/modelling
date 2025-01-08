@@ -1,7 +1,7 @@
 use super::HalfEdgeMeshImpl;
 use crate::{
     halfedge::HalfEdgeImplMeshType,
-    mesh::{EdgeBasics, FaceBasics, HalfEdge, MeshBasics, MeshChecker, VertexBasics},
+    mesh::{EdgeBasics, FaceBasics, FacePayload, HalfEdge, MeshBasics, MeshChecker, VertexBasics},
 };
 
 impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
@@ -35,10 +35,11 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     }
 
     fn check_edges_are_loops(&self) -> Result<(), String> {
-        if let Some(bad_edge) = self
-            .edges()
-            .find(|e| e.next(self).same_boundary(self, e.origin_id(self)).is_none())
-        {
+        if let Some(bad_edge) = self.edges().find(|e| {
+            e.next(self)
+                .same_boundary(self, e.origin_id(self))
+                .is_none()
+        }) {
             return Err(format!(
                 "Successor of edge {} cannot reach it's origin {} during forward search",
                 bad_edge.id(),
@@ -96,6 +97,39 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
         }
         Ok(())
     }
+
+    fn vertex_analysis(&self) -> String {
+        self.vertices()
+            .map(|v| format!("{:?}", v))
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    fn edge_analysis(&self) -> String {
+        format!(
+            "\n edge --><-- twin   |  face: edge/twin \n{}",
+            self.pair_edges()
+                .iter()
+                .map(|e| format!("{:?}", e))
+                .collect::<Vec<_>>()
+                .join("\n")
+        )
+    }
+
+    fn face_analysis(&self) -> String {
+        self.faces()
+            .map(|f| {
+                format!(
+                    "{}) {} edges, e.g., {}  |  {:?}",
+                    f.id(),
+                    f.num_edges(self),
+                    f.edge_id(),
+                    f.payload(), //f.is_planar(mesh, T::S::EPS.sqrt())
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
 }
 
 impl<T: HalfEdgeImplMeshType> MeshChecker<T> for HalfEdgeMeshImpl<T> {
@@ -110,7 +144,7 @@ impl<T: HalfEdgeImplMeshType> MeshChecker<T> for HalfEdgeMeshImpl<T> {
         // TODO: check_faces_planar
         // TODO: check_faces_convex
         // TODO: check_faces_oriented
-        // TODO: check for references to delete items
+        // TODO: check for references to deleted items
         Ok(())
     }
 }
@@ -119,20 +153,10 @@ impl<T: HalfEdgeImplMeshType> std::fmt::Debug for HalfEdgeMeshImpl<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Mesh:\nvertices:\n{}\n edge --><-- twin   |  face: edge/twin \n{}\n faces: \n{}\n{} ",
-            self.vertices()
-                .map(|v| format!("{:?}", v))
-                .collect::<Vec<_>>()
-                .join("\n"),
-            self.pair_edges()
-                .iter()
-                .map(|e| format!("{:?}", e))
-                .collect::<Vec<_>>()
-                .join("\n"),
-            self.faces()
-                .map(|f| format!("{:?}", f))
-                .collect::<Vec<_>>()
-                .join("\n"),
+            "vertices:\n{}\n{}\nfaces:\n{}\n{}",
+            self.vertex_analysis(),
+            self.edge_analysis(),
+            self.face_analysis(),
             if let Err(msg) = self.check() {
                 format!(
                     "⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ERROR ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️\n{}",

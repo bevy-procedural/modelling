@@ -1,7 +1,6 @@
-use super::basics::FaceBasics;
 use crate::{
     math::{LineSegment2D, Polygon, Scalar, TransformTrait, Vector, Vector3D, Vector3DIteratorExt},
-    mesh::{IndexedVertex2D, MeshType3D, VertexBasics},
+    mesh::{FaceBasics, IndexedVertex2D, MeshType, MeshType3D, VertexBasics},
 };
 use itertools::Itertools;
 

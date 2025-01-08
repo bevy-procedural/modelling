@@ -23,7 +23,7 @@ pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone {
 
     /// Returns the target vertex id of the half-edge. Reached via the next half-edge, not the twin.
     fn target_id(&self, mesh: &T::Mesh) -> T::V;
-    
+
     /// Returns whether the edge (i.e., this HalfEdge or its twin) is a boundary edge, i.e., adjacent to a hole.
     fn is_boundary(&self, mesh: &T::Mesh) -> bool;
 
@@ -85,13 +85,15 @@ mod tests {
         assert!(edge.unwrap().edges_face(&mesh).count() == 3);
         assert!(edge.unwrap().edges_face_back(&mesh).count() == 3);
         assert_eq!(
-            edge.unwrap().edges_face(&mesh)
+            edge.unwrap()
+                .edges_face(&mesh)
                 .map(|e| e.id())
                 .collect_vec()
                 .iter()
                 .rev()
                 .collect_vec(),
-            edge.unwrap().edges_face_back(&mesh)
+            edge.unwrap()
+                .edges_face_back(&mesh)
                 .map(|e| e.id())
                 .collect_vec()
                 .iter()
@@ -111,11 +113,13 @@ mod tests {
     fn test_edge_basics_cube() {
         let mesh = Mesh3d64::cube(1.0);
         assert_eq!(mesh.check(), Ok(()));
+        println!("{:?}", mesh);
         for edge in mesh.edges() {
+            println!("{:?}", edge);
             assert!(!edge.is_boundary(&mesh));
             assert_eq!(edge.face_ids(&mesh).count(), 2);
-            assert!(edge.edges_face(&mesh).count() == 4);
-            assert!(edge.edges_face_back(&mesh).count() == 4);
+            assert_eq!(edge.edges_face(&mesh).count(), 4);
+            assert_eq!(edge.edges_face_back(&mesh).count(), 4);
             assert!(edge
                 .face(&mesh)
                 .unwrap()

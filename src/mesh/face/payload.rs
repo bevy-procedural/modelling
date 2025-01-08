@@ -14,9 +14,15 @@ pub trait FacePayload: Clone + Copy + PartialEq + Eq + std::fmt::Debug {
 pub trait DefaultFacePayload: FacePayload + Default {}
 
 /// An empty face payload if you don't need any additional information.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub struct EmptyFacePayload<T: MeshType> {
     _phantom: std::marker::PhantomData<T>,
+}
+
+impl<T: MeshType> std::fmt::Debug for EmptyFacePayload<T> {
+    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Ok(())
+    }
 }
 
 impl<T: MeshType> FacePayload for EmptyFacePayload<T> {

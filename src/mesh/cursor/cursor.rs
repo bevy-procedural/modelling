@@ -108,6 +108,7 @@ pub trait CursorData: Sized + Debug {
 
     /// Applies a closure to the instance if it exists and is not deleted, moving the cursor to the returned id.
     #[inline]
+    #[must_use]
     fn try_move<F: FnOnce(&Self::S) -> Self::I>(self, f: F) -> Self {
         if let Some(e) = self.get() {
             let id = f(e);
