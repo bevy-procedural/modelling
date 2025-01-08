@@ -257,14 +257,14 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         let first_edge = self
             .insert_edge_vv(
                 last_v,
-                self.edge(e.expect("Iterator too short")).origin(self).id(),
+                self.edge_ref(e.expect("Iterator too short")).origin(self).id(),
                 ep,
             )
             .unwrap();
 
         debug_assert_eq!(
-            self.edge(first_edge).target(self).id(),
-            self.edge(e.unwrap()).origin(self).id()
+            self.edge_ref(first_edge).target(self).id(),
+            self.edge_ref(e.unwrap()).origin(self).id()
         );
 
         first_edge

@@ -49,18 +49,8 @@ impl<T: Deletable<I>, I: IndexType> DeletableVector<T, I> {
         self.data.iter_mut().filter(|f| !f.is_deleted())
     }
 
-    /// Returns the requested element. Panics if it doesn't exist or is deleted.
-    pub fn get(&self, index: I) -> &T {
-        let v = &self.data[index.index()];
-        assert!(
-            !v.is_deleted(),
-            "Tried to access deleted element at {}",
-            index
-        );
-        v
-    }
     /// Returns the requested element or `None` if it doesn't exist or is deleted.
-    pub fn try_get(&self, index: I) -> Option<&T> {
+    pub fn get(&self, index: I) -> Option<&T> {
         // PERF: We could add `unlikely` to these two conditions, but the compiler does a good job already.
         let i = index.index();
         if i >= self.data.len() {
@@ -79,15 +69,17 @@ impl<T: Deletable<I>, I: IndexType> DeletableVector<T, I> {
         i < self.data.len() && !self.data[i].is_deleted()
     }
 
-    /// Returns the requested element mutably. Panics if it doesn't exist or is deleted.
-    pub fn get_mut(&mut self, index: I) -> &mut T {
-        let v = &mut self.data[index.index()];
-        assert!(
-            !v.is_deleted(),
-            "Tried to mutably access deleted element at {}",
-            index
-        );
-        v
+    /// Returns the requested element mutably or `None` if it doesn't exist or is deleted.
+    pub fn get_mut(&mut self, index: I) -> Option<&mut T> {
+        let i = index.index();
+        if i >= self.data.len() {
+            return None;
+        }
+        let v = &mut self.data[i];
+        if v.is_deleted() {
+            return None;
+        }
+        Some(v)
     }
 
     /// Returns the number of non-deleted elements.

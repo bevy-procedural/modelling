@@ -52,7 +52,7 @@ impl HalfEdgeImplMeshTypePlus for MeshType2d64PNUCurved {}
 
 impl CurvedEdge<2, MeshType2d64PNUCurved> for HalfEdgeImpl<MeshType2d64PNUCurved> {
     fn curve_type(&self, mesh: &Mesh2d64Curved) -> CurvedEdgeType<2, MeshType2d64PNUCurved> {
-        mesh.edge_payload(self).curve_type()
+        mesh.edge_payload_l(self).curve_type()
     }
 
     fn set_curve_type_in_mesh(
@@ -60,7 +60,7 @@ impl CurvedEdge<2, MeshType2d64PNUCurved> for HalfEdgeImpl<MeshType2d64PNUCurved
         mesh: &mut Mesh2d64Curved,
         curve_type: CurvedEdgeType<2, MeshType2d64PNUCurved>,
     ) {
-        mesh.edge_payload_mut(self).set_curve_type(curve_type);
+        mesh.edge_payload_mut_l(self).set_curve_type(curve_type);
     }
 }
 

@@ -17,12 +17,12 @@ impl<T: HalfEdgeImplMeshType> EdgeBasics<T> for HalfEdgeImpl<T> {
 
     #[inline]
     fn origin<'a>(&'a self, mesh: &'a T::Mesh) -> &'a T::Vertex {
-        mesh.vertex(self.origin_id(mesh))
+        mesh.vertex_ref(self.origin_id(mesh))
     }
 
     #[inline]
     fn target<'a>(&'a self, mesh: &'a T::Mesh) -> &'a T::Vertex {
-        mesh.vertex(self.target_id(mesh))
+        mesh.vertex_ref(self.target_id(mesh))
     }
 
     #[inline]

@@ -145,15 +145,15 @@ impl<'a, T: HalfEdgeImplMeshType> Iterator for ForwardEdgeIteratorMut<'a, T> {
         unsafe {
             if self.is_first {
                 self.is_first = false;
-                let edge_ptr = self.mesh.edge_mut(self.current) as *mut HalfEdgeImpl<T>;
+                let edge_ptr = self.mesh.edge_ref_mut(self.current) as *mut HalfEdgeImpl<T>;
                 return Some(&mut *edge_ptr);
             }
-            let next = self.mesh.edge(self.current).next(self.mesh);
+            let next = self.mesh.edge_ref(self.current).next(self.mesh);
             if next.id() == self.first {
                 return None;
             } else {
                 self.current = next.id();
-                let edge_ptr = self.mesh.edge_mut(next.id()) as *mut HalfEdgeImpl<T>;
+                let edge_ptr = self.mesh.edge_ref_mut(next.id()) as *mut HalfEdgeImpl<T>;
                 return Some(&mut *edge_ptr);
             }
         }

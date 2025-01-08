@@ -115,7 +115,7 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         let mut edge_iso = IndexIsomorphism::<T::E, T2::E>::new();
 
         for v in self.vertices() {
-            let other_v: &T2::Vertex = other.vertex(*iso.get(v.id()).unwrap());
+            let other_v: &T2::Vertex = other.vertex_ref(*iso.get(v.id()).unwrap());
 
             // Is there a corresponding edge?
             for e in v.edges_out(self) {
@@ -172,7 +172,7 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
             // faces are the same if they have the same edges
 
             let es = self
-                .face(face)
+                .face_ref(face)
                 .edge_ids(self)
                 .map(|id| *iso.get(id).unwrap())
                 .collect_vec();
@@ -182,9 +182,9 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
             // check which face occurs in all corresponding edges.
             // This runs in O(e*fe) since all edges are checked once per incident face
             let mut other_faces: HashMap<T2::F, usize> =
-                other.edge(es[0]).face_ids(&other).map(|f| (f, 1)).collect();
+                other.edge_ref(es[0]).face_ids(&other).map(|f| (f, 1)).collect();
             for e in es.iter().skip(1) {
-                for other_face in other.edge(*e).face_ids(&other) {
+                for other_face in other.edge_ref(*e).face_ids(&other) {
                     if let Some(count) = other_faces.get_mut(&other_face) {
                         *count += 1;
                     }
@@ -192,7 +192,7 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
             }
 
             // when the counts are equal, those are faces on the same edge set
-            let num_edges = self.face(face).num_edges(self);
+            let num_edges = self.face_ref(face).num_edges(self);
             let matches = other_faces
                 .iter()
                 .filter(|(_, count)| **count == num_edges)
@@ -204,7 +204,7 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
                 if matches.is_empty() {
                     return Err(MeshEquivalenceDifference::NoCorrespondingFace(face));
                 }
-                if !compare_face(self.face(face), other.face(matches[0])) {
+                if !compare_face(self.face_ref(face), other.face_ref(matches[0])) {
                     return Err(MeshEquivalenceDifference::DifferentFaces(face, matches[0]));
                 }
                 face_iso.insert(face, matches[0]);
@@ -216,13 +216,13 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
             // This runs in O(f*fe*ef) since each edge is compared to at most ef other edges
             // where ef is the maximum number of edges per face. This simplifies to O(e*fe).
             for other_face in matches {
-                let other_es = other.face(other_face).edge_ids(&other).collect_vec();
+                let other_es = other.face_ref(other_face).edge_ids(&other).collect_vec();
                 if equal_up_to_rotation(&es, &other_es) {
                     if face_iso.has(face) {
                         // duplicate found
                         return Err(MeshEquivalenceDifference::DifferentFaces(face, other_face));
                     }
-                    if !compare_face(self.face(face), other.face(other_face)) {
+                    if !compare_face(self.face_ref(face), other.face_ref(other_face)) {
                         return Err(MeshEquivalenceDifference::DifferentFaces(face, other_face));
                     }
                     face_iso.insert(face, other_face);
@@ -272,7 +272,7 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
             return MeshEquivalenceDifference::DifferentNumberOfVertices;
         }
         for v in self.vertices() {
-            let other_v = other.vertex(*iso.get(v.id()).unwrap());
+            let other_v = other.vertex_ref(*iso.get(v.id()).unwrap());
             if !compare_vertex(v, other_v) {
                 return MeshEquivalenceDifference::DifferentVertices(v.id(), other_v.id());
             }
@@ -351,14 +351,14 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         }
 
         for v in self.vertices() {
-            let other_v = other.vertex(v.id());
+            let other_v = other.vertex_ref(v.id());
             if v.id() != other_v.id() || !compare_vertex(v, other_v) {
                 return MeshEquivalenceDifference::DifferentVertices(v.id(), other_v.id());
             }
         }
 
         for e in self.edges() {
-            let other_e = other.edge(e.id());
+            let other_e = other.edge_ref(e.id());
             if e.id() != other_e.id()
                 || e.origin(self).id() != other_e.origin(self).id()
                 || e.target(self).id() != other_e.target(self).id()
@@ -369,7 +369,7 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         }
 
         for f in self.faces() {
-            let other_f = other.face(f.id());
+            let other_f = other.face_ref(f.id());
             if f.id() != other_f.id()
                 || f.num_vertices(self) != other_f.num_vertices(self)
                 || !equal_up_to_rotation(

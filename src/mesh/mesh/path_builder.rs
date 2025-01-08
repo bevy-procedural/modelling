@@ -75,7 +75,7 @@ where
     {
         // TODO: implement this without requiring `HalfEdge`
 
-        if let Some(edge) = mesh.vertex(v).edge(mesh) {
+        if let Some(edge) = mesh.vertex_ref(v).edge(mesh) {
             Self::start_at_edge(mesh, edge.prev_id())
         } else {
             Self {
@@ -149,7 +149,7 @@ where
     {
         // TODO: implement this without requiring `HalfEdge`
 
-        let edge = mesh.edge(e);
+        let edge = mesh.edge_ref(e);
         let start_edges = Some((e, edge.prev_id()));
         let start_vertex = edge.target_id(mesh);
         Self {
@@ -232,7 +232,7 @@ where
             return IndexType::max();
         };
 
-        let ed = self.mesh().edge(current_inner).clone();
+        let ed = self.mesh().edge_ref(current_inner).clone();
         let end_of_path = ed
             .edges_face(self.mesh())
             .find(|e| e.id() == current_outer || e.id() == start_inner)
@@ -268,7 +268,7 @@ where
         assert!(!self.is_closed());
 
         let sv = self.start_vertex();
-        if self.mesh().vertex(sv).pos() == v {
+        if self.mesh().vertex_ref(sv).pos() == v {
             return self.start_vertex;
         }
 
@@ -395,7 +395,7 @@ where
             //let edges = self.mesh().insert_edge(inside, ep0, outside, ep1);
             let origin = self.current_vertex();
             let edge = self.mesh().insert_edge_vv(origin, v, ep).unwrap(); // TODO: handle error
-            self.current_edges = Some((edge, self.mesh().edge(edge).twin_id()));
+            self.current_edges = Some((edge, self.mesh().edge_ref(edge).twin_id()));
         } else {
             // The current vertex doesn't have any edges yet.
             assert!(self.start_edges().is_none());
@@ -403,7 +403,7 @@ where
             let origin = self.current_vertex();
             let edge = self.mesh().insert_edge_vv(origin, v, ep).unwrap(); // TODO: handle error
                                                                            // TODO: make some tests to see whether inside and outside are always correct
-            self.current_edges = Some((edge, self.mesh().edge(edge).twin_id()));
+            self.current_edges = Some((edge, self.mesh().edge_ref(edge).twin_id()));
             self.start_edges = self.current_edges;
         }
 
@@ -424,7 +424,7 @@ where
         self.line_to(end);
         let (edge, _twin) = self.current_edges().unwrap();
         self.mesh()
-            .edge(edge)
+            .edge_ref(edge)
             .clone()
             .set_curve_type_in_mesh(self.mesh(), CurvedEdgeType::QuadraticBezier(ct));
         self
@@ -449,7 +449,7 @@ where
         self.line_to(end);
         let (edge, _twin) = self.current_edges().unwrap();
         self.mesh()
-            .edge(edge)
+            .edge_ref(edge)
             .clone()
             .set_curve_type_in_mesh(self.mesh(), CurvedEdgeType::CubicBezier(ct1, ct2));
         self

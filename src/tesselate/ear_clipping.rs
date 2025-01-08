@@ -117,7 +117,7 @@ mod tests {
                 .iter()
                 .map(|v| VertexPayloadPNU::from_pos(Vec3::new(v.vec.x, 0.0, v.vec.y))),
         );
-        ear_clipping::<MeshType3d64PNU>(m.face(0), &m, &mut tri, false);
+        ear_clipping::<MeshType3d64PNU>(m.face_ref(0), &m, &mut tri, false);
         tri.verify_full::<Vec2<f64>, Polygon2d<f64>>(vec2s);
     }
 

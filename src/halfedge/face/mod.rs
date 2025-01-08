@@ -30,7 +30,7 @@ impl<T: HalfEdgeImplMeshType + MeshType3D> Face3d<T> for HalfEdgeFaceImpl<T> {}
 impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
     #[inline]
     fn edge<'a>(&'a self, mesh: &'a T::Mesh) -> &'a T::Edge {
-        mesh.edge(self.edge)
+        mesh.edge_ref(self.edge)
     }
 
     #[inline]

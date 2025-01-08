@@ -8,134 +8,34 @@ use crate::{
 use std::collections::HashMap;
 
 impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
+    //======================= Vertex Operations =======================//
+
     #[inline]
     fn has_vertex(&self, index: T::V) -> bool {
         self.vertices.has(index)
     }
 
     #[inline]
-    fn has_edge(&self, index: T::E) -> bool {
-        self.halfedges.has(index)
-    }
-
-    #[inline]
-    fn has_face(&self, index: T::F) -> bool {
-        self.faces.has(index)
-    }
-
-    #[inline]
-    fn vertex(&self, index: T::V) -> &T::Vertex {
+    fn get_vertex(&self, index: T::V) -> Option<&T::Vertex> {
         self.vertices.get(index)
     }
 
     #[inline]
-    fn get_vertex(&self, index: T::V) -> Option<&T::Vertex> {
-        self.vertices.try_get(index)
-    }
-
-    #[inline]
-    fn edge<'a>(&'a self, index: T::E) -> &'a T::Edge {
-        self.halfedges.get(index)
-    }
-
-    #[inline]
-    fn get_edge(&self, index: T::E) -> Option<&T::Edge> {
-        self.halfedges.try_get(index)
-    }
-
-    #[inline]
-    fn face(&self, index: T::F) -> &T::Face {
-        self.faces.get(index)
-    }
-
-    fn get_face(&self, index: T::F) -> Option<&T::Face> {
-        self.faces.try_get(index)
-    }
-
-    #[inline]
-    fn vertex_mut(&mut self, index: T::V) -> &mut T::Vertex {
+    fn get_vertex_mut(&mut self, index: T::V) -> Option<&mut T::Vertex> {
         self.vertices.get_mut(index)
     }
 
     #[inline]
-    fn edge_mut<'a>(&'a mut self, index: T::E) -> &'a mut T::Edge {
-        self.halfedges.get_mut(index)
-    }
-
-    #[inline]
-    fn face_mut(&mut self, index: T::F) -> &mut T::Face {
-        self.faces.get_mut(index)
-    }
-
-    fn is_open(&self) -> bool {
-        self.halfedges.iter().any(|e| e.is_boundary_self())
-    }
-
     fn max_vertex_index(&self) -> usize {
         self.vertices.capacity()
     }
 
+    #[inline]
     fn num_vertices(&self) -> usize {
         self.vertices.len()
     }
 
-    fn num_edges(&self) -> usize {
-        self.halfedges.len()
-    }
-
-    fn num_faces(&self) -> usize {
-        self.faces.len()
-    }
-
-    fn clear(&mut self) -> &mut Self {
-        self.vertices.clear();
-        self.halfedges.clear();
-        self.faces.clear();
-        self
-    }
-
-    fn payload(&self) -> &T::MP {
-        &self.payload
-    }
-
-    fn payload_mut(&mut self) -> &mut T::MP {
-        &mut self.payload
-    }
-
-    fn set_payload(&mut self, payload: T::MP) -> &mut Self {
-        self.payload = payload;
-        self
-    }
-
     #[inline]
-    fn edge_payload<'a>(&'a self, edge: &'a T::Edge) -> &'a T::EP {
-        if let Some(p) = &edge.payload_self() {
-            p
-        } else if let Some(p) = &(self.edge(edge.twin_id()).payload_self()) {
-            p
-        } else {
-            panic!("No payload found for edge {}", edge.id());
-        }
-    }
-
-    #[inline]
-    fn edge_payload_mut<'a>(&'a mut self, edge: &'a T::Edge) -> &'a mut T::EP {
-        if edge.payload_self().is_some() {
-            let pr: Option<&'a mut T::EP> = self.edge_mut(edge.id()).payload_self_mut();
-            if let Some(v) = pr {
-                return v;
-            }
-        } else {
-            let twin_id = edge.twin_id();
-            let pr: Option<&'a mut T::EP> = self.edge_mut(twin_id).payload_self_mut();
-            if let Some(v) = pr {
-                return v;
-            }
-        }
-        panic!("No payload found for edge {}", edge.id());
-    }
-
-    /// Returns an iterator over all non-deleted vertices
     fn vertices<'a>(&'a self) -> impl Iterator<Item = &'a T::Vertex>
     where
         T::Vertex: 'a,
@@ -143,7 +43,7 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         self.vertices.iter()
     }
 
-    /// Returns an mutable iterator over all non-deleted vertices
+    #[inline]
     fn vertices_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T::Vertex>
     where
         T::Vertex: 'a,
@@ -151,7 +51,135 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         self.vertices.iter_mut()
     }
 
-    /// Returns an iterator over all non-deleted faces
+    //======================= Edge Operations =======================//
+
+    #[inline]
+    fn has_edge(&self, index: T::E) -> bool {
+        self.halfedges.has(index)
+    }
+
+    #[inline]
+    fn get_edge(&self, index: T::E) -> Option<&T::Edge> {
+        self.halfedges.get(index)
+    }
+
+    #[inline]
+    fn get_edge_mut<'a>(&'a mut self, index: T::E) -> Option<&'a mut T::Edge> {
+        self.halfedges.get_mut(index)
+    }
+
+    #[inline]
+    fn num_edges(&self) -> usize {
+        self.halfedges.len()
+    }
+
+    #[inline]
+    fn edges<'a>(&'a self) -> impl Iterator<Item = &'a T::Edge>
+    where
+        T::Edge: 'a,
+    {
+        self.halfedges.iter()
+    }
+
+    #[inline]
+    fn edges_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T::Edge>
+    where
+        T::Edge: 'a,
+    {
+        self.halfedges.iter_mut()
+    }
+
+    #[inline]
+    fn edge_payload<'a>(&'a self, edge: T::E) -> &'a T::EP {
+        self.edge_payload_l(self.edge_ref(edge))
+    }
+
+    #[inline]
+    fn edge_payload_l<'a>(&'a self, edge: &'a T::Edge) -> &'a T::EP {
+        if let Some(p) = &edge.payload_self() {
+            p
+        } else if let Some(p) = &(self.edge_ref(edge.twin_id()).payload_self()) {
+            p
+        } else {
+            panic!("No payload found for edge {}", edge.id());
+        }
+    }
+
+    #[inline]
+    fn edge_payload_mut<'a>(&'a mut self, e: T::E) -> &'a mut T::EP {
+        if self.edge_ref(e).payload_self().is_some() {
+            let pr: Option<&'a mut T::EP> = self.edge_ref_mut(e).payload_self_mut();
+            if let Some(v) = pr {
+                return v;
+            }
+        } else {
+            let twin_id = self.edge_ref(e).twin_id();
+            let pr: Option<&'a mut T::EP> = self.edge_ref_mut(twin_id).payload_self_mut();
+            if let Some(v) = pr {
+                return v;
+            }
+        }
+        panic!("No payload found for edge {}", e);
+    }
+
+    #[inline]
+    fn edge_payload_mut_l<'a>(&'a mut self, edge: &'a T::Edge) -> &'a mut T::EP {
+        if edge.payload_self().is_some() {
+            let pr: Option<&'a mut T::EP> = self.edge_ref_mut(edge.id()).payload_self_mut();
+            if let Some(v) = pr {
+                return v;
+            }
+        } else {
+            let twin_id = edge.twin_id();
+            let pr: Option<&'a mut T::EP> = self.edge_ref_mut(twin_id).payload_self_mut();
+            if let Some(v) = pr {
+                return v;
+            }
+        }
+        panic!("No payload found for edge {}", edge.id());
+    }
+
+    /// Returns the id of the half edge from `v` to `w` or `None` if they are not neighbors.
+    /// Runs in O(n) time since it iterates over all edges of `v`.
+    #[inline]
+    fn shared_edge(&self, v: T::V, w: T::V) -> Option<&T::Edge> {
+        self.vertex_ref(v).edges_out(self).find_map(|e| {
+            if e.target_id(self) == w {
+                Some(e)
+            } else {
+                None
+            }
+        })
+    }
+
+    #[inline]
+    fn shared_edge_id(&self, v: T::V, w: T::V) -> Option<T::E> {
+        self.shared_edge(v, w).map(|e| e.id())
+    }
+
+    //======================= Face Operations =======================//
+
+    #[inline]
+    fn has_face(&self, index: T::F) -> bool {
+        self.faces.has(index)
+    }
+
+    #[inline]
+    fn get_face(&self, index: T::F) -> Option<&T::Face> {
+        self.faces.get(index)
+    }
+
+    #[inline]
+    fn get_face_mut(&mut self, index: T::F) -> Option<&mut T::Face> {
+        self.faces.get_mut(index)
+    }
+
+    #[inline]
+    fn num_faces(&self) -> usize {
+        self.faces.len()
+    }
+
+    #[inline]
     fn faces<'a>(&'a self) -> impl Iterator<Item = &'a T::Face>
     where
         T::Face: 'a,
@@ -159,7 +187,7 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         self.faces.iter()
     }
 
-    /// Returns an mutable iterator over all non-deleted faces
+    #[inline]
     fn faces_mut<'a>(
         &'a mut self,
     ) -> impl Iterator<Item = &'a mut <T as crate::prelude::MeshType>::Face>
@@ -169,41 +197,53 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         self.faces.iter_mut()
     }
 
-    /// Returns an iterator over all non-deleted halfedges
-    fn edges<'a>(&'a self) -> impl Iterator<Item = &'a T::Edge>
-    where
-        T::Edge: 'a,
-    {
-        self.halfedges.iter()
-    }
-
-    /// Returns an mutable iterator over all non-deleted halfedges
-    fn edges_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T::Edge>
-    where
-        T::Edge: 'a,
-    {
-        self.halfedges.iter_mut()
-    }
-
-    /// Returns the id of the half edge from `v` to `w` or `None` if they are not neighbors.
-    /// Runs in O(n) time since it iterates over all edges of `v`.
-    fn shared_edge(&self, v: T::V, w: T::V) -> Option<&T::Edge> {
-        self.vertex(v).edges_out(self).find_map(|e| {
-            if e.target_id(self) == w {
-                Some(e)
-            } else {
-                None
-            }
+    #[inline]
+    fn shared_face(&self, v0: T::V, v1: T::V) -> Option<T::F> {
+        // TODO: Currently cannot distinguish between holes and "the outside"
+        let w0 = self.vertex_ref(v0);
+        let w1 = self.vertex_ref(v1);
+        w0.faces(self).find_map(|f0| {
+            w1.faces(self).find_map(|f1: &T::Face| {
+                if f0.id() == f1.id() {
+                    Some(f0.id())
+                } else {
+                    None
+                }
+            })
         })
     }
 
-    fn shared_edge_id(&self, v: T::V, w: T::V) -> Option<T::E> {
-        self.shared_edge(v, w).map(|e| e.id())
+    //======================= Mesh Operations =======================//
+
+    #[inline]
+    fn is_open(&self) -> bool {
+        self.halfedges.iter().any(|e| e.is_boundary_self())
     }
 
-    /// Since the vertex payloads in the `Deletable` can be sparse,
-    /// we need to compact the vertices when converting them to a dense vector.
-    /// This function returns the cloned compact vertices and maps the indices to the new compact buffer.
+    #[inline]
+    fn clear(&mut self) -> &mut Self {
+        self.vertices.clear();
+        self.halfedges.clear();
+        self.faces.clear();
+        self
+    }
+
+    #[inline]
+    fn payload(&self) -> &T::MP {
+        &self.payload
+    }
+
+    #[inline]
+    fn payload_mut(&mut self) -> &mut T::MP {
+        &mut self.payload
+    }
+
+    #[inline]
+    fn set_payload(&mut self, payload: T::MP) -> &mut Self {
+        self.payload = payload;
+        self
+    }
+
     fn dense_vertices(&self, indices: &mut Vec<T::V>) -> Vec<T::VP> {
         let mut vertices = Vec::with_capacity(self.num_vertices());
 
@@ -228,21 +268,5 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         }
 
         vertices
-    }
-
-    /// Returns the face shared by the two vertices or `None`.
-    /// TODO: Currently cannot distinguish between holes and "the outside"
-    fn shared_face(&self, v0: T::V, v1: T::V) -> Option<T::F> {
-        let w0 = self.vertex(v0);
-        let w1 = self.vertex(v1);
-        w0.faces(self).find_map(|f0| {
-            w1.faces(self).find_map(|f1: &T::Face| {
-                if f0.id() == f1.id() {
-                    Some(f0.id())
-                } else {
-                    None
-                }
-            })
-        })
     }
 }

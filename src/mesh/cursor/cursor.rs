@@ -12,9 +12,17 @@ pub trait CursorData: Sized + Debug {
     /// The associated mesh type
     type T: MeshType;
 
-    /// Returns the id the cursor is pointing to.
+    /// Returns the id the cursor is pointing to. Panics if the cursor is void.
     #[must_use]
-    fn id(&self) -> Self::I;
+    #[inline]
+    fn id(&self) -> Self::I {
+        assert!(self.is_valid(), "Expected {:?} to be valid", self);
+        self.try_id()
+    }
+
+    /// Returns the id the cursor is pointing to no matter if it is void, deleted, or valid.
+    #[must_use]
+    fn try_id(&self) -> Self::I;
 
     /// Whether the cursor points to an invalid id, i.e.,
     /// either having the maximum index or pointing to a deleted instance.
@@ -100,13 +108,27 @@ pub trait CursorData: Sized + Debug {
 
     /// Applies a closure to the instance if it exists and is not deleted, moving the cursor to the returned id.
     #[inline]
-    fn map<F: FnOnce(&Self::S) -> Self::I>(self, f: F) -> Self {
+    fn try_move<F: FnOnce(&Self::S) -> Self::I>(self, f: F) -> Self {
         if let Some(e) = self.get() {
             let id = f(e);
             self.move_to(id)
         } else {
             self.void()
         }
+    }
+
+    /// Applies a closure to the instance if it exists and is not deleted, returning the result or the default.
+    /// The default is always evaluated.
+    #[inline]
+    fn map_or<U, F: FnOnce(&Self::S) -> U>(&self, default: U, f: F) -> U {
+        self.get().map(f).unwrap_or(default)
+    }
+
+    /// Applies a closure to the instance if it exists and is not deleted, returning the result or the default.
+    /// The default is only evaluated if necessary.
+    #[inline]
+    fn map_or_else<U, F: FnOnce(&Self::S) -> U, E: FnOnce() -> U>(&self, default: E, f: F) -> U {
+        self.get().map(f).unwrap_or_else(default)
     }
 
     /// Returns a reference to the instance the cursor points to..

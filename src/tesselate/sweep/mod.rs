@@ -73,7 +73,7 @@ mod tests {
     use crate::{prelude::*, tesselate::sweep::LinearMonoTriangulator};
 
     fn verify_triangulation<T: MeshType3D>(mesh: &T::Mesh, f: T::F) {
-        let face = mesh.face(f);
+        let face = mesh.face_ref(f);
         let vec2s = face.vec2s(mesh);
         assert!(
             T::Poly::from_iter(vec2s.iter().map(|v| v.vec)).is_ccw(),

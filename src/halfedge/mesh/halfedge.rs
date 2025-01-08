@@ -11,7 +11,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMesh<T> for HalfEdgeMeshImpl<T> {
     where
         T: 'a,
     {
-        ForwardEdgeIterator::<'a, T>::new(self.edge(e), self)
+        ForwardEdgeIterator::<'a, T>::new(self.edge_ref(e), self)
     }
 
     #[allow(refining_impl_trait)]
@@ -20,6 +20,6 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMesh<T> for HalfEdgeMeshImpl<T> {
     where
         T: 'a,
     {
-        BackwardEdgeIterator::<'a, T>::new(self.edge(e), self)
+        BackwardEdgeIterator::<'a, T>::new(self.edge_ref(e), self)
     }
 }

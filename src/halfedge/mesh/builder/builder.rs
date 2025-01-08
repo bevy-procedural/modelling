@@ -1,14 +1,14 @@
-use itertools::Itertools;
-
 use crate::{
     halfedge::{HalfEdgeImplMeshTypePlus, HalfEdgeMeshImpl},
     math::IndexType,
     mesh::{
-        EdgeBasics, EdgePayload, HalfEdge, HalfEdgeVertex, MeshBasics, MeshBuilder,
-        MeshHalfEdgeBuilder, VertexBasics,
+        CursorData, EdgeBasics, EdgeCursorHalfedgeBasics, EdgePayload, HalfEdge, HalfEdgeVertex,
+        MeshBasics, MeshBuilder, MeshHalfEdgeBuilder, VertexBasics, VertexCursorBasics,
+        VertexCursorHalfedgeBasics,
     },
     prelude::HalfEdgeFaceImpl,
 };
+use itertools::Itertools;
 
 /*
 impl<T:HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
@@ -62,8 +62,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     }
 
     fn try_remove_vertex(&mut self, v: T::V) -> bool {
-        let vertex = self.vertex(v);
-        if vertex.edge_id(self) != IndexType::max() {
+        if self.vertex(v).edge_id() != IndexType::max() {
             return false;
         }
         self.vertices.delete(v);
@@ -71,7 +70,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     }
 
     fn try_remove_edge(&mut self, e: T::E) -> bool {
-        let edge = self.edge(e).clone();
+        let edge = self.edge_ref(e).clone();
         if self.try_remove_halfedge(e) {
             let twin_id = edge.twin_id();
             if !self.has_edge(twin_id) {
@@ -115,8 +114,8 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         let (e1, e2) =
             self.insert_edge_unchecked(input, output, ep, IndexType::max(), IndexType::max(), true);
 
-        debug_assert_eq!(self.edge(e1).is_valid(self), Ok(()));
-        debug_assert_eq!(self.edge(e2).is_valid(self), Ok(()));
+        debug_assert_eq!(self.edge(e1).validate(), Ok(()));
+        debug_assert_eq!(self.edge(e2).validate(), Ok(()));
 
         Some(e1)
     }
@@ -132,8 +131,8 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         let av = self.vertex(a);
         let bv = self.vertex(b);
 
-        if av.is_isolated(self) {
-            if bv.is_isolated(self) {
+        if av.is_isolated() {
+            if bv.is_isolated() {
                 // both isolated - trivial case!
                 let (e1, e2) = self.insert_halfedge_pair_forced(
                     IndexType::max(),
@@ -146,16 +145,16 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
                     IndexType::max(),
                     ep,
                 );
-                self.vertex_mut(a).set_edge(e1);
-                self.vertex_mut(b).set_edge(e2);
-                debug_assert_eq!(self.edge(e1).is_valid(self), Ok(()));
-                debug_assert_eq!(self.edge(e2).is_valid(self), Ok(()));
+                self.vertex_ref_mut(a).set_edge(e1);
+                self.vertex_ref_mut(b).set_edge(e2);
+                debug_assert_eq!(self.edge_ref(e1).validate(self), Ok(()));
+                debug_assert_eq!(self.edge_ref(e2).validate(self), Ok(()));
                 return Some(e1);
             } else {
                 // a is isolated, b is not isolated
 
                 // find a unique boundary edge
-                let Some(b_in) = bv.ingoing_boundary_edge(self) else {
+                let Some(b_in) = bv.ingoing_boundary_edge() else {
                     return None;
                 };
                 let (e1, e2) = self.insert_halfedge_pair_forced(
@@ -164,24 +163,24 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
                     IndexType::max(),
                     b_in,
                     b,
-                    self.edge(b_in).next_id(),
+                    self.edge_ref(b_in).next_id(),
                     IndexType::max(),
                     IndexType::max(),
                     ep,
                 );
-                self.vertex_mut(a).set_edge(e1);
-                debug_assert_eq!(self.edge(e1).is_valid(self), Ok(()));
-                debug_assert_eq!(self.edge(e2).is_valid(self), Ok(()));
+                self.vertex_ref_mut(a).set_edge(e1);
+                debug_assert_eq!(self.edge_ref(e1).validate(self), Ok(()));
+                debug_assert_eq!(self.edge_ref(e2).validate(self), Ok(()));
                 return Some(e1);
             }
-        } else if bv.is_isolated(self) {
+        } else if bv.is_isolated() {
             // a is not isolated, b is isolated
 
             // find a unique boundary edge
-            let Some(a_in) = av.ingoing_boundary_edge(self) else {
+            let Some(a_in) = av.ingoing_boundary_edge() else {
                 return None;
             };
-            let next = self.edge(a_in).next_id();
+            let next = self.edge_ref(a_in).next_id();
             let (e1, e2) = self.insert_halfedge_pair_forced(
                 a_in,
                 a,
@@ -193,12 +192,12 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
                 IndexType::max(),
                 ep,
             );
-            self.vertex_mut(b).set_edge(e2);
-            self.edge_mut(a_in).set_next(e1);
-            self.edge_mut(next).set_prev(e2);
+            self.vertex_ref_mut(b).set_edge(e2);
+            self.edge_ref_mut(a_in).set_next(e1);
+            self.edge_ref_mut(next).set_prev(e2);
 
-            debug_assert_eq!(self.edge(e1).is_valid(self), Ok(()));
-            debug_assert_eq!(self.edge(e2).is_valid(self), Ok(()));
+            debug_assert_eq!(self.edge_ref(e1).validate(self), Ok(()));
+            debug_assert_eq!(self.edge_ref(e2).validate(self), Ok(()));
             return Some(e1);
         } else {
             // both are not isolated - there must be a shared boundary to figure out the orientation
@@ -206,12 +205,12 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
             // check that there are only multiple edges if the payload allows it
             if !ep.allow_multigraph() {
                 if let Some(duplicate) = self.shared_edge(a, b) {
-                    if !self.edge_payload(&duplicate).allow_multigraph() {
+                    if !self.edge_payload_l(&duplicate).allow_multigraph() {
                         return None;
                     }
                 }
                 if let Some(duplicate) = self.shared_edge(b, a) {
-                    if !self.edge_payload(&duplicate).allow_multigraph() {
+                    if !self.edge_payload_l(&duplicate).allow_multigraph() {
                         return None;
                     }
                 }
@@ -219,15 +218,15 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
 
             // find outgoing edges that are boundary and can reach the other vertex
             let mut m = None;
-            for e in av.edges_out(self) {
+            for e in av.edges_out() {
                 if !e.is_boundary_self() {
                     return None;
                 }
-                if let Some(other_e) = e.same_boundary(self, b) {
+                if let Some(other_e) = e.clone().same_boundary(b) {
                     if m.is_some() {
                         return None;
                     }
-                    m = Some((e.id(), other_e));
+                    m = Some((e.id(), other_e.id()));
                     // continue searching to make sure there is only one
                 }
             }
@@ -235,16 +234,16 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
                 return None;
             };
 
-            return self.insert_edge_ee(self.edge(from_a).prev_id(), from_b, ep);
+            return self.insert_edge_ee(self.edge_ref(from_a).prev_id(), from_b, ep);
         }
     }
 
     fn insert_edge_ev(&mut self, e: T::E, v: T::V, ep: T::EP) -> Option<T::E> {
-        if self.vertex(v).is_isolated(self) {
+        if self.vertex(v).is_isolated() {
             // Trivial case where the connectivity is already given
-            let edge = self.edge(e);
+            let edge = self.edge_ref(e);
             let origin = edge.target_id(self);
-            let fo = self.edge(e).next_id();
+            let fo = self.edge_ref(e).next_id();
             let (e1, e2) = self.insert_halfedge_pair_forced(
                 e,
                 origin,
@@ -256,27 +255,30 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
                 IndexType::max(),
                 ep,
             );
-            self.edge_mut(e).set_next(e1);
-            self.edge_mut(fo).set_prev(e2);
-            self.vertex_mut(v).set_edge(e2);
+            self.edge_ref_mut(e).set_next(e1);
+            self.edge_ref_mut(fo).set_prev(e2);
+            self.vertex_ref_mut(v).set_edge(e2);
 
-            debug_assert_eq!(self.edge(e1).is_valid(self), Ok(()));
-            debug_assert_eq!(self.edge(e2).is_valid(self), Ok(()));
-            debug_assert_eq!(self.edge(e).is_valid(self), Ok(()));
-            debug_assert_eq!(self.edge(e1).target_id(self), v);
-            debug_assert_eq!(self.edge(e1).origin_id(self), self.edge(e).target_id(self));
-            debug_assert_eq!(self.edge(e2).origin_id(self), v);
+            debug_assert_eq!(self.edge_ref(e1).validate(self), Ok(()));
+            debug_assert_eq!(self.edge_ref(e2).validate(self), Ok(()));
+            debug_assert_eq!(self.edge_ref(e).validate(self), Ok(()));
+            debug_assert_eq!(self.edge_ref(e1).target_id(self), v);
+            debug_assert_eq!(
+                self.edge_ref(e1).origin_id(self),
+                self.edge_ref(e).target_id(self)
+            );
+            debug_assert_eq!(self.edge_ref(e2).origin_id(self), v);
 
             return Some(e1);
         }
 
         // If there is only one boundary through `v`, use that one
-        if let Some(outgoing) = self.vertex(v).outgoing_boundary_edge(self) {
+        if let Some(outgoing) = self.vertex_ref(v).outgoing_boundary_edge(self) {
             return self.insert_edge_ee(e, outgoing, ep);
         };
 
         // Otherwise, find a unique boundary from e to v
-        if let Some(outgoing) = self.edge(e).same_boundary(self, v) {
+        if let Some(outgoing) = self.edge_ref(e).same_boundary(self, v) {
             return self.insert_edge_ee(e, outgoing, ep);
         }
 
@@ -291,7 +293,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         if !self.has_edge(e) {
             return None;
         }
-        let edge = self.edge(e).clone();
+        let edge = self.edge_ref(e).clone();
         if edge.face_id() != IndexType::max() {
             return None;
         }
@@ -307,7 +309,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         ep: T::EP,
         fp: T::FP,
     ) -> Option<(T::E, T::F)> {
-        self.close_face_ee(from, self.edge(to).next_id(), ep, fp)
+        self.close_face_ee(from, self.edge_ref(to).next_id(), ep, fp)
     }
 
     fn close_face_ee(
@@ -320,8 +322,8 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         if !self.has_edge(from) || !self.has_edge(to) {
             return None;
         }
-        let from_edge = self.edge(from).clone();
-        let to_edge = self.edge(to).clone();
+        let from_edge = self.edge_ref(from).clone();
+        let to_edge = self.edge_ref(to).clone();
         if from_edge.face_id() != IndexType::max() || to_edge.face_id() != IndexType::max() {
             return None;
         }

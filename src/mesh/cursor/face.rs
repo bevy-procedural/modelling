@@ -18,8 +18,17 @@ pub struct FaceCursor<'a, T: MeshType> {
 impl<'a, T: MeshType> FaceCursor<'a, T> {
     /// Creates a new face cursor pointing to the given face.
     #[inline]
+    #[must_use]
     pub fn new(mesh: &'a T::Mesh, face: T::F) -> Self {
         Self { mesh, face }
+    }
+
+    /// Returns a reference to the payload of the face.
+    /// Panics if the face is void.
+    #[inline]
+    #[must_use]
+    pub fn payload(&self) -> &T::FP {
+        self.unwrap().payload()
     }
 }
 
@@ -40,14 +49,24 @@ pub struct FaceCursorMut<'a, T: MeshType> {
 impl<'a, T: MeshType> FaceCursorMut<'a, T> {
     /// Creates a new mutable face cursor pointing to the given face.
     #[inline]
+    #[must_use]
     pub fn new(mesh: &'a mut T::Mesh, face: T::F) -> Self {
         Self { mesh, face }
     }
 
     /// Returns an immutable clone pointing to the same face.
     #[inline]
+    #[must_use]
     pub fn immutable(&'a self) -> FaceCursor<'a, T> {
         FaceCursor::new(self.mesh, self.face)
+    }
+
+    /// Returns a mutable reference to the payload of the face.
+    /// Panics if the face is void.
+    #[inline]
+    #[must_use]
+    pub fn payload_mut(&mut self) -> &mut T::FP {
+        self.mesh.face_ref_mut(self.face).payload_mut()
     }
 }
 
@@ -88,16 +107,16 @@ impl<'a, T: MeshType + 'a> CursorData for FaceCursor<'a, T> {
 
     #[inline]
     fn get<'b>(&'b self) -> Option<&'b T::Face> {
-        self.mesh().get_face(self.id())
+        self.mesh().get_face(self.try_id())
     }
 
     #[inline]
     fn is_void(&self) -> bool {
-        self.id() == IndexType::max() || !self.mesh().has_face(self.id())
+        self.try_id() == IndexType::max() || !self.mesh().has_face(self.try_id())
     }
 
     #[inline]
-    fn id(&self) -> T::F {
+    fn try_id(&self) -> T::F {
         self.face
     }
 
@@ -134,16 +153,16 @@ impl<'a, T: MeshType + 'a> CursorData for FaceCursorMut<'a, T> {
 
     #[inline]
     fn get<'b>(&'b self) -> Option<&'b T::Face> {
-        self.mesh().get_face(self.id())
+        self.mesh().get_face(self.try_id())
     }
 
     #[inline]
     fn is_void(&self) -> bool {
-        self.id() == IndexType::max() || !self.mesh().has_face(self.id())
+        self.try_id() == IndexType::max() || !self.mesh().has_face(self.try_id())
     }
 
     #[inline]
-    fn id(&self) -> T::F {
+    fn try_id(&self) -> T::F {
         self.face
     }
 
@@ -167,6 +186,12 @@ pub trait FaceCursorHalfedgeBasics<'a, T: MeshTypeHalfEdge + 'a>: FaceCursorData
     fn edge(self) -> Self::EC {
         let id = self.unwrap().edge_id();
         self.move_to_edge(id)
+    }
+
+    /// Returns the representative halfedge of the face.
+    /// Panics if the face is void.
+    fn edge_id(&self) -> T::E {
+        self.unwrap().edge_id()
     }
 }
 

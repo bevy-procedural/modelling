@@ -1,5 +1,5 @@
 use crate::mesh::{
-    DefaultEdgePayload, EdgeBasics, FaceBasics, HalfEdge, MeshTypeHalfEdge, VertexInterpolator,
+    CursorData, DefaultEdgePayload, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, FaceBasics, HalfEdge, MeshTypeHalfEdge, VertexInterpolator
 };
 
 /// Describes how to subdivide a mesh.
@@ -54,7 +54,7 @@ where
         let fs = self.faces().map(|f| f.id()).collect::<Vec<_>>();
         for face in &fs {
             // get the edge chain
-            let edges = self.face(*face).edges(self).cloned().collect::<Vec<_>>();
+            let edges = self.face_ref(*face).edges(self).cloned().collect::<Vec<_>>();
             let vs = edges.iter().map(|e| e.origin_id(self)).collect::<Vec<_>>();
             assert!(edges.len() == 3);
 
@@ -109,13 +109,13 @@ where
             for e in &edges {
                 self.insert_edge_ee(
                     e.id(),
-                    self.edge(e.id()).prev(self).prev_id(),
+                    self.edge(e.id()).prev().prev_id(),
                     Default::default(),
                 );
                 self.insert_face(e.id(), fp);
             }
             // fill the center hole
-            self.insert_face(self.edge(edges[0].id()).next(self).twin_id(), fp);
+            self.insert_face(self.edge(edges[0].id()).next().twin_id(), fp);
         }
 
         self

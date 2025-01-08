@@ -17,7 +17,7 @@ where
             if e.twin_id() < e.id() {
                 None
             } else {
-                Some((e, self.edge(e.twin_id())))
+                Some((e, self.edge_ref(e.twin_id())))
             }
         })
     }

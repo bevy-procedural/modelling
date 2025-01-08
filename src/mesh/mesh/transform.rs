@@ -19,7 +19,7 @@ where
             v.payload_mut().transform(t);
         }
         for e in self.edges().cloned().collect_vec() {
-            self.edge_payload_mut(&e).transform(t);
+            self.edge_payload_mut_l(&e).transform(t);
         }
         for f in self.faces_mut() {
             f.payload_mut().transform(t);
@@ -42,7 +42,7 @@ where
             v.payload_mut().translate(t);
         }
         for e in self.edges().cloned().collect_vec() {
-            self.edge_payload_mut(&e).translate(t);
+            self.edge_payload_mut_l(&e).translate(t);
         }
         for f in self.faces_mut() {
             f.payload_mut().translate(t);
@@ -65,7 +65,7 @@ where
             v.payload_mut().rotate(rotation);
         }
         for e in self.edges().cloned().collect_vec() {
-            self.edge_payload_mut(&e).rotate(rotation);
+            self.edge_payload_mut_l(&e).rotate(rotation);
         }
         for f in self.faces_mut() {
             f.payload_mut().rotate(rotation);
@@ -88,7 +88,7 @@ where
             v.payload_mut().scale(scale);
         }
         for e in self.edges().cloned().collect_vec() {
-            self.edge_payload_mut(&e).scale(scale);
+            self.edge_payload_mut_l(&e).scale(scale);
         }
         for f in self.faces_mut() {
             f.payload_mut().scale(scale);

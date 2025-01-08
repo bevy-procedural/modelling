@@ -1,7 +1,8 @@
 use crate::{
     math::{Scalar, Transformable},
     mesh::{
-        DefaultEdgePayload, DefaultFacePayload, EdgeBasics, EuclideanMeshType, FaceBasics,
+        CursorData, DefaultEdgePayload, DefaultFacePayload, EdgeBasics, EdgeCursorHalfedgeBasics,
+        EuclideanMeshType, FaceBasics, FaceCursorBasics, FaceCursorData, FaceCursorHalfedgeBasics,
         HalfEdge, MeshTypeHalfEdge, VertexBasics,
     },
     operations::MeshLoft,
@@ -26,8 +27,8 @@ where
     {
         let faces = self.face_ids().collect_vec();
         for f in faces {
-            let e = self.face(f).edge(self).twin_id();
-            if self.edge(e).is_boundary_self() {
+            let e = self.face(f).edge().twin_id();
+            if self.edge(e).unwrap().is_boundary_self() {
                 self.extrude(e, transform);
             }
         }
@@ -124,24 +125,24 @@ where
     /// Assumes `start` is on the boundary of the edge.
     /// Will insert a vertex `hub` with the given vp and fill the hole along the boundary with triangles connected to the hub vertex.
     /// Returns the id of the hub vertex.
-    /// 
+    ///
     /// The result will be a windmill with triangular blades.
     fn windmill(&mut self, start: T::E, hub: T::VP) -> T::V {
         // TODO: replace with loft n=1
-        let e0 = self.edge(start);
+        let e0 = self.edge_ref(start);
         let origin = e0.origin_id(self);
         let mut input = self.edge(start).prev_id();
         let (_, v) = self
             .insert_vertex_e(input, hub, Default::default())
             .unwrap(); // TODO: error handling
         loop {
-            let e = self.edge(input);
+            let e = self.edge_ref(input);
             if e.origin_id(self) == origin {
                 break;
             }
             input = e.prev_id();
             self.close_face_ee_legacy(
-                self.edge(input).next(&self).next_id(),
+                self.edge(input).next().next_id(),
                 input,
                 Default::default(),
                 Default::default(),

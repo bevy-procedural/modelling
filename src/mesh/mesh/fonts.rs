@@ -175,8 +175,8 @@ impl<'a> Font<'a> {
                     T::VP::from_pos(p1 * scale + trans),
                     Default::default(),
                 );
-                let v0 = mesh.edge(e).origin_id(mesh);
-                let v1 = mesh.edge(e).target_id(mesh);
+                let v0 = mesh.edge_ref(e).origin_id(mesh);
+                let v1 = mesh.edge_ref(e).target_id(mesh);
                 cur_v = v1;
                 prev_v = v0;
                 start_v = v0;
@@ -184,7 +184,7 @@ impl<'a> Font<'a> {
             }
 
             if c1.is_some() {
-                mesh.edge(cur_e).clone().set_curve_type_in_mesh(
+                mesh.edge_ref(cur_e).clone().set_curve_type_in_mesh(
                     mesh,
                     CurvedEdgeType::CubicBezier(
                         c0.unwrap() * scale + trans,
@@ -192,7 +192,7 @@ impl<'a> Font<'a> {
                     ),
                 );
             } else if c0.is_some() {
-                mesh.edge(cur_e).clone().set_curve_type_in_mesh(
+                mesh.edge_ref(cur_e).clone().set_curve_type_in_mesh(
                     mesh,
                     CurvedEdgeType::QuadraticBezier(c0.unwrap() * scale + trans),
                 );

@@ -67,7 +67,7 @@ where
         if self.edge == IndexType::max() {
             None
         } else {
-            Some(mesh.edge(self.edge))
+            Some(mesh.edge_ref(self.edge))
         }
     }
 

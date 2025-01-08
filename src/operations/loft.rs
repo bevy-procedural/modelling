@@ -1,6 +1,9 @@
 use crate::{
     math::IndexType,
-    mesh::{DefaultEdgePayload, DefaultFacePayload, HalfEdge, MeshTypeHalfEdge},
+    mesh::{
+        DefaultEdgePayload, DefaultFacePayload, EdgeCursor, EdgeCursorBasics, EdgeCursorData,
+        EdgeCursorHalfedgeBasics, HalfEdge, MeshTypeHalfEdge,
+    },
 };
 
 /// Different ways how faces cannot be connected.
@@ -78,7 +81,7 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
             if pos.is_some() || shift {
                 self.close_face_ee_legacy(
                     output,
-                    self.edge(output).prev(self).prev_id(),
+                    self.edge(output).prev_id(),
                     Default::default(),
                     Default::default(),
                 );
@@ -106,8 +109,8 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
         // 2. Use crochet with n=2, m=2, and then subdivide the faces
 
         let e = self.loft_tri(start, false, vp);
-        let inside = self.edge(e).twin(self).prev_id();
-        let outside = self.edge(inside).prev(self).prev_id();
+        let inside = self.edge(e).twin().prev_id();
+        let outside = self.edge(inside).prev().prev_id();
         self.close_face_ee_legacy(inside, outside, Default::default(), Default::default());
         self.close_face_ee_legacy(
             self.edge(e).twin_id(),
@@ -115,7 +118,7 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
             Default::default(),
             Default::default(),
         );
-        self.edge(outside).next(self).next_id()
+        self.edge(outside).next().next_id()
     }
 
     /// Create polygons with `n` vertices each using the iterator `vp`.
@@ -536,12 +539,15 @@ mod tests {
                 .map(|e| e.id())
                 .collect_vec(),
         );
-        let old_boundary_vertices: HashSet<usize, RandomState> =
-            HashSet::from_iter(old_boundary.iter().map(|e| mesh.edge(*e).origin_id(&mesh)));
+        let old_boundary_vertices: HashSet<usize, RandomState> = HashSet::from_iter(
+            old_boundary
+                .iter()
+                .map(|e| mesh.edge_ref(*e).origin_id(&mesh)),
+        );
         let diagonals: HashSet<usize, RandomState> = HashSet::from_iter(
             inserted_halfedges
                 .iter()
-                .filter(|e| old_boundary_vertices.contains(&mesh.edge(**e).origin_id(&mesh)))
+                .filter(|e| old_boundary_vertices.contains(&mesh.edge_ref(**e).origin_id(&mesh)))
                 .cloned(),
         );
         assert_eq!(diagonals.len(), config.num_diagonals);
@@ -549,7 +555,7 @@ mod tests {
             boundary_edges
                 .iter()
                 .filter(|e| {
-                    !(diagonals.contains(e) || diagonals.contains(&mesh.edge(**e).twin_id()))
+                    !(diagonals.contains(e) || diagonals.contains(&mesh.edge_ref(**e).twin_id()))
                         && inserted_halfedges.contains(e)
                 })
                 .cloned(),
@@ -562,19 +568,19 @@ mod tests {
 
         let small_face = inserted_faces
             .iter()
-            .find(|f| mesh.face(**f).vertices(&mesh).count() < config.n + config.m)
+            .find(|f| mesh.face_ref(**f).vertices(&mesh).count() < config.n + config.m)
             .cloned();
         assert_eq!(
             inserted_faces
                 .iter()
-                .filter(|f| mesh.face(**f).vertices(&mesh).count() == config.n + config.m)
+                .filter(|f| mesh.face_ref(**f).vertices(&mesh).count() == config.n + config.m)
                 .count(),
             config.num_appended_faces - if config.small_face_size > 0 { 1 } else { 0 }
         );
         assert_eq!(small_face.is_some(), config.small_face_size > 0);
         if small_face.is_some() {
             assert_eq!(
-                mesh.face(small_face.unwrap()).vertices(&mesh).count(),
+                mesh.face_ref(small_face.unwrap()).vertices(&mesh).count(),
                 config.small_face_size,
             );
         }
@@ -584,14 +590,14 @@ mod tests {
                 continue;
             }
             if let Some(a) = config.area_in_appended_faces {
-                let poly = mesh.face(face).as_polygon(&mesh);
+                let poly = mesh.face_ref(face).as_polygon(&mesh);
                 assert!(
                     poly.signed_area().is_about(a, 1e-6),
                     "face {}: {} != {}, {:?}",
                     face,
                     poly.signed_area(),
                     a,
-                    mesh.face(face).vertex_ids(&mesh).collect_vec()
+                    mesh.face_ref(face).vertex_ids(&mesh).collect_vec()
                 );
             };
         }
@@ -606,8 +612,8 @@ mod tests {
                 assert!(true_boundary.contains(&first_edge));
                 assert!(true_boundary.contains(&last_edge));
             }
-            assert!(mesh.edge(first_edge).is_boundary_self());
-            assert!(mesh.edge(last_edge).is_boundary_self());
+            assert!(mesh.edge_ref(first_edge).is_boundary_self());
+            assert!(mesh.edge_ref(last_edge).is_boundary_self());
 
             assert_eq!(first_edge == config.mesh.1, config.first_edge_is_start);
             assert_eq!(last_edge == config.mesh.1, config.last_edge_is_start);
@@ -619,38 +625,38 @@ mod tests {
 
             if config.backwards.unwrap() {
                 assert_eq!(
-                    mesh.edge(first_edge)
-                        .same_boundary_back(&mesh, mesh.edge(last_edge).origin_id(&mesh)),
+                    mesh.edge_ref(first_edge)
+                        .same_boundary_back(&mesh, mesh.edge_ref(last_edge).origin_id(&mesh)),
                     Some(last_edge)
                 );
                 assert_eq!(
-                    mesh.edge(last_edge).prev_id() == first_edge,
+                    mesh.edge_ref(last_edge).prev_id() == first_edge,
                     config.last_first_adjacent
                 );
                 assert_eq!(
-                    old_boundary.contains(&mesh.edge(last_edge).prev(&mesh).prev_id()),
+                    old_boundary.contains(&mesh.edge_ref(last_edge).prev(&mesh).prev_id()),
                     config.first_last_reach_old_boundary
                 );
                 assert_eq!(
-                    old_boundary.contains(&mesh.edge(first_edge).next(&mesh).next_id()),
+                    old_boundary.contains(&mesh.edge_ref(first_edge).next(&mesh).next_id()),
                     config.first_last_reach_old_boundary
                 );
             } else {
                 assert_eq!(
-                    mesh.edge(first_edge)
-                        .same_boundary(&mesh, mesh.edge(last_edge).origin_id(&mesh)),
+                    mesh.edge_ref(first_edge)
+                        .same_boundary(&mesh, mesh.edge_ref(last_edge).origin_id(&mesh)),
                     Some(last_edge)
                 );
                 assert_eq!(
-                    mesh.edge(last_edge).next_id() == first_edge,
+                    mesh.edge_ref(last_edge).next_id() == first_edge,
                     config.last_first_adjacent
                 );
                 assert_eq!(
-                    old_boundary.contains(&mesh.edge(last_edge).next(&mesh).next_id()),
+                    old_boundary.contains(&mesh.edge_ref(last_edge).next(&mesh).next_id()),
                     config.first_last_reach_old_boundary
                 );
                 assert_eq!(
-                    old_boundary.contains(&mesh.edge(first_edge).prev(&mesh).prev_id()),
+                    old_boundary.contains(&mesh.edge_ref(first_edge).prev(&mesh).prev_id()),
                     config.first_last_reach_old_boundary
                 );
             }

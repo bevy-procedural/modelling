@@ -9,7 +9,7 @@ fn main() {
     // make the vertices of one face red
     let vs = mesh.faces().next().unwrap().vertex_ids(&mesh).collect_vec();
     for v in vs {
-        mesh.vertex_mut(v).payload_mut().color = VertexColor { r: 255, g: 0, b: 0 };
+        mesh.vertex_ref_mut(v).payload_mut().color = VertexColor { r: 255, g: 0, b: 0 };
     }
 
     // since we implemented the Transformable trait for our custom payload, we can transform the mesh

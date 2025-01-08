@@ -16,12 +16,12 @@ where
     fn insert_polygon(&mut self, vp: impl IntoIterator<Item = T::VP>) -> T::E {
         let first = self.insert_loop_default(vp);
         self.insert_face(first, Default::default()).unwrap();
-        self.edge(first).twin_id()
+        self.edge_ref(first).twin_id()
     }
 
     fn insert_dihedron(&mut self, vp: impl IntoIterator<Item = T::VP>) -> T::E {
         let first = self.insert_polygon(vp);
-        self.insert_face(self.edge(first).twin_id(), Default::default());
+        self.insert_face(self.edge_ref(first).twin_id(), Default::default());
         first
     }
 }

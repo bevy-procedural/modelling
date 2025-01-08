@@ -56,7 +56,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
 
     #[inline]
     fn next<'a>(&self, mesh: &'a HalfEdgeMeshImpl<T>) -> &'a HalfEdgeImpl<T> {
-        mesh.edge(self.next)
+        mesh.edge_ref(self.next)
     }
 
     #[inline]
@@ -66,7 +66,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
 
     #[inline]
     fn twin<'a>(&self, mesh: &'a HalfEdgeMeshImpl<T>) -> &'a HalfEdgeImpl<T> {
-        mesh.edge(self.twin)
+        mesh.edge_ref(self.twin)
     }
 
     #[inline]
@@ -76,7 +76,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
 
     #[inline]
     fn prev<'a>(&self, mesh: &'a HalfEdgeMeshImpl<T>) -> &'a HalfEdgeImpl<T> {
-        mesh.edge(self.prev)
+        mesh.edge_ref(self.prev)
     }
 
     #[inline]
@@ -89,7 +89,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
         if self.face == IndexType::max() {
             None
         } else {
-            Some(mesh.face(self.face))
+            Some(mesh.face_ref(self.face))
         }
     }
 
@@ -104,7 +104,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
         if face == IndexType::max() {
             None
         } else {
-            Some(mesh.face(face))
+            Some(mesh.face_ref(face))
         }
     }
 
@@ -114,47 +114,47 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
     }
 
     fn flip(e: T::E, mesh: &mut HalfEdgeMeshImpl<T>) {
-        let origin_id = mesh.edge(e).origin_id(mesh);
-        let target_id = mesh.edge(e).target_id(mesh);
+        let origin_id = mesh.edge_ref(e).origin_id(mesh);
+        let target_id = mesh.edge_ref(e).target_id(mesh);
 
-        let edge = mesh.edge(e);
+        let edge = mesh.edge_ref(e);
         let next_id = edge.next;
         let prev_id = edge.prev;
         let face_id = edge.face_id();
         let twin_id = edge.twin_id();
 
-        let twin = mesh.edge(twin_id);
+        let twin = mesh.edge_ref(twin_id);
         let t_next_id = twin.next;
         let t_prev_id = twin.prev;
         let t_face_id = twin.face_id();
 
-        let edge = mesh.edge_mut(e);
+        let edge = mesh.edge_ref_mut(e);
         edge.next = t_next_id;
         edge.prev = t_prev_id;
         edge.face = t_face_id;
         edge.origin_id = target_id;
-        mesh.edge_mut(t_next_id).prev = e;
-        mesh.edge_mut(t_prev_id).next = e;
+        mesh.edge_ref_mut(t_next_id).prev = e;
+        mesh.edge_ref_mut(t_prev_id).next = e;
 
-        let twin = mesh.edge_mut(twin_id);
+        let twin = mesh.edge_ref_mut(twin_id);
         twin.next = next_id;
         twin.prev = prev_id;
         twin.face = face_id;
         twin.origin_id = origin_id;
-        mesh.edge_mut(next_id).prev = twin_id;
-        mesh.edge_mut(prev_id).next = twin_id;
+        mesh.edge_ref_mut(next_id).prev = twin_id;
+        mesh.edge_ref_mut(prev_id).next = twin_id;
 
-        mesh.vertex_mut(origin_id).set_edge(twin_id);
-        mesh.vertex_mut(target_id).set_edge(e);
+        mesh.vertex_ref_mut(origin_id).set_edge(twin_id);
+        mesh.vertex_ref_mut(target_id).set_edge(e);
         if face_id != IndexType::max() {
-            mesh.face_mut(face_id).set_edge(twin_id);
+            mesh.face_ref_mut(face_id).set_edge(twin_id);
         }
         if t_face_id != IndexType::max() {
-            mesh.face_mut(t_face_id).set_edge(e);
+            mesh.face_ref_mut(t_face_id).set_edge(e);
         }
     }
 
-    fn is_valid(&self, mesh: &T::Mesh) -> Result<(), String> {
+    fn validate(&self, mesh: &T::Mesh) -> Result<(), String> {
         let oi = self.origin_id(mesh);
         let ti = self.target_id(mesh);
         let prev = self.prev(mesh);
@@ -215,10 +215,10 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
         if oi == ti {
             return Err(format!("Origin and target vertices are the same {}", oi));
         }
-        if !mesh.vertex(oi).edges_out(mesh).any(|e| e.id == id) {
+        if !mesh.vertex_ref(oi).edges_out(mesh).any(|e| e.id == id) {
             return Err(format!("Origin vertex {} doesn't have edge {}", oi, id));
         }
-        if !mesh.vertex(ti).edges_in(mesh).any(|e| e.id == id) {
+        if !mesh.vertex_ref(ti).edges_in(mesh).any(|e| e.id == id) {
             return Err(format!("Target vertex {} doesn't have edge {}", ti, id));
         }
         Ok(())

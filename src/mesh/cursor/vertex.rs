@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use crate::{
     math::IndexType,
-    mesh::{MeshBasics, MeshType, MeshTypeHalfEdge},
+    mesh::{EdgeBasics, HalfEdgeVertex, MeshBasics, MeshType, MeshTypeHalfEdge, VertexBasics},
 };
 
 use super::{
@@ -22,6 +22,38 @@ impl<'a, T: MeshType> VertexCursor<'a, T> {
     pub fn new(mesh: &'a T::Mesh, vertex: T::V) -> Self {
         Self { mesh, vertex }
     }
+
+    /// Returns an iterator of edge cursors pointing to the outgoing halfedges of the vertex.
+    /// Panics if the vertex is void.
+    /// TODO: would be nice to return an empty iterator if the vertex is void instead?
+    /// See [VertexBasics::edges_out] for more information.
+    pub fn edges_out(&'a self) -> impl Iterator<Item = EdgeCursor<'a, T>> {
+        self.unwrap()
+            .edges_out(self.mesh)
+            .map(move |e| EdgeCursor::new(self.mesh, e.id()))
+    }
+
+    /// Returns an iterator of edge cursors pointing to the incoming halfedges of the vertex.
+    /// Panics if the vertex is void.
+    /// TODO: would be nice to return an empty iterator if the vertex is void instead?
+    /// See [VertexBasics::edges_in] for more information.
+    pub fn edges_in(&'a self) -> impl Iterator<Item = EdgeCursor<'a, T>> {
+        self.unwrap()
+            .edges_in(self.mesh)
+            .map(move |e| EdgeCursor::new(self.mesh, e.id()))
+    }
+
+    /// Returns a reference to the payload of the vertex.
+    /// Panics if the vertex is void.
+    #[inline]
+    #[must_use]
+    pub fn payload(&self) -> &T::VP {
+        self.unwrap().payload()
+    }
+}
+
+impl<'a, T: MeshTypeHalfEdge> VertexCursor<'a, T> {
+    //
 }
 
 /// A vertex cursor pointing to a vertex of a mesh with a mutable reference to the mesh.
@@ -35,6 +67,14 @@ impl<'a, T: MeshType> VertexCursorMut<'a, T> {
     /// Creates a new mutable vertex cursor pointing to the given vertex.
     pub fn new(mesh: &'a mut T::Mesh, vertex: T::V) -> Self {
         Self { mesh, vertex }
+    }
+
+    /// Returns a mutable reference to the payload of the vertex.
+    /// Panics if the vertex is void.
+    #[inline]
+    #[must_use]
+    pub fn payload(&mut self) -> &mut T::VP {
+        self.mesh.vertex_ref_mut(self.vertex).payload_mut()
     }
 }
 
@@ -86,18 +126,18 @@ impl<'a, T: MeshType + 'a> CursorData for VertexCursor<'a, T> {
     }
 
     #[inline]
-    fn id(&self) -> T::V {
+    fn try_id(&self) -> T::V {
         self.vertex
     }
 
     #[inline]
     fn is_void(&self) -> bool {
-        self.id() == IndexType::max() || !self.mesh().has_vertex(self.id())
+        self.try_id() == IndexType::max() || !self.mesh().has_vertex(self.try_id())
     }
 
     #[inline]
     fn get<'b>(&'b self) -> Option<&'b T::Vertex> {
-        self.mesh().get_vertex(self.id())
+        self.mesh().get_vertex(self.try_id())
     }
 }
 
@@ -122,7 +162,7 @@ impl<'a, T: MeshType + 'a> CursorData for VertexCursorMut<'a, T> {
     type T = T;
 
     #[inline]
-    fn id(&self) -> T::V {
+    fn try_id(&self) -> T::V {
         self.vertex
     }
 
@@ -138,24 +178,76 @@ impl<'a, T: MeshType + 'a> CursorData for VertexCursorMut<'a, T> {
 
     #[inline]
     fn is_void(&self) -> bool {
-        self.id() == IndexType::max() || !self.mesh().has_vertex(self.id())
+        self.try_id() == IndexType::max() || !self.mesh().has_vertex(self.try_id())
     }
 
     #[inline]
     fn get<'b>(&'b self) -> Option<&'b T::Vertex> {
-        self.mesh().get_vertex(self.id())
+        self.mesh().get_vertex(self.try_id())
     }
 }
 
-pub trait VertexCursorBasics<'a, T: MeshTypeHalfEdge + 'a>: VertexCursorData<'a, T> {
-    fn outgoing_edge(&self) -> Self::EC {
+pub trait VertexCursorBasics<'a, T: MeshType + 'a>: VertexCursorData<'a, T> {
+    /// Returns an edge cursor pointing to a representative edge incident to the vertex.
+    #[inline]
+    #[must_use]
+    fn edge(self) -> Self::EC {
+        let edge = self.unwrap().edge_id(self.mesh());
+        self.move_to_edge(edge)
+    }
+
+    /// Returns the id of a representative edge incident to the vertex, `IndexType::max()` if it has none, or panic if the vertex is void.
+    #[inline]
+    #[must_use]
+    fn edge_id(&self) -> T::E {
+        self.unwrap().edge_id(self.mesh())
+    }
+
+    /// Whether the vertex is isolated.
+    /// Panics if the vertex is void.
+    /// See [VertexBasics::is_isolated] for more information.
+    #[inline]
+    #[must_use]
+    fn is_isolated(&self) -> bool {
+        self.unwrap().is_isolated(self.mesh())
+    }
+}
+
+pub trait VertexCursorHalfedgeBasics<'a, T: MeshTypeHalfEdge + 'a>:
+    VertexCursorData<'a, T>
+{
+    /// Returns an edge cursor pointing to an outgoing halfedge incident to the vertex.
+    /// If the vertex is void, the edge cursor is void. Won't panic.
+    #[inline]
+    #[must_use]
+    fn outgoing_edge(self) -> Self::EC {
         let edge = todo!();
         self.move_to_edge(edge)
     }
+
+    /// Returns an ingoing boundary edge incident to the vertex.
+    /// Panics if the vertex is void.
+    /// See [HalfEdgeVertex::ingoing_boundary_edge] for more information.
+    #[inline]
+    #[must_use]
+    fn ingoing_boundary_edge(&self) -> Option<T::E> {
+        HalfEdgeVertex::ingoing_boundary_edge(self.unwrap(), self.mesh())
+    }
+
+    /// Returns an outgoing boundary edge incident to the vertex.
+    /// Panics if the vertex is void.
+    /// See [HalfEdgeVertex::ingoing_boundary_edge] for more information.
+    #[inline]
+    #[must_use]
+    fn outgoing_boundary_edge(&self) -> Option<T::E> {
+        HalfEdgeVertex::outgoing_boundary_edge(self.unwrap(), self.mesh())
+    }
 }
 
-impl<'a, T: MeshTypeHalfEdge + 'a> VertexCursorBasics<'a, T> for VertexCursor<'a, T> {}
-impl<'a, T: MeshTypeHalfEdge + 'a> VertexCursorBasics<'a, T> for VertexCursorMut<'a, T> {}
+impl<'a, T: MeshType + 'a> VertexCursorBasics<'a, T> for VertexCursor<'a, T> {}
+impl<'a, T: MeshType + 'a> VertexCursorBasics<'a, T> for VertexCursorMut<'a, T> {}
+impl<'a, T: MeshTypeHalfEdge + 'a> VertexCursorHalfedgeBasics<'a, T> for VertexCursor<'a, T> {}
+impl<'a, T: MeshTypeHalfEdge + 'a> VertexCursorHalfedgeBasics<'a, T> for VertexCursorMut<'a, T> {}
 
 #[cfg(test)]
 mod tests {

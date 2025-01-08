@@ -24,7 +24,7 @@ pub trait MeshTopology<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         predecessor.insert(v1, None);
 
         while let Some(current) = queue.pop_front() {
-            for neighbor in self.vertex(current).neighbor_ids(self) {
+            for neighbor in self.vertex_ref(current).neighbor_ids(self) {
                 if visited.contains(&neighbor) {
                     continue;
                 }

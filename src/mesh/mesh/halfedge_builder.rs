@@ -76,10 +76,10 @@ pub trait MeshHalfEdgeBuilder<T: MeshTypeHalfEdge<Mesh = Self>>: MeshBasics<T> {
             if !self.has_edge(from_target) {
                 return Err(format!("from_target Edge {} does not exist", from_target));
             }
-            let to_origin = self.edge(to_origin);
-            let from_origin = self.edge(from_origin);
-            let to_target = self.edge(to_target);
-            let from_target = self.edge(from_target);
+            let to_origin = self.edge_ref(to_origin);
+            let from_origin = self.edge_ref(from_origin);
+            let to_target = self.edge_ref(to_target);
+            let from_target = self.edge_ref(from_target);
             if to_origin.next_id() != from_origin.id() {
                 return Err(format!(
                     "to_origin.next_id() != from_origin.id(): {} != {}",

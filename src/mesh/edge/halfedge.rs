@@ -32,24 +32,28 @@ pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
     fn set_origin(&mut self, origin: T::V);
 
     /// Returns the next half-edge incident to the same face or boundary
+    #[deprecated(note = "Use cursor instead")]
     fn next<'a>(&self, mesh: &'a T::Mesh) -> &'a T::Edge;
 
     /// Returns the next id
     fn next_id(&self) -> T::E;
 
     /// Returns the other, opposite half-edge
+    #[deprecated(note = "Use cursor instead")]
     fn twin<'a>(&self, mesh: &'a T::Mesh) -> &'a T::Edge;
 
     /// Returns the twin id
     fn twin_id(&self) -> T::E;
 
     /// Returns the previous half-edge incident to the same face or boundary
+    #[deprecated(note = "Use cursor instead")]
     fn prev<'a>(&self, mesh: &'a T::Mesh) -> &'a T::Edge;
 
     /// Returns the prev id
     fn prev_id(&self) -> T::E;
 
     /// Returns the face the half-edge is incident to
+    #[deprecated(note = "Use cursor instead")]
     fn face<'a>(&'a self, mesh: &'a T::Mesh) -> Option<&'a T::Face>;
 
     /// Returns the face id
@@ -61,16 +65,17 @@ pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
     /// Returns whether the edge (i.e., this HalfEdge and not necessarily its twin) is a boundary edge
     fn is_boundary_self(&self) -> bool;
 
-    /// Returns whether the edge can reach the given vertex
-    /// when searching counter-clockwise along the boundary.
-    /// The returned edge's origin is `v`.
+    /// Returns an outgoing edge from `v` that is part of the same boundary as `self`.
+    /// Returns `None` if no such edge exists.
+    /// Traverses the boundary forwards.
     fn same_boundary(&self, mesh: &T::Mesh, v: T::V) -> Option<T::E> {
         self.edges_face(mesh)
             .find(|e| e.origin_id(mesh) == v)
             .map(|e| e.id())
     }
-    /// Like `same_boundary` but searches clockwise.
-    /// The returned edge's origin is `v`.
+    /// Returns an outgoing edge from `v` that is part of the same boundary as `self`.
+    /// Returns `None` if no such edge exists.
+    /// Traverses the boundary backwards.
     fn same_boundary_back(&self, mesh: &T::Mesh, v: T::V) -> Option<T::E> {
         self.edges_face_back(mesh)
             .find(|e| e.origin_id(mesh) == v)
@@ -86,7 +91,7 @@ pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
     /// Returns an error message if the edge is invalid.
     /// 
     /// Iterates the edge wheels of the origin and target vertices! So this is not O(1).
-    fn is_valid(&self, mesh: &T::Mesh) -> Result<(), String>;
+    fn validate(&self, mesh: &T::Mesh) -> Result<(), String>;
 }
 
 #[cfg(test)]
@@ -106,13 +111,13 @@ mod tests {
         }
 
         let e0 = mesh.edges().find(|e| !e.is_boundary_self()).unwrap().id();
-        let f0 = mesh.edge(e0).face_id();
-        mesh.edge_mut(e0).delete_face();
-        let edge = mesh.edge(e0);
+        let f0 = mesh.edge_ref(e0).face_id();
+        mesh.edge_ref_mut(e0).delete_face();
+        let edge = mesh.edge_ref(e0);
         assert!(edge.is_boundary_self());
 
-        mesh.edge_mut(e0).set_face(f0);
-        let edge = mesh.edge(e0);
+        mesh.edge_ref_mut(e0).set_face(f0);
+        let edge = mesh.edge_ref(e0);
         assert!(!edge.is_boundary_self());
 
         assert!(mesh.flipped().check().is_ok());

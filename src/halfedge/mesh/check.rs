@@ -9,7 +9,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     /// the precursor to the next edge is the same, and the successor of the previous.
     fn check_edge_invariants(&self) -> Result<(), String> {
         for edge in self.edges() {
-            edge.is_valid(self)?;
+            edge.validate(self)?;
         }
 
         Ok(())

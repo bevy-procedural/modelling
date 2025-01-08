@@ -21,7 +21,7 @@ pub trait MeshBasicsCurved<T: MeshType<Mesh = Self>>: MeshBasics<T> {
 
         // Convert curved edges
         for e in self.edge_ids().collect::<Vec<_>>().iter() {
-            let edge = self.edge(*e);
+            let edge = self.edge_ref(*e);
             if edge.curve_type(self) != CurvedEdgeType::Linear {
                 let vs = edge.flatten_casteljau(tol, self);
                 edge.clone()
