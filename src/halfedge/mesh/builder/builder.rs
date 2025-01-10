@@ -3,7 +3,7 @@ use crate::{
     math::IndexType,
     mesh::{
         CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, EdgePayload, HalfEdge,
-        MeshBasics, MeshBuilder, MeshHalfEdgeBuilder, VertexCursorBasics,
+        HalfEdgeVertex, MeshBasics, MeshBuilder, MeshHalfEdgeBuilder, VertexCursorBasics,
         VertexCursorHalfedgeBasics,
     },
     prelude::HalfEdgeFaceImpl,
@@ -113,8 +113,8 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         let (e1, e2) =
             self.insert_edge_unchecked(input, output, ep, IndexType::max(), IndexType::max(), true);
 
-        debug_assert_eq!(self.edge(e1).validate(), Ok(()));
-        debug_assert_eq!(self.edge(e2).validate(), Ok(()));
+        debug_assert_eq!(self.edge(e1).check(), Ok(()));
+        debug_assert_eq!(self.edge(e2).check(), Ok(()));
 
         Some(e1)
     }
@@ -146,8 +146,8 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
                 );
                 self.vertex_mut(a).set_edge(e1);
                 self.vertex_mut(b).set_edge(e2);
-                debug_assert_eq!(self.edge(e1).validate(), Ok(()));
-                debug_assert_eq!(self.edge(e2).validate(), Ok(()));
+                debug_assert_eq!(self.edge(e1).check(), Ok(()));
+                debug_assert_eq!(self.edge(e2).check(), Ok(()));
                 return Some(e1);
             } else {
                 // a is isolated, b is not isolated
@@ -168,8 +168,8 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
                     ep,
                 );
                 self.vertex_mut(a).set_edge(e1);
-                debug_assert_eq!(self.edge(e1).validate(), Ok(()));
-                debug_assert_eq!(self.edge(e2).validate(), Ok(()));
+                debug_assert_eq!(self.edge(e1).check(), Ok(()));
+                debug_assert_eq!(self.edge(e2).check(), Ok(()));
                 return Some(e1);
             }
         } else if bv.is_isolated() {
@@ -195,8 +195,8 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
             self.edge_mut(a_in).set_next(e1);
             self.edge_mut(next).set_prev(e2);
 
-            debug_assert_eq!(self.edge(e1).validate(), Ok(()));
-            debug_assert_eq!(self.edge(e2).validate(), Ok(()));
+            debug_assert_eq!(self.edge(e1).check(), Ok(()));
+            debug_assert_eq!(self.edge(e2).check(), Ok(()));
             return Some(e1);
         } else {
             // both are not isolated - there must be a shared boundary to figure out the orientation
@@ -215,25 +215,15 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
                 }
             }
 
-            // find outgoing edges that are boundary and can reach the other vertex
-            let mut m = None;
-            for e in av.edges_out() {
-                if !e.is_boundary_self() {
-                    return None;
-                }
-                if let Some(other_e) = e.clone().same_boundary(b) {
-                    if m.is_some() {
-                        return None;
-                    }
-                    m = Some((e.id(), other_e.id()));
-                    // continue searching to make sure there is only one
-                }
-            }
-            let Some((from_a, from_b)) = m else {
+            if a == b {
+                // TODO: We currently don't support self-loops
                 return None;
-            };
+            }
 
-            return self.insert_edge_ee(self.edge(from_a).prev_id(), from_b, ep);
+            let (to_a, from_b, _) = bv.unwrap().shortest_path(self, a)?;
+            debug_assert_eq!(self.edge(to_a).target_id(), a);
+            debug_assert_eq!(self.edge(from_b).origin_id(), b);
+            return self.insert_edge_ee(to_a, from_b, ep);
         }
     }
 
@@ -242,7 +232,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
             // Trivial case where the connectivity is already given
             let edge = self.edge(e);
             let origin = edge.target_id();
-            let fo = self.edge(e).next_id();
+            let fo = edge.next_id();
             let (e1, e2) = self.insert_halfedge_pair_forced(
                 e,
                 origin,
@@ -258,9 +248,9 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
             self.edge_mut(fo).set_prev(e2);
             self.vertex_mut(v).set_edge(e2);
 
-            debug_assert_eq!(self.edge(e1).validate(), Ok(()));
-            debug_assert_eq!(self.edge(e2).validate(), Ok(()));
-            debug_assert_eq!(self.edge(e).validate(), Ok(()));
+            debug_assert_eq!(self.edge(e1).check(), Ok(()));
+            debug_assert_eq!(self.edge(e2).check(), Ok(()));
+            debug_assert_eq!(self.edge(e).check(), Ok(()));
             debug_assert_eq!(self.edge(e1).target_id(), v);
             debug_assert_eq!(self.edge(e1).origin_id(), self.edge(e).target_id());
             debug_assert_eq!(self.edge(e2).origin_id(), v);
@@ -274,7 +264,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         };
 
         // Otherwise, find a unique boundary from e to v
-        if let Some(outgoing) = self.edge(e).same_boundary(v) {
+        if let Some(outgoing) = self.edge(e).same_boundary_back(v) {
             return self.insert_edge_ee(e, outgoing.id(), ep);
         }
 
@@ -286,50 +276,15 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     }
 
     fn insert_face(&mut self, e: T::E, fp: T::FP) -> Option<T::F> {
-        if !self.has_edge(e) {
-            return None;
-        }
-        let edge = self.edge_ref(e).clone();
-        if edge.face_id() != IndexType::max() {
+        if self.edge(e).has_face() {
             return None;
         }
         let f = self.faces.push(HalfEdgeFaceImpl::new(e, fp));
-        edge.edges_face_mut(self).for_each(|e| e.set_face(f));
+        self.edge_ref(e)
+            .clone()
+            .edges_face_mut(self)
+            .for_each(|e| e.set_face(f));
         return Some(f);
-    }
-
-    fn close_face_ee(
-        &mut self,
-        from: T::E,
-        to: T::E,
-        ep: T::EP,
-        fp: T::FP,
-    ) -> Option<(T::E, T::F)> {
-        if !self.has_edge(from) || !self.has_edge(to) {
-            return None;
-        }
-        if self.edge(from).face_id() != IndexType::max()
-            || self.edge(to).face_id() != IndexType::max()
-        {
-            return None;
-        }
-        let Some(e) = self.insert_edge_ee(from, to, ep) else {
-            return None;
-        };
-        let f = self.insert_face(e, fp).unwrap();
-        Some((e, f))
-    }
-
-    #[must_use]
-    fn close_face_vv(
-        &mut self,
-        prev: T::V,
-        from: T::V,
-        to: T::V,
-        ep: T::EP,
-        fp: T::FP,
-    ) -> Option<(T::E, T::F)> {
-        todo!("{}{}{}{:?}{:?}", prev, from, to, ep, fp)
     }
 
     fn subdivide_edge<I: Iterator<Item = (T::EP, T::VP)>>(&mut self, e: T::E, _vs: I) -> T::E {
@@ -695,17 +650,306 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
 #[cfg(test)]
 mod tests {
     use crate::{extensions::nalgebra::*, prelude::*};
+    use itertools::Itertools;
 
     fn vp(x: f64, y: f64, z: f64) -> VertexPayloadPNU<f64, 3> {
         VertexPayloadPNU::<f64, 3>::from_pos(Vec3::<f64>::new(x, y, z))
     }
 
+    fn sorted<I: IntoIterator<Item = usize>>(v: I) -> Vec<usize> {
+        let mut v = v.into_iter().collect_vec();
+        v.sort_unstable();
+        v
+    }
+
     #[test]
     fn test_insert_vertex() {
         let mut mesh = Mesh3d64::default();
-        let res = mesh.insert_isolated_edge(vp(0.0, 0.0, 0.0), vp(1.0, 0.0, 0.0), Default::default());
-        assert_eq!(res, 0);
+        let vp1 = vp(42.0, 42.0, 42.0);
+        let v1 = mesh.insert_vertex(vp1);
+        assert_eq!(v1, 0);
+        assert_eq!(mesh.check(), Ok(()));
+        assert_eq!(mesh.num_vertices(), 1);
+        assert_eq!(mesh.num_halfedges(), 0);
+        assert_eq!(mesh.num_faces(), 0);
+        assert_eq!(*mesh.vertex(v1).payload(), vp1);
+        assert_eq!(mesh.vertex(v1).edge_id(), usize::MAX);
+        assert_eq!(mesh.vertex(v1).neighbors().count(), 0);
+        assert_eq!(mesh.is_connected(), true);
+
+        let vp2 = vp(0.0, 0.0, 0.0);
+        let v2 = mesh.insert_vertex(vp2);
+        assert_eq!(v2, 1);
+        assert_eq!(mesh.check(), Ok(()));
+        assert_eq!(mesh.num_vertices(), 2);
+        assert_eq!(mesh.num_halfedges(), 0);
+        assert_eq!(mesh.num_faces(), 0);
+        assert_eq!(*mesh.vertex(v2).payload(), vp2);
+        assert_eq!(mesh.vertex(v2).edge_id(), usize::MAX);
+        assert_eq!(mesh.vertex(v2).neighbors().count(), 0);
+        assert_eq!(mesh.is_connected(), false);
+
+        let e12 = mesh.insert_edge_vv(v1, v2, Default::default()).unwrap();
+        assert_eq!(sorted([e12, mesh.edge(e12).twin_id()]), vec![0, 1]);
+        assert_eq!(mesh.check(), Ok(()));
         assert_eq!(mesh.num_vertices(), 2);
         assert_eq!(mesh.num_halfedges(), 2);
+        assert_eq!(mesh.num_faces(), 0);
+        assert_eq!(mesh.is_connected(), true);
+        assert_eq!(mesh.vertex(v2).neighbor_ids().collect_vec(), vec![v1]);
+        assert_eq!(mesh.vertex(v1).neighbor_ids().collect_vec(), vec![v2]);
+        assert_eq!(mesh.edge(e12).origin_id(), v1);
+        assert_eq!(mesh.edge(e12).target_id(), v2);
+
+        let vp3 = vp(1.0, 0.0, 0.0);
+        let (e23, v3) = mesh.insert_vertex_v(v2, vp3, Default::default()).unwrap();
+        assert_eq!(sorted([e23, mesh.edge(e23).twin_id()]), vec![2, 3]);
+        assert_eq!(v3, 2);
+        assert_eq!(mesh.check(), Ok(()));
+        assert_eq!(mesh.num_vertices(), 3);
+        assert_eq!(mesh.num_halfedges(), 4);
+        assert_eq!(mesh.num_faces(), 0);
+        assert_eq!(mesh.is_connected(), true);
+        assert_eq!(mesh.vertex(v3).neighbor_ids().collect_vec(), vec![v2]);
+        assert_eq!(sorted(mesh.vertex(v2).neighbor_ids()), sorted([v1, v3]));
+        assert_eq!(mesh.vertex(v1).neighbor_ids().collect_vec(), vec![v2]);
+        assert_eq!(mesh.edge(e23).origin_id(), v2);
+        assert_eq!(mesh.edge(e23).target_id(), v3);
+
+        let e31 = mesh.insert_edge_vv(v3, v1, Default::default()).unwrap();
+        assert_eq!(sorted([e31, mesh.edge(e31).twin_id()]), vec![4, 5]);
+        assert_eq!(mesh.check(), Ok(()));
+        assert_eq!(mesh.num_vertices(), 3);
+        assert_eq!(mesh.num_halfedges(), 6);
+        assert_eq!(mesh.num_faces(), 0);
+        assert_eq!(mesh.is_connected(), true);
+        assert_eq!(sorted(mesh.vertex(v3).neighbor_ids()), sorted([v2, v1]));
+        assert_eq!(sorted(mesh.vertex(v2).neighbor_ids()), sorted([v1, v3]));
+        assert_eq!(sorted(mesh.vertex(v1).neighbor_ids()), sorted([v2, v3]));
+        assert_eq!(mesh.edge(e31).origin_id(), v3);
+        assert_eq!(mesh.edge(e31).target_id(), v1);
+
+        let es = [e12, e23, e31];
+        for e in es.iter() {
+            // No matter which edge we use to insert the face, the result should be the same
+            let mut mesh = mesh.clone();
+            let f = mesh.insert_face(*e, Default::default()).unwrap();
+            assert_eq!(f, 0);
+            assert_eq!(mesh.check(), Ok(()));
+            assert_eq!(mesh.num_vertices(), 3);
+            assert_eq!(mesh.num_halfedges(), 6);
+            assert_eq!(mesh.num_faces(), 1);
+            assert_eq!(sorted(mesh.face(f).edge_ids()), sorted([e12, e23, e31]));
+            assert_eq!(sorted(mesh.face(f).vertex_ids()), sorted([v1, v2, v3]));
+            assert_eq!(mesh.face(f).edge_id(), *e);
+            assert_eq!(mesh.is_connected(), true);
+            assert_eq!(mesh.face(f).edge_id(), *e);
+            for e in es.iter() {
+                assert_eq!(mesh.edge(*e).face_id(), f);
+                assert_eq!(mesh.edge(*e).twin().has_face(), false);
+            }
+
+            // the edges should be in the correct order
+            let es = mesh.face(f).edge_ids().collect_vec();
+            for i in 0..es.len() {
+                assert_eq!(
+                    mesh.edge(es[i]).target_id(),
+                    mesh.edge(es[(i + 1) % es.len()]).origin_id()
+                );
+                assert_eq!(mesh.edge(es[i]).next_id(), es[(i + 1) % es.len()]);
+            }
+        }
+    }
+
+    #[test]
+    fn test_insert_edge() {
+        let mut mesh = Mesh3d64::default();
+        let e12 =
+            mesh.insert_isolated_edge(vp(0.0, 0.0, 0.0), vp(1.0, 0.0, 0.0), Default::default());
+        let v1 = mesh.vertex(mesh.edge(e12).origin_id()).id();
+        let v2 = mesh.vertex(mesh.edge(e12).target_id()).id();
+        assert_eq!(sorted([e12, mesh.edge(e12).twin_id()]), vec![0, 1]);
+        assert_eq!(mesh.check(), Ok(()));
+        assert_eq!(mesh.num_vertices(), 2);
+        assert_eq!(mesh.num_edges(), 1);
+        assert_eq!(mesh.num_faces(), 0);
+        assert_eq!(mesh.is_connected(), true);
+        assert_eq!(mesh.vertex(v1).neighbor_ids().collect_vec(), vec![v2]);
+        assert_eq!(mesh.vertex(v2).neighbor_ids().collect_vec(), vec![v1]);
+
+        let v3 = mesh.insert_vertex(vp(1.0, 1.0, 0.0));
+        assert_eq!(v3, 2);
+        assert_eq!(mesh.check(), Ok(()));
+        assert_eq!(mesh.num_vertices(), 3);
+        assert_eq!(mesh.num_edges(), 1);
+        assert_eq!(mesh.num_faces(), 0);
+        assert_eq!(mesh.is_connected(), false);
+        assert_eq!(mesh.vertex(v3).neighbors().count(), 0);
+
+        let e23 = mesh.insert_edge_ev(e12, v3, Default::default()).unwrap();
+        assert_eq!(sorted([e23, mesh.edge(e23).twin_id()]), vec![2, 3]);
+        assert_eq!(mesh.check(), Ok(()));
+        assert_eq!(mesh.num_vertices(), 3);
+        assert_eq!(mesh.num_edges(), 2);
+        assert_eq!(mesh.num_faces(), 0);
+        assert_eq!(mesh.is_connected(), true);
+        assert_eq!(mesh.vertex(v3).neighbor_ids().collect_vec(), vec![v2]);
+        assert_eq!(sorted(mesh.vertex(v2).neighbor_ids()), sorted([v1, v3]));
+        assert_eq!(mesh.vertex(v1).neighbor_ids().collect_vec(), vec![v2]);
+        assert_eq!(mesh.edge(e23).origin_id(), v2);
+        assert_eq!(mesh.edge(e23).target_id(), v3);
+
+        let (e34, v4) = mesh
+            .insert_vertex_e(e23, vp(1.0, 1.0, 1.0), Default::default())
+            .unwrap();
+        assert_eq!(sorted([e34, mesh.edge(e34).twin_id()]), vec![4, 5]);
+        assert_eq!(v4, 3);
+        assert_eq!(mesh.check(), Ok(()));
+        assert_eq!(mesh.num_vertices(), 4);
+        assert_eq!(mesh.num_edges(), 3);
+        assert_eq!(mesh.num_faces(), 0);
+        assert_eq!(mesh.is_connected(), true);
+        assert_eq!(mesh.vertex(v4).neighbor_ids().collect_vec(), vec![v3]);
+        assert_eq!(sorted(mesh.vertex(v3).neighbor_ids()), sorted([v2, v4]));
+        assert_eq!(sorted(mesh.vertex(v2).neighbor_ids()), sorted([v1, v3]));
+        assert_eq!(mesh.edge(e34).origin_id(), v3);
+        assert_eq!(mesh.edge(e34).target_id(), v4);
+
+        let (e25, v5) = mesh
+            .insert_vertex_e(e12, vp(0.0, 1.0, 0.0), Default::default())
+            .unwrap();
+        let e52 = mesh.edge(e25).twin_id();
+        assert_eq!(sorted([e25, e52]), vec![6, 7]);
+        assert_eq!(v5, 4);
+        assert_eq!(mesh.check(), Ok(()));
+        assert_eq!(mesh.num_vertices(), 5);
+        assert_eq!(mesh.num_edges(), 4);
+        assert_eq!(mesh.num_faces(), 0);
+        assert_eq!(mesh.is_connected(), true);
+        assert_eq!(mesh.vertex(v5).neighbor_ids().collect_vec(), vec![v2]);
+        assert_eq!(sorted(mesh.vertex(v1).neighbor_ids()), sorted([v2]));
+        assert_eq!(sorted(mesh.vertex(v2).neighbor_ids()), sorted([v1, v3, v5]));
+        assert_eq!(mesh.edge(e25).origin_id(), v2);
+        assert_eq!(mesh.edge(e25).target_id(), v5);
+
+        // connect based on vertices
+        {
+            let mut mesh = mesh.clone();
+            let (e45, f) = mesh
+                .close_face_vvv(v3, v4, v5, Default::default(), Default::default())
+                .unwrap();
+            assert_eq!(f, 0);
+            assert_eq!(mesh.check(), Ok(()));
+            assert_eq!(mesh.num_vertices(), 5);
+            assert_eq!(mesh.num_edges(), 5);
+            assert_eq!(mesh.num_faces(), 1);
+            assert_eq!(mesh.is_connected(), true);
+            assert_eq!(mesh.face(f).edge_id(), e45);
+            let es = vec![e45, e52, e23, e34];
+            assert_eq!(mesh.face(f).edge_ids().collect_vec(), es);
+            for e in es.iter() {
+                assert_eq!(mesh.edge(*e).face_id(), f);
+                assert_eq!(mesh.edge(*e).twin().has_face(), false);
+            }
+        }
+
+        // connect based on edges
+        {
+            let mut mesh = mesh.clone();
+            let (e45, f) = mesh
+                .close_face_ee(e34, e52, Default::default(), Default::default())
+                .unwrap();
+            assert_eq!(f, 0);
+            assert_eq!(mesh.check(), Ok(()));
+            assert_eq!(mesh.num_vertices(), 5);
+            assert_eq!(mesh.num_edges(), 5);
+            assert_eq!(mesh.num_faces(), 1);
+            assert_eq!(mesh.is_connected(), true);
+            assert_eq!(mesh.face(f).edge_id(), e45);
+            let es = vec![e45, e52, e23, e34];
+            assert_eq!(mesh.face(f).edge_ids().collect_vec(), es);
+            for e in es.iter() {
+                assert_eq!(mesh.edge(*e).face_id(), f);
+                assert_eq!(mesh.edge(*e).twin().has_face(), false);
+            }
+        }
+
+        // insert some non-manifold edges to make things complicated
+        {
+            let mut mesh = mesh.clone();
+            let v6 = mesh.insert_vertex(vp(0.0, 1.0, 1.0));
+            assert_eq!(mesh.is_connected(), false);
+            let mesh_copy = mesh.clone();
+            // inserting this based on vertices is ambiguous - it should fail without changing anything
+            assert_eq!(mesh.insert_edge_vv(v2, v6, Default::default()), None);
+            assert!(mesh.is_trivially_isomorphic(&mesh_copy).eq());
+            assert_eq!(mesh.check(), Ok(()));
+
+            // inserting this based on edges is not ambiguous
+            let e26 = mesh.insert_edge_ev(e52, v6, Default::default()).unwrap();
+            assert_eq!(mesh.check(), Ok(()));
+            assert_eq!(mesh.num_vertices(), 6);
+            assert_eq!(mesh.num_edges(), 5);
+            assert_eq!(mesh.num_faces(), 0);
+            assert_eq!(mesh.is_connected(), true);
+            assert_eq!(mesh.vertex(v6).neighbor_ids().collect_vec(), vec![v2]);
+            assert_eq!(
+                sorted(mesh.vertex(v2).neighbor_ids()),
+                sorted([v1, v3, v5, v6])
+            );
+            assert_eq!(mesh.edge(e26).origin_id(), v2);
+            assert_eq!(mesh.edge(e26).target_id(), v6);
+
+            {
+                // we now have a mesh like this:
+                //       v5
+                //        |
+                // v1 -- v2 -- v6
+                //        |
+                //       v3 -- v4
+                // let's make a face v2-v3-v4
+
+                // All the different faces should be able to make this connection
+                let mut m = vec![mesh.clone(), mesh.clone(), mesh.clone(), mesh.clone()];
+
+                let res = vec![
+                    m[0].close_face_vvv(v3, v4, v2, Default::default(), Default::default())
+                        .unwrap(),
+                    m[1].close_face_vv(v4, v2, Default::default(), Default::default())
+                        .unwrap(),
+                    m[2].close_face_ev(e34, v2, Default::default(), Default::default())
+                        .unwrap(),
+                    m[3].close_face_ee(e34, e23, Default::default(), Default::default())
+                        .unwrap(),
+                ];
+
+                for i in 0..4 {
+                    let (e42, f) = res[i];
+                    assert_eq!(f, 0);
+                    assert_eq!(m[i].edge(e42).target_id(), v2);
+                    assert_eq!(m[i].edge(e42).origin_id(), v4);
+                    assert_eq!(m[i].check(), Ok(()));
+                    assert!(m[i].is_trivially_isomorphic(&m[0]).eq());
+                    assert_eq!(m[i].num_vertices(), 6);
+                    assert_eq!(m[i].num_edges(), 6);
+                    assert_eq!(m[i].num_faces(), 1);
+                    assert_eq!(m[i].face(f).edge_id(), e42);
+                    let es = vec![e42, e23, e34];
+                    assert_eq!(m[i].face(f).edge_ids().collect_vec(), es);
+                    for e in es.iter() {
+                        assert_eq!(m[i].edge(*e).face_id(), f);
+                        assert_eq!(m[i].edge(*e).twin().has_face(), false);
+                    }
+
+                    // inserting again should fail (duplicate face)
+                    let cloned = m[i].clone();
+                    assert_eq!(
+                        m[i].close_face_vv(v4, v2, Default::default(), Default::default()),
+                        None
+                    );
+                    assert!(m[i].is_trivially_isomorphic(&cloned).eq());
+                }
+            }
+        }
     }
 }

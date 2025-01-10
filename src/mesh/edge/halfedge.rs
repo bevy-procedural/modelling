@@ -98,7 +98,7 @@ pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
     /// Returns an error message if the edge is invalid.
     ///
     /// Iterates the edge wheels of the origin and target vertices! So this is not O(1).
-    fn validate(&self, mesh: &T::Mesh) -> Result<(), String>;
+    fn check(&self, mesh: &T::Mesh) -> Result<(), String>;
 }
 
 #[cfg(test)]

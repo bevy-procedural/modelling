@@ -1,5 +1,8 @@
 use super::{MeshBasics, MeshType};
-use crate::mesh::{DefaultEdgePayload, EdgeCursorBasics};
+use crate::{
+    math::IndexType,
+    mesh::{DefaultEdgePayload, EdgeCursorBasics},
+};
 
 // TODO: Make sure return values are used for the failable methods!
 
@@ -66,12 +69,15 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Connects the vertices `a` and `b` with an edge and returns the edge id.
     /// This will not close any face! The method will not check whether the vertices
     /// are in different connected components, so, you can generate non-manifold meshes
-    /// using this method.
+    /// using this method. 
+    /// 
+    /// If `a` and `b` are connected by some boundary, it will walk backwards from `b`
+    /// and use the first edge coming from `a` to create the new boundary connectivity.
     ///
     /// Fails if the connectivity is ambiguous, i.e., if `a` and `b` both have edges but
-    /// are connected by more than exactly one boundary, e.g., when they are in different
-    /// connected components such that chirality is ambiguous or when there is more than one
-    /// boundary cycle passing through both vertices.
+    /// are not connected by exactly one boundary of minimal length, e.g., when they 
+    /// are in different connected components such that chirality is ambiguous or when 
+    /// there is more than one boundary cycle of minimal length passing through both vertices.
     ///
     /// Notice that this boundary checks can be costly if you have large faces!
     ///
@@ -98,7 +104,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
 
     /// Inserts an edge from the target of `e` to the vertex `v`.
     ///
-    /// Connectivity at `v` is inferred from the graph. Behaves similar to `insert_edge_vv`.
+    /// Connectivity at `v` is inferred from the graph. Behaves similar to [MeshBuilder::insert_edge_vv].
     #[must_use]
     fn insert_edge_ev(&mut self, e: T::E, v: T::V, ep: T::EP) -> Option<T::E>;
 
@@ -133,20 +139,101 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
 
     /// Close the open boundary with a single face. Doesn't create new edges or vertices.
     /// Fails if there is already a face using the boundary.
+    ///
+    /// The given edge will be the representative edge of the face.
     #[must_use]
     fn insert_face(&mut self, e: T::E, fp: T::FP) -> Option<T::F>;
 
     /// Close the given boundary by inserting an edge from `from.target` to
     /// `to.origin` and insert a face.
     ///
-    /// There must be exactly one boundary path from `from` to `to` without a face.
+    /// There must be exactly one boundary path from `to` to `from` without a face.
     /// This boundary will be used to construct the face.
     ///
     /// Returns the new face and edge id. For half-edge meshes, this should be the half-edge
     /// on the inside of the face, i.e., the half-edge directed from `from.target` to `to.origin`.
     #[must_use]
-    fn close_face_ee(&mut self, from: T::E, to: T::E, ep: T::EP, fp: T::FP)
-        -> Option<(T::E, T::F)>;
+    #[inline]
+    fn close_face_ee(
+        &mut self,
+        from: T::E,
+        to: T::E,
+        ep: T::EP,
+        fp: T::FP,
+    ) -> Option<(T::E, T::F)> {
+        // TODO: should we check that there is a path from `to` to `from`?
+        let e = self.insert_edge_ee(from, to, ep)?;
+        debug_assert_eq!(self.edge(e).target_id(), self.edge(to).origin_id());
+        debug_assert_eq!(self.edge(e).origin_id(), self.edge(from).target_id());
+
+        // `insert_face` fails if there is already a face using the boundary
+        if let Some(f) = self.insert_face(e, fp) {
+            Some((e, f))
+        } else {
+            self.remove_edge(e);
+            None
+        }
+    }
+
+    /// Close the given boundary by inserting an edge from `from.target` to
+    /// `to` and insert a face.
+    ///
+    /// There must be exactly one boundary path from `to` to `from` without a face.
+    /// This boundary will be used to construct the face.
+    ///
+    /// Returns the new face and edge id. For half-edge meshes, this should be the half-edge
+    /// on the inside of the face, i.e., the half-edge directed from `from.target` to `to.origin`.
+    #[must_use]
+    #[inline]
+    fn close_face_ev(
+        &mut self,
+        from: T::E,
+        to: T::V,
+        ep: T::EP,
+        fp: T::FP,
+    ) -> Option<(T::E, T::F)> {
+        // TODO: debug_assert!(self.edge(from).same_boundary_back(to));
+        let e = self.insert_edge_ev(from, to, ep)?;
+        debug_assert_eq!(self.edge(e).target_id(), to);
+        debug_assert_eq!(self.edge(e).origin_id(), self.edge(from).target_id());
+
+        // `insert_face` fails if there is already a face using the boundary
+        if let Some(f) = self.insert_face(e, fp) {
+            Some((e, f))
+        } else {
+            self.remove_edge(e);
+            None
+        }
+    }
+
+    /// Close the given boundary by inserting an edge from `from` to `to` and insert a face.
+    /// The face will be inserted such that the edge from `from` to `to` appears ccw in the face.
+    ///
+    /// The connection must be unambiguous in the same sense as required by [MeshBuilder::insert_edge_vv].
+    ///
+    /// Returns the new face and edge id. For half-edge meshes, this should be the half-edge
+    /// on the inside of the face, i.e., the half-edge directed from `from` to `to`.
+    #[must_use]
+    #[inline]
+    fn close_face_vv(
+        &mut self,
+        from: T::V,
+        to: T::V,
+        ep: T::EP,
+        fp: T::FP,
+    ) -> Option<(T::E, T::F)> {
+        let e = self.insert_edge_vv(from, to, ep)?;
+        debug_assert_eq!(self.edge(e).target_id(), to);
+        debug_assert_eq!(self.edge(e).origin_id(), from);
+
+        // `insert_face` fails if there is already a face using the boundary
+        if let Some(f) = self.insert_face(e, fp) {
+            Some((e, f))
+        } else {
+            self.remove_edge(e);
+            None
+        }
+    }
 
     /// Close the given boundary by inserting an edge from `from` to `to` and insert a face.
     /// The vertex `prev` must also lie on the face with an edge from `prev` to `from`. That way
@@ -158,14 +245,17 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Returns the new face and edge id. For half-edge meshes, this should be the half-edge
     /// on the inside of the face, i.e., the half-edge directed from `from` to `to`.
     #[must_use]
-    fn close_face_vv(
+    #[inline]
+    fn close_face_vvv(
         &mut self,
         prev: T::V,
         from: T::V,
         to: T::V,
         ep: T::EP,
         fp: T::FP,
-    ) -> Option<(T::E, T::F)>;
+    ) -> Option<(T::E, T::F)> {
+        self.close_face_ev(self.shared_edge_id(prev, from)?, to, ep, fp)
+    }
 
     ////////////////////////////////////////////////////////////////////////////////////
     //************************ More complex operations *******************************//

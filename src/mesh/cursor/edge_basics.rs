@@ -24,26 +24,20 @@ pub trait EdgeCursorData<'a, T: MeshType + 'a>: CursorData<T = T, I = T::E, S = 
 /// This trait implements some basic functionality for edge cursors that works with any type of mesh and both mutable and immutable cursors.
 pub trait EdgeCursorBasics<'a, T: MeshType + 'a>: EdgeCursorData<'a, T> {
     /// Moves the cursor to the origin vertex of the edge.
+    /// Won't move if the edge is void.
     #[inline]
     #[must_use]
     fn origin(self) -> Self::VC {
-        let id = if let Some(e) = self.get() {
-            e.origin_id(self.mesh())
-        } else {
-            IndexType::max()
-        };
+        let id = self.map_or(IndexType::max(), |e| e.origin_id(self.mesh()));
         self.move_to_vertex(id)
     }
 
     /// Moves the cursor to the target vertex of the edge.
+    /// Won't move if the edge is void.
     #[inline]
     #[must_use]
     fn target(self) -> Self::VC {
-        let id = if let Some(e) = self.get() {
-            e.target_id(self.mesh())
-        } else {
-            IndexType::max()
-        };
+        let id = self.map_or(IndexType::max(), |e| e.target_id(self.mesh()));
         self.move_to_vertex(id)
     }
 
@@ -83,6 +77,7 @@ where
     T::Edge: HalfEdge<T>,
 {
     /// Moves the cursor to the next halfedge of the edge.
+    /// Won't move if the edge is void.
     #[inline]
     #[must_use]
     fn next(self) -> Self {
@@ -90,6 +85,7 @@ where
     }
 
     /// Moves the cursor to the previous halfedge of the edge.
+    /// Won't move if the edge is void.
     #[inline]
     #[must_use]
     fn prev(self) -> Self {
@@ -97,27 +93,31 @@ where
     }
 
     /// Moves the cursor to the twin halfedge of the edge.
+    /// Won't move if the edge is void.
     #[inline]
     #[must_use]
     fn twin(self) -> Self {
         self.try_move(|e| e.twin_id())
     }
 
-    /// Returns the id of the next halfedge of the edge. Panics if the edge is void.
+    /// Returns the id of the next halfedge of the edge.
+    /// Panics if the edge is void.
     #[inline]
     #[must_use]
     fn next_id(&self) -> T::E {
         self.unwrap().next_id()
     }
 
-    /// Returns the id of the previous halfedge of the edge. Panics if the edge is void.
+    /// Returns the id of the previous halfedge of the edge.
+    /// Panics if the edge is void.
     #[inline]
     #[must_use]
     fn prev_id(&self) -> T::E {
         self.unwrap().prev_id()
     }
 
-    /// Returns the id of the twin halfedge of the edge. Panics if the edge is void.
+    /// Returns the id of the twin halfedge of the edge.
+    /// Panics if the edge is void.
     #[inline]
     #[must_use]
     fn twin_id(&self) -> T::E {
@@ -128,6 +128,8 @@ where
     /// Calling this repeatedly will return all outgoing halfedges with the same origin.
     /// If the origin is non-manifold, this might not reach all outgoing halfedges but only those in the same wheel.
     /// If you need all wheels, go to the target first. // TODO: Reference
+    ///
+    /// Won't move if the edge is void.
     #[inline]
     #[must_use]
     fn next_sibling(self) -> Self {
@@ -135,6 +137,8 @@ where
     }
 
     /// Moves the cursor to the previous sibling of the edge, i.e., the previous edge's twin.
+    ///
+    /// Won't move if the edge is void.
     #[inline]
     #[must_use]
     fn prev_sibling(self) -> Self {
@@ -142,19 +146,28 @@ where
     }
 
     /// Moves the cursor to the face of the edge.
-    /// Panics if the edge is void.
+    /// Won't move if the edge is void.
     #[inline]
     #[must_use]
     fn face(self) -> Self::FC {
-        let id = self.face_id();
+        let id = self.map_or(IndexType::max(), |e| e.face_id());
         self.move_to_face(id)
     }
 
-    /// Moves the cursor to the face of the edge. Panics if the edge is void.
+    /// Returns the id of the face of the edge.
+    /// Panics if the edge is void.
     #[inline]
     #[must_use]
     fn face_id(&self) -> T::F {
         self.unwrap().face_id()
+    }
+
+    /// Returns whether the edge has a face.
+    /// Panics if the edge is void.
+    #[inline]
+    #[must_use]
+    fn has_face(&self) -> bool {
+        self.face_id() != IndexType::max()
     }
 
     /// Runs some sanity checks on the edge, i.e., whether the origin and target vertices exist.
@@ -162,9 +175,9 @@ where
     /// See [Mesh::validate_edge] for more information.
     #[inline]
     #[must_use]
-    fn validate(&self) -> Result<(), String> {
+    fn check(&self) -> Result<(), String> {
         self.map_or(Err(format!("Edge {} is invalid", self.try_id())), |e| {
-            HalfEdge::validate(e, self.mesh())
+            HalfEdge::check(e, self.mesh())
         })
     }
 

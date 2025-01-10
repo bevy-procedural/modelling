@@ -73,7 +73,7 @@ where
 
     /// Iterates all vertices adjacent to the vertex in the same manifold edge wheel (clockwise)
     #[inline]
-    fn vertices<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Vertex>
+    fn neighbors<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Vertex>
     where
         T: 'a,
     {

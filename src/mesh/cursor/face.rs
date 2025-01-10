@@ -31,24 +31,41 @@ impl<'a, T: MeshType> FaceCursor<'a, T> {
         self.unwrap().payload()
     }
 
-    /// Returns an iterator of vertex cursors of the face.
+    /// Returns an iterator of the face's vertices' ids.
     /// Panics if the face is void.
+    /// See [FaceBasics::vertex_ids] for more information.
     #[inline]
     #[must_use]
-    fn vertices(&'a self) -> impl Iterator<Item = VertexCursor<'a, T>> {
-        self.unwrap()
-            .vertex_ids(self.mesh)
+    pub fn vertex_ids(&'a self) -> impl Iterator<Item = T::V> + 'a {
+        self.unwrap().vertex_ids(self.mesh)
+    }
+
+    /// Returns an iterator of the face's vertices.
+    /// Panics if the face is void.
+    /// See [FaceBasics::vertex_ids] for more information.
+    #[inline]
+    #[must_use]
+    pub fn vertices(&'a self) -> impl Iterator<Item = VertexCursor<'a, T>> {
+        self.vertex_ids()
             .map(move |v| VertexCursor::new(self.mesh, v))
     }
 
-    /// Returns an iterator of edge cursors of the face.
+    /// Returns an iterator of the face's edges' ids.
     /// Panics if the face is void.
+    /// See [FaceBasics::edge_ids] for more information.
     #[inline]
     #[must_use]
-    fn edges(&'a self) -> impl Iterator<Item = EdgeCursor<'a, T>> {
-        self.unwrap()
-            .edge_ids(self.mesh)
-            .map(move |e| EdgeCursor::new(self.mesh, e))
+    pub fn edge_ids(&'a self) -> impl Iterator<Item = T::E> + 'a {
+        self.unwrap().edge_ids(self.mesh)
+    }
+
+    /// Returns an iterator of the face's edges.
+    /// Panics if the face is void.
+    /// See [FaceBasics::edge_ids] for more information.
+    #[inline]
+    #[must_use]
+    pub fn edges(&'a self) -> impl Iterator<Item = EdgeCursor<'a, T>> {
+        self.edge_ids().map(move |e| EdgeCursor::new(self.mesh, e))
     }
 }
 

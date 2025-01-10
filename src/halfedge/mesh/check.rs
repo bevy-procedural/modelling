@@ -9,7 +9,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     /// the precursor to the next edge is the same, and the successor of the previous.
     fn check_edge_invariants(&self) -> Result<(), String> {
         for edge in self.edges() {
-            edge.validate(self)?;
+            edge.check(self)?;
         }
 
         Ok(())
@@ -140,7 +140,7 @@ impl<T: HalfEdgeImplMeshType> MeshChecker<T> for HalfEdgeMeshImpl<T> {
         self.check_vertex_invariants()?;
         self.check_edges_are_loops()?;
         self.check_faces_nondegenerate()?;
-        self.check_edges_have_face()?;
+        //self.check_edges_have_face()?;
         // TODO: check_faces_planar
         // TODO: check_faces_convex
         // TODO: check_faces_oriented

@@ -497,15 +497,15 @@ mod tests {
         mesh.insert_edge_vv(v0, v1, Default::default())?;
         let (_, v2) = mesh.insert_vertex_v(v1, vp(-x, -y, z), Default::default())?;
         let (_, v3) = mesh.insert_vertex_v(v2, vp(x, -y, z), Default::default())?;
-        mesh.close_face_vv(v2, v3, v0, Default::default(), Default::default())?;
+        mesh.close_face_vvv(v2, v3, v0, Default::default(), Default::default())?;
         let (_, v4) = mesh.insert_vertex_v(v1, vp(-x, y, -z), Default::default())?;
         let (_, v5) = mesh.insert_vertex_v(v4, vp(-x, -y, -z), Default::default())?;
-        mesh.close_face_vv(v4, v5, v2, Default::default(), Default::default())?;
+        mesh.close_face_vvv(v4, v5, v2, Default::default(), Default::default())?;
         let (_, v6) = mesh.insert_vertex_v(v0, vp(x, y, -z), Default::default())?;
         let (_, v7) = mesh.insert_vertex_v(v3, vp(x, -y, -z), Default::default())?;
-        mesh.close_face_vv(v3, v7, v6, Default::default(), Default::default())?;
-        mesh.close_face_vv(v2, v5, v7, Default::default(), Default::default())?;
-        mesh.close_face_vv(v0, v6, v4, Default::default(), Default::default())?;
+        mesh.close_face_vvv(v3, v7, v6, Default::default(), Default::default())?;
+        mesh.close_face_vvv(v2, v5, v7, Default::default(), Default::default())?;
+        mesh.close_face_vvv(v0, v6, v4, Default::default(), Default::default())?;
         mesh.insert_face(mesh.shared_edge(v6, v7)?.id(), Default::default())?;
         Some(mesh)
     }

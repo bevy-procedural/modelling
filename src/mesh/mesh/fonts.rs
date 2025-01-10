@@ -139,7 +139,7 @@ impl<'a> Font<'a> {
                 // TODO: don't use eq but similarity
                 if first.unwrap() == p1 {
                     let (e, _) = mesh
-                        .close_face_vv(
+                        .close_face_vvv(
                             prev_v,
                             cur_v,
                             start_v,

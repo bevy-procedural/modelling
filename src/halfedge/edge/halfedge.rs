@@ -154,7 +154,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
         }
     }
 
-    fn validate(&self, mesh: &T::Mesh) -> Result<(), String> {
+    fn check(&self, mesh: &T::Mesh) -> Result<(), String> {
         let oi = self.origin_id(mesh);
         let ti = self.target_id(mesh);
         let prev = self.prev(mesh);
