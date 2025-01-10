@@ -31,6 +31,13 @@ impl<'a, T: MeshType> VertexCursor<'a, T> {
             .map(move |e| EdgeCursor::new(self.mesh, e.id()))
     }
 
+    /// Returns an iterator of edge ids pointing to the outgoing halfedges of the vertex.
+    /// Panics if the vertex is void.
+    /// See [VertexBasics::edges_out_ids] for more information.
+    pub fn edges_out_ids(&'a self) -> impl Iterator<Item = T::E> + 'a {
+        self.unwrap().edges_out_ids(self.mesh)
+    }
+
     /// Returns an iterator of edge cursors pointing to the incoming halfedges of the vertex.
     /// Panics if the vertex is void.
     /// TODO: would be nice to return an empty iterator if the vertex is void instead?
@@ -39,6 +46,13 @@ impl<'a, T: MeshType> VertexCursor<'a, T> {
         self.unwrap()
             .edges_in(self.mesh)
             .map(move |e| EdgeCursor::new(self.mesh, e.id()))
+    }
+
+    /// Returns an iterator of edge ids pointing to the incoming halfedges of the vertex.
+    /// Panics if the vertex is void.
+    /// See [VertexBasics::edges_in_ids] for more information.
+    pub fn edges_in_ids(&'a self) -> impl Iterator<Item = T::E> + 'a {
+        self.unwrap().edges_in_ids(self.mesh)
     }
 
     /// Iterates over the neighbors of the vertex.

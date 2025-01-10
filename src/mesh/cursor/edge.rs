@@ -56,7 +56,7 @@ impl<'a, T: MeshType> EdgeCursor<'a, T> {
     /// Panics if the edge is void.
     #[inline]
     #[must_use]
-    fn faces<'b>(&'b self) -> impl Iterator<Item = FaceCursor<'b, T>> + 'b
+    pub fn faces<'b>(&'b self) -> impl Iterator<Item = FaceCursor<'b, T>> + 'b
     where
         T::Edge: 'b,
         'a: 'b,

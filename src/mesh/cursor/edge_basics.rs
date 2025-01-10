@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 use super::{CursorData, FaceCursorData, VertexCursorData};
 use crate::{
     math::IndexType,

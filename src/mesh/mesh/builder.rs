@@ -1,5 +1,5 @@
-use super::{MeshBasics, MeshType};
-use crate::mesh::{DefaultEdgePayload, EdgeCursorBasics};
+use crate::mesh::{DefaultEdgePayload, EdgeCursorBasics, MeshBasics, MeshType};
+use itertools::Itertools;
 
 // TODO: Make sure return values are used for the failable methods!
 
@@ -13,6 +13,18 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     #[inline]
     fn remove_vertex(&mut self, v: T::V) {
         assert!(self.try_remove_vertex(v), "Could not remove vertex {}", v);
+    }
+
+    /// Removes the vertex `v` "recursively", i.e., also removes all edges and faces connected to it.
+    /// Panics if the vertex doesn't exist.
+    #[inline]
+    fn remove_vertex_r(&mut self, v: T::V) {
+        // PERF: avoid allocation
+        let es = self.vertex(v).edges_out_ids().collect_vec();
+        for e in es {
+            self.remove_edge_r(e);
+        }
+        self.remove_vertex(v);
     }
 
     /// Tries to remove the vertex `v` and returns whether it was successful.
@@ -112,6 +124,18 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     #[inline]
     fn remove_edge(&mut self, e: T::E) {
         assert!(self.try_remove_edge(e), "Could not remove edge {}", e);
+    }
+
+    /// Removes the edge `e` "recursively", i.e., also removes all faces connected to it.
+    /// Panics if the edge doesn't exist.
+    #[inline]
+    fn remove_edge_r(&mut self, e: T::E) {
+        // PERF: avoid allocation
+        let fs = self.edge(e).face_ids().collect_vec();
+        for f in fs {
+            self.remove_face(f);
+        }
+        self.remove_edge(e);
     }
 
     /// Tries to remove the edge `e` and returns whether it was successful.
