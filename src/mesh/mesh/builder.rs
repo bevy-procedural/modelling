@@ -1,8 +1,5 @@
 use super::{MeshBasics, MeshType};
-use crate::{
-    math::IndexType,
-    mesh::{DefaultEdgePayload, EdgeCursorBasics},
-};
+use crate::mesh::{DefaultEdgePayload, EdgeCursorBasics};
 
 // TODO: Make sure return values are used for the failable methods!
 
@@ -69,14 +66,14 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Connects the vertices `a` and `b` with an edge and returns the edge id.
     /// This will not close any face! The method will not check whether the vertices
     /// are in different connected components, so, you can generate non-manifold meshes
-    /// using this method. 
-    /// 
+    /// using this method.
+    ///
     /// If `a` and `b` are connected by some boundary, it will walk backwards from `b`
     /// and use the first edge coming from `a` to create the new boundary connectivity.
     ///
     /// Fails if the connectivity is ambiguous, i.e., if `a` and `b` both have edges but
-    /// are not connected by exactly one boundary of minimal length, e.g., when they 
-    /// are in different connected components such that chirality is ambiguous or when 
+    /// are not connected by exactly one boundary of minimal length, e.g., when they
+    /// are in different connected components such that chirality is ambiguous or when
     /// there is more than one boundary cycle of minimal length passing through both vertices.
     ///
     /// Notice that this boundary checks can be costly if you have large faces!

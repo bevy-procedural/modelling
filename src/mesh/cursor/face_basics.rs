@@ -67,13 +67,7 @@ pub trait FaceCursorBasics<'a, T: MeshType + 'a>: FaceCursorData<'a, T> {
     {
         self.unwrap().as_polygon(self.mesh())
     }
-}
-
-/// This trait implements some basic functionality for face cursors that works with halfedge meshes and both mutable and immutable cursors.
-pub trait FaceCursorHalfedgeBasics<'a, T: MeshType + 'a>: FaceCursorData<'a, T>
-where
-    T::Edge: HalfEdge<T>,
-{
+    
     /// Moves the cursor to the representative halfedge of the face.
     #[inline]
     #[must_use]
@@ -89,4 +83,11 @@ where
     fn edge_id(&self) -> T::E {
         self.unwrap().edge_id()
     }
+}
+
+/// This trait implements some basic functionality for face cursors that works with halfedge meshes and both mutable and immutable cursors.
+pub trait FaceCursorHalfedgeBasics<'a, T: MeshType + 'a>: FaceCursorData<'a, T>
+where
+    T::Edge: HalfEdge<T>,
+{
 }

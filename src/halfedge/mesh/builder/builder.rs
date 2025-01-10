@@ -2,9 +2,9 @@ use crate::{
     halfedge::{HalfEdgeImplMeshTypePlus, HalfEdgeMeshImpl},
     math::IndexType,
     mesh::{
-        CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, EdgePayload, HalfEdge,
-        HalfEdgeVertex, MeshBasics, MeshBuilder, MeshHalfEdgeBuilder, VertexCursorBasics,
-        VertexCursorHalfedgeBasics,
+        CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, EdgePayload,
+        FaceCursorBasics, HalfEdge, HalfEdgeVertex, MeshBasics, MeshBuilder, MeshHalfEdgeBuilder,
+        VertexCursorBasics, VertexCursorHalfedgeBasics,
     },
     prelude::HalfEdgeFaceImpl,
 };
@@ -272,7 +272,14 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     }
 
     fn try_remove_face(&mut self, f: T::F) -> bool {
-        todo!("{}{:?}", f, self.face(f))
+        let face = self.face(f);
+        if face.is_void() {
+            return false;
+        }
+        let e = self.edge_ref(face.edge_id()).clone();
+        self.faces.delete(f);
+        e.edges_face_mut(self).for_each(|e| e.remove_face());
+        true
     }
 
     fn insert_face(&mut self, e: T::E, fp: T::FP) -> Option<T::F> {
