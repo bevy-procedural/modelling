@@ -6,7 +6,7 @@ mod text3d;
 use super::BevyMesh3d;
 use crate::{
     math::IndexType,
-    mesh::{EdgeBasics, Face, FaceBasics, HalfEdge, MeshBasics, VertexBasics},
+    mesh::{EdgeBasics, Face, FaceBasics, HalfEdge, HalfEdgeMesh, MeshBasics, VertexBasics},
     tesselate::TesselationMeta,
 };
 use bevy::prelude::*;

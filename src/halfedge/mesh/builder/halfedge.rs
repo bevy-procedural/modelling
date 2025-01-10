@@ -2,8 +2,8 @@ use crate::{
     halfedge::{HalfEdgeImpl, HalfEdgeImplMeshTypePlus, HalfEdgeMeshImpl, HalfEdgeVertexImpl},
     math::IndexType,
     mesh::{
-        CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, HalfEdge, MeshBasics,
-        MeshHalfEdgeBuilder, VertexCursorBasics,
+        EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, HalfEdge, MeshBasics,
+        MeshHalfEdgeBuilder,
     },
 };
 
@@ -65,7 +65,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T>
         if edge.face_id() != IndexType::max() {
             return false;
         }
-        
+
         self.halfedges.delete(e);
         true
     }
