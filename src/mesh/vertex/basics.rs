@@ -103,4 +103,9 @@ pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone {
     ) -> impl Iterator<Item = Vertex<E, V, VP>> + 'a {
         NonmanifoldVertexIterator::new(self.clone(), mesh)
     }*/
+
+    /// Determines whether the vertex is manifold, i.e., there is exactly
+    /// one (half)disk of faces incident to the vertex.
+    /// Isolated vertices are not considered manifold.
+    fn is_manifold(&self, mesh: &T::Mesh) -> bool;
 }

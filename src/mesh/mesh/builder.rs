@@ -108,7 +108,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Removes the edge `e`.
     /// Panics if the edge doesn't exist or there are adjacent faces.
     ///
-    /// On half-edge meshes, this will also remove the twin edge.
+    /// On half-edge meshes, this will also remove the twin edge and update the neighbors' connectivity.
     #[inline]
     fn remove_edge(&mut self, e: T::E) {
         assert!(self.try_remove_edge(e), "Could not remove edge {}", e);
@@ -117,7 +117,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Tries to remove the edge `e` and returns whether it was successful.
     /// Fails if there are adjacent faces.
     ///
-    /// On half-edge meshes, this will also remove the twin edge.
+    /// On half-edge meshes, this will also remove the twin edge and update the neighbors' connectivity.
     fn try_remove_edge(&mut self, e: T::E) -> bool;
 
     ////////////////////////////////////////////////////////////////////////////////////

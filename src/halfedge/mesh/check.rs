@@ -1,14 +1,14 @@
 use super::HalfEdgeMeshImpl;
 use crate::{
     halfedge::HalfEdgeImplMeshType,
-    mesh::{EdgeBasics, FaceBasics, HalfEdge, MeshBasics, MeshChecker, VertexBasics},
+    mesh::{EdgeBasics, FaceBasics, HalfEdge, HalfEdgeMesh, MeshBasics, MeshChecker, VertexBasics},
 };
 
 impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     /// Checks whether the twin of the twin is always the edge itself,
     /// the precursor to the next edge is the same, and the successor of the previous.
     fn check_edge_invariants(&self) -> Result<(), String> {
-        for edge in self.edges() {
+        for edge in self.halfedges() {
             edge.check(self)?;
         }
 
@@ -35,7 +35,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     }
 
     fn check_edges_are_loops(&self) -> Result<(), String> {
-        if let Some(bad_edge) = self.edges().find(|e| {
+        if let Some(bad_edge) = self.halfedges().find(|e| {
             e.next(self)
                 .same_boundary(self, e.origin_id(self))
                 .is_none()
@@ -47,7 +47,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
             ));
         }
 
-        if let Some(bad_edge) = self.edges().find(|e| {
+        if let Some(bad_edge) = self.halfedges().find(|e| {
             e.prev(self)
                 .same_boundary_back(self, e.target_id(self))
                 .is_none()
@@ -78,7 +78,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     /// This is somewhat optional; the algorithms shouldn't break when using this, but there isn't really a reason for it existing in a wellformed mesh
     fn check_edges_have_face(&self) -> Result<(), String> {
         if let Some(bad_edge) = self
-            .edges()
+            .halfedges()
             .find(|e| e.is_boundary_self() && e.twin(self).is_boundary_self())
         {
             return Err(format!("HalfEdge {} has no face!", bad_edge.id()));

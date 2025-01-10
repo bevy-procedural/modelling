@@ -17,6 +17,7 @@ pub trait MeshHalfEdgeBuilder<T: MeshTypeHalfEdge<Mesh = Self>>: MeshBasics<T> {
 
     /// Tries to remove a half-edge from the mesh.
     /// Returns `true` if the half-edge was removed.
+    /// Won't update the neighbors!
     fn try_remove_halfedge(&mut self, e: T::E) -> bool;
 
     /// Allocates and inserts a pair of half-edges and returns the ids.

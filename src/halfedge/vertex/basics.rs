@@ -1,7 +1,10 @@
 use super::{HalfEdgeImplMeshType, HalfEdgeVertexImpl, IncidentToVertexIterator};
 use crate::{
     math::IndexType,
-    mesh::{EdgeBasics, HalfEdge, MeshBasics, MeshType, VertexBasics},
+    mesh::{
+        CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, HalfEdge, MeshBasics,
+        MeshType, VertexBasics,
+    },
 };
 
 impl<T: MeshType> VertexBasics<T> for HalfEdgeVertexImpl<T>
@@ -112,5 +115,39 @@ where
             IncidentToVertexIterator::<T>::empty(mesh)
         })
         .map(|e| e.twin(mesh))
+    }
+
+    fn is_manifold(&self, mesh: &T::Mesh) -> bool {
+        // TODO: If there is a "non-manifold vertex wheel", i.e., you cannot reach all out_edges by going to the next edge sibling, this fails
+        let e0 = self.edge_id(mesh);
+        if e0 == IndexType::max() {
+            return false;
+        }
+        let mut e = e0;
+        let mut last_state = mesh.edge(e).has_face();
+        let mut state_changes = 0;
+        loop {
+            let edge = mesh.edge(e);
+            debug_assert_eq!(edge.origin_id(), self.id());
+
+            // go to the next sibling sib
+            let sibling = edge.next_sibling();
+            e = sibling.id();
+
+            if sibling.has_face() != last_state {
+                state_changes += 1;
+                last_state = !last_state;
+
+                if state_changes > 2 {
+                    return false;
+                }
+            }
+            
+            if e == e0 {
+                // went a full round
+                debug_assert!(state_changes % 2 == 0);
+                return (state_changes == 0 && last_state) || state_changes == 2;
+            }
+        }
     }
 }

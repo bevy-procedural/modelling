@@ -133,7 +133,7 @@ mod tests {
     #[test]
     fn test_edge_cursor() {
         let mut mesh = Mesh3d64::cube(1.0);
-        let e0 = mesh.edge_ids().next().unwrap();
+        let e0 = mesh.halfedge_ids().next().unwrap();
         let c1: EdgeCursor<'_, MeshType3d64PNU> = mesh.edge(e0).next();
         let c2 = c1.clone().next();
         let c3 = c1.clone().next().prev().next();

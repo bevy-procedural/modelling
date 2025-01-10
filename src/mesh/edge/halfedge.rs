@@ -110,14 +110,14 @@ mod tests {
     #[test]
     fn test_halfedge_triangle() {
         let mut mesh = Mesh3d64::regular_polygon(1.0, 3);
-        for edge in mesh.edges() {
+        for edge in mesh.halfedges() {
             assert!(edge.is_boundary_self() ^ (edge.twin(&mesh).is_boundary_self()));
             if edge.is_boundary_self() {
                 assert!(edge.other_face(&mesh).is_some());
             }
         }
 
-        let e0 = mesh.edges().find(|e| !e.is_boundary_self()).unwrap().id();
+        let e0 = mesh.halfedges().find(|e| !e.is_boundary_self()).unwrap().id();
         let f0 = mesh.edge(e0).face_id();
         mesh.edge_mut(e0).remove_face();
         let edge = mesh.edge(e0);
@@ -138,7 +138,7 @@ mod tests {
     #[test]
     fn test_halfedge_cube() {
         let mesh = Mesh3d64::cube(1.0);
-        for edge in mesh.edges() {
+        for edge in mesh.halfedges() {
             assert!(!edge.is_boundary_self());
             assert!(edge.other_face(&mesh).is_some());
         }

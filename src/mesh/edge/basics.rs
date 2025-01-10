@@ -61,6 +61,26 @@ pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone {
     /// (even for half-edges, this will return both faces if there are two
     /// or more than that if the edge is non-manifold)
     fn face_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::F> + 'a;
+
+    /// Determines whether the edge is manifold, i.e., has one or two incident faces.
+    /// Degenerate edges where the same face is incident twice are not considered manifold.
+    fn is_manifold(&self, mesh: &T::Mesh) -> bool {
+        let mut faces = self.face_ids(mesh);
+        let Some(f1) = faces.next() else {
+            // No faces at all
+            return false;
+        };
+        let Some(f2) = faces.next() else {
+            // Only one face
+            return true;
+        };
+        if faces.next().is_some() {
+            // More than two faces
+            return false;
+        }
+        // Two faces, but not the same face twice
+        return f1 != f2;
+    }
 }
 
 #[cfg(test)]
@@ -102,7 +122,7 @@ mod tests {
                 .take(3)
                 .collect_vec()
         );
-        for edge in mesh.edges() {
+        for edge in mesh.halfedges() {
             assert!(edge.is_boundary(&mesh));
             assert_eq!(edge.face_ids(&mesh).count(), 1);
             assert!(edge.edges_face(&mesh).count() == 3);
@@ -114,7 +134,7 @@ mod tests {
         let mesh = Mesh3d64::cube(1.0);
         assert_eq!(mesh.check(), Ok(()));
         println!("{:?}", mesh);
-        for edge in mesh.edges() {
+        for edge in mesh.halfedges() {
             println!("{:?}", edge);
             assert!(!edge.is_boundary(&mesh));
             assert_eq!(edge.face_ids(&mesh).count(), 2);

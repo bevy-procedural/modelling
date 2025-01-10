@@ -2,8 +2,8 @@ use crate::{
     halfedge::{HalfEdgeImpl, HalfEdgeImplMeshTypePlus, HalfEdgeMeshImpl, HalfEdgeVertexImpl},
     math::IndexType,
     mesh::{
-        EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, HalfEdge, MeshBasics,
-        MeshHalfEdgeBuilder,
+        CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, HalfEdge, MeshBasics,
+        MeshHalfEdgeBuilder, VertexCursorBasics,
     },
 };
 
@@ -61,9 +61,11 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T>
     }
 
     fn try_remove_halfedge(&mut self, e: T::E) -> bool {
-        if self.edge(e).face_id() != IndexType::max() {
+        let edge = self.edge(e);
+        if edge.face_id() != IndexType::max() {
             return false;
         }
+        
         self.halfedges.delete(e);
         true
     }

@@ -52,7 +52,7 @@ pub fn show_tesselation_meta<V: IndexType>(
 /// Boundary edges are red, edges with faces are green.
 /// Use `offset` to slightly shift them towards the face center.
 pub fn show_edges(texts: &mut ResMut<Text3dGizmos>, mesh: &BevyMesh3d, offset: f32) {
-    mesh.edges().for_each(|e| {
+    mesh.halfedges().for_each(|e| {
         if let Some(f) = e.face(mesh) {
             let p0 = e.centroid(mesh).clone();
             let p1 = f.centroid(mesh).clone();

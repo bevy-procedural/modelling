@@ -599,8 +599,8 @@ mod tests {
         assert_eq!(inserted_vertices.len(), config.num_inserted_vertices);
 
         let old_halfedges: HashSet<usize, RandomState> =
-            HashSet::from_iter(config.mesh.0.edge_ids());
-        let new_halfedges: HashSet<usize, RandomState> = HashSet::from_iter(mesh.edge_ids());
+            HashSet::from_iter(config.mesh.0.halfedge_ids());
+        let new_halfedges: HashSet<usize, RandomState> = HashSet::from_iter(mesh.halfedge_ids());
         assert!(old_halfedges.is_subset(&new_halfedges));
         let inserted_halfedges: HashSet<usize, RandomState> =
             HashSet::from_iter(new_halfedges.symmetric_difference(&old_halfedges).cloned());
@@ -614,7 +614,7 @@ mod tests {
         assert_eq!(inserted_faces.len(), config.num_appended_faces);
 
         let boundary_edges = mesh
-            .edges()
+            .halfedges()
             .filter(|e| e.is_boundary_self())
             .map(|e| e.id())
             .collect_vec();
@@ -631,7 +631,7 @@ mod tests {
             config
                 .mesh
                 .0
-                .edges()
+                .halfedges()
                 .filter(|e| e.is_boundary_self())
                 .map(|e| e.id())
                 .collect_vec(),

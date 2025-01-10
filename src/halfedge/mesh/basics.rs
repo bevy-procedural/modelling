@@ -81,7 +81,7 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     where
         T::Edge: 'a,
     {
-        self.halfedges.iter()
+        self.halfedges.iter().filter(|e| e.twin_id() > e.id())
     }
 
     #[inline]
@@ -121,7 +121,8 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         panic!("No payload found for edge {}", e);
     }
 
-    /// Returns the id of the half edge from `v` to `w` or `None` if they are not neighbors.
+    /// Implements [MeshBasics::shared_edge] for halfedge meshes.
+    ///
     /// Runs in O(n) time since it iterates over all edges of `v`.
     #[inline]
     fn shared_edge(&self, v: T::V, w: T::V) -> Option<&T::Edge> {
@@ -137,6 +138,21 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     #[inline]
     fn shared_edge_id(&self, v: T::V, w: T::V) -> Option<T::E> {
         self.shared_edge(v, w).map(|e| e.id())
+    }
+
+    #[inline]
+    fn shared_edges<'a>(&'a self, v: T::V, w: T::V) -> impl Iterator<Item = &'a T::Edge>
+    where
+        T: 'a,
+    {
+        self.vertex_ref(v)
+            .edges_out(self)
+            .filter(move |e| e.target_id(self) == w)
+    }
+
+    #[inline]
+    fn shared_edge_ids(&self, v: T::V, w: T::V) -> impl Iterator<Item = T::E> {
+        self.shared_edges(v, w).map(|e| e.id())
     }
 
     //======================= Face Operations =======================//
@@ -250,5 +266,14 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         }
 
         vertices
+    }
+
+    fn has_holes(&self) -> bool {
+        for e in self.halfedges() {
+            if e.is_boundary_self() {
+                return true;
+            }
+        }
+        false
     }
 }

@@ -149,19 +149,17 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     #[must_use]
     fn edge_payload_mut<'a>(&'a mut self, edge: T::E) -> &'a mut T::EP;
 
-    /// Returns an iterator over all non-deleted halfedge pairs without duplicates
-    #[must_use]
+    /// Returns an iterator over all non-deleted edges.
+    /// For halfedge graphs, this will enumerate only one halfedge per edge.
     fn edges<'a>(&'a self) -> impl Iterator<Item = &'a T::Edge>
     where
         T: 'a;
 
-    /// Returns an iterator over all non-deleted edge's ids
-    #[inline]
-    #[must_use]
-    fn edge_ids<'a>(&'a self) -> impl Iterator<Item = T::E>
+    /// Returns an iterator over all non-deleted edges' ids.
+    /// For halfedge graphs, this will enumerate only one halfedge per edge.
+    fn edge_ids<'a>(&'a self) -> impl Iterator<Item = T::E> + 'a
     where
         T: 'a,
-        T::Face: 'a,
     {
         self.edges().map(|e| e.id())
     }
@@ -172,13 +170,27 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     where
         T: 'a;
 
-    /// Returns the id of the (half)edge from `v` to `w` or `None` if they are not neighbors.
+    /// Returns a (half)edge from `v` to `w`.
+    /// Returns `None` if there is no edge between `v` and `w`.
+    /// If there are multiple edges between `v` and `w`, any of them may be returned.
     #[must_use]
     fn shared_edge(&self, v: T::V, w: T::V) -> Option<&T::Edge>;
 
-    /// Returns the (half)edge id from v to w. Panics if the edge does not exist.
+    /// Returns the id of a (half)edge from v to w.
+    /// Returns `None` if there is no edge between `v` and `w`.
+    /// If there are multiple edges between `v` and `w`, any of them may be returned.
     #[must_use]
     fn shared_edge_id(&self, v: T::V, w: T::V) -> Option<T::E>;
+
+    /// Returns all (half)edges from v to w.
+    #[must_use]
+    fn shared_edges<'a>(&'a self, v: T::V, w: T::V) -> impl Iterator<Item = &'a T::Edge>
+    where
+        T: 'a;
+
+    /// Returns the ids of all (half)edges from v to w.
+    #[must_use]
+    fn shared_edge_ids(&self, v: T::V, w: T::V) -> impl Iterator<Item = T::E>;
 
     //======================= Face Operations =======================//
 
@@ -358,6 +370,51 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     fn submesh<Iter: Iterator<Item = T::V>>(&self, vertices: Iter) -> Self {
         // TODO: test
         todo!("{:?}", vertices.collect::<Vec<_>>())
+    }
+
+    /// Determines whether the mesh has holes, i.e., true boundary edges.
+    #[must_use]
+    fn has_holes(&self) -> bool {
+        for e in self.edges() {
+            if e.is_boundary(self) {
+                return true;
+            }
+        }
+        false
+    }
+
+    /// Determines whether the mesh is a collection of open 2-manifolds.
+    /// The mesh might be empty or consist of multiple disconnected components where each one is an open 2-manifolds.
+    ///
+    /// This implies:
+    /// - Each edge has between 1 and 2 incident faces.
+    ///   This doesn't imply that the edge multiplicity is 1, since parallel edges are allowed
+    ///   and will be summarized as one edge, i.e., you can have two edges with one face
+    ///   each and a third one with no faces at all.
+    /// - Each vertex has exactly one (half)disk of faces around it.
+    ///
+    /// This function is only well-defined for well-formed meshes.
+    #[must_use]
+    fn is_open_2manifold(&self) -> bool {
+        for e in self.edges() {
+            if !e.is_manifold(self) {
+                return false;
+            }
+        }
+        for v in self.vertices() {
+            if !v.is_manifold(self) {
+                return false;
+            }
+        }
+
+        true
+    }
+
+    /// Determines whether the mesh is a collection of closed 2-manifolds.
+    /// See [MeshBasics::is_open_2manifold] and [MeshBasics::has_holes] for details.
+    #[must_use]
+    fn is_2manifold(&self) -> bool {
+        self.is_open_2manifold() && !self.has_holes()
     }
 }
 

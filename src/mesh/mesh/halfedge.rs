@@ -7,6 +7,22 @@ pub trait HalfEdgeMesh<T: MeshType<Mesh = Self>>: MeshBasics<T>
 where
     T::Edge: HalfEdge<T>,
 {
+    /// Returns an iterator over all non-deleted halfedges.
+    #[must_use]
+    fn halfedges<'a>(&'a self) -> impl Iterator<Item = &'a T::Edge>
+    where
+        T: 'a;
+
+    /// Returns an iterator over all non-deleted halfedge's ids
+    #[inline]
+    #[must_use]
+    fn halfedge_ids<'a>(&'a self) -> impl Iterator<Item = T::E>
+    where
+        T: 'a,
+        T::Face: 'a,
+    {
+        self.halfedges().map(|e| e.id())
+    }
     
     /// Returns the number of halfedges in the mesh
     #[must_use]
@@ -18,7 +34,7 @@ where
         T::Edge: 'a,
         T: 'a,
     {
-        self.edges().filter_map(move |e| {
+        self.halfedges().filter_map(move |e| {
             if e.twin_id() < e.id() {
                 None
             } else {
