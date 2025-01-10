@@ -4,7 +4,9 @@ use crate::{
     },
     math::{HasPosition, Vector},
     mesh::{
-        CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EdgeBasics, EdgePayload, EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshBasicsCurved, MeshType, MeshTypeHalfEdge
+        CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EdgeBasics, EdgePayload, EmptyEdgePayload,
+        EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshBasicsCurved,
+        MeshType, MeshTypeHalfEdge,
     },
     prelude::HalfEdgeImplMeshTypePlus,
 };
@@ -96,7 +98,7 @@ mod tests {
         let mut mesh = Mesh2d64Curved::new();
         mesh.insert_regular_star(radius, radius, n);
         assert_eq!(mesh.num_vertices(), n);
-        assert_eq!(mesh.num_edges(), 2 * n);
+        assert_eq!(mesh.num_edges(), n);
         assert_eq!(mesh.num_faces(), 1);
         assert!(mesh.has_consecutive_vertex_ids());
         assert!(mesh.is_open());
@@ -104,7 +106,7 @@ mod tests {
 
         let m3d = mesh.to_nd::<3>(1.0);
         assert_eq!(m3d.num_vertices(), n);
-        assert_eq!(m3d.num_edges(), 2 * n);
+        assert_eq!(m3d.num_edges(), n);
         assert_eq!(m3d.num_faces(), 1);
         assert!(m3d.has_consecutive_vertex_ids());
         assert!(m3d.is_open());

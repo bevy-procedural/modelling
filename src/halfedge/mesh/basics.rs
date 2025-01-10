@@ -2,7 +2,8 @@ use super::{HalfEdgeImplMeshType, HalfEdgeMeshImpl};
 use crate::{
     math::IndexType,
     mesh::{
-        EdgeBasics, FaceBasics, HalfEdge, MeshBasics, Triangulation, VertexBasics, VertexPayload,
+        EdgeBasics, FaceBasics, HalfEdge, HalfEdgeMesh, MeshBasics, Triangulation, VertexBasics,
+        VertexPayload,
     },
 };
 use std::collections::HashMap;
@@ -70,7 +71,9 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
 
     #[inline]
     fn num_edges(&self) -> usize {
-        self.halfedges.len()
+        let n = self.num_halfedges();
+        assert!(n % 2 == 0, "Number of halfedges is not even");
+        n / 2
     }
 
     #[inline]

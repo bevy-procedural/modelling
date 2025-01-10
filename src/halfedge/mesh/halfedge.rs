@@ -5,6 +5,11 @@ use crate::{
 };
 
 impl<T: HalfEdgeImplMeshType> HalfEdgeMesh<T> for HalfEdgeMeshImpl<T> {
+    #[inline]
+    fn num_halfedges(&self) -> usize {
+        self.halfedges.len()
+    }
+    
     #[allow(refining_impl_trait)]
     #[inline]
     fn edges_from<'a>(&'a self, e: T::E) -> ForwardEdgeIterator<'a, T>

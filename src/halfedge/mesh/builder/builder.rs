@@ -691,3 +691,21 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
 
      */
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{extensions::nalgebra::*, prelude::*};
+
+    fn vp(x: f64, y: f64, z: f64) -> VertexPayloadPNU<f64, 3> {
+        VertexPayloadPNU::<f64, 3>::from_pos(Vec3::<f64>::new(x, y, z))
+    }
+
+    #[test]
+    fn test_insert_vertex() {
+        let mut mesh = Mesh3d64::default();
+        let res = mesh.insert_isolated_edge(vp(0.0, 0.0, 0.0), vp(1.0, 0.0, 0.0), Default::default());
+        assert_eq!(res, 0);
+        assert_eq!(mesh.num_vertices(), 2);
+        assert_eq!(mesh.num_halfedges(), 2);
+    }
+}

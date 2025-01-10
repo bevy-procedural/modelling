@@ -7,6 +7,11 @@ pub trait HalfEdgeMesh<T: MeshType<Mesh = Self>>: MeshBasics<T>
 where
     T::Edge: HalfEdge<T>,
 {
+    
+    /// Returns the number of halfedges in the mesh
+    #[must_use]
+    fn num_halfedges(&self) -> usize;
+    
     /// Returns an iterator over all non-deleted halfedge pairs without duplicates
     fn twin_edges<'a>(&'a self) -> impl Iterator<Item = (&'a T::Edge, &'a T::Edge)>
     where
