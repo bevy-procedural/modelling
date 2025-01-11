@@ -138,8 +138,11 @@ impl<T: Deletable<I>, I: IndexType> DeletableVector<T, I> {
             v.is_deleted(),
             "Tried to set an element that already has an id"
         );
+        let l = self.deleted.len();
         debug_assert!(
-            self.deleted.len() == 0 || self.deleted[self.deleted.len() - 1] != index,
+            !((l >= 1 && self.deleted[l - 1] == index)
+                || (l >= 2 && self.deleted[l - 2] == index)
+                || (l >= 3 && self.deleted[l - 3] == index)),
             // self.deleted.contains(&index), // this would be too slow even in debug mode
             "Tried to set an element without allocating an index first"
         );
