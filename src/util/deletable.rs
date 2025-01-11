@@ -5,6 +5,7 @@ use crate::math::IndexType;
 /// A trait for soft-deletable elements.
 pub trait Deletable<I> {
     /// Returns whether the element is deleted.
+    #[must_use]
     fn is_deleted(&self) -> bool;
 
     /// Marks the element as deleted.
@@ -14,6 +15,7 @@ pub trait Deletable<I> {
     fn set_id(&mut self, id: I);
 
     /// Allocates a new, "deleted" instance (it isn't valid)
+    #[must_use]
     fn allocate() -> Self;
 }
 
@@ -34,22 +36,27 @@ impl<T: Deletable<I>, I: IndexType> DeletableVector<T, I> {
     }
 
     /// Deletes all elements.
+    #[inline]
     pub fn clear(&mut self) {
         self.data.clear();
         self.deleted.clear();
     }
 
     /// Returns an iterator over the non-deleted elements.
+    #[inline]
     pub fn iter(&self) -> impl Iterator<Item = &T> {
         self.data.iter().filter(|f| !f.is_deleted())
     }
 
     /// Returns a mutable iterator over the non-deleted elements.
+    #[inline]
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
         self.data.iter_mut().filter(|f| !f.is_deleted())
     }
 
     /// Returns the requested element or `None` if it doesn't exist or is deleted.
+    #[inline]
+    #[must_use]
     pub fn get(&self, index: I) -> Option<&T> {
         // PERF: We could add `unlikely` to these two conditions, but the compiler does a good job already.
         let i = index.index();
@@ -64,12 +71,16 @@ impl<T: Deletable<I>, I: IndexType> DeletableVector<T, I> {
     }
 
     /// Returns whether the element exists and is not deleted.
+    #[inline]
+    #[must_use]
     pub fn has(&self, index: I) -> bool {
         let i = index.index();
         i < self.data.len() && !self.data[i].is_deleted()
     }
 
     /// Returns the requested element mutably or `None` if it doesn't exist or is deleted.
+    #[inline]
+    #[must_use]
     pub fn get_mut(&mut self, index: I) -> Option<&mut T> {
         let i = index.index();
         if i >= self.data.len() {
@@ -83,16 +94,21 @@ impl<T: Deletable<I>, I: IndexType> DeletableVector<T, I> {
     }
 
     /// Returns the number of non-deleted elements.
+    #[inline]
+    #[must_use]
     pub fn len(&self) -> usize {
         self.data.len() - self.deleted.len()
     }
 
     /// Returns the maximum index of the non-deleted elements.
+    #[inline]
+    #[must_use]
     pub fn capacity(&self) -> usize {
         self.data.len()
     }
 
     /// Allocates a new element, moves the given to that index, sets the new id, and returns the index.
+    #[inline]
     pub fn push(&mut self, mut v: T) -> I {
         assert!(
             v.is_deleted(),
@@ -111,6 +127,7 @@ impl<T: Deletable<I>, I: IndexType> DeletableVector<T, I> {
     }
 
     /// Move the element at the given index. Assumes that the position is allocated and free, i.e., the contents are deleted.
+    #[inline]
     pub fn set(&mut self, index: I, mut v: T) {
         assert!(
             self.data[index.index()].is_deleted(),
@@ -126,6 +143,7 @@ impl<T: Deletable<I>, I: IndexType> DeletableVector<T, I> {
     }
 
     /// Marks the element as deleted and remembers it for reallocation.
+    #[inline]
     pub fn delete(&mut self, f: I) {
         self.data[f.index()].delete();
         self.deleted.push(f);
@@ -134,6 +152,8 @@ impl<T: Deletable<I>, I: IndexType> DeletableVector<T, I> {
     /// Returns the next free index or allocates a new one.
     /// The element is not deleted anymore, but it is not valid until it is overwritten.
     /// TODO: How can we force the user to overwrite it afterwards? Not writing to it is a memory leak.
+    #[inline]
+    #[must_use]
     pub fn allocate(&mut self) -> I {
         if let Some(index) = self.deleted.pop() {
             index

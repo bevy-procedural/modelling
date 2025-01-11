@@ -3,10 +3,12 @@ use crate::{
     math::IndexType,
     mesh::{
         CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, EdgePayload,
-        FaceCursorBasics, HalfEdge, HalfEdgeVertex, MeshBasics, MeshBuilder, MeshHalfEdgeBuilder,
-        MeshTypeHalfEdge, VertexBasics, VertexCursorBasics, VertexCursorHalfedgeBasics,
+        FaceCursorBasics, HalfEdge, HalfEdgeMesh, HalfEdgeVertex, MeshBasics, MeshBuilder,
+        MeshHalfEdgeBuilder, MeshTypeHalfEdge, VertexBasics, VertexCursorBasics,
+        VertexCursorHalfedgeBasics,
     },
     prelude::HalfEdgeFaceImpl,
+    util::Deletable,
 };
 
 impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
@@ -17,7 +19,11 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     }
 
     fn try_remove_vertex(&mut self, v: T::V) -> bool {
-        if self.vertex(v).edge_id() != IndexType::max() {
+        let c = self.vertex(v);
+        let Some(vertex) = c.get() else {
+            return false;
+        };
+        if vertex.edge_id(self) != IndexType::max() {
             return false;
         }
         self.vertices.delete(v);
@@ -25,19 +31,30 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     }
 
     fn try_remove_edge(&mut self, e: T::E) -> bool {
-        let edge = self.edge_ref(e).clone();
+        if !self.has_edge(e) {
+            return false;
+        }
+        let mut edge = self.edge_ref(e).clone();
         let Some(twin) = self.get_edge(edge.twin_id()).cloned() else {
             return false;
         };
-        if self.try_remove_halfedge(e) {
-            if !self.try_remove_halfedge(twin.id()) {
-                // failed to remove the twin -> revert the removal of the first edge
-                self.halfedges.set(e, edge);
-                return false;
-            }
-        } else {
+
+        if !self.try_remove_halfedge(e) {
             return false;
         }
+        debug_assert!(!self.has_edge(e));
+
+        if !self.try_remove_halfedge(twin.id()) {
+            // failed to remove the twin -> revert the removal of the first edge
+            // First, Mark the copy as deleted to insert it again
+            edge.delete();
+            let new_e = self.halfedges.allocate();
+            assert_eq!(new_e, e);
+            self.halfedges.set(new_e, edge);
+            debug_assert!(self.has_edge(new_e));
+            return false;
+        }
+        debug_assert!(!self.has_edge(twin.id()));
 
         fn fix_edge<T: MeshTypeHalfEdge>(edge: &T::Edge, twin: &T::Edge, mesh: &mut T::Mesh) {
             debug_assert_eq!(edge.twin_id(), twin.id());
@@ -74,6 +91,11 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
 
         fix_edge::<T>(&edge, &twin, self);
         fix_edge::<T>(&twin, &edge, self);
+
+        debug_assert!(edge.prev_id() == twin.id() || self.edge(edge.prev_id()).check().is_ok());
+        debug_assert!(edge.next_id() == twin.id() || self.edge(edge.next_id()).check().is_ok());
+        debug_assert!(twin.prev_id() == edge.id() || self.edge(twin.prev_id()).check().is_ok());
+        debug_assert!(twin.next_id() == edge.id() || self.edge(twin.next_id()).check().is_ok());
 
         true
     }
@@ -340,6 +362,108 @@ mod tests {
         let mut v = v.into_iter().collect_vec();
         v.sort_unstable();
         v
+    }
+
+    #[test]
+    fn test_remove_vertex() {
+        let mut mesh = Mesh3d64::default();
+        let v1 = mesh.insert_vertex(vp(0.0, 0.0, 0.0));
+        let v2 = mesh.insert_vertex(vp(1.0, 0.0, 0.0));
+        let e12 = mesh.insert_edge_vv(v1, v2, Default::default()).unwrap();
+        assert_eq!(mesh.check(), Ok(()));
+        assert_eq!(mesh.is_open_2manifold(), false);
+        assert_eq!(mesh.num_vertices(), 2);
+        assert_eq!(mesh.num_halfedges(), 2);
+        assert_eq!(mesh.num_faces(), 0);
+        assert_eq!(mesh.is_connected(), true);
+
+        // should fail before removing the edge
+        let mesh_clone = mesh.clone();
+        assert_eq!(mesh.try_remove_vertex(v1), false);
+        assert_eq!(mesh.is_trivially_isomorphic(&mesh_clone).eq(), true);
+
+        mesh.remove_edge(e12);
+        assert_eq!(mesh.try_remove_vertex(v1), true);
+        assert_eq!(mesh.check(), Ok(()));
+        assert_eq!(mesh.is_open_2manifold(), false);
+        assert_eq!(mesh.num_vertices(), 1);
+        assert_eq!(mesh.num_halfedges(), 0);
+        assert_eq!(mesh.num_faces(), 0);
+        assert_eq!(mesh.is_connected(), true);
+        assert_eq!(mesh.vertex(v2).edge_id(), usize::MAX);
+        assert_eq!(mesh.vertex(v2).neighbors().count(), 0);
+
+        // should fail when trying to remove again
+        let mesh_clone = mesh.clone();
+        assert_eq!(mesh.try_remove_vertex(v1), false);
+        assert_eq!(mesh.is_trivially_isomorphic(&mesh_clone).eq(), true);
+
+        assert_eq!(mesh.try_remove_vertex(v2), true);
+        assert_eq!(mesh.check(), Ok(()));
+        assert_eq!(mesh.is_open_2manifold(), true);
+        assert_eq!(mesh.num_vertices(), 0);
+        assert_eq!(mesh.num_halfedges(), 0);
+        assert_eq!(mesh.num_faces(), 0);
+        assert_eq!(mesh.is_connected(), true);
+    }
+
+    #[test]
+    fn test_remove_edge() {
+        let mut mesh = Mesh3d64::default();
+        let e0 = mesh.insert_regular_polygon(1.0, 3);
+        assert_eq!(mesh.is_open_2manifold(), true);
+        let (e1, _v1) = mesh
+            .insert_vertex_e(e0, vp(42.0, 0.0, 0.0), Default::default())
+            .unwrap();
+        let (e2, _v2) = mesh
+            .insert_vertex_e(e1, vp(142.0, 0.0, 0.0), Default::default())
+            .unwrap();
+        assert_eq!(mesh.check(), Ok(()));
+        assert_eq!(mesh.is_open_2manifold(), false);
+        assert_eq!(mesh.num_vertices(), 5);
+        assert_eq!(mesh.num_halfedges(), 10);
+        assert_eq!(mesh.num_faces(), 1);
+        assert_eq!(mesh.is_connected(), true);
+
+        // should fail before removing the face
+        let mesh_clone = mesh.clone();
+        assert_eq!(mesh.try_remove_edge(e0), false);
+        assert_eq!(mesh.is_trivially_isomorphic(&mesh_clone).eq(), true);
+
+        assert_eq!(mesh.try_remove_edge(e1), true);
+        assert_eq!(mesh.check(), Ok(()));
+        assert_eq!(mesh.is_open_2manifold(), false);
+        assert_eq!(mesh.num_vertices(), 5);
+        assert_eq!(mesh.num_halfedges(), 8);
+        assert_eq!(mesh.num_faces(), 1);
+        assert_eq!(mesh.is_connected(), false);
+
+        // should fail after being already removed
+        let mesh_clone = mesh.clone();
+        assert_eq!(mesh.try_remove_edge(e1), false);
+        assert_eq!(mesh.is_trivially_isomorphic(&mesh_clone).eq(), true);
+
+        /*
+        assert_eq!(mesh.try_remove_edge(e2), true);
+        assert_eq!(mesh.check(), Ok(()));
+        assert_eq!(mesh.is_open_2manifold(), true);
+        assert_eq!(mesh.num_vertices(), 5);
+        assert_eq!(mesh.num_halfedges(), 6);
+        assert_eq!(mesh.num_faces(), 1);
+        assert_eq!(mesh.is_connected(), false);
+
+        let f = mesh.face_ids().next().unwrap();
+        mesh.remove_face(f);
+        assert_eq!(mesh.check(), Ok(()));
+        assert_eq!(mesh.is_open_2manifold(), false);
+        assert_eq!(mesh.num_vertices(), 5);
+
+        assert_eq!(mesh.try_remove_edge(e1), true);
+        assert_eq!(mesh.check(), Ok(()));
+        assert_eq!(mesh.is_open_2manifold(), false);
+        assert_eq!(mesh.num_vertices(), 5);
+        assert_eq!(mesh.num_halfedges(), 4);
+        assert_eq!(mesh.num_faces(), 0);*/
     }
 
     #[test]

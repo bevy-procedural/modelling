@@ -36,7 +36,7 @@ impl Default for GlobalSettings {
 }
 
 fn make_mesh(_settings: &GlobalSettings) -> BevyMesh3d {
-    let mut mesh = BevyMesh3d::regular_icosahedron(1.0);
+    let mut mesh = BevyMesh3d::regular_pyramid(1.0, 1.0, 4);
 
     // place it "on the floor"
     let min_y = mesh

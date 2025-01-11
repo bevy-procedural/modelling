@@ -139,7 +139,8 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     }
 
     /// Tries to remove the edge `e` and returns whether it was successful.
-    /// Fails if there are adjacent faces.
+    /// Fails if there are adjacent faces or the edge doesn't exist. 
+    /// Doesn't panic. Restores the original state if the method fails.
     ///
     /// On half-edge meshes, this will also remove the twin edge and update the neighbors' connectivity.
     fn try_remove_edge(&mut self, e: T::E) -> bool;
