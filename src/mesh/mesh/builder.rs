@@ -1,8 +1,6 @@
 use crate::mesh::{DefaultEdgePayload, EdgeCursorBasics, MeshBasics, MeshType};
 use itertools::Itertools;
 
-// TODO: Make sure return values are used for the failable methods!
-
 /// Some basic operations to build meshes.
 pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// add a new vertex and return it's id
@@ -83,11 +81,12 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// If `a` and `b` are connected by some boundary, it will walk backwards from `b`
     /// and use the first edge coming from `a` to create the new boundary connectivity.
     ///
+    /// The edge will be updated with the matching faces to continue the boundary.
+    ///
     /// Fails if the connectivity is ambiguous, i.e., if `a` and `b` both have edges but
     /// are not connected by exactly one boundary of minimal length, e.g., when they
     /// are in different connected components such that chirality is ambiguous or when
     /// there is more than one boundary cycle of minimal length passing through both vertices.
-    /// It will also fail if the unique edges it discovered already have a face.
     ///
     /// Notice that this boundary checks can be costly if you have large faces!
     ///
@@ -99,8 +98,9 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Inserts an edge from the target of `input` to the origin of `output`.
     ///
     /// Connectivity is inferred from the graph. In case of half-edge meshes, the
-    /// method should never fail because of connectivity since it is never ambiguous.
-    /// However, appending an edge to a boundary with a face is invalid.
+    /// method should never fail since the connectivity is never ambiguous.
+    ///
+    /// The edge will be updated with the matching faces to continue the boundary.
     ///
     /// For half-edge meshes, the payload will be added to the half-edge
     /// from the `input` to `output`. This is also the half-edge that is returned.
@@ -127,6 +127,13 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     fn remove_edge(&mut self, e: T::E) {
         assert!(self.try_remove_edge(e), "Could not remove edge {}", e);
     }
+
+    /// Removes the edge `e`.
+    /// Doesn't check whether the edge is isolated or not.
+    /// Will behave like [MeshBuilder::try_remove_edge] otherwise.
+    ///
+    /// On half-edge meshes, this will also remove the twin edge and update the neighbors' connectivity.
+    fn try_remove_edge_forced(&mut self, e: T::E) -> bool;
 
     /// Removes the edge `e` "recursively", i.e., also removes all faces connected to it.
     /// Panics if the edge doesn't exist.
@@ -195,7 +202,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         if let Some(f) = self.insert_face(e, fp) {
             Some((e, f))
         } else {
-            self.remove_edge(e);
+            assert!(self.try_remove_edge_forced(e));
             None
         }
     }
@@ -227,7 +234,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         if let Some(f) = self.insert_face(e, fp) {
             Some((e, f))
         } else {
-            self.remove_edge(e);
+            assert!(self.try_remove_edge_forced(e));
             None
         }
     }
@@ -256,7 +263,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         if let Some(f) = self.insert_face(e, fp) {
             Some((e, f))
         } else {
-            self.remove_edge(e);
+            assert!(self.try_remove_edge_forced(e));
             None
         }
     }

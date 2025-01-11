@@ -3,9 +3,8 @@ use crate::{
     math::IndexType,
     mesh::{
         CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, EdgePayload,
-        FaceCursorBasics, HalfEdge, HalfEdgeMesh, HalfEdgeVertex, MeshBasics, MeshBuilder,
-        MeshHalfEdgeBuilder, MeshTypeHalfEdge, VertexBasics, VertexCursorBasics,
-        VertexCursorHalfedgeBasics,
+        FaceCursorBasics, HalfEdge, HalfEdgeVertex, MeshBasics, MeshBuilder, MeshHalfEdgeBuilder,
+        MeshTypeHalfEdge, VertexBasics, VertexCursorBasics, VertexCursorHalfedgeBasics,
     },
     prelude::HalfEdgeFaceImpl,
     util::Deletable,
@@ -30,30 +29,28 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         true
     }
 
+    #[inline]
     fn try_remove_edge(&mut self, e: T::E) -> bool {
+        let edge = self.edge(e);
+        if edge.has_face() || edge.twin().has_face() {
+            return false;
+        }
+        self.try_remove_edge_forced(e)
+    }
+
+    fn try_remove_edge_forced(&mut self, e: T::E) -> bool {
         if !self.has_edge(e) {
             return false;
         }
-        let mut edge = self.edge_ref(e).clone();
+        let edge = self.edge_ref(e).clone();
         let Some(twin) = self.get_edge(edge.twin_id()).cloned() else {
             return false;
         };
 
-        if !self.try_remove_halfedge(e) {
-            return false;
-        }
-        debug_assert!(!self.has_edge(e));
+        self.halfedges.delete(edge.id());
+        self.halfedges.delete(twin.id());
 
-        if !self.try_remove_halfedge(twin.id()) {
-            // failed to remove the twin -> revert the removal of the first edge
-            // First, Mark the copy as deleted to insert it again
-            edge.delete();
-            let new_e = self.halfedges.allocate();
-            assert_eq!(new_e, e);
-            self.halfedges.set(new_e, edge);
-            debug_assert!(self.has_edge(new_e));
-            return false;
-        }
+        debug_assert!(!self.has_edge(e));
         debug_assert!(!self.has_edge(twin.id()));
 
         fn fix_edge<T: MeshTypeHalfEdge>(edge: &T::Edge, twin: &T::Edge, mesh: &mut T::Mesh) {
@@ -123,13 +120,20 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
             debug_assert!(o.same_boundary_back(self, i.target_id(self)));
         }*/
 
-        if self.edge(input).has_face() || self.edge(output).has_face() {
-            return None;
-        }
         // TODO: are there any other checks necessary?
 
         let (e1, e2) =
             self.insert_edge_unchecked(input, output, ep, IndexType::max(), IndexType::max(), true);
+
+        // update faces to match the previous edges
+        let f1 = self.edge(e1).prev().face_id();
+        if f1 != IndexType::max() {
+            self.edge_mut(e1).set_face(f1);
+        }
+        let f2 = self.edge(e2).prev().face_id();
+        if f2 != IndexType::max() {
+            self.edge_mut(e2).set_face(f2);
+        }
 
         debug_assert_eq!(self.edge(e1).check(), Ok(()));
         debug_assert_eq!(self.edge(e2).check(), Ok(()));
@@ -174,9 +178,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
                 let Some(b_in) = bv.ingoing_boundary_edge() else {
                     return None;
                 };
-                if self.edge(b_in).has_face() {
-                    return None;
-                }
+                let face = self.edge(b_in).face_id();
                 let (e1, e2) = self.insert_halfedge_pair_forced(
                     IndexType::max(),
                     a,
@@ -184,8 +186,8 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
                     b_in,
                     b,
                     self.edge(b_in).next_id(),
-                    IndexType::max(),
-                    IndexType::max(),
+                    face,
+                    face,
                     ep,
                 );
                 self.vertex_mut(a).set_edge(e1);
@@ -200,9 +202,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
             let Some(a_in) = av.ingoing_boundary_edge() else {
                 return None;
             };
-            if self.edge(a_in).has_face() {
-                return None;
-            }
+            let face = self.edge(a_in).face_id();
             let next = self.edge_ref(a_in).next_id();
             let (e1, e2) = self.insert_halfedge_pair_forced(
                 a_in,
@@ -211,8 +211,8 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
                 IndexType::max(),
                 b,
                 IndexType::max(),
-                IndexType::max(),
-                IndexType::max(),
+                face,
+                face,
                 ep,
             );
             self.vertex_mut(b).set_edge(e2);
@@ -247,23 +247,17 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
             let (to_a, from_b, _) = bv.unwrap().shortest_path(self, a)?;
             debug_assert_eq!(self.edge(to_a).target_id(), a);
             debug_assert_eq!(self.edge(from_b).origin_id(), b);
-            if self.edge(to_a).has_face() || self.edge(from_b).has_face() {
-                return None;
-            }
             return self.insert_edge_ee(to_a, from_b, ep);
         }
     }
 
     fn insert_edge_ev(&mut self, e: T::E, v: T::V, ep: T::EP) -> Option<T::E> {
-        if self.edge(e).has_face() {
-            return None;
-        }
-
         if self.vertex(v).is_isolated() {
             // Trivial case where the connectivity is already given
             let edge = self.edge(e);
             let origin = edge.target_id();
             let fo = edge.next_id();
+            let face = edge.face_id();
             let (e1, e2) = self.insert_halfedge_pair_forced(
                 e,
                 origin,
@@ -271,8 +265,8 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
                 IndexType::max(),
                 v,
                 IndexType::max(),
-                IndexType::max(),
-                IndexType::max(),
+                face,
+                face,
                 ep,
             );
             self.edge_mut(e).set_next(e1);
@@ -326,7 +320,35 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     }
 
     fn subdivide_edge<I: Iterator<Item = (T::EP, T::VP)>>(&mut self, e: T::E, _vs: I) -> T::E {
-        todo!("{}", e)
+        todo!()
+        /*
+        let twin_id = self.edge(e).twin_id();
+        let mut current = self.edge(e).prev_id();
+        let f1 = self.edge(e).face_id();
+        let f2 = self.edge(twin_id).face_id();
+        let mut last_v = self.edge(e).origin_id();
+        let mut first = true;
+        for (ep1,  vp) in ps {
+            let (v, e1) = self.add_vertex_e(current, vp, ep1);
+            current = (e1, e2);
+            last_v = v;
+            self.edge_mut(current).set_face(f1);
+            self.edge_mut(current.1).set_face(f2);
+            if first {
+                self.vertex_mut(self.edge(e).origin_id()).set_edge(e1);
+                first = false;
+            }
+        }
+
+        self.edge_mut(current).set_next(e);
+        self.edge_mut(e).set_prev(current);
+        self.edge_mut(current_twin).set_prev(twin_id);
+        self.edge_mut(twin_id).set_next(current_twin);
+        self.edge_mut(e).set_origin(last_v);
+
+        return e;
+        */
+
         /*
         fn subdivide_edge<I: Iterator<Item = (T::EP, T::EP, T::VP)>>(
             &mut self,
