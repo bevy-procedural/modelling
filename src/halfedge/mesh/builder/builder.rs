@@ -123,6 +123,9 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
             debug_assert!(o.same_boundary_back(self, i.target_id(self)));
         }*/
 
+        if self.edge(input).has_face() || self.edge(output).has_face() {
+            return None;
+        }
         // TODO: are there any other checks necessary?
 
         let (e1, e2) =
@@ -171,6 +174,9 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
                 let Some(b_in) = bv.ingoing_boundary_edge() else {
                     return None;
                 };
+                if self.edge(b_in).has_face() {
+                    return None;
+                }
                 let (e1, e2) = self.insert_halfedge_pair_forced(
                     IndexType::max(),
                     a,
@@ -194,6 +200,9 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
             let Some(a_in) = av.ingoing_boundary_edge() else {
                 return None;
             };
+            if self.edge(a_in).has_face() {
+                return None;
+            }
             let next = self.edge_ref(a_in).next_id();
             let (e1, e2) = self.insert_halfedge_pair_forced(
                 a_in,
@@ -238,11 +247,18 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
             let (to_a, from_b, _) = bv.unwrap().shortest_path(self, a)?;
             debug_assert_eq!(self.edge(to_a).target_id(), a);
             debug_assert_eq!(self.edge(from_b).origin_id(), b);
+            if self.edge(to_a).has_face() || self.edge(from_b).has_face() {
+                return None;
+            }
             return self.insert_edge_ee(to_a, from_b, ep);
         }
     }
 
     fn insert_edge_ev(&mut self, e: T::E, v: T::V, ep: T::EP) -> Option<T::E> {
+        if self.edge(e).has_face() {
+            return None;
+        }
+
         if self.vertex(v).is_isolated() {
             // Trivial case where the connectivity is already given
             let edge = self.edge(e);
@@ -821,11 +837,10 @@ mod tests {
                     assert_eq!(mesh.face(f1).edge_ids().collect_vec(), es);
 
                     // this would be a duplicate face
-                    // TODO: There is a bug. This asserts instead of failing with None
-                    /* assert_eq!(
+                    assert_eq!(
                         mesh.close_face_ee(e23, e52, Default::default(), Default::default()),
                         None
-                    );*/
+                    );
 
                     // another degenerate face: v5-v3-v2-v1-v2-v5
                     let e32 = mesh.edge(e23).twin_id();

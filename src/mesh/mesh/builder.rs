@@ -98,7 +98,8 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Inserts an edge from the target of `input` to the origin of `output`.
     ///
     /// Connectivity is inferred from the graph. In case of half-edge meshes, the
-    /// method should never fail since connectivity is never ambiguous.
+    /// method should never fail because of connectivity since it is never ambiguous.
+    /// However, appending an edge to a boundary with a face is invalid.
     ///
     /// For half-edge meshes, the payload will be added to the half-edge
     /// from the `input` to `output`. This is also the half-edge that is returned.
@@ -139,7 +140,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     }
 
     /// Tries to remove the edge `e` and returns whether it was successful.
-    /// Fails if there are adjacent faces or the edge doesn't exist. 
+    /// Fails if there are adjacent faces or the edge doesn't exist.
     /// Doesn't panic. Restores the original state if the method fails.
     ///
     /// On half-edge meshes, this will also remove the twin edge and update the neighbors' connectivity.
