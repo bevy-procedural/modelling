@@ -87,6 +87,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// are not connected by exactly one boundary of minimal length, e.g., when they
     /// are in different connected components such that chirality is ambiguous or when
     /// there is more than one boundary cycle of minimal length passing through both vertices.
+    /// It will also fail if the unique edges it discovered already have a face.
     ///
     /// Notice that this boundary checks can be costly if you have large faces!
     ///
@@ -108,7 +109,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
 
     /// Inserts an edge from the target of `input` to the origin of `output`.
     ///
-    /// It behaves similar to `insert_edge_ee` but will not run any checks to see if the insertion is valid!
+    /// It behaves similar to [MeshBuilder::insert_edge_ee] but will not run any checks to see if the insertion is valid!
     /// This allows you to run this method on invalid meshes given that the `next` of the two edges is valid.
     fn insert_edge_ee_forced(&mut self, input: T::E, output: T::E, ep: T::EP) -> T::E;
 
@@ -172,6 +173,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     ///
     /// There must be exactly one boundary path from `to` to `from` without a face.
     /// This boundary will be used to construct the face.
+    /// See [MeshBuilder::insert_edge_ee] for more information.
     ///
     /// Returns the new face and edge id. For half-edge meshes, this should be the half-edge
     /// on the inside of the face, i.e., the half-edge directed from `from.target` to `to.origin`.
@@ -203,6 +205,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     ///
     /// There must be exactly one boundary path from `to` to `from` without a face.
     /// This boundary will be used to construct the face.
+    /// See [MeshBuilder::insert_edge_ev] for more information.
     ///
     /// Returns the new face and edge id. For half-edge meshes, this should be the half-edge
     /// on the inside of the face, i.e., the half-edge directed from `from.target` to `to.origin`.
