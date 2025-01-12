@@ -390,7 +390,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     fn is_connected(&self) -> bool {
         let mut seen = HashSet::<T::V>::new();
         let mut stack = Vec::<T::V>::new();
-        if let Some(v) = self.vertex_refs().next() {
+        if let Some(v) = self.vertices().next() {
             stack.push(v.id());
             seen.insert(v.id());
         } else {

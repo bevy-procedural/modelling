@@ -231,10 +231,9 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     #[inline]
     fn shared_face(&self, v0: T::V, v1: T::V) -> Option<T::F> {
         // TODO: Currently cannot distinguish between holes and "the outside"
-        let w0 = self.vertex_ref(v0);
-        let w1 = self.vertex_ref(v1);
-        w0.faces(self).find_map(|f0| {
-            w1.faces(self).find_map(|f1| {
+        let w1 = self.vertex(v1);
+        self.vertex(v0).faces().find_map(|f0| {
+            w1.clone().faces().find_map(|f1| {
                 if f0.id() == f1.id() {
                     Some(f0.id())
                 } else {

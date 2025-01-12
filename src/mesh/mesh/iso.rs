@@ -274,8 +274,8 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
             return MeshEquivalenceDifference::DifferentNumberOfVertices;
         }
         for v in self.vertices() {
-            let other_v = other.vertex_ref(*iso.get(v.id()).unwrap());
-            if !compare_vertex(v.unwrap(), other_v) {
+            let other_v = other.vertex(*iso.get(v.id()).unwrap());
+            if !compare_vertex(v.unwrap(), other_v.unwrap()) {
                 return MeshEquivalenceDifference::DifferentVertices(v.id(), other_v.id());
             }
         }
@@ -353,8 +353,8 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         }
 
         for v in self.vertices() {
-            let other_v = other.vertex_ref(v.id());
-            if v.id() != other_v.id() || !compare_vertex(v.unwrap(), other_v) {
+            let other_v = other.vertex(v.id());
+            if v.id() != other_v.id() || !compare_vertex(v.unwrap(), other_v.unwrap()) {
                 return MeshEquivalenceDifference::DifferentVertices(v.id(), other_v.id());
             }
         }

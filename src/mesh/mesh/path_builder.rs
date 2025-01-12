@@ -269,7 +269,7 @@ where
         assert!(!self.is_closed());
 
         let sv = self.start_vertex();
-        if self.mesh().vertex_ref(sv).pos() == v {
+        if self.mesh().vertex(sv).pos() == v {
             return self.start_vertex;
         }
 
