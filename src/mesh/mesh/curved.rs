@@ -46,7 +46,7 @@ pub trait MeshBasicsCurved<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         T: EuclideanMeshType<D>,
         T::VP: HasPosition<D, T::Vec>,
     {
-        self.edges()
+        self.edge_refs()
             .any(|e| e.curve_type(self) != CurvedEdgeType::Linear)
     }
 }

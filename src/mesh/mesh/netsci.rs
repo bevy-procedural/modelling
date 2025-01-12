@@ -1,6 +1,8 @@
 use crate::{
     math::{IndexType, Scalar, Vector},
-    mesh::{CursorData, EdgeBasics, EuclideanMeshType, MeshBasics, MeshType, VertexBasics, VertexCursorBasics},
+    mesh::{
+        CursorData, EdgeCursorBasics, EuclideanMeshType, MeshBasics, MeshType, VertexCursorBasics,
+    },
 };
 use std::collections::HashMap;
 
@@ -17,8 +19,8 @@ pub trait NetworkScience<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         let n = self.num_vertices();
         let mut adj = nalgebra::DMatrix::from_element(n, n, S::ZERO);
         for e in self.edges() {
-            let i = e.origin(self).id().index();
-            let j = e.target(self).id().index();
+            let i = e.origin_id().index();
+            let j = e.target_id().index();
             adj[(i, j)] = S::ONE;
             adj[(j, i)] = S::ONE;
         }
@@ -39,9 +41,9 @@ pub trait NetworkScience<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         let n = self.num_vertices();
         let mut adj = nalgebra::DMatrix::from_element(n, n, Scalar::ZERO);
         for e in self.edges() {
-            let i = e.origin(self).id().index();
-            let j = e.target(self).id().index();
-            let d: T::S = e.origin(self).pos().distance(&e.target(self).pos());
+            let i = e.origin_id().index();
+            let j = e.target_id().index();
+            let d: T::S = e.clone().origin().pos().distance(&e.target().pos());
             adj[(i, j)] = d;
             adj[(j, i)] = d;
         }

@@ -109,7 +109,7 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     }
 
     #[inline]
-    fn edges<'a>(&'a self) -> impl Iterator<Item = &'a T::Edge>
+    fn edge_refs<'a>(&'a self) -> impl Iterator<Item = &'a T::Edge>
     where
         T::Edge: 'a,
     {

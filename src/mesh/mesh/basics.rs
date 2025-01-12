@@ -1,7 +1,9 @@
 use crate::{
     math::IndexType,
     mesh::{
-        CursorData, EdgeBasics, EdgeCursor, EdgeCursorBasics, EdgeCursorMut, FaceBasics, FaceCursor, FaceCursorMut, MeshType, VertexBasics, VertexCursor, VertexCursorMut
+        CursorData, EdgeBasics, EdgeCursor, EdgeCursorBasics, EdgeCursorMut, FaceBasics,
+        FaceCursor, FaceCursorMut, MeshType, VertexBasics, VertexCursor, VertexCursorBasics,
+        VertexCursorMut,
     },
 };
 use std::collections::HashSet;
@@ -104,7 +106,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     /// Returns an empty iterator if the vertex does not exist.
     #[must_use]
     fn vertex_neighbors(&self, v: T::V) -> impl Iterator<Item = T::V>;
-    
+
     /// Iterates all faces adjacent to the vertex.
     /// Returns an empty iterator if the vertex does not exist.
     #[must_use]
@@ -182,17 +184,31 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
 
     /// Returns an iterator over all non-deleted edges.
     /// For halfedge graphs, this will enumerate only one halfedge per edge.
-    fn edges<'a>(&'a self) -> impl Iterator<Item = &'a T::Edge>
+    #[must_use]
+    fn edge_refs<'a>(&'a self) -> impl Iterator<Item = &'a T::Edge>
     where
         T: 'a;
 
+    /// Returns an edge cursor for each non-deleted edge.
+    /// For halfedge graphs, this will enumerate only one halfedge per edge.
+    #[inline]
+    #[must_use]
+    fn edges<'a>(&'a self) -> impl Iterator<Item = EdgeCursor<'a, T>>
+    where
+        T: 'a,
+    {
+        self.edge_ids().map(move |id| EdgeCursor::new(self, id))
+    }
+
     /// Returns an iterator over all non-deleted edges' ids.
     /// For halfedge graphs, this will enumerate only one halfedge per edge.
+    #[inline]
+    #[must_use]
     fn edge_ids<'a>(&'a self) -> impl Iterator<Item = T::E> + 'a
     where
         T: 'a,
     {
-        self.edges().map(|e| e.id())
+        self.edge_refs().map(|e| e.id())
     }
 
     /// Returns an mutable iterator over all non-deleted vertices
@@ -433,7 +449,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     #[must_use]
     fn has_holes(&self) -> bool {
         for e in self.edges() {
-            if e.is_boundary(self) {
+            if e.is_boundary() {
                 return true;
             }
         }
@@ -454,12 +470,12 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     #[must_use]
     fn is_open_2manifold(&self) -> bool {
         for e in self.edges() {
-            if !e.is_manifold(self) {
+            if !e.is_manifold() {
                 return false;
             }
         }
         for v in self.vertices() {
-            if !v.unwrap().is_manifold(self) {
+            if !v.is_manifold() {
                 return false;
             }
         }

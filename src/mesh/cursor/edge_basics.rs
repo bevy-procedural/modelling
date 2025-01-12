@@ -69,6 +69,21 @@ pub trait EdgeCursorBasics<'a, T: MeshType + 'a>: EdgeCursorData<'a, T> {
     {
         self.unwrap().face_ids(self.mesh())
     }
+
+    /// Whether the edge (or its halfedgetwin) is boundary.
+    /// Panics if the edge is void.
+    #[must_use]
+    fn is_boundary(&self) -> bool {
+        self.unwrap().is_boundary(self.mesh())
+    }
+
+    /// Whether the edge is manifold.
+    /// See [EdgeBasics::is_manifold] for more information.
+    /// Panics if the edge is void.
+    #[must_use]
+    fn is_manifold(&self) -> bool {
+        self.unwrap().is_manifold(self.mesh())
+    }
 }
 
 /// This trait implements some basic functionality for edge cursors that works with halfedge meshes and both mutable and immutable cursors.
@@ -179,15 +194,6 @@ where
         self.map_or(Err(format!("Edge {} is invalid", self.try_id())), |e| {
             HalfEdge::check(e, self.mesh())
         })
-    }
-
-    /// Returns whether the edge is a boundary edge.
-    /// Panics if the edge is void.
-    /// See [HalfEdge::is_boundary] for more information.
-    #[inline]
-    #[must_use]
-    fn is_boundary(&self) -> bool {
-        self.unwrap().is_boundary(self.mesh())
     }
 
     /// Returns whether the edge is a boundary edge itself.

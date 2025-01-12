@@ -362,9 +362,9 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         for e in self.edges() {
             let other_e = other.edge(e.id());
             if e.id() != other_e.id()
-                || e.origin(self).id() != other_e.origin_id()
-                || e.target(self).id() != other_e.target_id()
-                || !compare_edge(e, other_e.unwrap())
+                || e.origin_id() != other_e.origin_id()
+                || e.target_id() != other_e.target_id()
+                || !compare_edge(e.unwrap(), other_e.unwrap())
             {
                 return MeshEquivalenceDifference::DifferentEdges(e.id(), other_e.id());
             }

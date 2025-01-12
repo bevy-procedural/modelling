@@ -65,6 +65,15 @@ pub trait VertexCursorBasics<'a, T: MeshType + 'a>: VertexCursorData<'a, T> {
     fn degree(&self) -> usize {
         self.unwrap().degree(self.mesh())
     }
+
+    /// Whether the vertex is manifold.
+    /// See [VertexBasics::is_manifold] for more information.
+    /// Panics if the vertex is void.
+    #[inline]
+    #[must_use]
+    fn is_manifold(&self) -> bool {
+        self.unwrap().is_manifold(self.mesh())
+    }
 }
 
 /// This trait implements some basic functionality for vertex cursors that works with half edge meshes and both mutable and immutable cursors.
