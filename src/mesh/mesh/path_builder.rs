@@ -235,7 +235,7 @@ where
 
         let ed = self.mesh().edge_ref(current_inner).clone();
         let end_of_path = ed
-            .edges_face(self.mesh())
+            .boundary(self.mesh())
             .find(|e| e.id() == current_outer || e.id() == start_inner)
             .expect("The path is malformed.");
 

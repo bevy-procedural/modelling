@@ -307,7 +307,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         }
         let e = self.edge_ref(face.edge_id()).clone();
         self.faces.delete(f);
-        e.edges_face_mut(self).for_each(|e| e.remove_face());
+        e.boundary_mut(self).for_each(|e| e.remove_face());
         true
     }
 
@@ -324,7 +324,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         let f = self.faces.push(HalfEdgeFaceImpl::new(e, fp));
         self.edge_ref(e)
             .clone()
-            .edges_face_mut(self)
+            .boundary_mut(self)
             .for_each(|e| e.set_face(f));
         return f;
     }

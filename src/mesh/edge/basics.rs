@@ -48,12 +48,12 @@ pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone {
     }
 
     /// Iterates all (half)edges incident to the same face or boundary (counter-clockwise)
-    fn edges_face<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge> + 'a
+    fn boundary<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge> + 'a
     where
         T: 'a;
 
     /// Iterates all (half)edges incident to the same face or boundary (clockwise)
-    fn edges_face_back<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge> + 'a
+    fn boundary_back<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge> + 'a
     where
         T: 'a;
 
@@ -102,18 +102,18 @@ mod tests {
 
         // TODO: Cursor
         assert_eq!(edge.unwrap().face_ids(&mesh).collect::<Vec<_>>(), vec![0]);
-        assert!(edge.unwrap().edges_face(&mesh).count() == 3);
-        assert!(edge.unwrap().edges_face_back(&mesh).count() == 3);
+        assert!(edge.unwrap().boundary(&mesh).count() == 3);
+        assert!(edge.unwrap().boundary_back(&mesh).count() == 3);
         assert_eq!(
             edge.unwrap()
-                .edges_face(&mesh)
+                .boundary(&mesh)
                 .map(|e| e.id())
                 .collect_vec()
                 .iter()
                 .rev()
                 .collect_vec(),
             edge.unwrap()
-                .edges_face_back(&mesh)
+                .boundary_back(&mesh)
                 .map(|e| e.id())
                 .collect_vec()
                 .iter()
@@ -123,9 +123,9 @@ mod tests {
                 .collect_vec()
         );
         for edge in mesh.halfedges() {
-            assert!(edge.is_boundary(&mesh));
-            assert_eq!(edge.face_ids(&mesh).count(), 1);
-            assert!(edge.edges_face(&mesh).count() == 3);
+            assert!(edge.is_boundary());
+            assert_eq!(edge.clone().face_ids().count(), 1);
+            assert_eq!(edge.boundary().count(), 3);
         }
     }
 
@@ -133,15 +133,13 @@ mod tests {
     fn test_edge_basics_cube() {
         let mesh = Mesh3d64::cube(1.0);
         assert_eq!(mesh.check(), Ok(()));
-        println!("{:?}", mesh);
         for edge in mesh.halfedges() {
-            println!("{:?}", edge);
-            assert!(!edge.is_boundary(&mesh));
-            assert_eq!(edge.face_ids(&mesh).count(), 2);
-            assert_eq!(edge.edges_face(&mesh).count(), 4);
-            assert_eq!(edge.edges_face_back(&mesh).count(), 4);
+            assert!(!edge.is_boundary());
+            assert_eq!(edge.face_ids().count(), 2);
+            assert_eq!(edge.boundary().count(), 4);
+            assert_eq!(edge.boundary_back().count(), 4);
             assert!(edge
-                .face(&mesh)
+                .face()
                 .unwrap()
                 .polygon::<2>(&mesh)
                 .area()

@@ -1,4 +1,4 @@
-use crate::mesh::{EdgeBasics, HalfEdge};
+use crate::mesh::{EdgeBasics, EdgeCursor, HalfEdge};
 
 use super::{MeshBasics, MeshType};
 
@@ -9,9 +9,18 @@ where
 {
     /// Returns an iterator over all non-deleted halfedges.
     #[must_use]
-    fn halfedges<'a>(&'a self) -> impl Iterator<Item = &'a T::Edge>
+    fn halfedge_refs<'a>(&'a self) -> impl Iterator<Item = &'a T::Edge>
     where
         T: 'a;
+
+    /// Returns an iterator over all non-deleted halfedges.
+    #[must_use]
+    fn halfedges<'a>(&'a self) -> impl Iterator<Item = EdgeCursor<'a, T>>
+    where
+        T: 'a,
+    {
+        self.halfedge_ids().map(move |e| EdgeCursor::new(self, e))
+    }
 
     /// Returns an iterator over all non-deleted halfedge's ids
     #[inline]
@@ -21,20 +30,20 @@ where
         T: 'a,
         T::Face: 'a,
     {
-        self.halfedges().map(|e| e.id())
+        self.halfedge_refs().map(|e| e.id())
     }
-    
+
     /// Returns the number of halfedges in the mesh
     #[must_use]
     fn num_halfedges(&self) -> usize;
-    
+
     /// Returns an iterator over all non-deleted halfedge pairs without duplicates
     fn twin_edges<'a>(&'a self) -> impl Iterator<Item = (&'a T::Edge, &'a T::Edge)>
     where
         T::Edge: 'a,
         T: 'a,
     {
-        self.halfedges().filter_map(move |e| {
+        self.halfedge_refs().filter_map(move |e| {
             if e.twin_id() < e.id() {
                 None
             } else {

@@ -3,7 +3,7 @@ use crate::{
     halfedge::HalfEdgeImplMeshType,
     mesh::{
         CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, FaceCursorBasics,
-        HalfEdge, HalfEdgeMesh, MeshBasics, MeshChecker, VertexCursorBasics,
+        HalfEdgeMesh, MeshBasics, MeshChecker, VertexCursorBasics,
     },
 };
 
@@ -12,7 +12,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     /// the precursor to the next edge is the same, and the successor of the previous.
     fn check_edge_invariants(&self) -> Result<(), String> {
         for edge in self.halfedges() {
-            edge.check(self)?;
+            edge.check()?;
         }
 
         Ok(())
@@ -38,27 +38,25 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     }
 
     fn check_edges_are_loops(&self) -> Result<(), String> {
-        if let Some(bad_edge) = self.halfedges().find(|e| {
-            e.next(self)
-                .same_boundary(self, e.origin_id(self))
-                .is_none()
-        }) {
+        if let Some(bad_edge) = self
+            .halfedges()
+            .find(|e| e.clone().next().same_boundary(e.origin_id()).is_none())
+        {
             return Err(format!(
                 "Successor of edge {} cannot reach it's origin {} during forward search",
                 bad_edge.id(),
-                bad_edge.origin_id(self)
+                bad_edge.origin_id()
             ));
         }
 
-        if let Some(bad_edge) = self.halfedges().find(|e| {
-            e.prev(self)
-                .same_boundary_back(self, e.target_id(self))
-                .is_none()
-        }) {
+        if let Some(bad_edge) = self
+            .halfedges()
+            .find(|e| e.clone().prev().same_boundary_back(e.target_id()).is_none())
+        {
             return Err(format!(
                 "Precursor of edge {} cannot reach it's target {} during backward search",
                 bad_edge.id(),
-                bad_edge.target_id(self)
+                bad_edge.target_id()
             ));
         }
 
@@ -83,7 +81,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     fn check_edges_have_face(&self) -> Result<(), String> {
         if let Some(bad_edge) = self
             .halfedges()
-            .find(|e| e.is_boundary_self() && e.twin(self).is_boundary_self())
+            .find(|e| e.is_boundary_self() && e.clone().twin().is_boundary_self())
         {
             return Err(format!("HalfEdge {} has no face!", bad_edge.id()));
         }

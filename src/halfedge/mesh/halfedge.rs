@@ -7,7 +7,7 @@ use crate::{
 impl<T: HalfEdgeImplMeshType> HalfEdgeMesh<T> for HalfEdgeMeshImpl<T> {
     
     #[inline]
-    fn halfedges<'a>(&'a self) -> impl Iterator<Item = &'a T::Edge>
+    fn halfedge_refs<'a>(&'a self) -> impl Iterator<Item = &'a T::Edge>
     where
         T::Edge: 'a,
     {

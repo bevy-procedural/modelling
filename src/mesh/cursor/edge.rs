@@ -63,7 +63,7 @@ impl<'a, T: MeshType> EdgeCursor<'a, T> {
     /// Panics if the edge is void.
     #[inline]
     #[must_use]
-    pub fn faces<'b>(&'b self) -> impl Iterator<Item = FaceCursor<'b, T>> + 'b
+    pub fn faces<'b>(&'b self) -> impl Iterator<Item = FaceCursor<'b, T>>
     where
         T::Edge: 'b,
         'a: 'b,
@@ -71,6 +71,37 @@ impl<'a, T: MeshType> EdgeCursor<'a, T> {
         self.unwrap()
             .face_ids(self.mesh())
             .map(move |id| FaceCursor::new(self.mesh, id))
+    }
+
+    /// Returns face cursors for each edge on the same boundary as this edge.
+    /// Starts with the current edge.
+    /// Returns an empty iterator if the edge is void.
+    #[inline]
+    #[must_use]
+    pub fn boundary<'b>(&'b self) -> impl Iterator<Item = EdgeCursor<'b, T>>
+    where
+        T::Edge: 'b,
+        'a: 'b,
+    {
+        self.unwrap()
+            .boundary(self.mesh())
+            .map(move |e| EdgeCursor::new(self.mesh, e.id()))
+    }
+
+    /// Returns face cursors for each edge on the same boundary as this edge.
+    /// Starts with the current edge.
+    /// Traverses the boundary backwards.
+    /// Returns an empty iterator if the edge is void.
+    #[inline]
+    #[must_use]
+    pub fn boundary_back<'b>(&'b self) -> impl Iterator<Item = EdgeCursor<'b, T>>
+    where
+        T::Edge: 'b,
+        'a: 'b,
+    {
+        self.unwrap()
+            .boundary_back(self.mesh())
+            .map(move |e| EdgeCursor::new(self.mesh, e.id()))
     }
 }
 

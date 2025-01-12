@@ -302,7 +302,7 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     }
 
     fn has_holes(&self) -> bool {
-        for e in self.halfedges() {
+        for e in self.halfedge_refs() {
             if e.is_boundary_self() {
                 return true;
             }

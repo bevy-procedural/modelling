@@ -1,7 +1,7 @@
 use super::{CursorData, FaceCursorData, VertexCursorData};
 use crate::{
     math::IndexType,
-    mesh::{EdgeBasics, HalfEdge, MeshType},
+    mesh::{EdgeBasics, EuclideanMeshType, HalfEdge, MeshType},
 };
 
 /// This trait defines the basic functionality for accessing the data fields of an edge cursor.
@@ -72,6 +72,7 @@ pub trait EdgeCursorBasics<'a, T: MeshType + 'a>: EdgeCursorData<'a, T> {
 
     /// Whether the edge (or its halfedgetwin) is boundary.
     /// Panics if the edge is void.
+    #[inline]
     #[must_use]
     fn is_boundary(&self) -> bool {
         self.unwrap().is_boundary(self.mesh())
@@ -80,9 +81,20 @@ pub trait EdgeCursorBasics<'a, T: MeshType + 'a>: EdgeCursorData<'a, T> {
     /// Whether the edge is manifold.
     /// See [EdgeBasics::is_manifold] for more information.
     /// Panics if the edge is void.
+    #[inline]
     #[must_use]
     fn is_manifold(&self) -> bool {
         self.unwrap().is_manifold(self.mesh())
+    }
+
+    /// Returns the centroid of the edge, i.e., the average of the origin and target vertices.
+    #[inline]
+    #[must_use]
+    fn centroid<const D: usize>(&self) -> T::Vec
+    where
+        T: EuclideanMeshType<D>,
+    {
+        self.unwrap().centroid(self.mesh())
     }
 }
 

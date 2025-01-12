@@ -8,7 +8,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeImpl<T> {
     /// Iterates all half-edges incident to the same face
     /// WARNING: This method is unsafe because it allows mutable access to the mesh! Be careful!
     #[inline]
-    pub fn edges_face_mut<'a>(&'a self, mesh: &'a mut T::Mesh) -> ForwardEdgeIteratorMut<'a, T> {
+    pub fn boundary_mut<'a>(&'a self, mesh: &'a mut T::Mesh) -> ForwardEdgeIteratorMut<'a, T> {
         ForwardEdgeIteratorMut::new(self.id(), mesh)
     }
 }

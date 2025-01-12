@@ -76,7 +76,7 @@ pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
     /// Returns `None` if no such edge exists.
     /// Traverses the boundary forwards.
     fn same_boundary(&self, mesh: &T::Mesh, v: T::V) -> Option<T::E> {
-        self.edges_face(mesh)
+        self.boundary(mesh)
             .find(|e| e.origin_id(mesh) == v)
             .map(|e| e.id())
     }
@@ -84,7 +84,7 @@ pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
     /// Returns `None` if no such edge exists.
     /// Traverses the boundary backwards.
     fn same_boundary_back(&self, mesh: &T::Mesh, v: T::V) -> Option<T::E> {
-        self.edges_face_back(mesh)
+        self.boundary_back(mesh)
             .find(|e| e.origin_id(mesh) == v)
             .map(|e| e.id())
     }
@@ -104,16 +104,15 @@ pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
 #[cfg(test)]
 #[cfg(feature = "nalgebra")]
 mod tests {
-    use super::*;
     use crate::{extensions::nalgebra::*, prelude::*};
 
     #[test]
     fn test_halfedge_triangle() {
         let mut mesh = Mesh3d64::regular_polygon(1.0, 3);
         for edge in mesh.halfedges() {
-            assert!(edge.is_boundary_self() ^ (edge.twin(&mesh).is_boundary_self()));
+            assert!(edge.is_boundary_self() ^ (edge.clone().twin().is_boundary_self()));
             if edge.is_boundary_self() {
-                assert!(edge.other_face(&mesh).is_some());
+                assert!(edge.clone().twin().has_face());
             }
         }
 
@@ -144,7 +143,7 @@ mod tests {
         let mesh = Mesh3d64::cube(1.0);
         for edge in mesh.halfedges() {
             assert!(!edge.is_boundary_self());
-            assert!(edge.other_face(&mesh).is_some());
+            assert!(edge.twin().has_face());
         }
 
         for face in mesh.faces() {

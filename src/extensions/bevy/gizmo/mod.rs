@@ -7,8 +7,8 @@ use super::BevyMesh3d;
 use crate::{
     math::IndexType,
     mesh::{
-        CursorData, EdgeBasics, Face, FaceBasics, HalfEdge, HalfEdgeMesh, MeshBasics, VertexBasics,
-        VertexCursorBasics,
+        CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, Face, FaceBasics,
+        HalfEdge, HalfEdgeMesh, MeshBasics, VertexBasics, VertexCursorBasics,
     },
     tesselate::TesselationMeta,
 };
@@ -56,8 +56,8 @@ pub fn show_tesselation_meta<V: IndexType>(
 /// Use `offset` to slightly shift them towards the face center.
 pub fn show_edges(texts: &mut ResMut<Text3dGizmos>, mesh: &BevyMesh3d, offset: f32) {
     mesh.halfedges().for_each(|e| {
-        if let Some(f) = e.face(mesh) {
-            let p0 = e.centroid(mesh).clone();
+        if let Some(f) = e.clone().face().get() {
+            let p0 = e.centroid().clone();
             let p1 = f.centroid(mesh).clone();
             let p01 = p0 + (p1 - p0).normalize() * offset;
             texts.write(
@@ -65,7 +65,7 @@ pub fn show_edges(texts: &mut ResMut<Text3dGizmos>, mesh: &BevyMesh3d, offset: f
             );
         } else {
             texts.write(
-                Text3dGizmo::new(e.id().to_string(), e.centroid(mesh).clone())
+                Text3dGizmo::new(e.id().to_string(), e.centroid().clone())
                     .with_color(Color::srgb(1.0, 0.0, 0.0)),
             );
         }

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::{
     halfedge::HalfEdgeImplMeshType,
     math::IndexType,
-    mesh::{EdgeBasics, HalfEdge, HalfEdgeMesh},
+    mesh::{CursorData, EdgeCursorBasics, EdgeCursorHalfedgeBasics, HalfEdgeMesh},
 };
 
 use super::HalfEdgeMeshImpl;
@@ -61,7 +61,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     pub(crate) fn pair_edges(&self) -> Vec<PseudoWingedEdge<T::E, T::V, T::F>> {
         let mut edges: HashMap<T::E, PseudoWingedEdge<T::E, T::V, T::F>> = HashMap::new();
         self.halfedges().for_each(|edge| {
-            let twin = edge.twin(self);
+            let twin = edge.clone().twin();
             if edges.contains_key(&twin.id()) {
                 return;
             }
@@ -70,8 +70,8 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
                 PseudoWingedEdge {
                     id: edge.id(),
                     twin: twin.id(),
-                    origin: edge.origin_id(self),
-                    target: twin.origin_id(self),
+                    origin: edge.origin_id(),
+                    target: twin.origin_id(),
                     prev: edge.prev_id(),
                     face: edge.face_id(),
                     next: edge.next_id(),
