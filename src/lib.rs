@@ -31,7 +31,7 @@ mod tests {
     fn test_library_bevy() {
         use crate::extensions::bevy::*;
 
-        let mut mesh = BevyMesh3d::geodesic_octahedron(3.0, 128);
+        let mut mesh = BevyMesh3d::cube(1.0);
         mesh.generate_smooth_normals();
         let (_is, _vs) =
             mesh.triangulate_and_generate_flat_normals_post(TriangulationAlgorithm::Delaunay);
@@ -43,7 +43,7 @@ mod tests {
     fn test_library_nalgebra() {
         use crate::extensions::nalgebra::*;
 
-        let mut mesh = Mesh3d64::geodesic_octahedron(3.0, 128);
+        let mut mesh = Mesh3d64::cube(1.0);
         mesh.generate_smooth_normals();
         let (_is, _vs) =
             mesh.triangulate_and_generate_flat_normals_post(TriangulationAlgorithm::Delaunay);

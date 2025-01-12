@@ -34,7 +34,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     #[inline]
     fn try_remove_edge(&mut self, e: T::E) -> bool {
         let edge = self.edge(e);
-        if edge.has_face() || edge.twin().has_face() {
+        if edge.is_void() || edge.has_face() || edge.twin().has_face() {
             return false;
         }
         self.try_remove_edge_forced(e)
@@ -552,7 +552,7 @@ mod tests {
         let (e1, _v1) = mesh
             .insert_vertex_e(e0, vp(42.0, 0.0, 0.0), Default::default())
             .unwrap();
-        let (_e2, _v2) = mesh
+        let (e2, _v2) = mesh
             .insert_vertex_e(e1, vp(142.0, 0.0, 0.0), Default::default())
             .unwrap();
         assert_eq!(mesh.check(), Ok(()));
@@ -580,10 +580,9 @@ mod tests {
         assert_eq!(mesh.try_remove_edge(e1), false);
         assert_eq!(mesh.is_trivially_isomorphic(&mesh_clone).eq(), true);
 
-        /*
         assert_eq!(mesh.try_remove_edge(e2), true);
         assert_eq!(mesh.check(), Ok(()));
-        assert_eq!(mesh.is_open_2manifold(), true);
+        assert_eq!(mesh.is_open_2manifold(), false);
         assert_eq!(mesh.num_vertices(), 5);
         assert_eq!(mesh.num_halfedges(), 6);
         assert_eq!(mesh.num_faces(), 1);
@@ -594,13 +593,6 @@ mod tests {
         assert_eq!(mesh.check(), Ok(()));
         assert_eq!(mesh.is_open_2manifold(), false);
         assert_eq!(mesh.num_vertices(), 5);
-
-        assert_eq!(mesh.try_remove_edge(e1), true);
-        assert_eq!(mesh.check(), Ok(()));
-        assert_eq!(mesh.is_open_2manifold(), false);
-        assert_eq!(mesh.num_vertices(), 5);
-        assert_eq!(mesh.num_halfedges(), 4);
-        assert_eq!(mesh.num_faces(), 0);*/
     }
 
     #[test]

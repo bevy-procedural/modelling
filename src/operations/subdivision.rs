@@ -122,11 +122,13 @@ where
                     e.id(),
                     self.edge(e.id()).prev().prev_id(),
                     Default::default(),
-                ).unwrap();
+                )
+                .unwrap();
                 self.insert_face(e.id(), fp).unwrap();
             }
             // fill the center hole
-            self.insert_face(self.edge(edges[0].id()).next().twin_id(), fp).unwrap();
+            self.insert_face(self.edge(edges[0].id()).next().twin_id(), fp)
+                .unwrap();
         }
 
         self
@@ -164,26 +166,32 @@ where
     }
 }
 
-/*
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{extensions::nalgebra::*, prelude::*};
 
     #[test]
     fn subdivide_and_fixup() {
-        let mut mesh = BevyMesh3d::regular_polygon(1.0, 3);
-
-        let e = mesh.edge(0).clone();
-        let vp = BevyVertexPayload::from_pos(
-            *e.origin(&mesh).pos() * 0.5 + *e.origin(&mesh).pos() * 0.5,
+        let mut mesh = Mesh3d64::default();
+        let e = mesh.insert_regular_polygon(1.0, 3);
+        let vp = VertexPayloadPNU::<f64, 3>::from_pos(
+            mesh.edge(e).origin().pos() * 0.5 + mesh.edge(e).origin().pos() * 0.5,
         );
 
-        mesh.subdivide_unsafe(e.id(), vp);
+        // TODO:
+        /* mesh.subdivide_unsafe(e.id(), vp);
         assert!(mesh.subdivide_unsafe_try_fixup(e.twin_id()).is_some());
 
         println!("mesh: {}", mesh);
 
-        assert!(mesh.check().is_ok());
+        assert!(mesh.check().is_ok());*/
+    }
+
+    #[test]
+    fn subdivide_regular_shapes() {
+        let mut mesh = Mesh3d64::geodesic_icosahedron(1.0, 4);
+        assert_eq!(mesh.check(), Ok(()));
+        // TODO
     }
 }
-*/
