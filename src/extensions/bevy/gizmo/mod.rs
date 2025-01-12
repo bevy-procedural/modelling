@@ -7,8 +7,8 @@ use super::BevyMesh3d;
 use crate::{
     math::IndexType,
     mesh::{
-        CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, Face, FaceBasics,
-        HalfEdge, HalfEdgeMesh, MeshBasics, VertexBasics, VertexCursorBasics,
+        CursorData, EdgeCursorBasics, EdgeCursorHalfedgeBasics, Face, HalfEdgeMesh, MeshBasics,
+        VertexCursorBasics,
     },
     tesselate::TesselationMeta,
 };

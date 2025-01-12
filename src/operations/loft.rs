@@ -528,7 +528,7 @@ mod tests {
         backwards: Option<bool>, // if None, test both
         autoclose: Option<bool>, // if None, test both
         open: bool,
-        mesh: (Mesh3d64, usize),
+        mesh: (Mesh3d64, EU),
         vp: Vec<VertexPayloadPNU<f64, 3>>,
 
         // the following are expected results
@@ -590,26 +590,25 @@ mod tests {
         println!("{:?}", mesh);
         println!("Result: {:?}", res);
 
-        let old_vertices: HashSet<usize, RandomState> =
-            HashSet::from_iter(config.mesh.0.vertex_ids());
-        let new_vertices: HashSet<usize, RandomState> = HashSet::from_iter(mesh.vertex_ids());
+        let old_vertices: HashSet<VU, RandomState> = HashSet::from_iter(config.mesh.0.vertex_ids());
+        let new_vertices: HashSet<VU, RandomState> = HashSet::from_iter(mesh.vertex_ids());
         assert!(old_vertices.is_subset(&new_vertices));
-        let inserted_vertices: HashSet<usize, RandomState> =
+        let inserted_vertices: HashSet<VU, RandomState> =
             HashSet::from_iter(new_vertices.symmetric_difference(&old_vertices).cloned());
         assert_eq!(inserted_vertices.len(), config.num_inserted_vertices);
 
-        let old_halfedges: HashSet<usize, RandomState> =
+        let old_halfedges: HashSet<EU, RandomState> =
             HashSet::from_iter(config.mesh.0.halfedge_ids());
-        let new_halfedges: HashSet<usize, RandomState> = HashSet::from_iter(mesh.halfedge_ids());
+        let new_halfedges: HashSet<EU, RandomState> = HashSet::from_iter(mesh.halfedge_ids());
         assert!(old_halfedges.is_subset(&new_halfedges));
-        let inserted_halfedges: HashSet<usize, RandomState> =
+        let inserted_halfedges: HashSet<EU, RandomState> =
             HashSet::from_iter(new_halfedges.symmetric_difference(&old_halfedges).cloned());
         assert_eq!(inserted_halfedges.len(), 2 * config.num_appended_edges);
 
-        let old_faces: HashSet<usize, RandomState> = HashSet::from_iter(config.mesh.0.face_ids());
-        let new_faces: HashSet<usize, RandomState> = HashSet::from_iter(mesh.face_ids());
+        let old_faces: HashSet<FU, RandomState> = HashSet::from_iter(config.mesh.0.face_ids());
+        let new_faces: HashSet<FU, RandomState> = HashSet::from_iter(mesh.face_ids());
         assert!(old_faces.is_subset(&new_faces));
-        let inserted_faces: HashSet<usize, RandomState> =
+        let inserted_faces: HashSet<FU, RandomState> =
             HashSet::from_iter(new_faces.symmetric_difference(&old_faces).cloned());
         assert_eq!(inserted_faces.len(), config.num_appended_faces);
 
@@ -627,7 +626,7 @@ mod tests {
             .collect_vec();
         assert_eq!(inner_edges.len(), config.num_inner_edges);
 
-        let old_boundary: HashSet<usize, RandomState> = HashSet::from_iter(
+        let old_boundary: HashSet<EU, RandomState> = HashSet::from_iter(
             config
                 .mesh
                 .0
@@ -636,16 +635,16 @@ mod tests {
                 .map(|e| e.id())
                 .collect_vec(),
         );
-        let old_boundary_vertices: HashSet<usize, RandomState> =
+        let old_boundary_vertices: HashSet<VU, RandomState> =
             HashSet::from_iter(old_boundary.iter().map(|e| mesh.edge(*e).origin_id()));
-        let diagonals: HashSet<usize, RandomState> = HashSet::from_iter(
+        let diagonals: HashSet<EU, RandomState> = HashSet::from_iter(
             inserted_halfedges
                 .iter()
                 .filter(|e| old_boundary_vertices.contains(&mesh.edge(**e).origin_id()))
                 .cloned(),
         );
         assert_eq!(diagonals.len(), config.num_diagonals);
-        let true_boundary: HashSet<usize, RandomState> = HashSet::from_iter(
+        let true_boundary: HashSet<EU, RandomState> = HashSet::from_iter(
             boundary_edges
                 .iter()
                 .filter(|e| {
@@ -759,7 +758,7 @@ mod tests {
         }
     }
 
-    fn regular_polygon(n: usize) -> (Mesh3d64, usize) {
+    fn regular_polygon(n: usize) -> (Mesh3d64, EU) {
         let mut mesh = Mesh3d64::default();
         let e = mesh.insert_regular_polygon(1.0, n);
         (mesh, e)

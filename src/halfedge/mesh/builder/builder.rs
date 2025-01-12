@@ -495,7 +495,7 @@ mod tests {
         VertexPayloadPNU::<f64, 3>::from_pos(Vec3::<f64>::new(x, y, z))
     }
 
-    fn sorted<I: IntoIterator<Item = usize>>(v: I) -> Vec<usize> {
+    fn sorted<T: Ord, I: IntoIterator<Item = T>>(v: I) -> Vec<T> {
         let mut v = v.into_iter().collect_vec();
         v.sort_unstable();
         v
@@ -527,7 +527,7 @@ mod tests {
         assert_eq!(mesh.num_halfedges(), 0);
         assert_eq!(mesh.num_faces(), 0);
         assert_eq!(mesh.is_connected(), true);
-        assert_eq!(mesh.vertex(v2).edge_id(), usize::MAX);
+        assert_eq!(mesh.vertex(v2).edge_id(), IndexType::max());
         assert_eq!(mesh.vertex(v2).neighbors().count(), 0);
 
         // should fail when trying to remove again
@@ -608,32 +608,35 @@ mod tests {
         let mut mesh = Mesh3d64::default();
         let vp1 = vp(42.0, 42.0, 42.0);
         let v1 = mesh.insert_vertex(vp1);
-        assert_eq!(v1, 0);
+        assert_eq!(v1, IndexType::new(0));
         assert_eq!(mesh.check(), Ok(()));
         assert_eq!(mesh.is_open_2manifold(), false);
         assert_eq!(mesh.num_vertices(), 1);
         assert_eq!(mesh.num_halfedges(), 0);
         assert_eq!(mesh.num_faces(), 0);
         assert_eq!(*mesh.vertex(v1).payload(), vp1);
-        assert_eq!(mesh.vertex(v1).edge_id(), usize::MAX);
+        assert_eq!(mesh.vertex(v1).edge_id(), IndexType::max());
         assert_eq!(mesh.vertex(v1).neighbors().count(), 0);
         assert_eq!(mesh.is_connected(), true);
 
         let vp2 = vp(0.0, 0.0, 0.0);
         let v2 = mesh.insert_vertex(vp2);
-        assert_eq!(v2, 1);
+        assert_eq!(v2, IndexType::new(1));
         assert_eq!(mesh.check(), Ok(()));
         assert_eq!(mesh.is_open_2manifold(), false);
         assert_eq!(mesh.num_vertices(), 2);
         assert_eq!(mesh.num_halfedges(), 0);
         assert_eq!(mesh.num_faces(), 0);
         assert_eq!(*mesh.vertex(v2).payload(), vp2);
-        assert_eq!(mesh.vertex(v2).edge_id(), usize::MAX);
+        assert_eq!(mesh.vertex(v2).edge_id(), IndexType::max());
         assert_eq!(mesh.vertex(v2).neighbors().count(), 0);
         assert_eq!(mesh.is_connected(), false);
 
         let e12 = mesh.insert_edge_vv(v1, v2, Default::default()).unwrap();
-        assert_eq!(sorted([e12, mesh.edge(e12).twin_id()]), vec![0, 1]);
+        assert_eq!(
+            sorted([e12, mesh.edge(e12).twin_id()]),
+            vec![IndexType::new(0), IndexType::new(1)]
+        );
         assert_eq!(mesh.check(), Ok(()));
         assert_eq!(mesh.is_open_2manifold(), false);
         assert_eq!(mesh.num_vertices(), 2);
@@ -647,8 +650,11 @@ mod tests {
 
         let vp3 = vp(1.0, 0.0, 0.0);
         let (e23, v3) = mesh.insert_vertex_v(v2, vp3, Default::default()).unwrap();
-        assert_eq!(sorted([e23, mesh.edge(e23).twin_id()]), vec![2, 3]);
-        assert_eq!(v3, 2);
+        assert_eq!(
+            sorted([e23, mesh.edge(e23).twin_id()]),
+            vec![IndexType::new(2), IndexType::new(3)]
+        );
+        assert_eq!(v3, IndexType::new(2));
         assert_eq!(mesh.check(), Ok(()));
         assert_eq!(mesh.is_open_2manifold(), false);
         assert_eq!(mesh.num_vertices(), 3);
@@ -662,7 +668,10 @@ mod tests {
         assert_eq!(mesh.edge(e23).target_id(), v3);
 
         let e31 = mesh.insert_edge_vv(v3, v1, Default::default()).unwrap();
-        assert_eq!(sorted([e31, mesh.edge(e31).twin_id()]), vec![4, 5]);
+        assert_eq!(
+            sorted([e31, mesh.edge(e31).twin_id()]),
+            vec![IndexType::new(4), IndexType::new(5)]
+        );
         assert_eq!(mesh.check(), Ok(()));
         //assert_eq!(mesh.is_open_2manifold(), false);
         assert_eq!(mesh.num_vertices(), 3);
@@ -680,7 +689,7 @@ mod tests {
             // No matter which edge we use to insert the face, the result should be the same
             let mut mesh = mesh.clone();
             let f = mesh.insert_face(*e, Default::default()).unwrap();
-            assert_eq!(f, 0);
+            assert_eq!(f, IndexType::new(0));
             assert_eq!(mesh.check(), Ok(()));
             assert_eq!(mesh.is_open_2manifold(), true);
             assert_eq!(mesh.has_holes(), true);
@@ -716,7 +725,10 @@ mod tests {
             mesh.insert_isolated_edge(vp(0.0, 0.0, 0.0), vp(1.0, 0.0, 0.0), Default::default());
         let v1 = mesh.vertex(mesh.edge(e12).origin_id()).id();
         let v2 = mesh.vertex(mesh.edge(e12).target_id()).id();
-        assert_eq!(sorted([e12, mesh.edge(e12).twin_id()]), vec![0, 1]);
+        assert_eq!(
+            sorted([e12, mesh.edge(e12).twin_id()]),
+            vec![IndexType::new(0), IndexType::new(1)]
+        );
         assert_eq!(mesh.check(), Ok(()));
         assert_eq!(mesh.is_open_2manifold(), false);
         assert_eq!(mesh.num_vertices(), 2);
@@ -727,7 +739,7 @@ mod tests {
         assert_eq!(mesh.vertex(v2).neighbor_ids().collect_vec(), vec![v1]);
 
         let v3 = mesh.insert_vertex(vp(1.0, 1.0, 0.0));
-        assert_eq!(v3, 2);
+        assert_eq!(v3, IndexType::new(2));
         assert_eq!(mesh.check(), Ok(()));
         assert_eq!(mesh.is_open_2manifold(), false);
         assert_eq!(mesh.num_vertices(), 3);
@@ -737,7 +749,10 @@ mod tests {
         assert_eq!(mesh.vertex(v3).neighbors().count(), 0);
 
         let e23 = mesh.insert_edge_ev(e12, v3, Default::default()).unwrap();
-        assert_eq!(sorted([e23, mesh.edge(e23).twin_id()]), vec![2, 3]);
+        assert_eq!(
+            sorted([e23, mesh.edge(e23).twin_id()]),
+            vec![IndexType::new(2), IndexType::new(3)]
+        );
         assert_eq!(mesh.check(), Ok(()));
         assert_eq!(mesh.is_open_2manifold(), false);
         assert_eq!(mesh.num_vertices(), 3);
@@ -753,8 +768,11 @@ mod tests {
         let (e34, v4) = mesh
             .insert_vertex_e(e23, vp(1.0, 1.0, 1.0), Default::default())
             .unwrap();
-        assert_eq!(sorted([e34, mesh.edge(e34).twin_id()]), vec![4, 5]);
-        assert_eq!(v4, 3);
+        assert_eq!(
+            sorted([e34, mesh.edge(e34).twin_id()]),
+            vec![IndexType::new(4), IndexType::new(5)]
+        );
+        assert_eq!(v4, IndexType::new(3));
         assert_eq!(mesh.check(), Ok(()));
         assert_eq!(mesh.is_open_2manifold(), false);
         assert_eq!(mesh.num_vertices(), 4);
@@ -771,8 +789,11 @@ mod tests {
             .insert_vertex_e(e12, vp(0.0, 1.0, 0.0), Default::default())
             .unwrap();
         let e52 = mesh.edge(e25).twin_id();
-        assert_eq!(sorted([e25, e52]), vec![6, 7]);
-        assert_eq!(v5, 4);
+        assert_eq!(
+            sorted([e25, e52]),
+            vec![IndexType::new(6), IndexType::new(7)]
+        );
+        assert_eq!(v5, IndexType::new(4));
         assert_eq!(mesh.check(), Ok(()));
         assert_eq!(mesh.is_open_2manifold(), false);
         assert_eq!(mesh.num_vertices(), 5);
@@ -791,7 +812,7 @@ mod tests {
             let (e45, f) = mesh
                 .close_face_vvv(v3, v4, v5, Default::default(), Default::default())
                 .unwrap();
-            assert_eq!(f, 0);
+            assert_eq!(f, IndexType::new(0));
             assert_eq!(mesh.check(), Ok(()));
             assert_eq!(mesh.is_open_2manifold(), false);
             assert_eq!(mesh.num_vertices(), 5);
@@ -813,7 +834,7 @@ mod tests {
             let (e45, f) = mesh
                 .close_face_ee(e34, e52, Default::default(), Default::default())
                 .unwrap();
-            assert_eq!(f, 0);
+            assert_eq!(f, IndexType::new(0));
             assert_eq!(mesh.check(), Ok(()));
             assert_eq!(mesh.is_open_2manifold(), false);
             assert_eq!(mesh.num_vertices(), 5);
@@ -883,7 +904,7 @@ mod tests {
 
                     for i in 0..4 {
                         let (e42, f) = res[i];
-                        assert_eq!(f, 0);
+                        assert_eq!(f, IndexType::new(0));
                         assert_eq!(m[i].edge(e42).target_id(), v2);
                         assert_eq!(m[i].edge(e42).origin_id(), v4);
                         assert_eq!(m[i].check(), Ok(()));
@@ -924,7 +945,7 @@ mod tests {
                         let (e24, backface) = cloned
                             .close_face_ee(e32, e43, Default::default(), Default::default())
                             .unwrap();
-                        assert_eq!(backface, 1);
+                        assert_eq!(backface, IndexType::new(1));
                         assert_eq!(cloned.check(), Ok(()));
                         assert!(cloned.is_trivially_isomorphic(&m[i]).ne());
                         assert_eq!(cloned.num_vertices(), 6);
@@ -945,7 +966,7 @@ mod tests {
                     let (e45, f1) = mesh
                         .close_face_ee(e34, e52, Default::default(), Default::default())
                         .unwrap();
-                    assert_eq!(f1, 0);
+                    assert_eq!(f1, IndexType::new(0));
                     assert_eq!(mesh.check(), Ok(()));
                     assert_eq!(mesh.is_open_2manifold(), false);
                     assert_eq!(mesh.num_vertices(), 6);
@@ -968,7 +989,7 @@ mod tests {
                     let (e53, f2) = mesh
                         .close_face_ee(e25, e32, Default::default(), Default::default())
                         .unwrap();
-                    assert_eq!(f2, 1);
+                    assert_eq!(f2, IndexType::new(1));
                     assert_eq!(mesh.check(), Ok(()));
                     assert_eq!(mesh.is_open_2manifold(), false);
                     assert_eq!(mesh.num_vertices(), 6);

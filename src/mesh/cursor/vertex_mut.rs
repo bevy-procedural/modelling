@@ -6,13 +6,17 @@ use crate::{
     math::IndexType,
     mesh::{HalfEdge, HalfEdgeVertex, MeshBasics, MeshType, VertexBasics},
 };
-use std::fmt::Debug;
 
 /// A vertex cursor pointing to a vertex of a mesh with a mutable reference to the mesh.
-#[derive(Debug)]
 pub struct VertexCursorMut<'a, T: MeshType> {
     mesh: &'a mut T::Mesh,
     vertex: T::V,
+}
+
+impl<'a, T: MeshType> std::fmt::Debug for VertexCursorMut<'a, T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "VertexCursorMut({:?})", self.vertex)
+    }
 }
 
 impl<'a, T: MeshType> VertexCursorMut<'a, T> {

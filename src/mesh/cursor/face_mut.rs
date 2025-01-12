@@ -6,13 +6,17 @@ use crate::{
     math::IndexType,
     mesh::{FaceBasics, HalfEdge, MeshBasics, MeshBuilder, MeshType},
 };
-use std::fmt::Debug;
 
 /// A face cursor pointing to a face of a mesh with a mutable reference to the mesh.
-#[derive(Debug)]
 pub struct FaceCursorMut<'a, T: MeshType> {
     mesh: &'a mut T::Mesh,
     face: T::F,
+}
+
+impl<'a, T: MeshType> std::fmt::Debug for FaceCursorMut<'a, T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "FaceCursorMut({:?})", self.face)
+    }
 }
 
 impl<'a, T: MeshType> FaceCursorMut<'a, T> {
@@ -22,7 +26,7 @@ impl<'a, T: MeshType> FaceCursorMut<'a, T> {
     pub fn new(mesh: &'a mut T::Mesh, face: T::F) -> Self {
         Self { mesh, face }
     }
-    
+
     /// Creates a new void face cursor.
     #[inline]
     #[must_use]

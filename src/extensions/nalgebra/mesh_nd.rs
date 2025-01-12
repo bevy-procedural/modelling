@@ -1,3 +1,4 @@
+use super::{NdAffine, NdRotate, Polygon2d, VecN, VertexPayloadPNU, EU, FU, VU};
 use crate::{
     halfedge::{
         HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeImplMeshType, HalfEdgeMeshImpl, HalfEdgeVertexImpl,
@@ -8,8 +9,6 @@ use crate::{
     },
     prelude::HalfEdgeImplMeshTypePlus,
 };
-
-use super::{NdAffine, NdRotate, Polygon2d, VecN, VertexPayloadPNU};
 
 /// A mesh type for nalgebra with
 /// - nd vertices,
@@ -27,9 +26,9 @@ pub type MeshType3d64PNU = MeshTypeNd64PNU<3>;
 pub type MeshType4d64PNU = MeshTypeNd64PNU<4>;
 
 impl<const D: usize> MeshType for MeshTypeNd64PNU<D> {
-    type E = usize;
-    type V = usize;
-    type F = usize;
+    type E = EU;
+    type V = VU;
+    type F = FU;
     type EP = EmptyEdgePayload<Self>;
     type VP = VertexPayloadPNU<f64, D>;
     type FP = EmptyFacePayload<Self>;

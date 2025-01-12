@@ -6,7 +6,6 @@ use crate::{
     math::IndexType,
     mesh::{EdgeBasics, HalfEdge, MeshBasics, MeshType},
 };
-use std::fmt::Debug;
 
 /// An edge cursor pointing to an edge of a mesh with an immutable reference to the mesh.
 ///
@@ -22,10 +21,16 @@ use std::fmt::Debug;
 /// icmp + br               ; if the `next_id` exceeds the length of the `Vec` or is `IndexType::max()`, skip all further blocks
 /// ```
 /// (using `cargo rustc -- --emit=llvm-ir -O -C debuginfo=2`)
-#[derive(Clone, Debug, Eq)]
+#[derive(Clone, Eq)]
 pub struct EdgeCursor<'a, T: MeshType> {
     mesh: &'a T::Mesh,
     edge: T::E,
+}
+
+impl<'a, T: MeshType> std::fmt::Debug for EdgeCursor<'a, T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "EdgeCursor({:?})", self.edge)
+    }
 }
 
 impl<'a, T: MeshType> EdgeCursor<'a, T> {

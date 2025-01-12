@@ -150,6 +150,6 @@ mod tests {
         Font::new(include_bytes!("../../assets/Cochineal-Roman.otf"), 1.0)
             .layout_text::<2, MeshType2d64PNUCurved>("F", &mut mesh2d);
         let mesh3d = mesh2d.to_nd(0.01);
-        self::verify_triangulation::<MeshType3d64PNU>(&mesh3d, 0);
+        self::verify_triangulation::<MeshType3d64PNU>(&mesh3d, IndexType::new(0));
     }
 }

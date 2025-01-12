@@ -6,13 +6,18 @@ use crate::{
     math::IndexType,
     mesh::{HalfEdge, HalfEdgeVertex, MeshBasics, MeshType, VertexBasics},
 };
-use std::fmt::Debug;
 
 /// A vertex cursor pointing to a vertex of a mesh with an immutable reference to the mesh.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct VertexCursor<'a, T: MeshType> {
     mesh: &'a T::Mesh,
     vertex: T::V,
+}
+
+impl<'a, T: MeshType> std::fmt::Debug for VertexCursor<'a, T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "VertexCursor({:?})", self.vertex)
+    }
 }
 
 impl<'a, T: MeshType> VertexCursor<'a, T> {

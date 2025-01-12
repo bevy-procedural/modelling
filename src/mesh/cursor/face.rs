@@ -6,13 +6,18 @@ use crate::{
     math::IndexType,
     mesh::{FaceBasics, HalfEdge, MeshBasics, MeshType},
 };
-use std::fmt::Debug;
 
 /// A face cursor pointing to a face of a mesh with an immutable reference to the mesh.
-#[derive(Clone, Debug, Eq)]
+#[derive(Clone, Eq)]
 pub struct FaceCursor<'a, T: MeshType> {
     mesh: &'a T::Mesh,
     face: T::F,
+}
+
+impl<'a, T: MeshType> std::fmt::Debug for FaceCursor<'a, T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "FaceCursor({:?})", self.face)
+    }
 }
 
 impl<'a, T: MeshType> FaceCursor<'a, T> {

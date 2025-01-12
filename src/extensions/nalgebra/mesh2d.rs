@@ -1,3 +1,4 @@
+use super::{MeshNd64, NdAffine, NdRotate, Polygon2d, VecN, VertexPayloadPNU, EU, FU, VU};
 use crate::{
     halfedge::{
         HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeImplMeshType, HalfEdgeMeshImpl, HalfEdgeVertexImpl,
@@ -11,8 +12,6 @@ use crate::{
     prelude::HalfEdgeImplMeshTypePlus,
 };
 
-use super::{MeshNd64, NdAffine, NdRotate, Polygon2d, VecN, VertexPayloadPNU};
-
 /// A mesh type for nalgebra with
 /// - 2D vertices,
 /// - usize indices,
@@ -24,9 +23,9 @@ use super::{MeshNd64, NdAffine, NdRotate, Polygon2d, VecN, VertexPayloadPNU};
 pub struct MeshType2d64PNUCurved;
 
 impl MeshType for MeshType2d64PNUCurved {
-    type E = usize;
-    type V = usize;
-    type F = usize;
+    type E = EU;
+    type V = VU;
+    type F = FU;
     type EP = CurvedEdgePayload<2, Self>;
     type VP = VertexPayloadPNU<f64, 2>;
     type FP = EmptyFacePayload<Self>;

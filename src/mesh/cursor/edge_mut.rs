@@ -6,14 +6,18 @@ use crate::{
     math::IndexType,
     mesh::{HalfEdge, MeshBasics, MeshBuilder, MeshType},
 };
-use std::fmt::Debug;
 
 /// An edge cursor pointing to an edge of a mesh with a mutable reference to the mesh.
-#[derive(Debug)]
 pub struct EdgeCursorMut<'a, T: MeshType + 'a> {
     mesh: &'a mut T::Mesh,
     edge: T::E,
     // TODO: Integrate the path builder into the edge cursor mut! This should now include setting the start etc.
+}
+
+impl<'a, T: MeshType> std::fmt::Debug for EdgeCursorMut<'a, T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "EdgeCursorMut({:?})", self.edge)
+    }
 }
 
 impl<'a, T: MeshType + 'a> EdgeCursorMut<'a, T> {

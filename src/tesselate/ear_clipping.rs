@@ -105,7 +105,7 @@ mod tests {
     use super::*;
     use crate::{extensions::nalgebra::*, prelude::*};
 
-    fn verify_triangulation(vec2s: &Vec<IndexedVertex2D<usize, Vec2<f64>>>) {
+    fn verify_triangulation(vec2s: &Vec<IndexedVertex2D<VU, Vec2<f64>>>) {
         assert!(
             Polygon2d::from_iter(vec2s.iter().map(|v| v.vec)).is_ccw(),
             "Polygon must be counterclockwise"
@@ -117,14 +117,14 @@ mod tests {
                 .iter()
                 .map(|v| VertexPayloadPNU::from_pos(Vec3::new(v.vec.x, 0.0, v.vec.y))),
         );
-        ear_clipping::<MeshType3d64PNU>(m.face_ref(0), &m, &mut tri, false);
+        ear_clipping::<MeshType3d64PNU>(m.the_face().unwrap(), &m, &mut tri, false);
         tri.verify_full::<Vec2<f64>, Polygon2d<f64>>(vec2s);
     }
 
-    fn liv_from_array(arr: &[[f64; 2]]) -> Vec<IndexedVertex2D<usize, Vec2<f64>>> {
+    fn liv_from_array(arr: &[[f64; 2]]) -> Vec<IndexedVertex2D<VU, Vec2<f64>>> {
         arr.iter()
             .enumerate()
-            .map(|(i, &v)| IndexedVertex2D::new(Vec2::new(v[0], v[1]), i as usize))
+            .map(|(i, &v)| IndexedVertex2D::new(Vec2::new(v[0], v[1]), IndexType::new(i as usize)))
             .collect()
     }
 
@@ -141,7 +141,7 @@ mod tests {
                 .into_iter()
                 .map(|i| {
                     let a = i as f64 / (n as f64) * std::f64::consts::PI * 2.0;
-                    IndexedVertex2D::new(Vec2::new(a.cos(), a.sin()), i)
+                    IndexedVertex2D::new(Vec2::new(a.cos(), a.sin()), IndexType::new(i))
                 })
                 .collect(),
         );

@@ -92,16 +92,19 @@ mod tests {
     #[test]
     fn test_edge_basics_triangle() {
         let mesh = Mesh3d64::regular_polygon(1.0, 3);
-        let edge = mesh.edge(0);
+        let edge = mesh.edge(IndexType::new(0));
         assert_eq!(mesh.check(), Ok(()));
-        assert_eq!(edge.origin_id(), 0);
-        assert_eq!(edge.target_id(), 1);
-        assert_eq!(edge.twin_id(), 1);
+        assert_eq!(edge.origin_id(), IndexType::new(0));
+        assert_eq!(edge.target_id(), IndexType::new(1));
+        assert_eq!(edge.twin_id(), IndexType::new(1));
         assert_eq!(edge.is_boundary(), true);
         assert_eq!(edge.payload().is_empty(), true);
 
         // TODO: Cursor
-        assert_eq!(edge.unwrap().face_ids(&mesh).collect::<Vec<_>>(), vec![0]);
+        assert_eq!(
+            edge.unwrap().face_ids(&mesh).collect::<Vec<_>>(),
+            vec![IndexType::new(0)]
+        );
         assert!(edge.unwrap().boundary(&mesh).count() == 3);
         assert!(edge.unwrap().boundary_back(&mesh).count() == 3);
         assert_eq!(
