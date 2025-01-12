@@ -517,7 +517,11 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{extensions::nalgebra::*, prelude::*};
+    use crate::{
+        extensions::nalgebra::*,
+        math::impls::{EU, FU, VU},
+        prelude::*,
+    };
     use itertools::Itertools;
     use std::{collections::HashSet, hash::RandomState};
 

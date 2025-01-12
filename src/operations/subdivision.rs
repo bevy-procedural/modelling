@@ -168,14 +168,13 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::{extensions::nalgebra::*, prelude::*};
 
     #[test]
     fn subdivide_and_fixup() {
         let mut mesh = Mesh3d64::default();
         let e = mesh.insert_regular_polygon(1.0, 3);
-        let vp = VertexPayloadPNU::<f64, 3>::from_pos(
+        let _vp = VertexPayloadPNU::<f64, 3>::from_pos(
             mesh.edge(e).origin().pos() * 0.5 + mesh.edge(e).origin().pos() * 0.5,
         );
 
@@ -190,7 +189,7 @@ mod tests {
 
     #[test]
     fn subdivide_regular_shapes() {
-        let mut mesh = Mesh3d64::geodesic_icosahedron(1.0, 4);
+        let mesh = Mesh3d64::geodesic_icosahedron(1.0, 4);
         assert_eq!(mesh.check(), Ok(()));
         // TODO
     }

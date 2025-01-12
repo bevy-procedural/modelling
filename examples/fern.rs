@@ -208,7 +208,7 @@ fn make_blechnum_spicant(settings: &GlobalSettings) -> BevyMesh3d {
             edge,
             base.iter()
                 .map(|v| BevyVertexPayload3d::from_pos(cur + q.mul_vec3(*v * scale))),
-        );
+        ).unwrap();
 
         // TODO: make the smoothstep a more general concept. Also, investigate different overshoot and offset systems
         let leaf_progress = smoothstep(

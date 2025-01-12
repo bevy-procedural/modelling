@@ -1,9 +1,9 @@
-use super::{MeshNd64, NdAffine, NdRotate, Polygon2d, VecN, VertexPayloadPNU, EU, FU, VU};
+use super::{MeshNd64, NdAffine, NdRotate, Polygon2d, VecN, VertexPayloadPNU};
 use crate::{
     halfedge::{
         HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeImplMeshType, HalfEdgeMeshImpl, HalfEdgeVertexImpl,
     },
-    math::{HasPosition, Vector},
+    math::{impls::{EU, FU, VU}, HasPosition, Vector},
     mesh::{
         CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EdgeBasics, EdgePayload, EmptyEdgePayload,
         EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshBasicsCurved,

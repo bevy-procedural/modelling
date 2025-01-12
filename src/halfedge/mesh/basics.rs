@@ -2,7 +2,7 @@ use super::{HalfEdgeImplMeshType, HalfEdgeMeshImpl};
 use crate::{
     math::IndexType,
     mesh::{
-        CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, FaceBasics, HalfEdge,
+        CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, HalfEdge,
         HalfEdgeMesh, MeshBasics, Triangulation, VertexBasics, VertexPayload,
     },
     prelude::IncidentToVertexIterator,

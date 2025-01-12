@@ -25,7 +25,7 @@ fn create_vertices(t: f64) -> (Vec<MyVertex>, Vec<u16>) {
     let mut vertices = Vec::new();
     let mut indices = Vec::new();
     for i in is {
-        indices.push(i as u16);
+        indices.push(i.index() as u16);
     }
     for v in vs {
         vertices.push(MyVertex {

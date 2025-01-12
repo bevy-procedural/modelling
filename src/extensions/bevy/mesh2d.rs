@@ -3,7 +3,7 @@ use crate::{
     halfedge::{
         HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeImplMeshType, HalfEdgeMeshImpl, HalfEdgeVertexImpl,
     },
-    math::HasPosition,
+    math::{impls::{E32, F32, V32}, HasPosition},
     mesh::{
         CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EdgeBasics, EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshBasicsCurved, MeshType, MeshTypeHalfEdge
     },
@@ -21,9 +21,9 @@ use bevy::math::{Affine2, Vec2, Vec3};
 pub struct BevyMeshType2d32;
 
 impl MeshType for BevyMeshType2d32 {
-    type E = u32;
-    type V = u32;
-    type F = u32;
+    type E = E32;
+    type V = V32;
+    type F = F32;
     type EP = CurvedEdgePayload<2, Self>;
     type VP = BevyVertexPayload2d;
     type FP = EmptyFacePayload<Self>;

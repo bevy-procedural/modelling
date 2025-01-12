@@ -2,7 +2,7 @@ use crate::{
     math::{HasPosition, IndexType, TransformTrait, Transformable},
     mesh::{
         CursorData, CurvedEdge, CurvedEdgeType, DefaultEdgePayload, EdgeBasics, EdgeCursorBasics,
-        EdgeCursorHalfedgeBasics, HalfEdge, MeshBasics, MeshBuilder, MeshType, VertexBasics,
+        EdgeCursorHalfedgeBasics, HalfEdge, MeshBasics, MeshBuilder, MeshType,
         VertexCursorBasics,
     },
 };

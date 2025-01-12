@@ -2,6 +2,6 @@
 
 pub mod f32;
 pub mod f64;
+mod index;
 
-// pub mod mpfr;
-// pub mod fixed;
+pub use index::*;

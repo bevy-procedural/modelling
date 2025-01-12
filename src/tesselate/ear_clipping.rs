@@ -103,7 +103,7 @@ pub fn ear_clipping_direct<Vec2: Vector2D, V: IndexType>(
 #[cfg(feature = "nalgebra")]
 mod tests {
     use super::*;
-    use crate::{extensions::nalgebra::*, prelude::*};
+    use crate::{extensions::nalgebra::*, math::impls::VU, prelude::*};
 
     fn verify_triangulation(vec2s: &Vec<IndexedVertex2D<VU, Vec2<f64>>>) {
         assert!(
