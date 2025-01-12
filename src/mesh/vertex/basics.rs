@@ -2,7 +2,7 @@
 
 use crate::{
     math::{HasPosition, Scalar, Vector},
-    mesh::{EdgeBasics, MeshType},
+    mesh::{MeshBasics, MeshType},
 };
 
 /// Basic vertex functionality for a mesh
@@ -42,7 +42,7 @@ pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone {
     fn has_only_one_edge(&self, mesh: &T::Mesh) -> bool;
 
     /// Iterates all vertices adjacent to the vertex in the same manifold edge wheel (clockwise)
-    fn neighbors<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Vertex>
+    fn neighbors<'a>(&self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Vertex>
     where
         T: 'a;
 
@@ -66,32 +66,14 @@ pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone {
 
     /// Iterates all outgoing (half)edges (resp. all edges in outwards-direction
     /// if undirected) incident to this vertex (clockwise)
-    fn edges_out<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge>
-    where
-        T: 'a;
-
-    /// Iterates all outgoing (half)edges (resp. all edges in outwards-direction
-    /// if undirected) incident to this vertex (clockwise)
-    fn edges_out_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::E> + 'a
-    where
-        T: 'a,
-    {
-        self.edges_out(mesh).map(|e| e.id())
+    fn edges_out(&self, mesh: &T::Mesh) -> impl Iterator<Item = T::E> {
+        mesh.vertex_edges_out(self.id())
     }
 
     /// Iterates all ingoing (half)edges (resp. all edges in inwards-direction
     /// if undirected) incident to this vertex (clockwise)
-    fn edges_in<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge>
-    where
-        T: 'a;
-
-    /// Iterates all ingoing (half)edges (resp. all edges in inwards-direction
-    /// if undirected) incident to this vertex (clockwise)
-    fn edges_in_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::E> + 'a
-    where
-        T: 'a,
-    {
-        self.edges_in(mesh).map(|e| e.id())
+    fn edges_in(&self, mesh: &T::Mesh) -> impl Iterator<Item = T::E> {
+        mesh.vertex_edges_in(self.id())
     }
 
     /*

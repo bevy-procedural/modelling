@@ -79,6 +79,23 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     where
         T: 'a;
 
+    /// Iterates all outgoing (half)edges (resp. all edges in outwards-direction
+    /// if undirected) incident to this vertex (clockwise)
+    /// Returns an empty iterator if the vertex does not exist.
+    #[must_use]
+    fn vertex_edges_out(&self, v: T::V) -> impl Iterator<Item = T::E>;
+
+    /// Iterates all ingoing (half)edges (resp. all edges in outwards-direction
+    /// if undirected) incident to this vertex (clockwise)
+    /// Returns an empty iterator if the vertex does not exist.
+    #[must_use]
+    fn vertex_edges_in(&self, v: T::V) -> impl Iterator<Item = T::E>;
+
+    /// Iterates all neighbors of the vertex.
+    /// Returns an empty iterator if the vertex does not exist.
+    #[must_use]
+    fn vertex_neighbors(&self, v: T::V) -> impl Iterator<Item = T::V>;
+
     //======================= Edge Operations =======================//
 
     /// Returns whether the edge exists and is not deleted

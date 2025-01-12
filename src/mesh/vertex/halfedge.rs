@@ -2,8 +2,7 @@ use super::VertexBasics;
 use crate::{
     math::IndexType,
     mesh::{
-        CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, HalfEdge, MeshBasics,
-        MeshType,
+        CursorData, EdgeCursorBasics, EdgeCursorHalfedgeBasics, HalfEdge, MeshBasics, MeshType,
     },
 };
 use itertools::Itertools;
@@ -20,11 +19,11 @@ where
     fn outgoing_boundary_edge(&self, mesh: &T::Mesh) -> Option<T::E> {
         if let Ok(e) = self
             .edges_out(mesh)
-            .filter(|e| e.is_boundary_self())
+            .filter(|e| mesh.edge(*e).is_boundary_self())
             .exactly_one()
         {
-            debug_assert_eq!(e.origin_id(mesh), self.id());
-            Some(e.id())
+            debug_assert_eq!(mesh.edge(e).origin_id(), self.id());
+            Some(e)
         } else {
             None
         }
@@ -34,11 +33,11 @@ where
     fn ingoing_boundary_edge(&self, mesh: &T::Mesh) -> Option<T::E> {
         if let Ok(e) = self
             .edges_in(mesh)
-            .filter(|e| e.is_boundary_self())
+            .filter(|e| mesh.edge(*e).is_boundary_self())
             .exactly_one()
         {
-            debug_assert_eq!(e.target_id(mesh), self.id());
-            Some(e.id())
+            debug_assert_eq!(mesh.edge(e).target_id(), self.id());
+            Some(e)
         } else {
             None
         }
@@ -51,7 +50,7 @@ where
         let v0 = self.id();
 
         let mut m = None;
-        let starts: Vec<T::E> = self.edges_out_ids(mesh).collect_vec();
+        let starts: Vec<T::E> = self.edges_out(mesh).collect_vec();
         let mut paths = starts.clone();
         let mut len = 0;
         while m.is_none() {

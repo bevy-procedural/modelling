@@ -29,7 +29,7 @@ pub trait MeshBasicsCurved<T: MeshType<Mesh = Self>>: MeshBasics<T> {
                 if vs.len() == 0 {
                     continue;
                 }
-                self.subdivide_edge(
+                self.subdivide_edge_iter(
                     *e,
                     vs.iter().map(|v| (T::EP::default(), T::VP::from_pos(*v))),
                 );

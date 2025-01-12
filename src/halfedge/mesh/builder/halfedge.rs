@@ -163,9 +163,12 @@ impl<T: HalfEdgeImplMeshTypePlus> HalfEdgeMeshImpl<T> {
         let (fv, tw, v, w) = {
             let e_input = self.edge(input);
             let e_output = self.edge(output);
-            let v = e_input.target_id();
-            let w = e_output.origin_id();
-            (e_input.next_id(), e_output.prev_id(), v, w)
+            (
+                e_input.next_id(),
+                e_output.prev_id(),
+                e_input.target_id(),
+                e_output.origin_id(),
+            )
         };
 
         debug_assert_eq!(self.edge(input).target_id(), v);

@@ -4,7 +4,7 @@ use super::{
 };
 use crate::{
     math::IndexType,
-    mesh::{EdgeBasics, HalfEdge, HalfEdgeVertex, MeshBasics, MeshType, VertexBasics},
+    mesh::{HalfEdge, HalfEdgeVertex, MeshBasics, MeshType, VertexBasics},
 };
 use std::fmt::Debug;
 
@@ -17,42 +17,50 @@ pub struct VertexCursor<'a, T: MeshType> {
 
 impl<'a, T: MeshType> VertexCursor<'a, T> {
     /// Creates a new vertex cursor pointing to the given vertex.
+    #[must_use]
+    #[inline]
     pub fn new(mesh: &'a T::Mesh, vertex: T::V) -> Self {
         Self { mesh, vertex }
     }
 
     /// Returns an iterator of edge cursors pointing to the outgoing halfedges of the vertex.
-    /// Panics if the vertex is void.
-    /// TODO: would be nice to return an empty iterator if the vertex is void instead?
-    /// See [VertexBasics::edges_out] for more information.
-    pub fn edges_out(&'a self) -> impl Iterator<Item = EdgeCursor<'a, T>> {
-        self.unwrap()
-            .edges_out(self.mesh)
-            .map(move |e| EdgeCursor::new(self.mesh, e.id()))
+    /// Returns an empty iterator if the vertex is void.
+    /// See [MeshBasics::vertex_edges_out] for more information.
+    #[must_use]
+    #[inline]
+    pub fn edges_out(self) -> impl Iterator<Item = EdgeCursor<'a, T>> {
+        self.mesh
+            .vertex_edges_out(self.try_id())
+            .map(move |e| EdgeCursor::new(self.mesh, e))
     }
 
     /// Returns an iterator of edge ids pointing to the outgoing halfedges of the vertex.
     /// Panics if the vertex is void.
-    /// See [VertexBasics::edges_out_ids] for more information.
-    pub fn edges_out_ids(&'a self) -> impl Iterator<Item = T::E> + 'a {
-        self.unwrap().edges_out_ids(self.mesh)
+    /// See [MeshBasics::vertex_edges_out] for more information.
+    #[must_use]
+    #[inline]
+    pub fn edges_out_ids<'b>(&'b self) -> impl Iterator<Item = T::E> + 'b {
+        self.mesh.vertex_edges_out(self.id())
     }
 
     /// Returns an iterator of edge cursors pointing to the incoming halfedges of the vertex.
-    /// Panics if the vertex is void.
-    /// TODO: would be nice to return an empty iterator if the vertex is void instead?
-    /// See [VertexBasics::edges_in] for more information.
-    pub fn edges_in(&'a self) -> impl Iterator<Item = EdgeCursor<'a, T>> {
-        self.unwrap()
-            .edges_in(self.mesh)
-            .map(move |e| EdgeCursor::new(self.mesh, e.id()))
+    /// Returns an empty iterator if the vertex is void.
+    /// See [MeshBasics::vertex_edges_in] for more information.
+    #[must_use]
+    #[inline]
+    pub fn edges_in(self) -> impl Iterator<Item = EdgeCursor<'a, T>> {
+        self.mesh
+            .vertex_edges_in(self.try_id())
+            .map(move |e| EdgeCursor::new(self.mesh, e))
     }
 
     /// Returns an iterator of edge ids pointing to the incoming halfedges of the vertex.
     /// Panics if the vertex is void.
-    /// See [VertexBasics::edges_in_ids] for more information.
-    pub fn edges_in_ids(&'a self) -> impl Iterator<Item = T::E> + 'a {
-        self.unwrap().edges_in_ids(self.mesh)
+    /// See [MeshBasics::vertex_edges_in] for more information.
+    #[must_use]
+    #[inline]
+    pub fn edges_in_ids<'b>(&'b self) -> impl Iterator<Item = T::E> + 'b {
+        self.mesh.vertex_edges_in(self.id())
     }
 
     /// Iterates over the neighbors of the vertex.
@@ -60,18 +68,19 @@ impl<'a, T: MeshType> VertexCursor<'a, T> {
     /// See [VertexBasics::neighbor_ids] for more information.
     #[inline]
     #[must_use]
-    pub fn neighbors(&'a self) -> impl Iterator<Item = VertexCursor<'a, T>> + 'a {
-        self.neighbor_ids()
+    pub fn neighbors(self) -> impl Iterator<Item = VertexCursor<'a, T>> {
+        self.mesh
+            .vertex_neighbors(self.id())
             .map(move |v| VertexCursor::new(self.mesh, v))
     }
 
     /// Iterates over the neighbors' ids of the vertex.
-    /// Panics if the vertex is void.
+    /// Returns an empty iterator if the vertex is void.
     /// See [VertexBasics::neighbor_ids] for more information.
     #[inline]
     #[must_use]
-    pub fn neighbor_ids(&'a self) -> impl Iterator<Item = T::V> + 'a {
-        self.unwrap().neighbor_ids(self.mesh())
+    pub fn neighbor_ids<'b>(&'b self) -> impl Iterator<Item = T::V> + 'b {
+        self.mesh.vertex_neighbors(self.try_id())
     }
 
     /// Returns a reference to the payload of the vertex.

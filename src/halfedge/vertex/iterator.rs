@@ -1,7 +1,7 @@
 use crate::{
     halfedge::HalfEdgeImplMeshType,
     math::IndexType,
-    mesh::{CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, MeshBasics},
+    mesh::{CursorData, EdgeCursorBasics, EdgeCursorHalfedgeBasics, MeshBasics},
 };
 
 /// Iterator over all half-edges incident to the same vertex (clockwise)
@@ -14,10 +14,10 @@ pub struct IncidentToVertexIterator<'a, T: HalfEdgeImplMeshType + 'a> {
 
 impl<'a, T: HalfEdgeImplMeshType> IncidentToVertexIterator<'a, T> {
     /// Creates a new iterator
-    pub fn new(first: &T::Edge, mesh: &'a T::Mesh) -> Self {
+    pub fn new(first: T::E, mesh: &'a T::Mesh) -> Self {
         Self {
-            first: first.id(),
-            current: first.id(),
+            first,
+            current: first,
             mesh,
             is_first: true,
         }
@@ -35,7 +35,7 @@ impl<'a, T: HalfEdgeImplMeshType> IncidentToVertexIterator<'a, T> {
 }
 
 impl<'a, T: HalfEdgeImplMeshType> Iterator for IncidentToVertexIterator<'a, T> {
-    type Item = &'a T::Edge;
+    type Item = T::E;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.current == IndexType::max() {
@@ -44,7 +44,7 @@ impl<'a, T: HalfEdgeImplMeshType> Iterator for IncidentToVertexIterator<'a, T> {
         let current = self.mesh.edge(self.current);
         if self.is_first {
             self.is_first = false;
-            return Some(self.mesh.edge_ref(current.id()));
+            return Some(current.id());
         }
         let next = current.twin().next();
         debug_assert_eq!(
@@ -57,9 +57,9 @@ impl<'a, T: HalfEdgeImplMeshType> Iterator for IncidentToVertexIterator<'a, T> {
             return None;
         } else {
             // self-loop edge
-            assert!(self.current != next.id());
+            assert_ne!(self.current, next.id());
             self.current = next.id();
-            return Some(self.mesh.edge_ref(next.id()));
+            return Some(next.id());
         }
     }
 }

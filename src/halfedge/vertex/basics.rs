@@ -1,9 +1,9 @@
-use super::{HalfEdgeImplMeshType, HalfEdgeVertexImpl, IncidentToVertexIterator};
+use super::{HalfEdgeImplMeshType, HalfEdgeVertexImpl};
 use crate::{
     math::IndexType,
     mesh::{
-        CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, HalfEdge, MeshBasics,
-        MeshType, VertexBasics,
+        CursorData, EdgeCursorBasics, EdgeCursorHalfedgeBasics, HalfEdge, MeshBasics, MeshType,
+        VertexBasics,
     },
 };
 
@@ -36,7 +36,7 @@ where
     /// Returns whether the vertex is a boundary vertex
     #[inline]
     fn is_boundary(&self, mesh: &T::Mesh) -> bool {
-        self.edges_out(mesh).any(|e| e.is_boundary(mesh))
+        self.edges_out(mesh).any(|e| mesh.edge(e).is_boundary())
     }
 
     /*
@@ -76,11 +76,12 @@ where
 
     /// Iterates all vertices adjacent to the vertex in the same manifold edge wheel (clockwise)
     #[inline]
-    fn neighbors<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Vertex>
+    fn neighbors<'a>(&self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Vertex>
     where
         T: 'a,
     {
-        self.edges_out(mesh).map(|e| e.target(mesh))
+        self.edges_out(mesh)
+            .map(|e| mesh.vertex_ref(mesh.edge(e).target_id()))
     }
 
     /// Iterates all faces adjacent to this vertex in the same manifold edge wheel (clockwise)
@@ -89,32 +90,8 @@ where
     where
         T: 'a,
     {
-        self.edges_out(mesh).filter_map(|e| e.face(mesh))
-    }
-
-    #[inline]
-    fn edges_out<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge>
-    where
-        T: 'a,
-    {
-        if let Some(e) = self.edge(mesh) {
-            IncidentToVertexIterator::<'a, T>::new(e, mesh)
-        } else {
-            IncidentToVertexIterator::<'a, T>::empty(mesh)
-        }
-    }
-
-    #[inline]
-    fn edges_in<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge>
-    where
-        T: 'a,
-    {
-        (if let Some(e) = self.edge(mesh) {
-            IncidentToVertexIterator::<T>::new(e, mesh)
-        } else {
-            IncidentToVertexIterator::<T>::empty(mesh)
-        })
-        .map(|e| e.twin(mesh))
+        self.edges_out(mesh)
+            .filter_map(|e| mesh.get_face(mesh.edge(e).face_id()))
     }
 
     fn is_manifold(&self, mesh: &T::Mesh) -> bool {
@@ -142,7 +119,7 @@ where
                     return false;
                 }
             }
-            
+
             if e == e0 {
                 // went a full round
                 debug_assert!(state_changes % 2 == 0);

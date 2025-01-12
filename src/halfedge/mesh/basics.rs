@@ -2,9 +2,10 @@ use super::{HalfEdgeImplMeshType, HalfEdgeMeshImpl};
 use crate::{
     math::IndexType,
     mesh::{
-        EdgeBasics, FaceBasics, HalfEdge, HalfEdgeMesh, MeshBasics, Triangulation, VertexBasics,
-        VertexPayload,
+        CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, FaceBasics, HalfEdge,
+        HalfEdgeMesh, MeshBasics, Triangulation, VertexBasics, VertexPayload,
     },
+    prelude::IncidentToVertexIterator,
 };
 use std::collections::HashMap;
 
@@ -50,6 +51,25 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         T::Vertex: 'a,
     {
         self.vertices.iter_mut()
+    }
+
+    #[inline]
+    fn vertex_edges_out(&self, v: T::V) -> impl Iterator<Item = T::E> {
+        self.get_vertex(v).map_or_else(
+            || IncidentToVertexIterator::<'_, T>::empty(self),
+            |v| IncidentToVertexIterator::<'_, T>::new(v.edge_id(self), self),
+        )
+    }
+
+    #[inline]
+    fn vertex_edges_in(&self, v: T::V) -> impl Iterator<Item = T::E> {
+        self.vertex_edges_out(v).map(|e| self.edge(e).twin_id())
+    }
+
+    #[inline]
+    fn vertex_neighbors(&self, v: T::V) -> impl Iterator<Item = T::V> {
+        self.vertex_edges_out(v)
+            .map(move |e| self.edge(e).target_id())
     }
 
     //======================= Edge Operations =======================//
@@ -126,9 +146,14 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     /// Runs in O(n) time since it iterates over all edges of `v`.
     #[inline]
     fn shared_edge(&self, v: T::V, w: T::V) -> Option<&T::Edge> {
-        self.vertex_ref(v).edges_out(self).find_map(|e| {
-            if e.target_id(self) == w {
-                Some(e)
+        self.shared_edge_id(v, w).map(|e| self.edge_ref(e))
+    }
+
+    #[inline]
+    fn shared_edge_id(&self, v: T::V, w: T::V) -> Option<T::E> {
+        self.vertex(v).edges_out().find_map(|e| {
+            if e.target_id() == w {
+                Some(e.id())
             } else {
                 None
             }
@@ -136,23 +161,19 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     }
 
     #[inline]
-    fn shared_edge_id(&self, v: T::V, w: T::V) -> Option<T::E> {
-        self.shared_edge(v, w).map(|e| e.id())
-    }
-
-    #[inline]
     fn shared_edges<'a>(&'a self, v: T::V, w: T::V) -> impl Iterator<Item = &'a T::Edge>
     where
         T: 'a,
     {
-        self.vertex_ref(v)
-            .edges_out(self)
-            .filter(move |e| e.target_id(self) == w)
+        self.shared_edge_ids(v, w).map(move |e| self.edge_ref(e))
     }
 
     #[inline]
     fn shared_edge_ids(&self, v: T::V, w: T::V) -> impl Iterator<Item = T::E> {
-        self.shared_edges(v, w).map(|e| e.id())
+        self.vertex(v)
+            .edges_out()
+            .filter(move |e| e.target_id() == w)
+            .map(|e| e.id())
     }
 
     //======================= Face Operations =======================//

@@ -293,11 +293,47 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     ////////////////////////////////////////////////////////////////////////////////////
     //************************ More complex operations *******************************//
 
-    /// Subdivide the given edge (resp. half-edge pair) by appending multiple edges
-    /// and vertices given by the iterator to the edge's origin vertex and connecting them
-    /// with the edge. The edge stays connected to it's original target vertex.
-    /// Returns the (half)edge starting in the previous origin
-    fn subdivide_edge<I: Iterator<Item = (T::EP, T::VP)>>(&mut self, e: T::E, vs: I) -> T::E;
+    /// Subdivide the given edge (resp. half-edge pair) by inserting a new vertex,
+    /// changing the edge's target vertex to the new vertex and connecting the new vertex
+    /// to the edge's original target vertex.
+    ///
+    /// Returns the (half)edge starting in the new vertex.
+    /// Panics if the edge doesn't exist.
+    /// Sets the same faces on the inserted edge as the original edge.
+    fn subdivide_edge(&mut self, e: T::E, vp: T::VP, ep: T::EP) -> T::E;
+
+    /// Like [MeshBuilder::subdivide_edge] but takes an iterator of vertices and edges to insert.
+    ///
+    /// Returns the last (half)edge inserted, i.e., the one pointing to the original target vertex.
+    #[inline]
+    fn subdivide_edge_iter<I: Iterator<Item = (T::EP, T::VP)>>(&mut self, e: T::E, vs: I) -> T::E {
+        let mut last = e;
+        for (ep, vp) in vs {
+            last = self.subdivide_edge(last, vp, ep);
+        }
+        last
+    }
+
+    /// Subdivide the face by inserting a diagonal edge from the target `v` of `from` to the origin `w` of `to`.
+    /// The face containing edge `wv` will keep the old face payload, the face containing `vw` will get the new payload.
+    /// Returns the edge `vw`.
+    ///
+    /// Panics if the face doesn't exist or not both vertices are part of the face.
+    ///
+    /// Doesn't care about whether the diagonal is geometrically inside the face.
+    #[must_use]
+    fn subdivide_face(&mut self, from: T::E, to: T::E, ep: T::EP, fp: T::FP) -> Option<T::E>;
+
+    /// Subdivide the given face by inserting a diagonal edge from `v` to `w`.
+    /// The face containing edge `wv` will keep the old face payload, the face containing `vw` will get the new payload.
+    /// Returns the edge `vw`.
+    ///
+    /// Panics if the face doesn't exist or not both vertices are part of the face.
+    ///
+    /// Doesn't care about whether the diagonal is geometrically inside the face.
+    #[must_use]
+    fn subdivide_face_v(&mut self, f: T::F, v: T::V, w: T::V, ep: T::EP, fp: T::FP)
+        -> Option<T::E>;
 
     /// Append a chain of edges to the vertex `v` from the finite iterator of vertices and edges.
     /// Returns the first edge inserted after `v` as well as the last vertex's id.

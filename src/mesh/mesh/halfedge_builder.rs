@@ -47,7 +47,8 @@ pub trait MeshHalfEdgeBuilder<T: MeshTypeHalfEdge<Mesh = Self>>: MeshBasics<T> {
     ///
     /// Only on debug builds, this method will check that the operation makes
     /// sense, i.e., the vertices exist and the edges are correctly connected.
-    /// Doesn't care about the faces.    #[inline]
+    /// Doesn't care about the faces.    
+    #[inline]
     fn try_insert_halfedge_pair(
         &mut self,
         to_origin: T::E,

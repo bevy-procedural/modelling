@@ -121,23 +121,20 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
 
             // Is there a corresponding edge?
             for e in v.edges_out(self) {
-                if edge_iso.has(e.id()) {
+                if edge_iso.has(e) {
                     continue;
                 }
 
                 let Some(other_e) =
-                    other.shared_edge(other_v.id(), *iso.get(e.target(self).id()).unwrap())
+                    other.shared_edge(other_v.id(), *iso.get(self.edge(e).target_id()).unwrap())
                 else {
-                    return Err(MeshEquivalenceDifference::NoCorrespondingEdge(e.id()));
+                    return Err(MeshEquivalenceDifference::NoCorrespondingEdge(e));
                 };
 
-                edge_iso.insert(e.id(), other_e.id());
+                edge_iso.insert(e, other_e.id());
 
-                if !compare_edge(&e, &other_e) {
-                    return Err(MeshEquivalenceDifference::DifferentEdges(
-                        e.id(),
-                        other_e.id(),
-                    ));
+                if !compare_edge(self.edge_ref(e), &other_e) {
+                    return Err(MeshEquivalenceDifference::DifferentEdges(e, other_e.id()));
                 }
             }
         }

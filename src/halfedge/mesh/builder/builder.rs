@@ -7,8 +7,8 @@ use crate::{
         MeshTypeHalfEdge, VertexBasics, VertexCursorBasics, VertexCursorHalfedgeBasics,
     },
     prelude::HalfEdgeFaceImpl,
-    util::Deletable,
 };
+use itertools::Itertools;
 
 impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     fn insert_vertex(&mut self, vp: T::VP) -> T::V {
@@ -319,71 +319,85 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         return Some(f);
     }
 
-    fn subdivide_edge<I: Iterator<Item = (T::EP, T::VP)>>(&mut self, e: T::E, _vs: I) -> T::E {
-        todo!()
-        /*
-        let twin_id = self.edge(e).twin_id();
-        let mut current = self.edge(e).prev_id();
-        let f1 = self.edge(e).face_id();
-        let f2 = self.edge(twin_id).face_id();
-        let mut last_v = self.edge(e).origin_id();
-        let mut first = true;
-        for (ep1,  vp) in ps {
-            let (v, e1) = self.add_vertex_e(current, vp, ep1);
-            current = (e1, e2);
-            last_v = v;
-            self.edge_mut(current).set_face(f1);
-            self.edge_mut(current.1).set_face(f2);
-            if first {
-                self.vertex_mut(self.edge(e).origin_id()).set_edge(e1);
-                first = false;
-            }
+    fn subdivide_edge(&mut self, e: T::E, vp: T::VP, ep: T::EP) -> T::E {
+        let edge = self.edge_ref(e).clone();
+        let twin = self.edge_ref(edge.twin_id()).clone();
+        let target = twin.origin_id(self);
+
+        let v = self.insert_vertex(vp);
+
+        let (new_e, new_t) = self.insert_halfedge_pair_forced(
+            edge.id(),
+            v,
+            twin.id(),
+            twin.prev_id(),
+            target,
+            edge.next_id(),
+            edge.face_id(),
+            twin.face_id(),
+            ep,
+        );
+
+        self.vertex_mut(v).set_edge(new_e);
+        self.edge_mut(edge.next_id()).set_prev(new_e);
+        self.edge_mut(twin.prev_id()).set_next(new_t);
+        self.edge_mut(edge.id()).set_next(new_e);
+        self.edge_mut(twin.id()).set_prev(new_t);
+        self.edge_mut(twin.id()).set_origin(v);
+
+        new_e
+    }
+
+    /// Subdivide the face by inserting a diagonal edge from the target `v` of `from` to the origin `w` of `to`.
+    /// The face containing edge `wv` will keep the old face payload, the face containing `vw` will get the new payload.
+    /// Returns the edge `vw`.
+    ///
+    /// Panics if the face doesn't exist or not both vertices are part of the face.
+    ///
+    /// Doesn't care about whether the diagonal is geometrically inside the face.
+    fn subdivide_face(&mut self, from: T::E, to: T::E, ep: T::EP, fp: T::FP) -> Option<T::E> {
+        if self.edge(from).face_id() != self.edge(to).face_id() || !self.edge(from).has_face() {
+            return None;
         }
 
-        self.edge_mut(current).set_next(e);
-        self.edge_mut(e).set_prev(current);
-        self.edge_mut(current_twin).set_prev(twin_id);
-        self.edge_mut(twin_id).set_next(current_twin);
-        self.edge_mut(e).set_origin(last_v);
+        let new_e = self.insert_edge_ee(from, to, ep)?;
+        self.insert_face(new_e, fp)?;
+        Some(new_e)
+    }
 
-        return e;
-        */
+    /// Subdivide the given face by inserting a diagonal edge from `v` to `w`.
+    /// The face containing edge `wv` will keep the old face payload, the face containing `vw` will get the new payload.
+    /// Returns the edge `vw`.
+    ///
+    /// Panics if the face doesn't exist or not both vertices are part of the face.
+    ///
+    /// Doesn't care about whether the diagonal is geometrically inside the face.
+    fn subdivide_face_v(
+        &mut self,
+        f: T::F,
+        v: T::V,
+        w: T::V,
+        ep: T::EP,
+        fp: T::FP,
+    ) -> Option<T::E> {
+        let Ok(to) = self
+            .vertex(w)
+            .edges_out()
+            .filter(|e| e.face_id() == f)
+            .exactly_one()
+        else {
+            return None;
+        };
+        let Ok(from) = self
+            .vertex(v)
+            .edges_in()
+            .filter(|e| e.face_id() == f)
+            .exactly_one()
+        else {
+            return None;
+        };
 
-        /*
-        fn subdivide_edge<I: Iterator<Item = (T::EP, T::EP, T::VP)>>(
-            &mut self,
-            e: T::E,
-            ps: I,
-        ) -> T::E {
-            let twin_id = self.edge(e).twin_id();
-            let mut current = self.edge(e).prev_id();
-            let mut current_twin = self.edge(twin_id).next_id();
-            let f1 = self.edge(e).face_id();
-            let f2 = self.edge(twin_id).face_id();
-            let mut last_v = self.edge(e).origin_id();
-            let mut first = true;
-            for (ep1, ep2, vp) in ps {
-                let (v, e1, e2) =
-                    self.add_vertex_via_edge(current, self.edge(current).twin_id(), vp, ep1, ep2);
-                current = e1;
-                current_twin = e2;
-                last_v = v;
-                self.edge_mut(current).set_face(f1);
-                self.edge_mut(current_twin).set_face(f2);
-                if first {
-                    self.vertex_mut(self.edge(e).origin_id()).set_edge(e1);
-                    first = false;
-                }
-            }
-
-            self.edge_mut(current).set_next(e);
-            self.edge_mut(e).set_prev(current);
-            self.edge_mut(current_twin).set_prev(twin_id);
-            self.edge_mut(twin_id).set_next(current_twin);
-            self.edge_mut(e).set_origin(last_v);
-
-            return e;
-        }*/
+        self.subdivide_face(from.id(), to.id(), ep, fp)
     }
 }
 
@@ -453,7 +467,7 @@ mod tests {
         let (e1, _v1) = mesh
             .insert_vertex_e(e0, vp(42.0, 0.0, 0.0), Default::default())
             .unwrap();
-        let (e2, _v2) = mesh
+        let (_e2, _v2) = mesh
             .insert_vertex_e(e1, vp(142.0, 0.0, 0.0), Default::default())
             .unwrap();
         assert_eq!(mesh.check(), Ok(()));
@@ -927,5 +941,15 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn test_subdivide_edge() {
+        todo!()
+    }
+
+    #[test]
+    fn test_subdivide_face() {
+        todo!()
     }
 }
