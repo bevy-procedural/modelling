@@ -1,7 +1,10 @@
 use super::HalfEdgeMeshImpl;
 use crate::{
     halfedge::HalfEdgeImplMeshType,
-    mesh::{EdgeBasics, FaceBasics, HalfEdge, HalfEdgeMesh, MeshBasics, MeshChecker, VertexBasics},
+    mesh::{
+        CursorData, EdgeBasics, EdgeCursorHalfedgeBasics, FaceCursorBasics, HalfEdge, HalfEdgeMesh,
+        MeshBasics, MeshChecker, VertexBasics,
+    },
 };
 
 impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
@@ -65,11 +68,11 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     fn check_faces_nondegenerate(&self) -> Result<(), String> {
         // TODO: this and many other checks would also work without half edges!
         // TODO: we should allow 2 faces when the mesh is allowed to be degenerate
-        if let Some(bad_face) = self.face_refs().find(|f| f.edges(self).count() < 3) {
+        if let Some(bad_face) = self.faces().find(|f| f.num_edges() < 3) {
             return Err(format!(
                 "Face {} has only {} edges!",
                 bad_face.id(),
-                bad_face.edges(self).count()
+                bad_face.num_edges()
             ));
         }
 
@@ -88,12 +91,12 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     }
 
     fn check_face_invariants(&self) -> Result<(), String> {
-        if let Some(bad_face) = self.face_refs().find(|f| f.edge(self).face_id() != f.id()) {
+        if let Some(bad_face) = self.faces().find(|f| f.clone().edge().face_id() != f.id()) {
             return Err(format!(
                 "Face {} has edge {} with face {}",
                 bad_face.id(),
-                bad_face.edge(self).id(),
-                bad_face.edge(self).face_id()
+                bad_face.clone().edge().id(),
+                bad_face.edge().face_id()
             ));
         }
         Ok(())
@@ -118,12 +121,12 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     }
 
     fn face_analysis(&self) -> String {
-        self.face_refs()
+        self.faces()
             .map(|f| {
                 format!(
                     "{}) {} edges, e.g., {}   {:?}",
                     f.id(),
-                    f.num_edges(self),
+                    f.num_edges(),
                     f.edge_id(),
                     f.payload(), //f.is_planar(mesh, T::S::EPS.sqrt())
                 )

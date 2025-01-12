@@ -38,7 +38,7 @@ fn lofted_polygon(
     );
     mesh.flip_yz().translate(&Vec3::new(0.0, 0.1, 0.0));
 
-    for face in mesh.face_refs() {
+    for face in mesh.faces() {
         let poly = face.as_polygon(&mesh);
         println!("{:?}", poly.area());
     }

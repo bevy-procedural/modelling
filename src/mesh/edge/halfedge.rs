@@ -117,7 +117,11 @@ mod tests {
             }
         }
 
-        let e0 = mesh.halfedges().find(|e| !e.is_boundary_self()).unwrap().id();
+        let e0 = mesh
+            .halfedges()
+            .find(|e| !e.is_boundary_self())
+            .unwrap()
+            .id();
         let f0 = mesh.edge(e0).face_id();
         mesh.edge_mut(e0).remove_face();
         let edge = mesh.edge(e0);
@@ -143,10 +147,10 @@ mod tests {
             assert!(edge.other_face(&mesh).is_some());
         }
 
-        for face in mesh.face_refs() {
-            face.edges(&mesh).for_each(|e1| {
-                face.edges(&mesh).for_each(|e2| {
-                    assert!(e1.same_boundary(&mesh, e2.origin_id(&mesh)).is_some());
+        for face in mesh.faces() {
+            face.edges().for_each(|e1| {
+                face.edges().for_each(|e2| {
+                    assert!(e1.clone().same_boundary(e2.origin_id()).is_some());
                 });
             });
         }

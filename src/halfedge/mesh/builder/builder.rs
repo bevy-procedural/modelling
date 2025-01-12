@@ -1139,8 +1139,8 @@ mod tests {
         assert_eq!(mesh.edge(d1bt).origin_id(), center);
         assert_eq!(mesh.edge(d1at).origin_id(), center);
 
-        for f in mesh.face_refs() {
-            assert_eq!(mesh.face(f.id()).num_edges(), 3);
+        for f in mesh.faces() {
+            assert_eq!(f.num_edges(), 3);
         }
 
         let mesh_clone = mesh.clone();
@@ -1202,8 +1202,8 @@ mod tests {
         assert_eq!(mesh.num_edges(), 9);
         assert_eq!(mesh.num_faces(), 6);
 
-        for f in mesh.face_refs() {
-            assert_eq!(mesh.face(f.id()).num_edges(), 3);
+        for f in mesh.faces() {
+            assert_eq!(f.num_edges(), 3);
         }
     }
 }

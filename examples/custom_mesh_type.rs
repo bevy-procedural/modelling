@@ -7,7 +7,7 @@ fn main() {
     let mut mesh = Mesh3dColored::cube(1.0);
 
     // make the vertices of one face red
-    let vs = mesh.face_refs().next().unwrap().vertex_ids(&mesh).collect_vec();
+    let vs = mesh.the_face().vertex_ids().collect_vec();
     for v in vs {
         mesh.vertex_mut(v).payload().color = VertexColor { r: 255, g: 0, b: 0 };
     }
@@ -83,7 +83,7 @@ impl<const D: usize> EuclideanMeshType<D> for MeshTypeColored<D> {
     type Poly = Polygon2d<f64>;
 }
 
-// enable half-edge-specific functionality  
+// enable half-edge-specific functionality
 impl<const D: usize> HalfEdgeImplMeshType for MeshTypeColored<D> {}
 impl<const D: usize> HalfEdgeImplMeshTypePlus for MeshTypeColored<D> {}
 impl<const D: usize> MeshTypeHalfEdge for MeshTypeColored<D> {}

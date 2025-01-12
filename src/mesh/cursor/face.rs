@@ -23,6 +23,13 @@ impl<'a, T: MeshType> FaceCursor<'a, T> {
         Self { mesh, face }
     }
 
+    /// Creates a new void face cursor.
+    #[inline]
+    #[must_use]
+    pub fn new_void(mesh: &'a T::Mesh) -> Self {
+        Self::new(mesh, IndexType::max())
+    }
+
     /// Returns a reference to the payload of the face.
     /// Panics if the face is void.
     #[inline]

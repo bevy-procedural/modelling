@@ -6,7 +6,9 @@ mod text3d;
 use super::BevyMesh3d;
 use crate::{
     math::IndexType,
-    mesh::{EdgeBasics, Face, FaceBasics, HalfEdge, HalfEdgeMesh, MeshBasics, VertexBasics},
+    mesh::{
+        CursorData, EdgeBasics, Face, FaceBasics, HalfEdge, HalfEdgeMesh, MeshBasics, VertexBasics,
+    },
     tesselate::TesselationMeta,
 };
 use bevy::prelude::*;
@@ -71,9 +73,9 @@ pub fn show_edges(texts: &mut ResMut<Text3dGizmos>, mesh: &BevyMesh3d, offset: f
 
 /// Show the face indices of a mesh in green.
 pub fn show_faces(texts: &mut ResMut<Text3dGizmos>, mesh: &BevyMesh3d) {
-    mesh.face_refs().for_each(|f| {
+    mesh.faces().for_each(|f| {
         texts.write(
-            Text3dGizmo::new(f.id().to_string(), f.centroid(mesh).clone())
+            Text3dGizmo::new(f.id().to_string(), f.unwrap().centroid(mesh).clone())
                 .with_color(Color::srgb(0.0, 1.0, 0.0)),
         );
     });

@@ -36,6 +36,13 @@ impl<'a, T: MeshType> EdgeCursor<'a, T> {
         Self { mesh, edge }
     }
 
+    /// Creates a new void edge cursor.
+    #[inline]
+    #[must_use]
+    pub fn new_void(mesh: &'a T::Mesh) -> Self {
+        Self::new(mesh, IndexType::max())
+    }
+
     // TODO: this cannot be called. How to realize this?
     /*#[inline]
     pub fn mutable(self, mesh: &'a mut T::Mesh) -> EdgeCursorMut<'a, T> {

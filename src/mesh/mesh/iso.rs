@@ -1,8 +1,8 @@
 use crate::{
     math::{HasPosition, IndexType, Scalar, Vector},
     mesh::{
-        CursorData, CurvedEdge, EdgeBasics, EdgeCursorBasics, EuclideanMeshType, FaceBasics,
-        FaceCursorBasics, MeshBasics, MeshType, VertexBasics,
+        CursorData, CurvedEdge, EdgeBasics, EdgeCursorBasics, EuclideanMeshType, FaceCursorBasics,
+        MeshBasics, MeshType, VertexBasics,
     },
 };
 use itertools::Itertools;
@@ -367,15 +367,15 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
             }
         }
 
-        for f in self.face_refs() {
-            let other_f = other.face_ref(f.id());
+        for f in self.faces() {
+            let other_f = other.face(f.id());
             if f.id() != other_f.id()
-                || f.num_vertices(self) != other_f.num_vertices(self)
+                || f.num_vertices() != other_f.num_vertices()
                 || !equal_up_to_rotation(
-                    &f.edge_ids(self).collect_vec(),
-                    &other_f.edge_ids(self).collect_vec(),
+                    &f.edge_ids().collect_vec(),
+                    &other_f.edge_ids().collect_vec(),
                 )
-                || !compare_face(f, other_f)
+                || !compare_face(f.unwrap(), other_f.unwrap())
             {
                 return MeshEquivalenceDifference::DifferentFaces(f.id(), other_f.id());
             }

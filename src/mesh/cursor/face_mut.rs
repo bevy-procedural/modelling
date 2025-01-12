@@ -22,6 +22,13 @@ impl<'a, T: MeshType> FaceCursorMut<'a, T> {
     pub fn new(mesh: &'a mut T::Mesh, face: T::F) -> Self {
         Self { mesh, face }
     }
+    
+    /// Creates a new void face cursor.
+    #[inline]
+    #[must_use]
+    pub fn new_void(mesh: &'a mut T::Mesh) -> Self {
+        Self::new(mesh, IndexType::max())
+    }
 
     /// Returns an immutable clone pointing to the same face.
     #[inline]

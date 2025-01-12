@@ -23,6 +23,13 @@ impl<'a, T: MeshType> VertexCursor<'a, T> {
         Self { mesh, vertex }
     }
 
+    /// Creates a new void vertex cursor.
+    #[inline]
+    #[must_use]
+    pub fn new_void(mesh: &'a T::Mesh) -> Self {
+        Self::new(mesh, IndexType::max())
+    }
+
     /// Returns an iterator of edge cursors pointing to the outgoing halfedges of the vertex.
     /// Returns an empty iterator if the vertex is void.
     /// See [MeshBasics::vertex_edges_out] for more information.

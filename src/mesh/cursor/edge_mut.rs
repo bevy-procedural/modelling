@@ -24,6 +24,13 @@ impl<'a, T: MeshType + 'a> EdgeCursorMut<'a, T> {
         Self { mesh, edge }
     }
 
+    /// Creates a new void edge cursor.
+    #[inline]
+    #[must_use]
+    pub fn new_void(mesh: &'a mut T::Mesh) -> Self {
+        Self::new(mesh, IndexType::max())
+    }
+
     /// Returns an immutable clone pointing to the same edge.
     #[inline]
     #[must_use]

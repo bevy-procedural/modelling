@@ -1,7 +1,10 @@
 use crate::{
     halfedge::{HalfEdgeFaceImpl, HalfEdgeMeshImpl, HalfEdgeVertexImpl},
     math::IndexType,
-    mesh::{EdgeBasics, FaceBasics, HalfEdge, HalfEdgeMesh, MeshBasics, MeshType, VertexBasics},
+    mesh::{
+        CursorData, EdgeBasics, FaceCursorBasics, HalfEdge, HalfEdgeMesh, MeshBasics, MeshType,
+        VertexBasics,
+    },
     prelude::HalfEdgeImplMeshTypePlus,
 };
 
@@ -29,7 +32,7 @@ impl<T: HalfEdgeImplMeshTypePlus> HalfEdgeMeshImpl<T> {
         }
         let mut face_map = std::collections::HashMap::new();
         face_map.insert(IndexType::max(), IndexType::max());
-        for face in MeshBasics::face_refs(mesh) {
+        for face in mesh.faces() {
             let f = res.faces.allocate();
             face_map.insert(face.id(), f);
         }
@@ -49,10 +52,10 @@ impl<T: HalfEdgeImplMeshTypePlus> HalfEdgeMeshImpl<T> {
             );
         }
 
-        for face in MeshBasics::face_refs(mesh) {
+        for face in mesh.faces() {
             res.faces.set(
                 face_map[&face.id()],
-                HalfEdgeFaceImpl::new(edge_map[&FaceBasics::edge_id(face)], ff(face.payload())),
+                HalfEdgeFaceImpl::new(edge_map[&face.edge_id()], ff(face.payload())),
             );
         }
 

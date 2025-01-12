@@ -269,9 +269,34 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     fn face_ids<'a>(&'a self) -> impl Iterator<Item = T::F>
     where
         T: 'a,
-        T::Face: 'a,
     {
         self.face_refs().map(|f| f.id())
+    }
+
+    /// Returns an iterator of cursors for each non-deleted face
+    #[inline]
+    #[must_use]
+    fn faces<'a>(&'a self) -> impl Iterator<Item = FaceCursor<'a, T>>
+    where
+        T: 'a,
+    {
+        self.face_ids().map(move |id| FaceCursor::new(self, id))
+    }
+
+    /// If the mesh has exactly one face, returns a cursor to that face.
+    /// Otherwise, returns a void cursor.
+    #[inline]
+    #[must_use]
+    fn the_face(&self) -> FaceCursor<'_, T> {
+        let mut fs = self.face_ids();
+        let Some(f) = fs.next() else {
+            return FaceCursor::new_void(self);
+        };
+        if fs.next().is_some() {
+            FaceCursor::new_void(self)
+        } else {
+            FaceCursor::new(self, f)
+        }
     }
 
     /// Returns an mutable iterator over all non-deleted vertices

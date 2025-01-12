@@ -1,6 +1,6 @@
 use crate::{
     math::{HasNormal, Scalar, Vector, VectorIteratorExt},
-    mesh::{EuclideanMeshType, Face3d, FaceBasics, MeshType3D, VertexBasics},
+    mesh::{CursorData, EuclideanMeshType, Face3d, FaceBasics, MeshType3D, VertexBasics},
 };
 use std::collections::HashMap;
 
@@ -49,8 +49,8 @@ pub trait WithNormals<
         // Smooth normals are calculated without vertex duplication.
         // Hence, we have to set the normals of the whole mesh.
         // we copy the vertices still to both compact the indices and set the normals without mutating the mesh
-        let face_normals: HashMap<T::F, _> = MeshBasics::face_refs(self)
-            .map(|f| (f.id(), Face3d::normal(f, self).normalize()))
+        let face_normals: HashMap<T::F, _> = MeshBasics::faces(self)
+            .map(|f| (f.id(), Face3d::normal(f.unwrap(), self).normalize()))
             .collect();
 
         let normals = MeshBasics::vertices(self)

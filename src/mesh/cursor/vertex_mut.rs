@@ -21,6 +21,13 @@ impl<'a, T: MeshType> VertexCursorMut<'a, T> {
         Self { mesh, vertex }
     }
 
+    /// Creates a new void vertex cursor.
+    #[inline]
+    #[must_use]
+    pub fn new_void(mesh: &'a mut T::Mesh) -> Self {
+        Self::new(mesh, IndexType::max())
+    }
+
     /// Returns a mutable reference to the payload of the vertex.
     /// Panics if the vertex is void.
     #[inline]
