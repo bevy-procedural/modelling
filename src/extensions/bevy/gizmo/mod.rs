@@ -8,6 +8,7 @@ use crate::{
     math::IndexType,
     mesh::{
         CursorData, EdgeBasics, Face, FaceBasics, HalfEdge, HalfEdgeMesh, MeshBasics, VertexBasics,
+        VertexCursorBasics,
     },
     tesselate::TesselationMeta,
 };

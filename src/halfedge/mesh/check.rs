@@ -2,8 +2,8 @@ use super::HalfEdgeMeshImpl;
 use crate::{
     halfedge::HalfEdgeImplMeshType,
     mesh::{
-        CursorData, EdgeBasics, EdgeCursorHalfedgeBasics, FaceCursorBasics, HalfEdge, HalfEdgeMesh,
-        MeshBasics, MeshChecker, VertexBasics,
+        CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, FaceCursorBasics,
+        HalfEdge, HalfEdgeMesh, MeshBasics, MeshChecker, VertexCursorBasics,
     },
 };
 
@@ -20,7 +20,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
 
     fn check_vertex_invariants(&self) -> Result<(), String> {
         if let Some(bad_vertex) = self.vertices().find(|v| {
-            if let Some(e) = v.edge(self) {
+            if let Some(e) = v.clone().edge().get() {
                 e.origin_id(self) != v.id()
             } else {
                 false
@@ -29,8 +29,8 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
             return Err(format!(
                 "Vertex {} has edge {} with origin {}",
                 bad_vertex.id(),
-                bad_vertex.edge(self).unwrap().id(),
-                bad_vertex.edge(self).unwrap().origin_id(self)
+                bad_vertex.clone().edge().id(),
+                bad_vertex.edge().origin_id()
             ));
         }
 

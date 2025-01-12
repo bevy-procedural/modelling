@@ -1,6 +1,6 @@
 use crate::{
     math::{Vector, VectorIteratorExt},
-    mesh::{EuclideanMeshType, MeshBasics, VertexBasics},
+    mesh::{EuclideanMeshType, MeshBasics, VertexBasics, VertexCursorBasics},
 };
 
 /// Methods for transforming meshes.
@@ -18,7 +18,7 @@ pub trait MeshPosition<const D: usize, T: EuclideanMeshType<D, Mesh = Self>>:
     where
         T: 'a,
     {
-        self.vertices()
+        self.vertex_refs()
             .map(|v| (v, v.pos().distance_squared(&pos)))
             .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap())
             .map(|(v, _)| v)

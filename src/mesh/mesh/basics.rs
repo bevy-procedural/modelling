@@ -1,8 +1,7 @@
 use crate::{
     math::IndexType,
     mesh::{
-        EdgeBasics, EdgeCursor, EdgeCursorBasics, EdgeCursorMut, FaceBasics, FaceCursor,
-        FaceCursorMut, MeshType, VertexBasics, VertexCursor, VertexCursorMut,
+        CursorData, EdgeBasics, EdgeCursor, EdgeCursorBasics, EdgeCursorMut, FaceBasics, FaceCursor, FaceCursorMut, MeshType, VertexBasics, VertexCursor, VertexCursorMut
     },
 };
 use std::collections::HashSet;
@@ -59,7 +58,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
 
     /// Returns an iterator over all non-deleted vertices
     #[must_use]
-    fn vertices<'a>(&'a self) -> impl Iterator<Item = &'a T::Vertex>
+    fn vertex_refs<'a>(&'a self) -> impl Iterator<Item = &'a T::Vertex>
     where
         T: 'a;
 
@@ -70,7 +69,17 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     where
         T: 'a,
     {
-        self.vertices().map(|v| v.id())
+        self.vertex_refs().map(|v| v.id())
+    }
+
+    /// Returns an iterator of cursors for each non-deleted vertex
+    #[inline]
+    #[must_use]
+    fn vertices<'a>(&'a self) -> impl Iterator<Item = VertexCursor<'a, T>>
+    where
+        T: 'a,
+    {
+        self.vertex_ids().map(move |id| VertexCursor::new(self, id))
     }
 
     /// Returns an mutable iterator over all non-deleted vertices
@@ -95,6 +104,11 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     /// Returns an empty iterator if the vertex does not exist.
     #[must_use]
     fn vertex_neighbors(&self, v: T::V) -> impl Iterator<Item = T::V>;
+    
+    /// Iterates all faces adjacent to the vertex.
+    /// Returns an empty iterator if the vertex does not exist.
+    #[must_use]
+    fn vertex_faces(&self, v: T::V) -> impl Iterator<Item = T::F>;
 
     //======================= Edge Operations =======================//
 
@@ -338,6 +352,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     /// Returns whether the vertex ids are consecutive, i.e., 0, 1, 2, 3, ...
     #[must_use]
     fn has_consecutive_vertex_ids(&self) -> bool {
+        // TODO: We can check this more efficiently using the deleted vertices
         let mut last_id: usize = 0;
         for v in self.vertices() {
             if v.id() != IndexType::new(last_id) {
@@ -359,7 +374,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     fn is_connected(&self) -> bool {
         let mut seen = HashSet::<T::V>::new();
         let mut stack = Vec::<T::V>::new();
-        if let Some(v) = self.vertices().next() {
+        if let Some(v) = self.vertex_refs().next() {
             stack.push(v.id());
             seen.insert(v.id());
         } else {
@@ -444,7 +459,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
             }
         }
         for v in self.vertices() {
-            if !v.is_manifold(self) {
+            if !v.unwrap().is_manifold(self) {
                 return false;
             }
         }

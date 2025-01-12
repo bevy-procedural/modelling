@@ -120,21 +120,24 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
             let other_v = other.vertex(*iso.get(v.id()).unwrap());
 
             // Is there a corresponding edge?
-            for e in v.edges_out(self) {
-                if edge_iso.has(e) {
+            for e in v.edges_out() {
+                if edge_iso.has(e.id()) {
                     continue;
                 }
 
                 let Some(other_e) =
-                    other.shared_edge(other_v.id(), *iso.get(self.edge(e).target_id()).unwrap())
+                    other.shared_edge(other_v.id(), *iso.get(e.target_id()).unwrap())
                 else {
-                    return Err(MeshEquivalenceDifference::NoCorrespondingEdge(e));
+                    return Err(MeshEquivalenceDifference::NoCorrespondingEdge(e.id()));
                 };
 
-                edge_iso.insert(e, other_e.id());
+                edge_iso.insert(e.id(), other_e.id());
 
-                if !compare_edge(self.edge_ref(e), &other_e) {
-                    return Err(MeshEquivalenceDifference::DifferentEdges(e, other_e.id()));
+                if !compare_edge(e.unwrap(), &other_e) {
+                    return Err(MeshEquivalenceDifference::DifferentEdges(
+                        e.id(),
+                        other_e.id(),
+                    ));
                 }
             }
         }
@@ -272,7 +275,7 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         }
         for v in self.vertices() {
             let other_v = other.vertex_ref(*iso.get(v.id()).unwrap());
-            if !compare_vertex(v, other_v) {
+            if !compare_vertex(v.unwrap(), other_v) {
                 return MeshEquivalenceDifference::DifferentVertices(v.id(), other_v.id());
             }
         }
@@ -351,7 +354,7 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
 
         for v in self.vertices() {
             let other_v = other.vertex_ref(v.id());
-            if v.id() != other_v.id() || !compare_vertex(v, other_v) {
+            if v.id() != other_v.id() || !compare_vertex(v.unwrap(), other_v) {
                 return MeshEquivalenceDifference::DifferentVertices(v.id(), other_v.id());
             }
         }
@@ -421,7 +424,10 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         let mut res = IndexIsomorphism::new();
         let mut used = HashSet::new();
         for v in self.vertices() {
-            let Some(best_match) = other.vertices().find(|v2| are_the_same(v, v2)) else {
+            let Some(best_match) = other
+                .vertices()
+                .find(|v2| are_the_same(v.unwrap(), v2.unwrap()))
+            else {
                 return Err(format!("No match found for vertex {:?}", v.id()));
             };
             if res.has(v.id()) {

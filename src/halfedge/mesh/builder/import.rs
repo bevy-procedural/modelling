@@ -3,7 +3,7 @@ use crate::{
     math::IndexType,
     mesh::{
         CursorData, EdgeBasics, FaceCursorBasics, HalfEdge, HalfEdgeMesh, MeshBasics, MeshType,
-        VertexBasics,
+        VertexCursorBasics,
     },
     prelude::HalfEdgeImplMeshTypePlus,
 };
@@ -45,10 +45,7 @@ impl<T: HalfEdgeImplMeshTypePlus> HalfEdgeMeshImpl<T> {
         for vertex in MeshBasics::vertices(mesh) {
             res.vertices.set(
                 vertex_map[&vertex.id()],
-                HalfEdgeVertexImpl::new(
-                    edge_map[&VertexBasics::edge_id(vertex, mesh)],
-                    fv(vertex.payload()),
-                ),
+                HalfEdgeVertexImpl::new(edge_map[&vertex.edge_id()], fv(vertex.payload())),
             );
         }
 

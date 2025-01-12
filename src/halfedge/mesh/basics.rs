@@ -38,7 +38,7 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     }
 
     #[inline]
-    fn vertices<'a>(&'a self) -> impl Iterator<Item = &'a T::Vertex>
+    fn vertex_refs<'a>(&'a self) -> impl Iterator<Item = &'a T::Vertex>
     where
         T::Vertex: 'a,
     {
@@ -70,6 +70,18 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     fn vertex_neighbors(&self, v: T::V) -> impl Iterator<Item = T::V> {
         self.vertex_edges_out(v)
             .map(move |e| self.edge(e).target_id())
+    }
+
+    #[inline]
+    fn vertex_faces(&self, v: T::V) -> impl Iterator<Item = T::F> {
+        self.vertex_edges_out(v).filter_map(move |e| {
+            let f = self.edge(e).face_id();
+            if f == IndexType::max() {
+                None
+            } else {
+                Some(f)
+            }
+        })
     }
 
     //======================= Edge Operations =======================//
@@ -222,7 +234,7 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         let w0 = self.vertex_ref(v0);
         let w1 = self.vertex_ref(v1);
         w0.faces(self).find_map(|f0| {
-            w1.faces(self).find_map(|f1: &T::Face| {
+            w1.faces(self).find_map(|f1| {
                 if f0.id() == f1.id() {
                     Some(f0.id())
                 } else {

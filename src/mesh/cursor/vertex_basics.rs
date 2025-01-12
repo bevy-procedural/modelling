@@ -1,5 +1,8 @@
 use super::{CursorData, EdgeCursorData, FaceCursorData};
-use crate::mesh::{HalfEdge, HalfEdgeVertex, MeshType, VertexBasics};
+use crate::{
+    math::{HasPosition, Scalar, Vector},
+    mesh::{HalfEdge, HalfEdgeVertex, MeshType, VertexBasics},
+};
 
 /// This trait defines the basic functionality for accessing the data fields of a vertex cursor.
 pub trait VertexCursorData<'a, T: MeshType + 'a>:
@@ -42,6 +45,25 @@ pub trait VertexCursorBasics<'a, T: MeshType + 'a>: VertexCursorData<'a, T> {
     #[must_use]
     fn is_isolated(&self) -> bool {
         self.unwrap().is_isolated(self.mesh())
+    }
+
+    /// Returns the vertex position.
+    /// Panics if the vertex is void.
+    #[inline]
+    #[must_use]
+    fn pos<S: Scalar, const D: usize, Vec: Vector<S, D>>(&self) -> Vec
+    where
+        T::VP: HasPosition<D, Vec, S = S>,
+    {
+        self.unwrap().pos()
+    }
+
+    /// Returns the vertex degree.
+    /// Panics if the vertex is void.
+    #[inline]
+    #[must_use]
+    fn degree(&self) -> usize {
+        self.unwrap().degree(self.mesh())
     }
 }
 

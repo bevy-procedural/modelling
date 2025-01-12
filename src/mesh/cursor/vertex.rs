@@ -83,11 +83,31 @@ impl<'a, T: MeshType> VertexCursor<'a, T> {
 
     /// Iterates over the neighbors' ids of the vertex.
     /// Returns an empty iterator if the vertex is void.
-    /// See [VertexBasics::neighbor_ids] for more information.
+    /// See [MeshBasics::vertex_neighbors] for more information.
     #[inline]
     #[must_use]
     pub fn neighbor_ids<'b>(&'b self) -> impl Iterator<Item = T::V> + 'b {
         self.mesh.vertex_neighbors(self.try_id())
+    }
+
+    /// Iterates over the faces adjacent to the vertex.
+    /// Panics if the vertex is void.
+    /// See [MeshBasics::vertex_faces] for more information.
+    #[inline]
+    #[must_use]
+    pub fn faces(self) -> impl Iterator<Item = FaceCursor<'a, T>> {
+        self.mesh
+            .vertex_faces(self.id())
+            .map(move |f| FaceCursor::new(self.mesh, f))
+    }
+
+    /// Iterates over the ids of the faces adjacent to the vertex.
+    /// Panics if the vertex is void.
+    /// See [MeshBasics::vertex_faces] for more information.
+    #[inline]
+    #[must_use]
+    pub fn face_ids<'b>(&'b self) -> impl Iterator<Item = T::F> + 'b {
+        self.mesh.vertex_faces(self.id())
     }
 
     /// Returns a reference to the payload of the vertex.

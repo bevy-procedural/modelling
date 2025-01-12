@@ -86,7 +86,7 @@ where
 
     /// Iterates all faces adjacent to this vertex in the same manifold edge wheel (clockwise)
     #[inline]
-    fn faces<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Face>
+    fn faces<'a>(&self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Face>
     where
         T: 'a,
     {

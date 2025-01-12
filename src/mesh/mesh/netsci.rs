@@ -1,6 +1,6 @@
 use crate::{
     math::{IndexType, Scalar, Vector},
-    mesh::{EdgeBasics, EuclideanMeshType, MeshBasics, MeshType, VertexBasics},
+    mesh::{CursorData, EdgeBasics, EuclideanMeshType, MeshBasics, MeshType, VertexBasics, VertexCursorBasics},
 };
 use std::collections::HashMap;
 
@@ -56,7 +56,7 @@ pub trait NetworkScience<T: MeshType<Mesh = Self>>: MeshBasics<T> {
 
         let mut degrees = HashMap::new();
         for v in self.vertices() {
-            degrees.insert(v.id(), v.degree(self));
+            degrees.insert(v.id(), v.degree());
         }
         degrees
             .into_iter()

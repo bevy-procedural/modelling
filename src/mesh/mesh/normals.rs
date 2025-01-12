@@ -1,6 +1,6 @@
 use crate::{
     math::{HasNormal, Scalar, Vector, VectorIteratorExt},
-    mesh::{CursorData, EuclideanMeshType, Face3d, FaceBasics, MeshType3D, VertexBasics},
+    mesh::{CursorData, EuclideanMeshType, Face3d, MeshType3D, VertexBasics},
 };
 use std::collections::HashMap;
 
@@ -55,7 +55,7 @@ pub trait WithNormals<
 
         let normals = MeshBasics::vertices(self)
             .map(|v| {
-                v.faces(self)
+                v.faces()
                     .map(|f| face_normals[&f.id()])
                     .stable_mean()
                     .normalize()

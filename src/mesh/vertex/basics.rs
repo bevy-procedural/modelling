@@ -47,9 +47,12 @@ pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone {
         T: 'a;
 
     /// Iterates all faces adjacent to this vertex in the same manifold edge wheel (clockwise)
-    fn faces<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Face> + 'a
+    fn faces<'a>(&self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Face>
     where
-        T: 'a;
+        T: 'a,
+    {
+        mesh.vertex_faces(self.id()).map(move |f| mesh.face_ref(f))
+    }
 
     /// Iterates the ids of all neighbors of the vertex
     fn neighbor_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::V> + 'a
