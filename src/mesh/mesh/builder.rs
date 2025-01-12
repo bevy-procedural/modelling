@@ -178,7 +178,6 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Close the open boundary with a single face. Doesn't create new edges or vertices.
     ///
     /// The given edge will be the representative edge of the face.
-    #[must_use]
     fn insert_face_forced(&mut self, e: T::E, fp: T::FP) -> T::F;
 
     /// Close the given boundary by inserting an edge from `from.target` to
@@ -308,11 +307,21 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Sets the same faces on the inserted edge as the original edge.
     fn subdivide_edge(&mut self, e: T::E, vp: T::VP, ep: T::EP) -> T::E;
 
+    /// Deletes the next edge and connects the given edge to the target of the next edge.
+    /// Fails if the edge doesn't exist or the edge's target vertex doesn't have degree 2.
+    /// Applying this to a pair of parallel edges or a dead-end with a self-loop will also delete the enclosed degenerate face. 
+    #[must_use]
+    fn collapse_edge(&mut self, e: T::E) -> Option<T::E>;
+
     /// Like [MeshBuilder::subdivide_edge] but takes an iterator of vertices and edges to insert.
     ///
     /// Returns the last (half)edge inserted, i.e., the one pointing to the original target vertex.
     #[inline]
-    fn subdivide_edge_iter(&mut self, e: T::E, vs: impl IntoIterator<Item = (T::EP, T::VP)>) -> T::E {
+    fn subdivide_edge_iter(
+        &mut self,
+        e: T::E,
+        vs: impl IntoIterator<Item = (T::EP, T::VP)>,
+    ) -> T::E {
         let mut last = e;
         for (ep, vp) in vs {
             last = self.subdivide_edge(last, vp, ep);
@@ -324,7 +333,8 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// The face containing edge `wv` will keep the old face payload, the face containing `vw` will get the new payload.
     /// Returns the edge `vw`.
     ///
-    /// Panics if the face doesn't exist or not both vertices are part of the face.
+    /// Panics if the edges are not part of the same face or one of the created faces has less than 2 vertices.
+    /// Won't complain about degenerate faces with 2 vertices and two parallel pairs of half-edges.
     ///
     /// Doesn't care about whether the diagonal is geometrically inside the face.
     #[must_use]
@@ -334,7 +344,8 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// The face containing edge `wv` will keep the old face payload, the face containing `vw` will get the new payload.
     /// Returns the edge `vw`.
     ///
-    /// Panics if the face doesn't exist or not both vertices are part of the face.
+    /// Panics if the face doesn't exist or not both vertices are part of the face or one of the created faces has less than 2 vertices.
+    /// Won't complain about degenerate faces with 2 vertices and two parallel pairs of half-edges.
     ///
     /// Doesn't care about whether the diagonal is geometrically inside the face.
     #[must_use]

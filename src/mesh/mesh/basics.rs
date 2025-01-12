@@ -259,7 +259,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
 
     /// Returns an iterator over all non-deleted faces
     #[must_use]
-    fn faces<'a>(&'a self) -> impl Iterator<Item = &'a T::Face>
+    fn face_refs<'a>(&'a self) -> impl Iterator<Item = &'a T::Face>
     where
         T: 'a;
 
@@ -271,7 +271,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
         T: 'a,
         T::Face: 'a,
     {
-        self.faces().map(|f| f.id())
+        self.face_refs().map(|f| f.id())
     }
 
     /// Returns an mutable iterator over all non-deleted vertices

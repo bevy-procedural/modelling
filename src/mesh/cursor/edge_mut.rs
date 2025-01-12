@@ -184,32 +184,61 @@ where
     }
 
     /// Sets the next halfedge of the edge in the mesh.
-    pub fn set_next(&mut self, next: T::E) {
+    /// Also sets the previous halfedge of the given next edge to be the current edge.
+    pub fn link(self, next: T::E) -> Self {
         self.mesh.edge_ref_mut(self.edge).set_next(next);
+        self.mesh.edge_ref_mut(next).set_prev(self.edge);
+        self
+    }
+
+    /// Sets the next halfedge of the edge in the mesh.
+    pub fn set_next(self, next: T::E) -> Self {
+        self.mesh.edge_ref_mut(self.edge).set_next(next);
+        self
     }
 
     /// Sets the previous halfedge of the edge in the mesh.
-    pub fn set_prev(&mut self, prev: T::E) {
+    pub fn set_prev(self, prev: T::E) -> Self {
         self.mesh.edge_ref_mut(self.edge).set_prev(prev);
+        self
     }
 
     /// Sets the twin halfedge of the edge in the mesh.
-    pub fn set_twin(&mut self, twin: T::E) {
+    pub fn set_twin(self, twin: T::E) -> Self {
         self.mesh.edge_ref_mut(self.edge).set_twin(twin);
+        self
     }
 
     /// Sets the face of the edge in the mesh.
-    pub fn set_face(&mut self, face: T::F) {
+    pub fn set_face(self, face: T::F) -> Self {
         self.mesh.edge_ref_mut(self.edge).set_face(face);
+        self
+    }
+
+    /// Sets the face of the edge in the mesh even if it already has a face.
+    /// Calling this method with `IndexType::max()` will remove the face.
+    pub fn replace_face(self, face: T::F) -> Self {
+        let f = if self.has_face() {
+            self.remove_face()
+        } else {
+            self
+        };
+        if face != IndexType::max() {
+            f.set_face(face)
+        } else {
+            f
+        }
     }
 
     /// Removes the face of the edge in the mesh.
-    pub fn remove_face(&mut self) {
+    pub fn remove_face(self) -> Self {
         self.mesh.edge_ref_mut(self.edge).remove_face();
+        self
     }
 
     /// Sets the origin vertex of the edge in the mesh.
-    pub fn set_origin(&mut self, origin: T::V) {
+    pub fn set_origin(self, origin: T::V) -> Self {
         self.mesh.edge_ref_mut(self.edge).set_origin(origin);
+        self
     }
 }

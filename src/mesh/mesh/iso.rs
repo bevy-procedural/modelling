@@ -367,7 +367,7 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
             }
         }
 
-        for f in self.faces() {
+        for f in self.face_refs() {
             let other_f = other.face_ref(f.id());
             if f.id() != other_f.id()
                 || f.num_vertices(self) != other_f.num_vertices(self)

@@ -128,19 +128,19 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
         let t_prev_id = twin.prev_id();
         let t_face_id = twin.face_id();
 
-        let mut edge = mesh.edge_mut(e);
-        edge.set_next(t_next_id);
-        edge.set_prev(t_prev_id);
-        edge.set_face(t_face_id);
-        edge.set_origin(target_id);
+        mesh.edge_mut(e)
+            .set_next(t_next_id)
+            .set_prev(t_prev_id)
+            .set_face(t_face_id)
+            .set_origin(target_id);
         mesh.edge_mut(t_next_id).set_prev(e);
         mesh.edge_mut(t_prev_id).set_next(e);
 
-        let mut twin = mesh.edge_mut(twin_id);
-        twin.set_next(next_id);
-        twin.set_prev(prev_id);
-        twin.set_face(face_id);
-        twin.set_origin(origin_id);
+        mesh.edge_mut(twin_id)
+            .set_next(next_id)
+            .set_prev(prev_id)
+            .set_face(face_id)
+            .set_origin(origin_id);
         mesh.edge_mut(next_id).set_prev(twin_id);
         mesh.edge_mut(prev_id).set_next(twin_id);
 

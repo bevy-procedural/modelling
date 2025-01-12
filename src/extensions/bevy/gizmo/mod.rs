@@ -71,7 +71,7 @@ pub fn show_edges(texts: &mut ResMut<Text3dGizmos>, mesh: &BevyMesh3d, offset: f
 
 /// Show the face indices of a mesh in green.
 pub fn show_faces(texts: &mut ResMut<Text3dGizmos>, mesh: &BevyMesh3d) {
-    mesh.faces().for_each(|f| {
+    mesh.face_refs().for_each(|f| {
         texts.write(
             Text3dGizmo::new(f.id().to_string(), f.centroid(mesh).clone())
                 .with_color(Color::srgb(0.0, 1.0, 0.0)),

@@ -334,11 +334,10 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         let twin = self.edge_ref(edge.twin_id()).clone();
         let target = twin.origin_id(self);
 
-        let v = self.insert_vertex(vp);
-
+        let origin = self.insert_vertex(vp);
         let (new_e, new_t) = self.insert_halfedge_pair_forced(
             edge.id(),
-            v,
+            origin,
             twin.id(),
             twin.prev_id(),
             target,
@@ -348,41 +347,112 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
             ep,
         );
 
-        self.vertex_mut(v).set_edge(new_e);
+        self.vertex_mut(origin).set_edge(new_e);
+        self.vertex_mut(target).set_edge(new_t);
         self.edge_mut(edge.next_id()).set_prev(new_e);
         self.edge_mut(twin.prev_id()).set_next(new_t);
         self.edge_mut(edge.id()).set_next(new_e);
         self.edge_mut(twin.id()).set_prev(new_t);
-        self.edge_mut(twin.id()).set_origin(v);
+        self.edge_mut(twin.id()).set_origin(origin);
+
+        debug_assert_eq!(self.edge(new_e).check(), Ok(()));
+        debug_assert_eq!(self.edge(new_t).check(), Ok(()));
 
         new_e
     }
 
-    /// Subdivide the face by inserting a diagonal edge from the target `v` of `from` to the origin `w` of `to`.
-    /// The face containing edge `wv` will keep the old face payload, the face containing `vw` will get the new payload.
-    /// Returns the edge `vw`.
-    ///
-    /// Panics if the face doesn't exist or not both vertices are part of the face.
-    ///
-    /// Doesn't care about whether the diagonal is geometrically inside the face.
-    #[inline]
-    fn subdivide_face(&mut self, from: T::E, to: T::E, ep: T::EP, fp: T::FP) -> Option<T::E> {
-        if self.edge(from).face_id() != self.edge(to).face_id() || !self.edge(from).has_face() {
+    fn collapse_edge(&mut self, edge_id: T::E) -> Option<T::E> {
+        let edge = self.edge(edge_id);
+        if edge.is_void() {
             return None;
         }
+        let twin = edge.clone().twin();
+        let next = edge.clone().next();
+        let next_twin = next.clone().twin();
 
+        let removed_v = twin.origin_id();
+        let target = next_twin.origin_id();
+        let next_twin_id = next_twin.id();
+        let next_id = next.id();
+        let next_next_id = next.next_id();
+        let next_twin_prev_id = next_twin.prev_id();
+        let twin_id = twin.id();
+
+        if next_id == twin_id {
+            // The target vertex has degree 1, so we cannot collapse the edge
+            return None;
+        }
+        if next_twin.next_id() != twin_id {
+            // The target vertex has degree > 2, so we cannot collapse the edge
+            return None;
+        }
+        if next_next_id == edge_id {
+            // The edge is parallel to edge_id.
+            let face = edge.face_id();
+            let twin_face = twin.face_id();
+
+            // swapped, because `v` won't be removed
+            self.vertex_mut(target).set_edge(edge_id);
+            self.vertex_mut(removed_v).set_edge(twin_id);
+
+            self.edge_mut(edge_id).link(twin_id);
+            if next_twin_prev_id == twin_id {
+                // both parallel
+                self.edge_mut(twin_id).link(edge_id);
+            }
+
+            // The enclosed face must be removed
+            if face != IndexType::max() {
+                self.faces.delete(face);
+            }
+            self.edge_mut(edge_id).replace_face(twin_face);
+            self.halfedges.delete(next_id);
+            self.halfedges.delete(next_twin_id);
+        } else if next_twin_prev_id == twin_id {
+            // also a parallel edge; mirrored case of the above
+            todo!();
+            // TODO: Be aware, that there are three types of parallel-edges:
+            // 1): edge.next = edge and twin.prev = twin
+            // 2): edge.next = edge but twin.prev != twin
+            // 3): edge.next != edge but twin.prev = twin
+        } else if next_next_id == twin_id {
+            // This is a self-loop
+            // TODO: test this and other functions with self-loops and parallel edges
+            todo!();
+        } else {
+            self.vertex_mut(target).set_edge(twin_id);
+            self.edge_mut(twin_id).set_origin(target);
+            self.edge_mut(edge_id).link(next_next_id);
+            self.edge_mut(next_twin_prev_id).link(twin_id);
+
+            self.vertices.delete(removed_v);
+            self.halfedges.delete(next_id);
+            self.halfedges.delete(next_twin_id);
+        }
+
+        debug_assert_eq!(self.edge(edge_id).check(), Ok(()));
+        debug_assert_eq!(self.edge(twin_id).check(), Ok(()));
+        Some(edge_id)
+    }
+
+    #[inline]
+    fn subdivide_face(&mut self, from: T::E, to: T::E, ep: T::EP, fp: T::FP) -> Option<T::E> {
+        let f = self.edge(from).face_id();
+        if f == IndexType::max() || f != self.edge(to).face_id() {
+            return None;
+        }
+        if self.edge(from).target_id() == self.edge(to).origin_id() {
+            // won't create self-loops
+            // TODO: Actually, we should allow this.
+            return None;
+        }
         let new_e = self.insert_edge_ee(from, to, ep)?;
-        self.insert_face(new_e, fp)?;
+        self.insert_face_forced(new_e, fp);
+        let new_twin = self.edge(new_e).twin_id();
+        self.face_mut(f).set_edge(new_twin);
         Some(new_e)
     }
 
-    /// Subdivide the given face by inserting a diagonal edge from `v` to `w`.
-    /// The face containing edge `wv` will keep the old face payload, the face containing `vw` will get the new payload.
-    /// Returns the edge `vw`.
-    ///
-    /// Panics if the face doesn't exist or not both vertices are part of the face.
-    ///
-    /// Doesn't care about whether the diagonal is geometrically inside the face.
     #[inline]
     fn subdivide_face_v(
         &mut self,
@@ -392,6 +462,9 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         ep: T::EP,
         fp: T::FP,
     ) -> Option<T::E> {
+        if v == w {
+            return None;
+        }
         let Ok(to) = self
             .vertex(w)
             .edges_out()
@@ -957,11 +1030,180 @@ mod tests {
 
     #[test]
     fn test_subdivide_edge() {
-        todo!()
+        let mut mesh = Mesh3d64::default();
+        let e0 = mesh.insert_regular_polygon(1.0, 3);
+        assert_eq!(mesh.check(), Ok(()));
+        let f = mesh.edge(e0).twin().face_id();
+
+        let e1 = mesh.subdivide_edge(e0, vp(0.0, 0.0, 0.0), Default::default());
+        assert_eq!(mesh.check(), Ok(()));
+        assert_eq!(mesh.is_connected(), true);
+        assert_eq!(mesh.is_open_2manifold(), true);
+        assert_eq!(mesh.num_vertices(), 4);
+        assert_eq!(mesh.num_edges(), 4);
+        assert_eq!(mesh.num_faces(), 1);
+        assert_eq!(mesh.face(f).num_edges(), 4);
+
+        let e2 = mesh.subdivide_edge(e0, vp(0.1, 0.0, 0.0), Default::default());
+        assert_eq!(mesh.check(), Ok(()));
+        assert_eq!(mesh.is_connected(), true);
+        assert_eq!(mesh.is_open_2manifold(), true);
+        assert_eq!(mesh.num_vertices(), 5);
+        assert_eq!(mesh.num_edges(), 5);
+        assert_eq!(mesh.num_faces(), 1);
+        assert_eq!(mesh.face(f).num_edges(), 5);
+
+        {
+            let mut mesh = mesh.clone();
+            for i in 1..=4 {
+                let e0b = mesh.collapse_edge(e0).unwrap();
+                assert_eq!(e0b, e0);
+                assert_eq!(mesh.has_edge(e0), true);
+                assert_eq!(mesh.has_edge(e1), i == 1);
+                assert_eq!(mesh.has_edge(e2), false);
+                if 5 - i >= 3 {
+                    assert_eq!(mesh.check(), Ok(()));
+                }
+                assert_eq!(mesh.is_connected(), true);
+                assert_eq!(mesh.is_open_2manifold(), 5 - i >= 2);
+                assert_eq!(mesh.num_vertices(), (5 - i).max(2));
+                assert_eq!(mesh.num_edges(), 5 - i);
+                assert_eq!(mesh.num_faces(), 1);
+            }
+            assert_eq!(mesh.num_vertices(), 2);
+            assert_eq!(mesh.num_edges(), 1);
+            assert_eq!(mesh.num_halfedges(), 2);
+            // TODO: verify existence of parallel edges
+            // TODO: Verify other types of self loops
+
+            let mesh_clone = mesh.clone();
+            assert_eq!(mesh.collapse_edge(e0), None);
+            assert_eq!(mesh.is_trivially_isomorphic(&mesh_clone).eq(), true);
+        }
+
+        /*
+        let mesh_clone = mesh.clone();
+        assert_eq!(
+            mesh.subdivide_face(e1, e1, Default::default(), Default::default()),
+            None
+        );
+        assert_eq!(mesh.is_trivially_isomorphic(&mesh_clone).eq(), true);*/
     }
 
     #[test]
     fn test_subdivide_face() {
-        todo!()
+        let mut mesh = Mesh3d64::default();
+        let e0b = mesh.insert_regular_polygon(1.0, 4);
+        let e0 = mesh.edge(e0b).twin_id();
+        assert_eq!(mesh.check(), Ok(()));
+
+        let e1 = mesh.edge(e0).next_id();
+        let e2 = mesh.edge(e1).next_id();
+        let e3 = mesh.edge(e2).next_id();
+
+        let d1a = mesh
+            .subdivide_face(e0, e3, Default::default(), Default::default())
+            .unwrap();
+        assert_eq!(mesh.check(), Ok(()));
+        assert_eq!(mesh.is_connected(), true);
+        assert_eq!(mesh.is_open_2manifold(), true);
+        assert_eq!(mesh.num_vertices(), 4);
+        assert_eq!(mesh.num_edges(), 5);
+        assert_eq!(mesh.num_faces(), 2);
+
+        let d1bt = mesh.subdivide_edge(d1a, vp(0.0, 0.0, 0.0), Default::default());
+        let d1at = mesh.edge(d1bt).twin().next_id();
+        assert_ne!(d1a, d1bt);
+        assert_eq!(d1a, mesh.edge(d1at).twin_id());
+
+        assert_eq!(mesh.num_vertices(), 5);
+
+        let d2a = mesh
+            .subdivide_face(e3, d1bt, Default::default(), Default::default())
+            .unwrap();
+        let d2b = mesh
+            .subdivide_face(e1, d1at, Default::default(), Default::default())
+            .unwrap();
+
+        assert_eq!(mesh.check(), Ok(()));
+        assert_eq!(mesh.is_connected(), true);
+        assert_eq!(mesh.is_open_2manifold(), true);
+        assert_eq!(mesh.num_vertices(), 5);
+        assert_eq!(mesh.num_edges(), 8);
+        assert_eq!(mesh.num_faces(), 4);
+
+        let center = mesh.edge(d1bt).origin_id();
+        assert_eq!(mesh.edge(d2a).target_id(), center);
+        assert_eq!(mesh.edge(d2b).target_id(), center);
+        assert_eq!(mesh.edge(d1a).target_id(), center);
+        assert_eq!(mesh.edge(d1bt).origin_id(), center);
+        assert_eq!(mesh.edge(d1at).origin_id(), center);
+
+        for f in mesh.face_refs() {
+            assert_eq!(mesh.face(f.id()).num_edges(), 3);
+        }
+
+        let mesh_clone = mesh.clone();
+        // not the same face
+        assert_eq!(
+            mesh.subdivide_face(e0, e1, Default::default(), Default::default()),
+            None
+        );
+        assert_eq!(mesh.is_trivially_isomorphic(&mesh_clone).eq(), true);
+
+        // still not the same face
+        assert_eq!(
+            mesh.subdivide_face(e0, e2, Default::default(), Default::default()),
+            None
+        );
+        assert_eq!(mesh.is_trivially_isomorphic(&mesh_clone).eq(), true);
+
+        // too small
+        assert_eq!(
+            mesh.subdivide_face(
+                e0,
+                mesh.edge(e0).next_id(),
+                Default::default(),
+                Default::default()
+            ),
+            None
+        );
+        assert_eq!(mesh.is_trivially_isomorphic(&mesh_clone).eq(), true);
+
+        // subdiving the outside is also not possible
+        assert_eq!(
+            mesh.subdivide_face(
+                mesh.edge(e0).twin_id(),
+                mesh.edge(e3).twin_id(),
+                Default::default(),
+                Default::default(),
+            ),
+            None
+        );
+        assert_eq!(mesh.is_trivially_isomorphic(&mesh_clone).eq(), true);
+
+        // though, we can insert an outside face:
+        mesh.insert_face(mesh.edge(e0).twin_id(), Default::default())
+            .unwrap();
+        assert_eq!(mesh.check(), Ok(()));
+        let _d3 = mesh
+            .subdivide_face(
+                mesh.edge(e0).twin_id(),
+                mesh.edge(e1).twin_id(),
+                Default::default(),
+                Default::default(),
+            )
+            .unwrap();
+
+        assert_eq!(mesh.check(), Ok(()));
+        assert_eq!(mesh.is_connected(), true);
+        assert_eq!(mesh.is_open_2manifold(), true);
+        assert_eq!(mesh.num_vertices(), 5);
+        assert_eq!(mesh.num_edges(), 9);
+        assert_eq!(mesh.num_faces(), 6);
+
+        for f in mesh.face_refs() {
+            assert_eq!(mesh.face(f.id()).num_edges(), 3);
+        }
     }
 }

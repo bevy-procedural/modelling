@@ -49,7 +49,7 @@ pub trait WithNormals<
         // Smooth normals are calculated without vertex duplication.
         // Hence, we have to set the normals of the whole mesh.
         // we copy the vertices still to both compact the indices and set the normals without mutating the mesh
-        let face_normals: HashMap<T::F, _> = MeshBasics::faces(self)
+        let face_normals: HashMap<T::F, _> = MeshBasics::face_refs(self)
             .map(|f| (f.id(), Face3d::normal(f, self).normalize()))
             .collect();
 

@@ -199,7 +199,7 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     }
 
     #[inline]
-    fn faces<'a>(&'a self) -> impl Iterator<Item = &'a T::Face>
+    fn face_refs<'a>(&'a self) -> impl Iterator<Item = &'a T::Face>
     where
         T::Face: 'a,
     {

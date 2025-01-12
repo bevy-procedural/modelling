@@ -143,7 +143,7 @@ mod tests {
             assert!(edge.other_face(&mesh).is_some());
         }
 
-        for face in mesh.faces() {
+        for face in mesh.face_refs() {
             face.edges(&mesh).for_each(|e1| {
                 face.edges(&mesh).for_each(|e2| {
                     assert!(e1.same_boundary(&mesh, e2.origin_id(&mesh)).is_some());

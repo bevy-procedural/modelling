@@ -7,7 +7,7 @@ fn main() {
     let mut mesh = Mesh3dColored::cube(1.0);
 
     // make the vertices of one face red
-    let vs = mesh.faces().next().unwrap().vertex_ids(&mesh).collect_vec();
+    let vs = mesh.face_refs().next().unwrap().vertex_ids(&mesh).collect_vec();
     for v in vs {
         mesh.vertex_mut(v).payload().color = VertexColor { r: 255, g: 0, b: 0 };
     }

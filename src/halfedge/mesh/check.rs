@@ -64,9 +64,10 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
 
     fn check_faces_nondegenerate(&self) -> Result<(), String> {
         // TODO: this and many other checks would also work without half edges!
-        if let Some(bad_face) = self.faces().find(|f| f.edges(self).count() < 3) {
+        // TODO: we should allow 2 faces when the mesh is allowed to be degenerate
+        if let Some(bad_face) = self.face_refs().find(|f| f.edges(self).count() < 3) {
             return Err(format!(
-                "Face {} has only {} faces!",
+                "Face {} has only {} edges!",
                 bad_face.id(),
                 bad_face.edges(self).count()
             ));
@@ -87,7 +88,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     }
 
     fn check_face_invariants(&self) -> Result<(), String> {
-        if let Some(bad_face) = self.faces().find(|f| f.edge(self).face_id() != f.id()) {
+        if let Some(bad_face) = self.face_refs().find(|f| f.edge(self).face_id() != f.id()) {
             return Err(format!(
                 "Face {} has edge {} with face {}",
                 bad_face.id(),
@@ -117,7 +118,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     }
 
     fn face_analysis(&self) -> String {
-        self.faces()
+        self.face_refs()
             .map(|f| {
                 format!(
                     "{}) {} edges, e.g., {}   {:?}",

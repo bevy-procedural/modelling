@@ -29,7 +29,7 @@ impl<T: HalfEdgeImplMeshTypePlus> HalfEdgeMeshImpl<T> {
         }
         let mut face_map = std::collections::HashMap::new();
         face_map.insert(IndexType::max(), IndexType::max());
-        for face in MeshBasics::faces(mesh) {
+        for face in MeshBasics::face_refs(mesh) {
             let f = res.faces.allocate();
             face_map.insert(face.id(), f);
         }
@@ -49,7 +49,7 @@ impl<T: HalfEdgeImplMeshTypePlus> HalfEdgeMeshImpl<T> {
             );
         }
 
-        for face in MeshBasics::faces(mesh) {
+        for face in MeshBasics::face_refs(mesh) {
             res.faces.set(
                 face_map[&face.id()],
                 HalfEdgeFaceImpl::new(edge_map[&FaceBasics::edge_id(face)], ff(face.payload())),

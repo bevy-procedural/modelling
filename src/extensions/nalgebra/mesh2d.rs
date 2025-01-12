@@ -112,7 +112,7 @@ mod tests {
         assert!(m3d.is_open());
         assert!(m3d.check().is_ok());
 
-        let f = m3d.faces().next().expect("no face");
+        let f = m3d.face_refs().next().expect("no face");
         assert!(f.is_convex(&m3d));
         assert!(f.is_planar2(&m3d));
         //assert!(f.is_simple(&m3d));

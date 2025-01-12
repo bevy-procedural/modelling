@@ -16,7 +16,7 @@ pub trait Triangulateable<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         T: MeshType3D,
     {
         let mut indices = Vec::new();
-        for f in self.faces() {
+        for f in self.face_refs() {
             let mut tri = Triangulation::new(&mut indices);
             triangulate_face::<T>(f, self, &mut tri, algorithm)
 
@@ -40,7 +40,7 @@ pub trait Triangulateable<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         let mut vertices = Vec::new();
         let mut indices = Vec::new();
 
-        for f in self.faces() {
+        for f in self.face_refs() {
             let mut tri = Triangulation::new(&mut indices);
             let face_normal = Face3d::normal(f, self).normalize();
             let mut id_map = HashMap::new();
