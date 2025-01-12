@@ -11,12 +11,14 @@ use crate::{
 use itertools::Itertools;
 
 impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
+    #[inline]
     fn insert_vertex(&mut self, vp: T::VP) -> T::V {
         let new = self.vertices.allocate();
         self.vertices.set(new, T::Vertex::new(IndexType::max(), vp));
         new
     }
 
+    #[inline]
     fn try_remove_vertex(&mut self, v: T::V) -> bool {
         let c = self.vertex(v);
         let Some(vertex) = c.get() else {
@@ -38,6 +40,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         self.try_remove_edge_forced(e)
     }
 
+    #[inline]
     fn try_remove_edge_forced(&mut self, e: T::E) -> bool {
         if !self.has_edge(e) {
             return false;
@@ -141,7 +144,6 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         Some(e1)
     }
 
-    #[inline]
     fn insert_edge_vv(&mut self, a: T::V, b: T::V, ep: T::EP) -> Option<T::E> {
         // TODO: When allowing non-manifold meshes, their vertices might not be at boundary and in the same component, e.g., we could allow an edge from one interior point to another.
 
@@ -251,6 +253,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         }
     }
 
+    #[inline]
     fn insert_edge_ev(&mut self, e: T::E, v: T::V, ep: T::EP) -> Option<T::E> {
         if self.vertex(v).is_isolated() {
             // Trivial case where the connectivity is already given
@@ -296,6 +299,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         None
     }
 
+    #[inline]
     fn try_remove_face(&mut self, f: T::F) -> bool {
         let face = self.face(f);
         if face.is_void() {
@@ -307,16 +311,22 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         true
     }
 
+    #[inline]
     fn insert_face(&mut self, e: T::E, fp: T::FP) -> Option<T::F> {
         if self.edge(e).has_face() {
             return None;
         }
+        Some(self.insert_face_forced(e, fp))
+    }
+
+    #[inline]
+    fn insert_face_forced(&mut self, e: T::E, fp: T::FP) -> T::F {
         let f = self.faces.push(HalfEdgeFaceImpl::new(e, fp));
         self.edge_ref(e)
             .clone()
             .edges_face_mut(self)
             .for_each(|e| e.set_face(f));
-        return Some(f);
+        return f;
     }
 
     fn subdivide_edge(&mut self, e: T::E, vp: T::VP, ep: T::EP) -> T::E {
@@ -355,6 +365,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     /// Panics if the face doesn't exist or not both vertices are part of the face.
     ///
     /// Doesn't care about whether the diagonal is geometrically inside the face.
+    #[inline]
     fn subdivide_face(&mut self, from: T::E, to: T::E, ep: T::EP, fp: T::FP) -> Option<T::E> {
         if self.edge(from).face_id() != self.edge(to).face_id() || !self.edge(from).has_face() {
             return None;
@@ -372,6 +383,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     /// Panics if the face doesn't exist or not both vertices are part of the face.
     ///
     /// Doesn't care about whether the diagonal is geometrically inside the face.
+    #[inline]
     fn subdivide_face_v(
         &mut self,
         f: T::F,

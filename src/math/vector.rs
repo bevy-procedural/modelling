@@ -65,12 +65,12 @@ pub trait Vector<S: Scalar, const D: usize>:
     fn splat(value: S) -> Self;
 
     /// Calculate the sum of an iterator of vectors using some numerically stable algorithm.
-    fn stable_sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+    fn stable_sum(iter: impl IntoIterator<Item = Self>) -> Self {
         kahan_summation(iter).0
     }
 
     /// Calculate the mean of an iterator of vectors using some numerically stable algorithm.
-    fn stable_mean<I: Iterator<Item = Self>>(iter: I) -> Self {
+    fn stable_mean(iter: impl IntoIterator<Item = Self>) -> Self {
         let (sum, count) = kahan_summation(iter);
         sum / S::from_usize(count)
     }

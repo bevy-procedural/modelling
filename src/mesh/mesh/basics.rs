@@ -384,9 +384,9 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
 
     /// Returns the subgraph induced by the given vertices.
     #[must_use]
-    fn submesh<Iter: Iterator<Item = T::V>>(&self, vertices: Iter) -> Self {
+    fn submesh(&self, vertices: impl IntoIterator<Item = T::V>) -> Self {
         // TODO: test
-        todo!("{:?}", vertices.collect::<Vec<_>>())
+        todo!("{:?}", vertices.into_iter().collect::<Vec<_>>())
     }
 
     /// Determines whether the mesh has holes, i.e., true boundary edges.

@@ -60,6 +60,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T>
         (forward, backward)
     }
 
+    #[inline]
     fn try_remove_halfedge(&mut self, e: T::E) -> bool {
         let edge = self.edge(e);
         if edge.face_id() != IndexType::max() {
@@ -193,6 +194,7 @@ impl<T: HalfEdgeImplMeshTypePlus> HalfEdgeMeshImpl<T> {
     /// Inserts a single half-edge with the given id.
     /// This will not update the neighbors and will not check whether the operation is allowed!
     /// After this operation, the mesh might be in an inconsistent state.
+    #[inline]
     pub(crate) fn insert_halfedge_forced(
         &mut self,
         edge: T::E,

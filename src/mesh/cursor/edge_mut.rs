@@ -95,12 +95,6 @@ impl<'a, T: MeshType + 'a> EdgeCursorHalfedgeBasics<'a, T> for EdgeCursorMut<'a,
 /// This trait implements some shorthands to quickly modify a mesh without thinking about local variables,
 /// i.e., you can quickly modify the mesh multiple times and change the edge etc. using a chaining syntax.
 impl<'a, T: MeshType + 'a> EdgeCursorMut<'a, T> {
-    /*#[inline]
-    pub fn subdivide<I: Iterator<Item = (T::EP, T::VP)>>(self, vs: I) -> Self {
-        let e = self.mesh.subdivide_edge::<I>(self.edge, vs);
-        self.move_to(e)
-    }*/
-
     /// Tries to remove the current edge.
     /// If the edge was successfully removed or didn't exist, returns `None`.
     /// Otherwise, returns an cursor still pointing to the same edge.

@@ -175,6 +175,12 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     #[must_use]
     fn insert_face(&mut self, e: T::E, fp: T::FP) -> Option<T::F>;
 
+    /// Close the open boundary with a single face. Doesn't create new edges or vertices.
+    ///
+    /// The given edge will be the representative edge of the face.
+    #[must_use]
+    fn insert_face_forced(&mut self, e: T::E, fp: T::FP) -> T::F;
+
     /// Close the given boundary by inserting an edge from `from.target` to
     /// `to.origin` and insert a face.
     ///
@@ -306,7 +312,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     ///
     /// Returns the last (half)edge inserted, i.e., the one pointing to the original target vertex.
     #[inline]
-    fn subdivide_edge_iter<I: Iterator<Item = (T::EP, T::VP)>>(&mut self, e: T::E, vs: I) -> T::E {
+    fn subdivide_edge_iter(&mut self, e: T::E, vs: impl IntoIterator<Item = (T::EP, T::VP)>) -> T::E {
         let mut last = e;
         for (ep, vp) in vs {
             last = self.subdivide_edge(last, vp, ep);
@@ -359,6 +365,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Insert a path of vertices and edges starting at `vp`.
     /// Returns the first edge  inserted after `vp` as well as the last vertex's id.
     /// If the iterator is empty, the method will return only the vertex `vp`.
+    #[inline]
     fn insert_path(
         &mut self,
         vp: T::VP,
@@ -366,39 +373,13 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     ) -> (Option<T::E>, T::V) {
         let v = self.insert_vertex(vp);
         self.append_path(v, iter)
-
-        /*
-
-           /// Generate a path from the finite iterator of positions and return the halfedges pointing to the first and last vertex.
-           fn insert_path(&mut self, vp: impl IntoIterator<Item = T::VP>) -> (T::E, T::E)
-           where
-               T::EP: DefaultEdgePayload,
-           {
-               // TODO: create this directly without the builder functions
-
-               let mut iter = vp.into_iter();
-               let p0 = iter.next().expect("Path must have at least one vertex");
-               let p1 = iter.next().expect("Path must have at least two vertices");
-               let (v0, v) = self.insert_isolated_edge(p0, p1);
-               let first = self.shared_edge(v0, v).unwrap();
-               let mut input = first.id();
-               let mut output = first.twin_id();
-               for pos in iter {
-                   self.insert_vertex_e(input, output, pos);
-                   let n = self.edge(input).next(self);
-                   input = n.id();
-                   output = n.twin_id();
-               }
-
-               (first.twin_id(), input)
-           }
-        */
     }
 
     /// Same as `insert_path` but closes the path by connecting the last vertex with the first one.
     /// Also, returns the first edge (outer boundary of the loop when constructed ccw).
     /// The first edge's target is the first vertex of the loop.
     /// Panics if the iterator has a length of less than 2.
+    #[inline]
     fn insert_loop(&mut self, iter: impl IntoIterator<Item = (T::EP, T::VP)>) -> T::E {
         let mut iter = iter.into_iter();
         let (ep, vp) = iter.next().unwrap();
@@ -417,19 +398,10 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         );
 
         first_edge
-
-        /*
-                 fn insert_loop(&mut self, vp: impl IntoIterator<Item = T::VP>) -> T::E
-        where
-            T::EP: DefaultEdgePayload,
-        {
-            let (first, last) = self.insert_path(vp);
-            self.insert_edge(first, Default::default(), last, Default::default());
-            return first;
-        } */
     }
 
     /// Same as `insert_loop` but uses the default edge payload.
+    #[inline]
     fn insert_loop_default(&mut self, iter: impl IntoIterator<Item = T::VP>) -> T::E
     where
         T::EP: DefaultEdgePayload,

@@ -138,12 +138,12 @@ pub trait Scalar:
     }
 
     /// Calculate the sum of an iterator of scalars using some numerically stable algorithm.
-    fn stable_sum<I: Iterator<Item = Self>>(values: I) -> Self {
+    fn stable_sum(values: impl IntoIterator<Item = Self>) -> Self {
         neumaier_summation(values).0
     }
 
     /// Calculate the mean of an iterator of scalars using some numerically stable algorithm.
-    fn stable_mean<I: Iterator<Item = Self>>(values: I) -> Self {
+    fn stable_mean(values: impl IntoIterator<Item = Self>) -> Self {
         let (sum, n) = neumaier_summation(values);
         sum / Self::from_usize(n)
     }
@@ -215,7 +215,7 @@ impl<S: Scalar> std::cmp::Ord for OrderedFloats<S> {
 /// This is a more numerically stable way to sum up a list of scalars.
 /// It is especially useful when the scalars are of different magnitudes.
 /// It's slightly more precise than Kahan summation.
-pub fn neumaier_summation<S: Scalar, I: Iterator<Item = S>>(iter: I) -> (S, usize) {
+pub fn neumaier_summation<S: Scalar>(iter: impl IntoIterator<Item = S>) -> (S, usize) {
     let mut sum = S::ZERO;
     let mut c = S::ZERO;
     let mut count = 0;
@@ -237,9 +237,8 @@ pub fn neumaier_summation<S: Scalar, I: Iterator<Item = S>>(iter: I) -> (S, usiz
 /// It can be overloaded with a very broad range of floating point types including most vectors.
 pub fn kahan_summation<
     X: std::ops::Add<Output = X> + std::ops::Sub<Output = X> + Copy + HasZero,
-    I: Iterator<Item = X>,
 >(
-    iter: I,
+    iter: impl IntoIterator<Item = X>,
 ) -> (X, usize) {
     let mut sum = X::zero();
     let mut c = X::zero();
