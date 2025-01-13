@@ -115,7 +115,7 @@ where
     /// Won't move if the edge is void.
     #[inline]
     #[must_use]
-    fn skip(self, n: usize) -> Self {
+    fn next_n(self, n: usize) -> Self {
         let mut cursor = self;
         for _ in 0..n {
             cursor = cursor.next();
@@ -135,7 +135,7 @@ where
     /// Won't move if the edge is void.
     #[inline]
     #[must_use]
-    fn skip_back(self, n: usize) -> Self {
+    fn prev_n(self, n: usize) -> Self {
         let mut cursor = self;
         for _ in 0..n {
             cursor = cursor.prev();

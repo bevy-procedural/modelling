@@ -38,8 +38,8 @@ impl<'a, T: MeshType + 'a> EdgeCursorMut<'a, T> {
     /// Returns an immutable clone pointing to the same edge.
     #[inline]
     #[must_use]
-    pub fn immutable(&'a self) -> EdgeCursor<'a, T> {
-        EdgeCursor::new(self.mesh, self.edge)
+    pub fn as_immutable(&'a self) -> EdgeCursor<'a, T> {
+        EdgeCursor::new(self.mesh, self.try_id())
     }
 
     /// Returns a mutable reference to the payload of the edge.
@@ -47,7 +47,7 @@ impl<'a, T: MeshType + 'a> EdgeCursorMut<'a, T> {
     #[inline]
     #[must_use]
     pub fn payload(&mut self) -> &mut T::EP {
-        self.mesh.edge_payload_mut(self.edge)
+        self.mesh.edge_payload_mut(self.try_id())
     }
 }
 
@@ -363,7 +363,7 @@ where
     T::Edge: HalfEdge<T>,
 {
     /// Runs the closure on all outgoing halfedges of the target.
-    pub fn all_next<F: Fn(Self) -> Self>(self, f: F) -> Self {
+    pub fn for_each_next<F: Fn(Self) -> Self>(self, f: F) -> Self {
         let twin = self.twin();
         let id = twin.id();
         let mut c = twin.next_sibling();

@@ -37,8 +37,8 @@ impl<'a, T: MeshType> FaceCursorMut<'a, T> {
     /// Returns an immutable clone pointing to the same face.
     #[inline]
     #[must_use]
-    pub fn immutable(&'a self) -> FaceCursor<'a, T> {
-        FaceCursor::new(self.mesh, self.face)
+    pub fn as_immutable(&'a self) -> FaceCursor<'a, T> {
+        FaceCursor::new(self.mesh, self.try_id())
     }
 
     /// Returns a mutable reference to the payload of the face.
@@ -46,7 +46,7 @@ impl<'a, T: MeshType> FaceCursorMut<'a, T> {
     #[inline]
     #[must_use]
     pub fn payload_mut(&mut self) -> &mut T::FP {
-        self.mesh.face_ref_mut(self.face).payload_mut()
+        self.mesh.face_ref_mut(self.try_id()).payload_mut()
     }
 }
 
