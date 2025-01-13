@@ -36,7 +36,7 @@ impl Default for GlobalSettings {
 }
 
 fn make_mesh(_settings: &GlobalSettings) -> BevyMesh3d {
-    let mut mesh = BevyMesh3d::uv_sphere(1.0, 5, 5);
+    let mut mesh = BevyMesh3d::fake_uv_sphere(1.0, 5, 5);
     //regular_pyramid(1.0, 1.0, 4);
     //regular_icosahedron(1.0);
     //regular_polygon(1.0, 4);

@@ -39,7 +39,7 @@ fn generate_shapes(
         BevyMesh3d::regular_octahedron(1.0),
         //BevyMesh3d::dodecahedron(1.0) // TODO: crash?
         // row 3
-        BevyMesh3d::uv_sphere(1.0, 16, 16),
+        BevyMesh3d::fake_uv_sphere(1.0, 16, 16),
         BevyMesh3d::geodesic_icosahedron(1.0, 8),
         BevyMesh3d::geodesic_tetrahedron(1.0, 16),
         BevyMesh3d::geodesic_octahedron(1.0, 16),

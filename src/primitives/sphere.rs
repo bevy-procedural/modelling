@@ -27,10 +27,10 @@ where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
 {
-    /// Create a uv sphere with a given `radius`.
+    /// Create a fake uv sphere (without vertex duplication) with a given `radius`.
     /// `n` is the number of rings (including the two made of triangular faces).
     /// `m` is the number of columns.
-    fn uv_sphere(radius: T::S, n: usize, m: usize) -> Self {
+    fn fake_uv_sphere(radius: T::S, n: usize, m: usize) -> Self {
         // TODO: https://catlikecoding.com/unity/tutorials/procedural-meshes/uv-sphere/
         assert!(n >= 2);
         assert!(m >= 3);
