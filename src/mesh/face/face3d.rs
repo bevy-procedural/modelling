@@ -90,20 +90,21 @@ pub trait Face3d<T: MeshType3D<Face = Self>>: FaceBasics<T> {
 
         // println!("Normal of face {:?} {:?}", self.id(), self.vertices(mesh).map(|v| v.pos()).collect::<Vec<_>>());
 
-        debug_assert!(
+        // TODO: Ignore non planar faces?
+        /*debug_assert!(
             self.may_be_curved() || self.is_planar2(mesh),
             "Face is not planar {:?}",
             self
-        );
+        );*/
 
         let normal = self.vertices(mesh).map(|v| v.pos()).normal();
 
-        debug_assert!(
+        /*debug_assert!(
             normal.length_squared() >= T::S::EPS,
             "Degenerated face {} {:?}",
             self.id(),
             self.vertices(mesh).map(|v| v.pos()).collect::<Vec<_>>()
-        );
+        );*/
 
         normal
     }

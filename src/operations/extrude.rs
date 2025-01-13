@@ -95,7 +95,7 @@ where
             .edges_from(self.edge(e).next_id())
             .map(|v| v.origin(self).payload().transformed(&transform))
             .collect();
-        let start = self.loft_tri_closed(e, vps).unwrap();
+        let start = self.loft_tri(e, false, true, vps).unwrap();
         self.insert_face(start, Default::default()).unwrap();
         self.edge_mut(start)
     }
@@ -121,7 +121,7 @@ where
             .map(|(a, b)| a.lerped(&b, T::S::HALF))
             .collect();
         vps.rotate_right(1);
-        let start = self.loft_tri_closed(e, vps).unwrap();
+        let start = self.loft_tri(e, false, true, vps).unwrap();
         self.insert_face(start, Default::default()).unwrap();
         self.edge_mut(start)
     }
@@ -132,11 +132,11 @@ where
     ///
     /// The result will be a windmill with triangular blades.
     #[must_use]
-    fn windmill(&mut self, start: T::E, hub: T::VP) -> Option<T::V> {
+    fn windmill_back(&mut self, start: T::E, hub: T::VP) -> Option<T::V> {
         // TODO: replace with loft n=1
-        let e0 = self.edge(start);
-        let origin = e0.origin_id();
-        let mut input = self.edge(start).prev_id();
+        let start = self.edge(start);
+        let origin = start.origin_id();
+        let mut input = start.prev_id();
         let (_, v) = self.insert_vertex_e(input, hub, Default::default())?;
         loop {
             let e = self.edge(input);
@@ -144,8 +144,31 @@ where
                 break;
             }
             input = e.prev_id();
-            let n = self.edge(input).next();
-            self.close_face_ee(n.next_id(), n.id(), Default::default(), Default::default())?;
+            self.close_face_ee(e.next_id(), e.id(), Default::default(), Default::default())?;
+        }
+        self.insert_face(input, Default::default())?;
+        Some(v)
+    }
+
+    /// Assumes `start` is on the boundary of the edge.
+    /// Will insert a vertex `hub` with the given vp and fill the hole along the boundary with triangles connected to the hub vertex.
+    /// Returns the id of the hub vertex.
+    ///
+    /// The result will be a windmill with triangular blades.
+    #[must_use]
+    fn windmill(&mut self, start: T::E, hub: T::VP) -> Option<T::V> {
+        // TODO: replace with loft n=1
+        let start = self.edge(start);
+        let target = start.target_id();
+        let mut input = start.next_id();
+        let (_, v) = self.insert_vertex_e(start.id(), hub, Default::default())?;
+        loop {
+            let e = self.edge(input);
+            if e.target_id() == target {
+                break;
+            }
+            input = e.next_id();
+            self.close_face_ee(e.id(), e.prev_id(), Default::default(), Default::default())?;
         }
         self.insert_face(input, Default::default())?;
         Some(v)

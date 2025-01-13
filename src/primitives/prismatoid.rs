@@ -110,7 +110,7 @@ where
         vp2: impl IntoIterator<Item = T::VP>,
     ) -> EdgeCursorMut<'_, T> {
         let first = self.insert_polygon(vp).id();
-        let e = self.loft_tri_closed(first, vp2).unwrap();
+        let e = self.loft_tri(first, false, true, vp2).unwrap();
         self.insert_face(e, Default::default()).unwrap();
         self.edge_mut(e)
     }
@@ -132,7 +132,7 @@ where
         apex: T::VP,
     ) -> EdgeCursorMut<'_, T> {
         let first = self.insert_polygon(base).id();
-        self.windmill(first, apex).unwrap();
+        self.windmill_back(first, apex).unwrap();
         self.edge_mut(first).twin()
     }
 
@@ -255,7 +255,7 @@ where
             )
             .id();
         mesh.remove_face(mesh.edge(e).face_id());
-        mesh.windmill(e, T::VP::from_pos(T::Vec::from_xyz(zero, -h, zero)))
+        mesh.windmill_back(e, T::VP::from_pos(T::Vec::from_xyz(zero, -h, zero)))
             .unwrap();
         mesh
     }

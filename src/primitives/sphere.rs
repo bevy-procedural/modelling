@@ -57,7 +57,7 @@ where
         let mut prev = mesh
             .insert_loop((0..m).map(|j| (Default::default(), make_vp(1, j))))
             .id();
-        mesh.windmill(mesh.edge(prev).twin_id(), make_vp(0, 0))
+        mesh.windmill_back(mesh.edge(prev).twin_id(), make_vp(0, 0))
             .unwrap();
 
         // normal squares
@@ -69,7 +69,7 @@ where
         }
 
         // bottom pole
-        mesh.windmill(prev, make_vp(n, 0)).unwrap();
+        mesh.windmill_back(prev, make_vp(n, 0)).unwrap();
 
         mesh
     }
@@ -151,13 +151,15 @@ where
                 make_vp(-short, zero, long),
                 make_vp(-long, short, zero),
             ])
-            .id();
+            .twin_id();
 
         mesh.windmill(start, make_vp(zero, long, short)).unwrap();
 
         let end = mesh
-            .loft_tri_back_closed(
-                mesh.edge(start).twin().prev_id(),
+            .loft_tri(
+                mesh.edge(start).twin().next_id(),
+                false,
+                true,
                 [
                     make_vp(short, zero, -long),
                     make_vp(long, -short, zero),
@@ -168,7 +170,10 @@ where
             )
             .unwrap();
 
-        mesh.windmill(end, make_vp(zero, -long, -short)).unwrap();
+        debug_assert!(!mesh.edge(end).has_face());
+
+        mesh.windmill_back(end, make_vp(zero, -long, -short))
+            .unwrap();
 
         mesh
     }

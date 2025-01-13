@@ -36,10 +36,11 @@ impl Default for GlobalSettings {
 }
 
 fn make_mesh(_settings: &GlobalSettings) -> BevyMesh3d {
-    let mut mesh = BevyMesh3d::regular_polygon(1.0, 4);
+    let mut mesh = BevyMesh3d::regular_icosahedron(1.0);
     //regular_pyramid(1.0, 1.0, 4);
     //regular_icosahedron(1.0);
-    //regular_pyramid(1.0, 1.0, 4);
+    //regular_polygon(1.0, 4);
+    //icosphere(1.0, 2);
 
     // place it "on the floor"
     let min_y = mesh
@@ -52,7 +53,7 @@ fn make_mesh(_settings: &GlobalSettings) -> BevyMesh3d {
 }
 
 pub fn main() {
-    env::set_var("RUST_BACKTRACE", "1"); // or "full", "1", "0"
+    env::set_var("RUST_BACKTRACE", "0"); // or "full", "1", "0"
 
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {

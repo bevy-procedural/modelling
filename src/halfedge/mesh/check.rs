@@ -101,7 +101,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     }
 
     fn vertex_analysis(&self) -> String {
-        self.vertices()
+        self.vertex_refs()
             .map(|v| format!("{:?}", v))
             .collect::<Vec<_>>()
             .join("\n")

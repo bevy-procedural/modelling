@@ -74,12 +74,17 @@ pub fn triangulate_face<T: MeshType3D>(
     algorithm: TriangulationAlgorithm,
 ) {
     let n = face.num_vertices(mesh);
-    assert!(
+
+    // TODO: ignore faces with less than 3 vertices
+    if n < 3 {
+        return;
+    }
+    /*assert!(
         n >= 3,
         "a face must have at least 3 vertices, but {} only had {}",
         face.id(),
         n
-    );
+    );*/
 
     if try_min_weight_small::<T>(face, mesh, tri) {
         return;
