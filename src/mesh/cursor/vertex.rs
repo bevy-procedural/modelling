@@ -28,6 +28,13 @@ impl<'a, T: MeshType> VertexCursor<'a, T> {
         Self { mesh, vertex }
     }
 
+    /// Clones the cursor.
+    #[inline]
+    #[must_use]
+    pub fn fork(&self) -> Self {
+        Self::new(self.mesh, self.vertex)
+    }
+
     /// Creates a new void vertex cursor.
     #[inline]
     #[must_use]

@@ -43,7 +43,7 @@ pub trait NetworkScience<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         for e in self.edges() {
             let i = e.origin_id().index();
             let j = e.target_id().index();
-            let d: T::S = e.clone().origin().pos().distance(&e.target().pos());
+            let d: T::S = e.fork().origin().pos().distance(&e.target().pos());
             adj[(i, j)] = d;
             adj[(j, i)] = d;
         }

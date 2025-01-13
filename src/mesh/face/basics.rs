@@ -55,7 +55,7 @@ pub trait FaceBasics<T: MeshType<Face = Self>>: std::fmt::Debug + Clone + Copy {
     }
 
     /// Iterates all half-edges incident to the face
-    fn edges<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge> + 'a
+    fn edge_refs<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge> + 'a
     where
         T: 'a;
 
@@ -64,6 +64,6 @@ pub trait FaceBasics<T: MeshType<Face = Self>>: std::fmt::Debug + Clone + Copy {
     where
         T: 'a,
     {
-        self.edges(mesh).map(|e| e.id())
+        self.edge_refs(mesh).map(|e| e.id())
     }
 }

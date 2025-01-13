@@ -206,6 +206,7 @@ pub trait MeshHalfEdgeBuilder<T: MeshTypeHalfEdge<Mesh = Self>>: MeshBasics<T> {
 
     /// Will insert a new vertex inside this halfedge.
     /// After this, the mesh will be invalid since the twin is not updated!
+    /// Returns the newly inserted edge.
     fn subdivide_halfedge(&mut self, e: T::E, vp: T::VP, ep: T::EP) -> T::E;
 
     /// Call this on the twin of an halfedge where `subdivide_unsafe` was called

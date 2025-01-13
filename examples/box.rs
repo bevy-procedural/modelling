@@ -13,13 +13,12 @@ fn vp(x: f32, y: f32, z: f32) -> BevyVertexPayload3d {
     BevyVertexPayload3d::from_pos(Vec3::new(x, y, z))
 }
 
-
 /// Creates a cuboid with a given `size`.
 ///
 /// This method attempts the most intuitive approach:
 /// Define all the vertices, then insert all the edges, then all the faces.
-/// 
-/// While being quite low-level, this method is not nice to read and 
+///
+/// While being quite low-level, this method is not nice to read and
 /// also not necessarily more efficient than the other methods.
 fn cuboid_from_vertices(size: Vec3) -> BevyMesh3d {
     // TODO: Rewrite this method for better clarity
@@ -27,12 +26,12 @@ fn cuboid_from_vertices(size: Vec3) -> BevyMesh3d {
     let (x, y, z) = (size * 0.5).tuple();
     let mut mesh = BevyMesh3d::new();
     let (v0, v1) = mesh.insert_isolated_edge(vp(x, y, z), vp(-x, y, z));
-    let v2 = mesh.insert_vertex_v(v1, vp(-x, -y, z)).0;
-    let v3 = mesh.insert_vertex_v(v2, vp(x, -y, z)).0;
-    let v4 = mesh.insert_vertex_v(v1, vp(-x, y, -z)).0;
-    let v5 = mesh.insert_vertex_v(v4, vp(-x, -y, -z)).0;
-    let v6 = mesh.insert_vertex_v(v0, vp(x, y, -z)).0;
-    let v7 = mesh.insert_vertex_v(v3, vp(x, -y, -z)).0;
+    let (_e12, v2) = mesh.insert_vertex_v(v1, vp(-x, -y, z));
+    let (_e23, v3) = mesh.insert_vertex_v(v2, vp(x, -y, z));
+    let (_e14, v4) = mesh.insert_vertex_v(v1, vp(-x, y, -z));
+    let (_e45, v5) = mesh.insert_vertex_v(v4, vp(-x, -y, -z));
+    let (_e06, v6) = mesh.insert_vertex_v(v0, vp(x, y, -z));
+    let (_e37, v7) = mesh.insert_vertex_v(v3, vp(x, -y, -z));
 
     mesh.close_face_vertices_default(v4, v5, v2, false);
     mesh.close_face_vertices_default(v2, v3, v0, false);
@@ -42,7 +41,6 @@ fn cuboid_from_vertices(size: Vec3) -> BevyMesh3d {
     mesh.insert_face(mesh.shared_edge(v6, v7).unwrap().id(), Default::default());
     mesh
 }
-
 
 /// Creates a cuboid with a given `size`.
 ///
@@ -82,7 +80,7 @@ fn cuboid_from_loft(size: Vec3) -> BevyMesh3d {
 
 /// Creates a cuboid with a given `size`.
 ///
-/// We can also use the fact that faces aren't necessarily planar. 
+/// We can also use the fact that faces aren't necessarily planar.
 /// Therefore, we construct the cube net with a single face and then
 /// subdivide that face into quads to create the cuboid.
 fn cuboid_from_net(size: Vec3) -> BevyMesh3d {

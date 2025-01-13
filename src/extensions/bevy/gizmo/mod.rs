@@ -56,7 +56,7 @@ pub fn show_tesselation_meta<V: IndexType>(
 /// Use `offset` to slightly shift them towards the face center.
 pub fn show_edges(texts: &mut ResMut<Text3dGizmos>, mesh: &BevyMesh3d, offset: f32) {
     mesh.halfedges().for_each(|e| {
-        if let Some(f) = e.clone().face().get() {
+        if let Some(f) = e.fork().face().get() {
             let p0 = e.centroid().clone();
             let p1 = f.centroid(mesh).clone();
             let p01 = p0 + (p1 - p0).normalize() * offset;

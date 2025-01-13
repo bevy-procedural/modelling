@@ -41,6 +41,13 @@ impl<'a, T: MeshType> EdgeCursor<'a, T> {
         Self { mesh, edge }
     }
 
+    /// Clones the cursor.
+    #[inline]
+    #[must_use]
+    pub fn fork(&self) -> Self {
+        Self::new(self.mesh, self.edge)
+    }
+
     /// Creates a new void edge cursor.
     #[inline]
     #[must_use]
@@ -178,8 +185,8 @@ mod tests {
         let mut mesh = Mesh3d64::cube(1.0);
         let e0 = mesh.halfedge_ids().next().unwrap();
         let c1: EdgeCursor<'_, MeshType3d64PNU> = mesh.edge(e0).next();
-        let c2 = c1.clone().next();
-        let c3 = c1.clone().next().prev().next();
+        let c2 = c1.fork().next();
+        let c3 = c1.fork().next().prev().next();
         assert_ne!(c1, c2);
         assert_eq!(c1, c1);
         assert_eq!(c2, c3);

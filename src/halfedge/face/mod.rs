@@ -54,7 +54,7 @@ impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
     }
 
     fn num_edges(&self, mesh: &T::Mesh) -> usize {
-        let (min, max) = self.edges(mesh).size_hint();
+        let (min, max) = self.edge_refs(mesh).size_hint();
         assert!(min == max.unwrap());
         min
     }
@@ -80,12 +80,12 @@ impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
         &'a self,
         mesh: &'a T::Mesh,
     ) -> impl Iterator<Item = T::Vertex> + 'a + Clone + ExactSizeIterator {
-        self.edges(mesh).map(|e| e.target(mesh).clone())
+        self.edge_refs(mesh).map(|e| e.target(mesh).clone())
     }
 
     #[inline]
     #[allow(refining_impl_trait)]
-    fn edges<'a>(&'a self, mesh: &'a T::Mesh) -> ForwardEdgeIterator<'a, T>
+    fn edge_refs<'a>(&'a self, mesh: &'a T::Mesh) -> ForwardEdgeIterator<'a, T>
     where
         T: 'a,
     {

@@ -309,7 +309,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
 
     /// Deletes the next edge and connects the given edge to the target of the next edge.
     /// Fails if the edge doesn't exist or the edge's target vertex doesn't have degree 2.
-    /// Applying this to a pair of parallel edges or a dead-end with a self-loop will also delete the enclosed degenerate face. 
+    /// Applying this to a pair of parallel edges or a dead-end with a self-loop will also delete the enclosed degenerate face.
     #[must_use]
     fn collapse_edge(&mut self, e: T::E) -> Option<T::E>;
 
@@ -355,7 +355,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Append a chain of edges to the vertex `v` from the finite iterator of vertices and edges.
     /// Returns the first edge inserted after `v` as well as the last vertex's id.
     /// If the iterator is empty, the method will return only the vertex `v`.
-    #[must_use]
+    #[inline]
     fn append_path(
         &mut self,
         v: T::V,

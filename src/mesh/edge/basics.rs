@@ -127,7 +127,7 @@ mod tests {
         );
         for edge in mesh.halfedges() {
             assert!(edge.is_boundary());
-            assert_eq!(edge.clone().face_ids().count(), 1);
+            assert_eq!(edge.fork().face_ids().count(), 1);
             assert_eq!(edge.boundary().count(), 3);
         }
     }

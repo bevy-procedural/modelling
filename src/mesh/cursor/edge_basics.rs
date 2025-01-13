@@ -111,12 +111,36 @@ where
         self.try_move(|e| e.next_id())
     }
 
+    /// Moves the cursor by calling next `n` times.
+    /// Won't move if the edge is void.
+    #[inline]
+    #[must_use]
+    fn skip(self, n: usize) -> Self {
+        let mut cursor = self;
+        for _ in 0..n {
+            cursor = cursor.next();
+        }
+        cursor
+    }
+
     /// Moves the cursor to the previous halfedge of the edge.
     /// Won't move if the edge is void.
     #[inline]
     #[must_use]
     fn prev(self) -> Self {
         self.try_move(|e| e.prev_id())
+    }
+
+    /// Moves the cursor by calling prev `n` times.
+    /// Won't move if the edge is void.
+    #[inline]
+    #[must_use]
+    fn skip_back(self, n: usize) -> Self {
+        let mut cursor = self;
+        for _ in 0..n {
+            cursor = cursor.prev();
+        }
+        cursor
     }
 
     /// Moves the cursor to the twin halfedge of the edge.

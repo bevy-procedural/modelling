@@ -61,7 +61,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     pub(crate) fn pair_edges(&self) -> Vec<PseudoWingedEdge<T::E, T::V, T::F>> {
         let mut edges: HashMap<T::E, PseudoWingedEdge<T::E, T::V, T::F>> = HashMap::new();
         self.halfedges().for_each(|edge| {
-            let twin = edge.clone().twin();
+            let twin = edge.fork().twin();
             if edges.contains_key(&twin.id()) {
                 return;
             }

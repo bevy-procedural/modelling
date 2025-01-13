@@ -366,9 +366,9 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         if edge.is_void() {
             return None;
         }
-        let twin = edge.clone().twin();
-        let next = edge.clone().next();
-        let next_twin = next.clone().twin();
+        let twin = edge.fork().twin();
+        let next = edge.fork().next();
+        let next_twin = next.fork().twin();
 
         let removed_v = twin.origin_id();
         let target = next_twin.origin_id();

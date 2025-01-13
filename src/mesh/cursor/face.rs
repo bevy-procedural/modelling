@@ -27,6 +27,13 @@ impl<'a, T: MeshType> FaceCursor<'a, T> {
     pub fn new(mesh: &'a T::Mesh, face: T::F) -> Self {
         Self { mesh, face }
     }
+    
+    /// Clones the cursor.
+    #[inline]
+    #[must_use]
+    pub fn fork(&self) -> Self {
+        Self::new(self.mesh, self.face)
+    }
 
     /// Creates a new void face cursor.
     #[inline]

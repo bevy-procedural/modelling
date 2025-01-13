@@ -1,10 +1,10 @@
 use super::{
-    CursorData, EdgeCursorMut, FaceCursorMut, VertexCursorBasics, VertexCursorData,
-    VertexCursorHalfedgeBasics,
+    CursorData, EdgeCursorHalfedgeBasics, EdgeCursorMut, FaceCursorMut, VertexCursorBasics,
+    VertexCursorData, VertexCursorHalfedgeBasics,
 };
 use crate::{
     math::IndexType,
-    mesh::{HalfEdge, HalfEdgeVertex, MeshBasics, MeshType, VertexBasics},
+    mesh::{HalfEdge, HalfEdgeVertex, MeshBasics, MeshBuilder, MeshType, VertexBasics},
 };
 
 /// A vertex cursor pointing to a vertex of a mesh with a mutable reference to the mesh.
@@ -19,7 +19,7 @@ impl<'a, T: MeshType> std::fmt::Debug for VertexCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType> VertexCursorMut<'a, T> {
+impl<'a, T: MeshType + 'a> VertexCursorMut<'a, T> {
     /// Creates a new mutable vertex cursor pointing to the given vertex.
     pub fn new(mesh: &'a mut T::Mesh, vertex: T::V) -> Self {
         Self { mesh, vertex }
@@ -38,6 +38,70 @@ impl<'a, T: MeshType> VertexCursorMut<'a, T> {
     #[must_use]
     pub fn payload(&mut self) -> &mut T::VP {
         VertexBasics::payload_mut(self.mesh.vertex_ref_mut(self.try_id()))
+    }
+
+    /// Appends multiple edges to the current vertex given by the iterator.
+    /// Each edge payload will be used for the edge leading to the given vertex payload.
+    ///
+    /// Moves the cursor to the last inserted vertex.
+    /// If the iterator is empty, don't move the cursor.
+    /// Panics if the cursor is void.
+    #[inline]
+    pub fn append_path(self, iter: impl IntoIterator<Item = (T::EP, T::VP)>) -> Self {
+        let (_e, v) = self.mesh.append_path(self.id(), iter);
+        self.move_to(v)
+    }
+
+    /// Connects the current vertex and the given vertex with an edge.
+    ///
+    /// Moves the cursor to the newly inserted edge.
+    /// Returns `None` if the connectivity wasn't clear.
+    /// Panics if the cursor is void.
+    ///
+    /// See [MeshBuilder::insert_edge_vv] for more information.
+    #[inline]
+    #[must_use]
+    pub fn connect(self, target: T::V, ep: T::EP) -> Option<EdgeCursorMut<'a, T>> {
+        let e = self.mesh.insert_edge_vv(self.id(), target, ep)?;
+        Some(self.move_to_edge(e))
+    }
+
+    /// Connects the current vertex and the given edge's origin with an edge.
+    ///
+    /// Moves the cursor to the newly inserted edge leading from the current vertex to the edge's origin.
+    /// Returns `None` if the connectivity wasn't clear.
+    /// Panics if the cursor is void.
+    ///
+    /// See [MeshBuilder::insert_edge_ev] for more information.
+    #[inline]
+    #[must_use]
+    pub fn connect_e(self, target: T::E, ep: T::EP) -> Option<EdgeCursorMut<'a, T>>
+    where
+        T::Edge: HalfEdge<T>,
+    {
+        let target_twin = self.mesh.edge_ref(target).twin_id();
+        let e = self.mesh.insert_edge_ev(target_twin, self.id(), ep)?;
+        Some(self.move_to_edge(e).twin())
+    }
+
+    /// Subdivide the given face by inserting an edge from the current vertex to the given vertex.
+    ///
+    /// Moves the cursor to the new edge. The new face will be that edge's face.
+    /// Returns `None` if the resulting faces would've been invalid or the vertices don't share the given face.
+    /// Panics if the cursor is void.
+    ///
+    /// See [MeshBuilder::subdivide_face_v] for more information.
+    #[inline]
+    #[must_use]
+    pub fn subdivide_face(
+        self,
+        f: T::F,
+        other: T::V,
+        ep: T::EP,
+        fp: T::FP,
+    ) -> Option<EdgeCursorMut<'a, T>> {
+        let e = self.mesh.subdivide_face_v(f, self.id(), other, ep, fp)?;
+        Some(self.move_to_edge(e))
     }
 }
 

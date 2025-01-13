@@ -110,9 +110,9 @@ mod tests {
     fn test_halfedge_triangle() {
         let mut mesh = Mesh3d64::regular_polygon(1.0, 3);
         for edge in mesh.halfedges() {
-            assert!(edge.is_boundary_self() ^ (edge.clone().twin().is_boundary_self()));
+            assert!(edge.is_boundary_self() ^ (edge.fork().twin().is_boundary_self()));
             if edge.is_boundary_self() {
-                assert!(edge.clone().twin().has_face());
+                assert!(edge.fork().twin().has_face());
             }
         }
 

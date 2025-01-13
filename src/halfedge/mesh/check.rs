@@ -20,7 +20,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
 
     fn check_vertex_invariants(&self) -> Result<(), String> {
         if let Some(bad_vertex) = self.vertices().find(|v| {
-            if let Some(e) = v.clone().edge().get() {
+            if let Some(e) = v.fork().edge().get() {
                 e.origin_id(self) != v.id()
             } else {
                 false
@@ -40,7 +40,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     fn check_edges_are_loops(&self) -> Result<(), String> {
         if let Some(bad_edge) = self
             .halfedges()
-            .find(|e| e.clone().next().same_boundary(e.origin_id()).is_none())
+            .find(|e| e.fork().next().same_boundary(e.origin_id()).is_none())
         {
             return Err(format!(
                 "Successor of edge {} cannot reach it's origin {} during forward search",
@@ -51,7 +51,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
 
         if let Some(bad_edge) = self
             .halfedges()
-            .find(|e| e.clone().prev().same_boundary_back(e.target_id()).is_none())
+            .find(|e| e.fork().prev().same_boundary_back(e.target_id()).is_none())
         {
             return Err(format!(
                 "Precursor of edge {} cannot reach it's target {} during backward search",
@@ -81,7 +81,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     fn check_edges_have_face(&self) -> Result<(), String> {
         if let Some(bad_edge) = self
             .halfedges()
-            .find(|e| e.is_boundary_self() && e.clone().twin().is_boundary_self())
+            .find(|e| e.is_boundary_self() && e.fork().twin().is_boundary_self())
         {
             return Err(format!("HalfEdge {} has no face!", bad_edge.id()));
         }
@@ -89,11 +89,11 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     }
 
     fn check_face_invariants(&self) -> Result<(), String> {
-        if let Some(bad_face) = self.faces().find(|f| f.clone().edge().face_id() != f.id()) {
+        if let Some(bad_face) = self.faces().find(|f| f.fork().edge().face_id() != f.id()) {
             return Err(format!(
                 "Face {} has edge {} with face {}",
                 bad_face.id(),
-                bad_face.clone().edge().id(),
+                bad_face.fork().edge().id(),
                 bad_face.edge().face_id()
             ));
         }

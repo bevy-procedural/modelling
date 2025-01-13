@@ -55,18 +55,19 @@ where
         let fs = self.face_ids().collect::<Vec<_>>();
         for face in &fs {
             // get the edge chain
-            let edges = self
+            let es = self
                 .face_ref(*face)
-                .edges(self)
+                .edge_refs(self)
                 .cloned()
                 .collect::<Vec<_>>();
-            let vs = edges.iter().map(|e| e.origin_id(self)).collect::<Vec<_>>();
-            assert!(edges.len() == 3);
+            let vs = es.iter().map(|e| e.origin_id(self)).collect::<Vec<_>>();
+            let mut es2 = vec![T::E::default(), T::E::default(), T::E::default()];
+            assert_eq!(es.len(), 3);
 
             // insert an additional vertex for each edge
             for i in 0..3 {
                 if self
-                    .subdivide_halfedge_try_fixup(edges[i].id(), Default::default())
+                    .subdivide_halfedge_try_fixup(es[i].id(), Default::default())
                     .is_some()
                 {
                     // edge is already subdivided
@@ -76,9 +77,7 @@ where
                     self,
                     [
                         (
-                            if vs[0] == edges[i].origin_id(self)
-                                || vs[0] == edges[i].target_id(self)
-                            {
+                            if vs[0] == es[i].origin_id(self) || vs[0] == es[i].target_id(self) {
                                 1
                             } else {
                                 0
@@ -86,9 +85,7 @@ where
                             vs[0],
                         ),
                         (
-                            if vs[1] == edges[i].origin_id(self)
-                                || vs[1] == edges[i].target_id(self)
-                            {
+                            if vs[1] == es[i].origin_id(self) || vs[1] == es[i].target_id(self) {
                                 1
                             } else {
                                 0
@@ -96,9 +93,7 @@ where
                             vs[1],
                         ),
                         (
-                            if vs[2] == edges[i].origin_id(self)
-                                || vs[2] == edges[i].target_id(self)
-                            {
+                            if vs[2] == es[i].origin_id(self) || vs[2] == es[i].target_id(self) {
                                 1
                             } else {
                                 0
@@ -107,11 +102,22 @@ where
                         ),
                     ],
                 );
-                self.subdivide_halfedge(edges[i].id(), vp, Default::default());
+                es2[i] = self.subdivide_halfedge(es[i].id(), vp, Default::default());
             }
 
-            // remove the original face
             let fp = self.face(*face).payload().clone();
+            for i in 0..3 {
+                self.subdivide_face(
+                    self.edge(es2[i]).prev_id(),
+                    es2[(i + 3) % 3],
+                    Default::default(),
+                    fp.clone(),
+                ).unwrap();
+            }
+
+            /*
+
+            // remove the original face
             self.remove_face(*face);
 
             // TODO: cannot clone fp like that!
@@ -128,7 +134,7 @@ where
             }
             // fill the center hole
             self.insert_face(self.edge(edges[0].id()).next().twin_id(), fp)
-                .unwrap();
+                .unwrap();*/
         }
 
         self
