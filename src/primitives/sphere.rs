@@ -44,7 +44,7 @@ where
             let phi = T::S::PI * T::S::from_usize(i) / sn;
 
             // j goes around the sphere. Hence, theta goes from 0 to 2*PI.
-            let theta = -T::S::PI * T::S::from_usize(2 * j + 4) / sm;
+            let theta = T::S::PI * T::S::from_usize(2 * j + 4) / sm;
 
             T::VP::from_pos(T::Vec::from_xyz(
                 radius * phi.sin() * theta.cos(),
@@ -56,19 +56,18 @@ where
         // top pole
         let mut prev = mesh
             .insert_loop((0..m).map(|j| (Default::default(), make_vp(1, j))))
-            .windmill_back(make_vp(0, 0))
-            .unwrap()
-            .twin();
+            .twin()
+            .windmill(make_vp(0, 0))
+            .twin()
+            .next();
 
         // normal squares
         for i in 1..(n - 1) {
-            prev = prev
-                .loft_back(2, 2, (0..m).map(|j| make_vp(i + 1, j)))
-                .unwrap();
+            prev = prev.loft(2, 2, (0..m).map(|j| make_vp(i + 1, j)));
         }
 
         // bottom pole
-        prev.windmill_back(make_vp(n, 0)).unwrap();
+        prev.windmill(make_vp(n, 0)).unwrap();
 
         mesh
     }
@@ -93,8 +92,7 @@ where
 
         // TODO: polygon should return something more helpful
         let start = mesh.shared_edge_id(T::V::new(1), T::V::new(0)).unwrap();
-        let start_middle = mesh
-            .edge_mut(start)
+        mesh.edge_mut(start)
             .loft_back(
                 3,
                 2,
@@ -111,11 +109,6 @@ where
                     make_vp(phi, -iphi, zero),  // pink
                 ],
             )
-            .unwrap()
-            .id();
-
-        let start_bottom = mesh
-            .edge_mut(start_middle)
             .next()
             .loft_back(
                 2,
@@ -128,10 +121,8 @@ where
                     make_vp(zero, -phi, -iphi), // green
                 ],
             )
-            .unwrap()
-            .id();
-
-        mesh.insert_face(start_bottom, Default::default()).unwrap();
+            .insert_face(Default::default())
+            .unwrap();
 
         mesh
     }

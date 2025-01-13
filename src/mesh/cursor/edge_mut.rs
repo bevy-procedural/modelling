@@ -156,61 +156,78 @@ impl<'a, T: MeshType> EdgeCursorMut<'a, T> {
     /// new vertex will become the "next" of the current edge and the cursor will move
     /// to this newly created halfedge.
     ///
-    /// Returns `None` if the insertion was not successful or the cursor was void.
+    /// Returns the void cursor if the insertion was not successful or the cursor was void.
     ///
     /// See [MeshBuilder::insert_vertex_e] for more information.
     #[inline]
     #[must_use]
-    pub fn insert_vertex(self, vp: T::VP, ep: T::EP) -> Option<Self> {
+    pub fn insert_vertex(self, vp: T::VP, ep: T::EP) -> Self {
+        if self.is_void() {
+            return self.void();
+        };
         let old_target = self.target_id();
-        let (e, _v) = self.mesh.insert_vertex_e(self.edge, vp, ep)?;
+        let Some((e, _v)) = self.mesh.insert_vertex_e(self.edge, vp, ep) else {
+            return self.void();
+        };
         let c = self.move_to(e);
         debug_assert!(old_target == c.origin_id());
-        Some(c)
+        c
     }
 
     /// Connects the current halfedge to the given halfedge.
-    /// Returns `None` if the connection was not successful or the cursor was void.
+    /// Returns the void cursor if the connection was not successful or the cursor was void.
     ///
     /// See [MeshBuilder::insert_edge_ee] for more information.
     #[inline]
     #[must_use]
-    pub fn connect(self, other: T::E, ep: T::EP) -> Option<Self> {
-        let e = self.mesh.insert_edge_ee(self.edge, other, ep)?;
-        Some(self.move_to(e))
+    pub fn connect(self, other: T::E, ep: T::EP) -> Self {
+        if self.is_void() {
+            return self.void();
+        };
+        let Some(e) = self.mesh.insert_edge_ee(self.edge, other, ep) else {
+            return self.void();
+        };
+        self.move_to(e)
     }
 
     /// Connects the current halfedge to the given vertex.
-    /// Returns `None` if the connection was not successful or the cursor was void.
+    /// Returns the void cursor if the connection was not successful or the cursor was void.
     ///
     /// See [MeshBuilder::insert_edge_ev] for more information.
     #[inline]
     #[must_use]
-    pub fn connect_v(self, other: T::V, ep: T::EP) -> Option<Self> {
-        let e = self.mesh.insert_edge_ev(self.edge, other, ep)?;
-        Some(self.move_to(e))
+    pub fn connect_v(self, other: T::V, ep: T::EP) -> Self {
+        if self.is_void() {
+            return self.void();
+        };
+        let Some(e) = self.mesh.insert_edge_ev(self.edge, other, ep) else {
+            return self.void();
+        };
+        self.move_to(e)
     }
 
     /// Inserts a face in the boundary of the current halfedge and move the cursor to the new face.
     /// If the face already exists, move there and return that cursor instead.
     ///
-    /// Returns `None` on error.
-    /// Panics if the cursor is void.
+    /// If the cursor was void or an error occurs, return the void cursor.
     ///
     /// See [MeshBuilder::insert_face] for more information.
     #[inline]
     #[must_use]
-    pub fn insert_face(self, fp: T::FP) -> Option<FaceCursorMut<'a, T>>
+    pub fn insert_face(self, fp: T::FP) -> FaceCursorMut<'a, T>
     where
         // TODO: We should remove this bound by implementing face_id for all edges
         T::Edge: HalfEdge<T>,
     {
-        assert!(self.is_valid());
-        Some(if let Some(f) = self.mesh.insert_face(self.edge, fp) {
+        if self.is_void() {
+            self.face().void()
+        } else if self.has_face() {
+            self.face()
+        } else if let Some(f) = self.mesh.insert_face(self.edge, fp) {
             self.move_to_face(f)
         } else {
-            self.face()
-        })
+            self.face().void()
+        }
     }
 
     /// Sets the face of the edge in the mesh even if it already has a face.
@@ -254,96 +271,121 @@ impl<'a, T: MeshType> EdgeCursorMut<'a, T> {
 
     /// Insert an edge to the given vertex and move the cursor to that new edge.
     /// Close the resulting face with the given face payload.
-    /// Return `None` if the insertion failed.
     ///
-    /// Panics if the cursor is void.
+    /// Return the void cursor if the insertion failed or the cursor is void.
     ///
     /// See [MeshBuilder::close_face_ev] for more information.
     #[inline]
     #[must_use]
-    pub fn close_face_v(self, v: T::V, ep: T::EP, fp: T::FP) -> Option<Self> {
-        let (e, _f) = self.mesh.close_face_ev(self.edge, v, ep, fp)?;
-        Some(self.move_to(e))
+    pub fn close_face_v(self, v: T::V, ep: T::EP, fp: T::FP) -> Self {
+        if self.is_void() {
+            return self.void();
+        };
+        let Some((e, _f)) = self.mesh.close_face_ev(self.edge, v, ep, fp) else {
+            return self.void();
+        };
+        self.move_to(e)
     }
 
     /// Insert an edge to the given edge's input and move the cursor to that new edge.
     /// Close the resulting face with the given face payload.
-    /// Return `None` if the insertion failed.
     ///
-    /// Panics if the cursor is void.
+    /// Return the void cursor if the insertion failed or the cursor is void.
     ///
     /// See [MeshBuilder::close_face_ee] for more information.
     #[inline]
     #[must_use]
-    pub fn close_face(self, e: T::E, ep: T::EP, fp: T::FP) -> Option<Self> {
-        let (e, _f) = self.mesh.close_face_ee(self.edge, e, ep, fp)?;
-        Some(self.move_to(e))
+    pub fn close_face(self, e: T::E, ep: T::EP, fp: T::FP) -> Self {
+        if self.is_void() {
+            return self.void();
+        };
+        let Some((e, _f)) = self.mesh.close_face_ee(self.edge, e, ep, fp) else {
+            return self.void();
+        };
+        self.move_to(e)
     }
 
     /// Subdivides the given edge by inserting a vertex in the middle, using
     /// that vertex as the new target and inserting a new edge from the middle vertex
     /// to the original target.
     ///
-    /// Panics if the cursor is void.
-    ///
     /// Moves the cursor to the new edge (the original edge will be the `prev` of the new edge).
     ///
     /// See [MeshBuilder::subdivide_edge] for more information.
     #[inline]
+    #[must_use]
     pub fn subdivide(self, vp: T::VP, ep: T::EP) -> Self {
+        if self.is_void() {
+            return self.void();
+        };
         let e = self.mesh.subdivide_edge(self.edge, vp, ep);
         self.move_to(e)
     }
 
     /// Collapses the edge with the next edge.
     /// Keeps the payload of the current edge.
-    /// If the target of the current edge doesn't have a degree of 2, the operation will fail and return `None`.
     ///
-    /// Panics if the cursor is void.
+    /// If the target of the current edge doesn't have a degree of 2, the operation will fail and return the void cursor.
+    ///
     /// Doesn't move the cursor.
     ///
     /// See [MeshBuilder::collapse_edge] for more information.
     #[inline]
     #[must_use]
-    pub fn collapse(self) -> Option<Self> {
-        let e = self.mesh.collapse_edge(self.edge)?;
-        Some(self.move_to(e))
+    pub fn collapse(self) -> Self {
+        if self.is_void() {
+            return self.void();
+        };
+        let Some(e) = self.mesh.collapse_edge(self.edge) else {
+            return self.void();
+        };
+        self.move_to(e)
     }
 
     /// Subdivide the adjacent face by inserting an edge from the current target to the given other edge's origin.
     ///
     /// Moves the cursor to the new edge. The new face will be that edge's face.
-    /// Returns `None` if the other edge is not adjacent to the same face or the resulting faces would've been invalid.
-    /// Panics if the cursor is void.
+    ///
+    /// Returns the void cursor if the other edge is not adjacent to the same face or the resulting faces would've been invalid.
     ///
     /// See [MeshBuilder::subdivide_face] for more information.
     #[inline]
     #[must_use]
-    pub fn subdivide_face(self, output: T::E, ep: T::EP, fp: T::FP) -> Option<Self>
+    pub fn subdivide_face(self, output: T::E, ep: T::EP, fp: T::FP) -> Self
     where
         T::Edge: HalfEdge<T>,
     {
-        let e = self.mesh.subdivide_face(self.edge, output, ep, fp)?;
-        Some(self.move_to(e))
+        if self.is_void() {
+            return self.void();
+        };
+        let Some(e) = self.mesh.subdivide_face(self.edge, output, ep, fp) else {
+            return self.void();
+        };
+        self.move_to(e)
     }
 
     /// Subdivide the adjacent face by inserting an edge from the current target to the given vertex.
     ///
     /// Moves the cursor to the new edge. The new face will be that edge's face.
-    /// Returns `None` if the resulting faces would've been invalid.
-    /// Panics if the cursor is void.
+    /// Returns the void cursor if the resulting faces would've been invalid.
     ///
     /// See [MeshBuilder::subdivide_face_v] for more information.
     #[inline]
     #[must_use]
-    pub fn subdivide_face_v(self, v: T::V, ep: T::EP, fp: T::FP) -> Option<Self>
+    pub fn subdivide_face_v(self, v: T::V, ep: T::EP, fp: T::FP) -> Self
     where
         T::Edge: HalfEdge<T>,
     {
-        let e = self
+        if self.is_void() {
+            return self.void();
+        };
+        let Some(e) = self
             .mesh
-            .subdivide_face_v(self.face_id(), self.target_id(), v, ep, fp)?;
-        Some(self.move_to(e))
+            .subdivide_face_v(self.face_id(), self.target_id(), v, ep, fp)
+        else {
+            return self.void();
+        };
+        self.move_to(e)
     }
 
     /// Appends multiple edges to the current edge given by the iterator.
@@ -353,10 +395,11 @@ impl<'a, T: MeshType> EdgeCursorMut<'a, T> {
     /// If the iterator is empty, don't move the cursor.
     /// Panics if the cursor is void.
     #[inline]
+    #[must_use]
     pub fn append_path(self, iter: impl IntoIterator<Item = (T::VP, T::EP)>) -> Self {
         let mut c = self;
         for (vp, ep) in iter {
-            c = c.insert_vertex(vp, ep).unwrap();
+            c = c.insert_vertex(vp, ep);
         }
         c
     }
@@ -367,15 +410,21 @@ impl<'a, T: MeshType> EdgeCursorMut<'a, T> {
     /// Moves to the first edge of the new boundary.
     #[inline]
     #[must_use]
-    pub fn loft(self, n: usize, m: usize, vp: impl IntoIterator<Item = T::VP>) -> Option<Self>
+    pub fn loft(self, n: usize, m: usize, vp: impl IntoIterator<Item = T::VP>) -> Self
     where
         T: MeshTypeHalfEdge,
         T::Mesh: MeshLoft<T>,
         T::FP: DefaultFacePayload,
         T::EP: DefaultEdgePayload,
     {
-        let (first, _last) = self.mesh.crochet(self.id(), n, m, false, true, false, vp)?;
-        Some(self.move_to(first))
+        if self.is_void() {
+            return self.void();
+        };
+        let Some((first, _last)) = self.mesh.crochet(self.id(), n, m, false, true, false, vp)
+        else {
+            return self.void();
+        };
+        self.move_to(first)
     }
 
     /// Applies `self.crochet(start, n, m, true, true, false, vp)`.
@@ -384,47 +433,62 @@ impl<'a, T: MeshType> EdgeCursorMut<'a, T> {
     /// Moves to the first edge of the new boundary.
     #[inline]
     #[must_use]
-    pub fn loft_back(self, n: usize, m: usize, vp: impl IntoIterator<Item = T::VP>) -> Option<Self>
+    pub fn loft_back(self, n: usize, m: usize, vp: impl IntoIterator<Item = T::VP>) -> Self
     where
         T: MeshTypeHalfEdge,
         T::Mesh: MeshLoft<T>,
         T::FP: DefaultFacePayload,
         T::EP: DefaultEdgePayload,
     {
-        let (first, _last) = self.mesh.crochet(self.id(), n, m, true, true, false, vp)?;
-        Some(self.move_to(first))
+        if self.is_void() {
+            return self.void();
+        };
+        let Some((first, _last)) = self.mesh.crochet(self.id(), n, m, true, true, false, vp) else {
+            return self.void();
+        };
+        self.move_to(first)
     }
 
     /// See [MeshExtrude::windmill].
     /// Doesn't move the cursor.
-    /// Panics if the cursor is void.
+    /// Returns the void cursor if the operation failed or the cursor was void.
     #[inline]
     #[must_use]
-    pub fn windmill(self, vp: T::VP) -> Option<Self>
+    pub fn windmill(self, vp: T::VP) -> Self
     where
         T: MeshTypeHalfEdge,
         T::Mesh: MeshExtrude<T>,
         T::FP: DefaultFacePayload,
         T::EP: DefaultEdgePayload,
     {
-        self.mesh.windmill(self.id(), vp)?;
-        Some(self)
+        if self.is_void() {
+            return self.void();
+        };
+        let Some(_) = self.mesh.windmill(self.id(), vp) else {
+            return self.void();
+        };
+        self
     }
 
     /// See [MeshExtrude::windmill_back].
     /// Doesn't move the cursor.
-    /// Panics if the cursor is void.
+    /// Returns the void cursor if the operation failed or the cursor was void.
     #[inline]
     #[must_use]
-    pub fn windmill_back(self, vp: T::VP) -> Option<Self>
+    pub fn windmill_back(self, vp: T::VP) -> Self
     where
         T: MeshTypeHalfEdge,
         T::Mesh: MeshExtrude<T>,
         T::FP: DefaultFacePayload,
         T::EP: DefaultEdgePayload,
     {
-        self.mesh.windmill_back(self.id(), vp)?;
-        Some(self)
+        if self.is_void() {
+            return self.void();
+        };
+        let Some(_) = self.mesh.windmill_back(self.id(), vp) else {
+            return self.void();
+        };
+        self
     }
 }
 

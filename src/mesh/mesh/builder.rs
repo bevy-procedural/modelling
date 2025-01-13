@@ -373,7 +373,10 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         let (first_e, _first_v) = self.insert_vertex_v(v, vp, ep)?;
         let mut last_e = self.edge_mut(first_e);
         for (ep, vp) in iter.into_iter() {
-            last_e = last_e.insert_vertex(vp, ep)?;
+            last_e = last_e.insert_vertex(vp, ep);
+        }
+        if last_e.is_void() {
+            return None;
         }
         Some((first_e, last_e.id()))
     }

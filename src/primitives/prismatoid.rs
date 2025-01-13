@@ -150,7 +150,7 @@ where
         top: impl IntoIterator<Item = T::VP>,
         smooth: bool,
     ) -> EdgeCursorMut<'_, T> {
-        let top_edge = self.insert_polygon(base).loft(2, 2, top).unwrap().id();
+        let top_edge = self.insert_polygon(base).loft(2, 2, top).id();
         self.insert_face(top_edge, Default::default()).unwrap();
         // TODO: smooth
         assert!(!smooth, "Smooth frustums not yet implemented");
@@ -191,7 +191,6 @@ where
                 vp(-p.x(), p.y(), p.z()),
             ],
         )
-        .unwrap()
         .insert_face(Default::default())
         .unwrap();
         mesh

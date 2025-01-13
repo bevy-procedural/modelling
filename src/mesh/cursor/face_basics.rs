@@ -1,5 +1,8 @@
 use super::{CursorData, EdgeCursorData, VertexCursorData};
-use crate::mesh::{Face3d, FaceBasics, HalfEdge, MeshType, MeshType3D};
+use crate::{
+    math::IndexType,
+    mesh::{Face3d, FaceBasics, HalfEdge, MeshType, MeshType3D},
+};
 
 /// This trait defines the basic functionality for accessing the data fields of a face cursor.
 pub trait FaceCursorData<'a, T: MeshType>: CursorData<T = T, I = T::F, S = T::Face> {
@@ -69,9 +72,13 @@ pub trait FaceCursorBasics<'a, T: MeshType>: FaceCursorData<'a, T> {
     }
 
     /// Moves the cursor to the representative halfedge of the face.
+    /// Returns the void cursor if the face is void or doesn't have a representative halfedge.
     #[inline]
     #[must_use]
     fn edge(self) -> Self::EC {
+        if self.is_void() {
+            return self.move_to_edge(IndexType::max());
+        }
         let id = self.unwrap().edge_id();
         self.move_to_edge(id)
     }
@@ -86,7 +93,7 @@ pub trait FaceCursorBasics<'a, T: MeshType>: FaceCursorData<'a, T> {
 }
 
 /// This trait implements some basic functionality for face cursors that works with halfedge meshes and both mutable and immutable cursors.
-pub trait FaceCursorHalfedgeBasics<'a, T: MeshType >: FaceCursorData<'a, T>
+pub trait FaceCursorHalfedgeBasics<'a, T: MeshType>: FaceCursorData<'a, T>
 where
     T::Edge: HalfEdge<T>,
 {
