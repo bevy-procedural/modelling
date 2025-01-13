@@ -1,4 +1,6 @@
-use crate::mesh::{DefaultEdgePayload, EdgeCursorBasics, MeshBasics, MeshType};
+use crate::mesh::{
+    CursorData, DefaultEdgePayload, EdgeCursorBasics, EdgeCursorMut, MeshBasics, MeshType,
+};
 use itertools::Itertools;
 
 /// Some basic operations to build meshes.
@@ -353,67 +355,67 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         -> Option<T::E>;
 
     /// Append a chain of edges to the vertex `v` from the finite iterator of vertices and edges.
-    /// Returns the first edge inserted after `v` as well as the last vertex's id.
-    /// If the iterator is empty, the method will return only the vertex `v`.
+    ///
+    /// Returns the first edge inserted after `v` as well as the last inserted edge.
+    ///
+    /// If the iterator is empty or the path cannot be appended (e.g., due to connectivity ambiguities), the method will `None`.
     #[inline]
+    #[must_use]
     fn append_path(
         &mut self,
         v: T::V,
         iter: impl IntoIterator<Item = (T::EP, T::VP)>,
-    ) -> (Option<T::E>, T::V) {
-        let mut tail = v;
-        let mut first_e = None;
+    ) -> Option<(T::E, T::E)> {
+        let mut iter = iter.into_iter();
+        let Some((ep, vp)) = iter.next() else {
+            return None;
+        };
+        let (first_e, _first_v) = self.insert_vertex_v(v, vp, ep)?;
+        let mut last_e = self.edge_mut(first_e);
         for (ep, vp) in iter.into_iter() {
-            let (last_e, last_v) = self.insert_vertex_v(tail, vp, ep).unwrap();
-            tail = last_v;
-            if first_e.is_none() {
-                first_e = Some(last_e);
-            }
+            last_e = last_e.insert_vertex(vp, ep)?;
         }
-        (first_e, tail)
+        Some((first_e, last_e.id()))
     }
 
     /// Insert a path of vertices and edges starting at `vp`.
-    /// Returns the first edge  inserted after `vp` as well as the last vertex's id.
-    /// If the iterator is empty, the method will return only the vertex `vp`.
+    /// Returns the first edge inserted after `vp` as well as the last inserted edge.
+    /// Panics if the iterator is empty.
     #[inline]
     fn insert_path(
         &mut self,
         vp: T::VP,
         iter: impl IntoIterator<Item = (T::EP, T::VP)>,
-    ) -> (Option<T::E>, T::V) {
+    ) -> (T::E, T::E) {
         let v = self.insert_vertex(vp);
-        self.append_path(v, iter)
+        self.append_path(v, iter).unwrap()
     }
 
-    /// Same as `insert_path` but closes the path by connecting the last vertex with the first one.
-    /// Also, returns the first edge (outer boundary of the loop when constructed ccw).
+    /// Same as [MeshBuilder::insert_path] but closes the path by connecting the last vertex with the first one.
+    ///
+    /// Returns the first edge (outer boundary of the loop when constructed ccw).
+    ///
     /// The first edge's target is the first vertex of the loop.
     /// Panics if the iterator has a length of less than 2.
     #[inline]
-    fn insert_loop(&mut self, iter: impl IntoIterator<Item = (T::EP, T::VP)>) -> T::E {
+    fn insert_loop(
+        &mut self,
+        iter: impl IntoIterator<Item = (T::EP, T::VP)>,
+    ) -> EdgeCursorMut<'_, T> {
         let mut iter = iter.into_iter();
         let (ep, vp) = iter.next().unwrap();
-        let (e, last_v) = self.insert_path(vp, iter);
-        let first_edge = self
-            .insert_edge_vv(
-                last_v,
-                self.edge(e.expect("Iterator too short")).origin_id(),
-                ep,
-            )
-            .unwrap();
-
+        let (second_e, last_e) = self.insert_path(vp, iter);
+        let first_e = self.insert_edge_ee(last_e, second_e, ep).unwrap();
         debug_assert_eq!(
-            self.edge(first_edge).target_id(),
-            self.edge(e.unwrap()).origin_id()
+            self.edge(first_e).target_id(),
+            self.edge(second_e).origin_id()
         );
-
-        first_edge
+        self.edge_mut(first_e)
     }
 
     /// Same as `insert_loop` but uses the default edge payload.
     #[inline]
-    fn insert_loop_default(&mut self, iter: impl IntoIterator<Item = T::VP>) -> T::E
+    fn insert_loop_default(&mut self, iter: impl IntoIterator<Item = T::VP>) -> EdgeCursorMut<'_, T>
     where
         T::EP: DefaultEdgePayload,
     {

@@ -1,9 +1,10 @@
 use super::{
-    CursorData, EdgeCursorHalfedgeBasics, EdgeCursorMut, FaceCursorMut, VertexCursor, VertexCursorBasics, VertexCursorData, VertexCursorHalfedgeBasics
+    CursorData, EdgeCursorHalfedgeBasics, EdgeCursorMut, FaceCursorMut, VertexCursorBasics,
+    VertexCursorData, VertexCursorHalfedgeBasics,
 };
 use crate::{
     math::IndexType,
-    mesh::{HalfEdge, HalfEdgeVertex, MeshBasics, MeshBuilder, MeshType, VertexBasics},
+    mesh::{EdgeBasics, HalfEdge, HalfEdgeVertex, MeshBasics, MeshBuilder, MeshType, VertexBasics},
 };
 
 /// A vertex cursor pointing to a vertex of a mesh with a mutable reference to the mesh.
@@ -18,7 +19,7 @@ impl<'a, T: MeshType> std::fmt::Debug for VertexCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType + 'a> VertexCursorMut<'a, T> {
+impl<'a, T: MeshType> VertexCursorMut<'a, T> {
     /// Creates a new mutable vertex cursor pointing to the given vertex.
     pub fn new(mesh: &'a mut T::Mesh, vertex: T::V) -> Self {
         Self { mesh, vertex }
@@ -39,12 +40,12 @@ impl<'a, T: MeshType + 'a> VertexCursorMut<'a, T> {
         VertexBasics::payload_mut(self.mesh.vertex_ref_mut(self.try_id()))
     }
 
-    /// Returns an immutable clone pointing to the same vertex.
+    /*/// Returns an immutable clone pointing to the same vertex.
     #[inline]
     #[must_use]
     pub fn as_immutable(&'a self) -> VertexCursor<'a, T> {
         VertexCursor::new(self.mesh, self.try_id())
-    }
+    }*/
 
     /// Appends multiple edges to the current vertex given by the iterator.
     /// Each edge payload will be used for the edge leading to the given vertex payload.
@@ -52,10 +53,29 @@ impl<'a, T: MeshType + 'a> VertexCursorMut<'a, T> {
     /// Moves the cursor to the last inserted vertex.
     /// If the iterator is empty, don't move the cursor.
     /// Panics if the cursor is void.
+    ///
     #[inline]
     pub fn append_path(self, iter: impl IntoIterator<Item = (T::EP, T::VP)>) -> Self {
-        let (_e, v) = self.mesh.append_path(self.id(), iter);
-        self.move_to(v)
+        if let Some((_first_e, last_e)) = self.mesh.append_path(self.id(), iter) {
+            let id = self.mesh.edge_ref(last_e).target_id(self.mesh());
+            self.move_to(id)
+        } else {
+            self
+        }
+    }
+
+    /// Inserts a new vertex and a edge connecting the current vertex and the new vertex.
+    /// Move to the new vertex.
+    ///
+    /// Returns `None` if the insertion wasn't successful.
+    /// Panics if the cursor is void.
+    ///
+    /// See [MeshBuilder::insert_vertex_v] for more information.
+    #[inline]
+    #[must_use]
+    pub fn insert_vertex(self, vp: T::VP, ep: T::EP) -> Option<Self> {
+        let (_e, v) = self.mesh.insert_vertex_v(self.id(), vp, ep)?;
+        Some(self.move_to(v))
     }
 
     /// Connects the current vertex and the given vertex with an edge.
@@ -111,7 +131,7 @@ impl<'a, T: MeshType + 'a> VertexCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType + 'a> VertexCursorData<'a, T> for VertexCursorMut<'a, T> {
+impl<'a, T: MeshType> VertexCursorData<'a, T> for VertexCursorMut<'a, T> {
     type EC = EdgeCursorMut<'a, T>;
     type FC = FaceCursorMut<'a, T>;
 
@@ -126,7 +146,7 @@ impl<'a, T: MeshType + 'a> VertexCursorData<'a, T> for VertexCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType + 'a> CursorData for VertexCursorMut<'a, T> {
+impl<'a, T: MeshType> CursorData for VertexCursorMut<'a, T> {
     type I = T::V;
     type S = T::Vertex;
     type T = T;
@@ -157,7 +177,7 @@ impl<'a, T: MeshType + 'a> CursorData for VertexCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType + 'a> VertexCursorMut<'a, T> {
+impl<'a, T: MeshType> VertexCursorMut<'a, T> {
     /// Updates the representative edge incident to the vertex in the mesh.
     /// Panics if the vertex is void.
     #[inline]
@@ -170,8 +190,8 @@ impl<'a, T: MeshType + 'a> VertexCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType + 'a> VertexCursorBasics<'a, T> for VertexCursorMut<'a, T> {}
-impl<'a, T: MeshType + 'a> VertexCursorHalfedgeBasics<'a, T> for VertexCursorMut<'a, T>
+impl<'a, T: MeshType> VertexCursorBasics<'a, T> for VertexCursorMut<'a, T> {}
+impl<'a, T: MeshType> VertexCursorHalfedgeBasics<'a, T> for VertexCursorMut<'a, T>
 where
     T::Edge: HalfEdge<T>,
     T::Vertex: HalfEdgeVertex<T>,

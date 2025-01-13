@@ -179,7 +179,7 @@ mod tests {
     #[test]
     fn subdivide_and_fixup() {
         let mut mesh = Mesh3d64::default();
-        let e = mesh.insert_regular_polygon(1.0, 3);
+        let e = mesh.insert_regular_polygon(1.0, 3).id();
         let _vp = VertexPayloadPNU::<f64, 3>::from_pos(
             mesh.edge(e).origin().pos() * 0.5 + mesh.edge(e).origin().pos() * 0.5,
         );

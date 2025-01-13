@@ -1,6 +1,6 @@
 use super::{
-    CursorData, EdgeCursorMut, FaceCursor, FaceCursorBasics, FaceCursorData,
-    FaceCursorHalfedgeBasics, VertexCursorMut,
+    CursorData, EdgeCursorMut, FaceCursorBasics, FaceCursorData, FaceCursorHalfedgeBasics,
+    VertexCursorMut,
 };
 use crate::{
     math::IndexType,
@@ -34,12 +34,12 @@ impl<'a, T: MeshType> FaceCursorMut<'a, T> {
         Self::new(mesh, IndexType::max())
     }
 
-    /// Returns an immutable clone pointing to the same face.
+    /*/// Returns an immutable clone pointing to the same face.
     #[inline]
     #[must_use]
     pub fn as_immutable(&'a self) -> FaceCursor<'a, T> {
         FaceCursor::new(self.mesh, self.try_id())
-    }
+    }*/
 
     /// Returns a mutable reference to the payload of the face.
     /// Panics if the face is void.
@@ -50,7 +50,7 @@ impl<'a, T: MeshType> FaceCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType + 'a> FaceCursorData<'a, T> for FaceCursorMut<'a, T> {
+impl<'a, T: MeshType> FaceCursorData<'a, T> for FaceCursorMut<'a, T> {
     type VC = VertexCursorMut<'a, T>;
     type EC = EdgeCursorMut<'a, T>;
 
@@ -65,7 +65,7 @@ impl<'a, T: MeshType + 'a> FaceCursorData<'a, T> for FaceCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType + 'a> CursorData for FaceCursorMut<'a, T> {
+impl<'a, T: MeshType> CursorData for FaceCursorMut<'a, T> {
     type I = T::F;
     type S = T::Face;
     type T = T;
@@ -96,7 +96,7 @@ impl<'a, T: MeshType + 'a> CursorData for FaceCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType + 'a> FaceCursorMut<'a, T> {
+impl<'a, T: MeshType> FaceCursorMut<'a, T> {
     /// Updates the representative edge incident to the face in the mesh.
     /// Panics if the vertex is void.
     #[inline]
@@ -105,15 +105,15 @@ impl<'a, T: MeshType + 'a> FaceCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType + 'a> FaceCursorBasics<'a, T> for FaceCursorMut<'a, T> {}
-impl<'a, T: MeshType + 'a> FaceCursorHalfedgeBasics<'a, T> for FaceCursorMut<'a, T> where
+impl<'a, T: MeshType> FaceCursorBasics<'a, T> for FaceCursorMut<'a, T> {}
+impl<'a, T: MeshType> FaceCursorHalfedgeBasics<'a, T> for FaceCursorMut<'a, T> where
     T::Edge: HalfEdge<T>
 {
 }
 
 /// This trait implements some shorthands to quickly modify a mesh without thinking about local variables,
 /// i.e., you can quickly modify the mesh multiple times and change the face etc. using a chaining syntax.
-impl<'a, T: MeshType + 'a> FaceCursorMut<'a, T> {
+impl<'a, T: MeshType> FaceCursorMut<'a, T> {
     /// Removes the face the cursor is pointing to.
     /// Returns an empty cursor if the face was removed successfully or didn't exist.
     /// Returns the same cursor if the face couldn't be removed and still exists.

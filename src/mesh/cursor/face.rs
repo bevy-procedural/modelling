@@ -95,7 +95,7 @@ impl<'a, T: MeshType> PartialEq for FaceCursor<'a, T> {
     }
 }
 
-impl<'a, T: MeshType + 'a> FaceCursorData<'a, T> for FaceCursor<'a, T> {
+impl<'a, T: MeshType > FaceCursorData<'a, T> for FaceCursor<'a, T> {
     type VC = VertexCursor<'a, T>;
     type EC = EdgeCursor<'a, T>;
 
@@ -110,7 +110,7 @@ impl<'a, T: MeshType + 'a> FaceCursorData<'a, T> for FaceCursor<'a, T> {
     }
 }
 
-impl<'a, T: MeshType + 'a> CursorData for FaceCursor<'a, T> {
+impl<'a, T: MeshType > CursorData for FaceCursor<'a, T> {
     type I = T::F;
     type S = T::Face;
     type T = T;
@@ -141,8 +141,8 @@ impl<'a, T: MeshType + 'a> CursorData for FaceCursor<'a, T> {
     }
 }
 
-impl<'a, T: MeshType + 'a> FaceCursorBasics<'a, T> for FaceCursor<'a, T> {}
-impl<'a, T: MeshType + 'a> FaceCursorHalfedgeBasics<'a, T> for FaceCursor<'a, T> where
+impl<'a, T: MeshType > FaceCursorBasics<'a, T> for FaceCursor<'a, T> {}
+impl<'a, T: MeshType > FaceCursorHalfedgeBasics<'a, T> for FaceCursor<'a, T> where
     T::Edge: HalfEdge<T>
 {
 }

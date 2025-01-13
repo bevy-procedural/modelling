@@ -1,8 +1,8 @@
 use crate::{
     math::{HasPosition, Scalar, TransformTrait, Vector},
     mesh::{
-        CursorData, DefaultEdgePayload, DefaultFacePayload, EdgeCursorHalfedgeBasics, Face3d,
-        MeshType3D, MeshTypeHalfEdge, VertexPayload,
+        CursorData, DefaultEdgePayload, DefaultFacePayload, EdgeCursorHalfedgeBasics,
+        EdgeCursorMut, Face3d, MeshType3D, MeshTypeHalfEdge, VertexPayload,
     },
     operations::{MeshExtrude, MeshLoft, MeshSubdivision},
     primitives::polygon::Make2dShape,
@@ -50,13 +50,19 @@ where
     /// Creates a prism by inserting the flat polygon given by `vp` and inserting an
     /// translated copy at `height` along the normal of the face.
     /// Uses quads for the sides.
-    fn insert_prism(&mut self, vp: impl IntoIterator<Item = T::VP>, height: T::S) -> T::E {
-        let first = self.insert_polygon(vp);
-        let twin = self.edge(first).twin();
-        let f = twin.face().expect("The polygon must have a face");
+    fn insert_prism(
+        &mut self,
+        vp: impl IntoIterator<Item = T::VP>,
+        height: T::S,
+    ) -> EdgeCursorMut<'_, T> {
+        let first = self.insert_polygon(vp).id();
+        let f = self
+            .edge(first)
+            .twin()
+            .face()
+            .expect("The polygon must have a face");
         let normal = Face3d::normal(f.unwrap(), self).normalize();
-        let e = self.extrude(first, T::Trans::from_translation(-normal * height));
-        e
+        self.extrude(first, T::Trans::from_translation(-normal * height))
     }
 
     /// calls `insert_prism` on a new mesh
@@ -72,18 +78,21 @@ where
     ///
     /// WARNING: This doesn't produce a proper regular antiprism since the radius
     /// of the top polygon will be slightly smaller!
-    fn insert_antiprism(&mut self, vp: impl IntoIterator<Item = T::VP>, height: T::S) -> T::E {
-        let first = self.insert_polygon(vp);
+    fn insert_antiprism(
+        &mut self,
+        vp: impl IntoIterator<Item = T::VP>,
+        height: T::S,
+    ) -> EdgeCursorMut<'_, T> {
+        let first = self.insert_polygon(vp).id();
         let f = self
             .edge(first)
             .face()
             .expect("The polygon must have a face");
         let normal = f.unwrap().normal(self).normalize();
-        let e = self.extrude_tri2(
+        self.extrude_tri2(
             self.edge(first).twin_id(),
             T::Trans::from_translation(-normal * height),
-        );
-        e
+        )
     }
 
     /// calls `insert_antiprism` on a new mesh
@@ -99,11 +108,11 @@ where
         &mut self,
         vp: impl IntoIterator<Item = T::VP>,
         vp2: impl IntoIterator<Item = T::VP>,
-    ) -> T::E {
-        let first = self.insert_polygon(vp);
+    ) -> EdgeCursorMut<'_, T> {
+        let first = self.insert_polygon(vp).id();
         let e = self.loft_tri_closed(first, vp2).unwrap();
         self.insert_face(e, Default::default()).unwrap();
-        e
+        self.edge_mut(e)
     }
 
     /// calls `insert_antiprism_iter` on a new mesh
@@ -117,10 +126,14 @@ where
     }
 
     /// Creates a pyramid by connecting the polygon given by `vp` with the point `apex`.
-    fn insert_pyramid(&mut self, base: impl IntoIterator<Item = T::VP>, apex: T::VP) -> T::E {
-        let first = self.insert_polygon(base);
+    fn insert_pyramid(
+        &mut self,
+        base: impl IntoIterator<Item = T::VP>,
+        apex: T::VP,
+    ) -> EdgeCursorMut<'_, T> {
+        let first = self.insert_polygon(base).id();
         self.windmill(first, apex).unwrap();
-        self.edge(first).twin_id()
+        self.edge_mut(first).twin()
     }
 
     /// calls `insert_pyramid` on a new mesh
@@ -136,13 +149,13 @@ where
         base: impl IntoIterator<Item = T::VP>,
         top: impl IntoIterator<Item = T::VP>,
         smooth: bool,
-    ) -> T::E {
-        let first = self.insert_polygon(base);
+    ) -> EdgeCursorMut<'_, T> {
+        let first = self.insert_polygon(base).id();
         let top_edge = self.loft(first, 2, 2, top).unwrap().0;
         self.insert_face(top_edge, Default::default()).unwrap();
         // TODO: smooth
         assert!(!smooth, "Smooth frustums not yet implemented");
-        top_edge
+        self.edge_mut(top_edge)
     }
 
     /// calls `insert_frustum` on a new mesh
@@ -162,12 +175,14 @@ where
         let mut mesh = Self::default();
         let vp = |x, y, z| T::VP::from_pos(T::Vec::from_xyz(x, y, z));
 
-        let front_edge = mesh.insert_polygon([
-            vp(-p.x(), -p.y(), p.z()),
-            vp(p.x(), -p.y(), p.z()),
-            vp(p.x(), p.y(), p.z()),
-            vp(-p.x(), p.y(), p.z()),
-        ]);
+        let front_edge = mesh
+            .insert_polygon([
+                vp(-p.x(), -p.y(), p.z()),
+                vp(p.x(), -p.y(), p.z()),
+                vp(p.x(), p.y(), p.z()),
+                vp(-p.x(), p.y(), p.z()),
+            ])
+            .id();
         let back_edge = mesh
             .loft_back(
                 front_edge,
@@ -233,10 +248,12 @@ where
         let zero = T::S::ZERO;
         let h = radius;
         let mut mesh = Self::default();
-        let e = mesh.insert_pyramid(
-            circle_iter(radius, 4, T::S::ZERO, T::S::ZERO),
-            T::VP::from_pos(T::Vec::from_xyz(zero, h, zero)),
-        );
+        let e = mesh
+            .insert_pyramid(
+                circle_iter(radius, 4, T::S::ZERO, T::S::ZERO),
+                T::VP::from_pos(T::Vec::from_xyz(zero, h, zero)),
+            )
+            .id();
         mesh.remove_face(mesh.edge(e).face_id());
         mesh.windmill(e, T::VP::from_pos(T::Vec::from_xyz(zero, -h, zero)))
             .unwrap();

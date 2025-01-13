@@ -5,9 +5,7 @@ use crate::{
 };
 
 /// This trait defines the basic functionality for accessing the data fields of a vertex cursor.
-pub trait VertexCursorData<'a, T: MeshType + 'a>:
-    CursorData<T = T, I = T::V, S = T::Vertex>
-{
+pub trait VertexCursorData<'a, T: MeshType>: CursorData<T = T, I = T::V, S = T::Vertex> {
     /// The associated face cursor type
     type FC: FaceCursorData<'a, T>;
 
@@ -22,7 +20,7 @@ pub trait VertexCursorData<'a, T: MeshType + 'a>:
 }
 
 /// This trait implements some basic functionality for vertex cursors that works with any type of mesh and both mutable and immutable cursors.
-pub trait VertexCursorBasics<'a, T: MeshType + 'a>: VertexCursorData<'a, T> {
+pub trait VertexCursorBasics<'a, T: MeshType>: VertexCursorData<'a, T> {
     /// Returns an edge cursor pointing to a representative edge incident to the vertex.
     #[inline]
     #[must_use]
@@ -77,7 +75,7 @@ pub trait VertexCursorBasics<'a, T: MeshType + 'a>: VertexCursorData<'a, T> {
 }
 
 /// This trait implements some basic functionality for vertex cursors that works with half edge meshes and both mutable and immutable cursors.
-pub trait VertexCursorHalfedgeBasics<'a, T: MeshType + 'a>: VertexCursorData<'a, T>
+pub trait VertexCursorHalfedgeBasics<'a, T: MeshType >: VertexCursorData<'a, T>
 where
     T::Edge: HalfEdge<T>,
     T::Vertex: HalfEdgeVertex<T>,

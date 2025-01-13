@@ -50,10 +50,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     /// Returns a mutable vertex cursor to the requested vertex. Doesn't panic, even if the vertex does not exist.
     #[inline]
     #[must_use]
-    fn vertex_mut<'a>(&'a mut self, index: T::V) -> VertexCursorMut<'a, T>
-    where
-        T: 'a,
-    {
+    fn vertex_mut<'a>(&'a mut self, index: T::V) -> VertexCursorMut<'a, T> {
         VertexCursorMut::new(self, index)
     }
 

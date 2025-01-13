@@ -1,8 +1,9 @@
 use crate::{
     math::{HasPosition, Scalar, Vector},
     mesh::{
-        CurvedEdge, DefaultEdgePayload, DefaultFacePayload, EuclideanMeshType, HalfEdge,
-        MeshBuilder, MeshTrait, MeshType, MeshTypeHalfEdge, PathBuilder,
+        CurvedEdge, DefaultEdgePayload, DefaultFacePayload, EdgeCursorMut,
+        EuclideanMeshType, HalfEdge, MeshBuilder, MeshTrait, MeshType, MeshTypeHalfEdge,
+        PathBuilder,
     },
 };
 
@@ -23,9 +24,12 @@ where
     T::FP: DefaultFacePayload,
 {
     /// Construct a polygon from the given vertices and
-    /// return the first edge on the outside boundary
-    /// (assuming ccw orientation).
-    fn insert_polygon(&mut self, vp: impl IntoIterator<Item = T::VP>) -> T::E;
+    /// Return the edge from the first to the second inserted vertex.
+    /// Panics if the Iterator has less than 2 elements.
+    fn insert_polygon<'a>(
+        &'a mut self,
+        vp: impl IntoIterator<Item = T::VP>,
+    ) -> EdgeCursorMut<'a, T>;
 
     /// Calls `insert_polygon` on a default mesh.
     fn polygon(vp: impl IntoIterator<Item = T::VP>) -> Self {
@@ -35,7 +39,7 @@ where
     }
 
     /// Construct a dihedron (flat degenerate polygon with two faces) from the given vertices.
-    fn insert_dihedron(&mut self, _vp: impl IntoIterator<Item = T::VP>) -> T::E;
+    fn insert_dihedron(&mut self, _vp: impl IntoIterator<Item = T::VP>) -> EdgeCursorMut<'_, T>;
 
     /// Calls `insert_dihedron` on a default mesh.
     fn dihedron(vp: impl IntoIterator<Item = T::VP>) -> Self {
@@ -45,15 +49,19 @@ where
     }
 
     /// create a regular star, i.e., a regular polygon with two radii
-    fn insert_regular_star<const D: usize>(
-        &mut self,
+    fn insert_regular_star<'a, const D: usize>(
+        &'a mut self,
         inner_radius: T::S,
         outer_radius: T::S,
         n: usize,
-    ) -> T::E
+    ) -> EdgeCursorMut<'a, T>
     where
         T: EuclideanMeshType<D>,
     {
+        assert!(
+            n >= 2,
+            "Cannot build a shape with less than 2 vertices edges."
+        );
         let pi2n = 2.0 * std::f32::consts::PI / (n as f32);
         self.insert_polygon((0..n).into_iter().map(|i| {
             let r = if i % 2 == 1 {
@@ -70,7 +78,11 @@ where
     }
 
     /// Inserts a regular polygon with `n` sides and a given `radius`.
-    fn insert_regular_polygon<const D: usize>(&mut self, radius: T::S, n: usize) -> T::E
+    fn insert_regular_polygon<'a, const D: usize>(
+        &'a mut self,
+        radius: T::S,
+        n: usize,
+    ) -> EdgeCursorMut<'a, T>
     where
         T: EuclideanMeshType<D>,
     {
@@ -127,5 +139,31 @@ where
         let mut mesh = Self::default();
         mesh.insert_regular_star(inner_radius, outer_radius, n);
         mesh
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{extensions::nalgebra::*, prelude::*};
+
+    #[test]
+    fn test_regular_polygon() {
+        for n in [2, 3, 4, 10] {
+            let mut mesh = Mesh3d64::default();
+            let e0 = mesh.insert_regular_polygon(1.0, n).id();
+            assert_eq!(mesh.num_edges(), n);
+            assert_eq!(mesh.num_faces(), 1);
+            assert_eq!(mesh.num_vertices(), n);
+            assert_eq!(mesh.check(), Ok(()));
+            assert_eq!(mesh.is_open_2manifold(), true);
+            assert_eq!(mesh.is_connected(), true);
+            assert_eq!(mesh.edge(e0).has_face(), false);
+            assert_eq!(mesh.edge(e0).twin().has_face(), true);
+            let f = mesh.the_face();
+            for i in 0..n {
+                let ei = mesh.edge(e0).next_n(i);
+                assert_eq!(ei.twin().face_id(), f.id());
+            }
+        }
     }
 }

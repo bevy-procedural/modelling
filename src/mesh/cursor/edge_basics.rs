@@ -5,7 +5,7 @@ use crate::{
 };
 
 /// This trait defines the basic functionality for accessing the data fields of an edge cursor.
-pub trait EdgeCursorData<'a, T: MeshType + 'a>: CursorData<T = T, I = T::E, S = T::Edge> {
+pub trait EdgeCursorData<'a, T: MeshType>: CursorData<T = T, I = T::E, S = T::Edge> {
     /// The associated vertex cursor type
     type VC: VertexCursorData<'a, T>;
 
@@ -22,7 +22,7 @@ pub trait EdgeCursorData<'a, T: MeshType + 'a>: CursorData<T = T, I = T::E, S = 
 }
 
 /// This trait implements some basic functionality for edge cursors that works with any type of mesh and both mutable and immutable cursors.
-pub trait EdgeCursorBasics<'a, T: MeshType + 'a>: EdgeCursorData<'a, T> {
+pub trait EdgeCursorBasics<'a, T: MeshType>: EdgeCursorData<'a, T> {
     /// Moves the cursor to the origin vertex of the edge.
     /// Won't move if the edge is void.
     #[inline]
@@ -64,7 +64,7 @@ pub trait EdgeCursorBasics<'a, T: MeshType + 'a>: EdgeCursorData<'a, T> {
     #[must_use]
     fn face_ids<'b>(&'b self) -> impl Iterator<Item = T::F> + 'b
     where
-        T::Edge: 'b,
+        T: 'b,
         'a: 'b,
     {
         self.unwrap().face_ids(self.mesh())
@@ -99,7 +99,7 @@ pub trait EdgeCursorBasics<'a, T: MeshType + 'a>: EdgeCursorData<'a, T> {
 }
 
 /// This trait implements some basic functionality for edge cursors that works with halfedge meshes and both mutable and immutable cursors.
-pub trait EdgeCursorHalfedgeBasics<'a, T: MeshType + 'a>: EdgeCursorData<'a, T>
+pub trait EdgeCursorHalfedgeBasics<'a, T: MeshType>: EdgeCursorData<'a, T>
 where
     T::Edge: HalfEdge<T>,
 {

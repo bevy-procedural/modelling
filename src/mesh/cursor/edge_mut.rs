@@ -1,6 +1,6 @@
 use super::{
-    CursorData, EdgeCursor, EdgeCursorBasics, EdgeCursorData, EdgeCursorHalfedgeBasics,
-    FaceCursorMut, VertexCursorMut,
+    CursorData, EdgeCursorBasics, EdgeCursorData, EdgeCursorHalfedgeBasics, FaceCursorMut,
+    VertexCursorMut,
 };
 use crate::{
     math::IndexType,
@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// An edge cursor pointing to an edge of a mesh with a mutable reference to the mesh.
-pub struct EdgeCursorMut<'a, T: MeshType + 'a> {
+pub struct EdgeCursorMut<'a, T: MeshType> {
     mesh: &'a mut T::Mesh,
     edge: T::E,
     // TODO: Integrate the path builder into the edge cursor mut! This should now include setting the start etc.
@@ -20,7 +20,7 @@ impl<'a, T: MeshType> std::fmt::Debug for EdgeCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType + 'a> EdgeCursorMut<'a, T> {
+impl<'a, T: MeshType> EdgeCursorMut<'a, T> {
     /// Creates a new mutable edge cursor pointing to the given edge.
     #[inline]
     #[must_use]
@@ -35,23 +35,23 @@ impl<'a, T: MeshType + 'a> EdgeCursorMut<'a, T> {
         Self::new(mesh, IndexType::max())
     }
 
-    /// Returns an immutable clone pointing to the same edge.
+    /*/// Returns an immutable clone pointing to the same edge.
     #[inline]
     #[must_use]
-    pub fn as_immutable(&'a self) -> EdgeCursor<'a, T> {
-        EdgeCursor::new(self.mesh, self.try_id())
-    }
+    pub fn as_immutable(self) -> EdgeCursor<'a, T> {
+        EdgeCursor::new(&*self.mesh, self.edge)
+    }*/
 
     /// Returns a mutable reference to the payload of the edge.
     /// Panics if the edge is void.
     #[inline]
     #[must_use]
     pub fn payload(&mut self) -> &mut T::EP {
-        self.mesh.edge_payload_mut(self.try_id())
+        self.mesh.edge_payload_mut(self.edge)
     }
 }
 
-impl<'a, T: MeshType + 'a> EdgeCursorData<'a, T> for EdgeCursorMut<'a, T> {
+impl<'a, T: MeshType> EdgeCursorData<'a, T> for EdgeCursorMut<'a, T> {
     type VC = VertexCursorMut<'a, T>;
     type FC = FaceCursorMut<'a, T>;
 
@@ -66,7 +66,7 @@ impl<'a, T: MeshType + 'a> EdgeCursorData<'a, T> for EdgeCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType + 'a> CursorData for EdgeCursorMut<'a, T> {
+impl<'a, T: MeshType> CursorData for EdgeCursorMut<'a, T> {
     type I = T::E;
     type S = T::Edge;
     type T = T;
@@ -97,15 +97,15 @@ impl<'a, T: MeshType + 'a> CursorData for EdgeCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType + 'a> EdgeCursorBasics<'a, T> for EdgeCursorMut<'a, T> {}
-impl<'a, T: MeshType + 'a> EdgeCursorHalfedgeBasics<'a, T> for EdgeCursorMut<'a, T> where
+impl<'a, T: MeshType> EdgeCursorBasics<'a, T> for EdgeCursorMut<'a, T> {}
+impl<'a, T: MeshType> EdgeCursorHalfedgeBasics<'a, T> for EdgeCursorMut<'a, T> where
     T::Edge: HalfEdge<T>
 {
 }
 
 /// This trait implements some shorthands to quickly modify a mesh without thinking about local variables,
 /// i.e., you can quickly modify the mesh multiple times and change the edge etc. using a chaining syntax.
-impl<'a, T: MeshType + 'a> EdgeCursorMut<'a, T> {
+impl<'a, T: MeshType> EdgeCursorMut<'a, T> {
     /// Tries to remove the current edge.
     ///
     /// If the edge was successfully removed or didn't exist, returns `None`.
@@ -358,7 +358,7 @@ impl<'a, T: MeshType + 'a> EdgeCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType + 'a> EdgeCursorMut<'a, T>
+impl<'a, T: MeshType> EdgeCursorMut<'a, T>
 where
     T::Edge: HalfEdge<T>,
 {

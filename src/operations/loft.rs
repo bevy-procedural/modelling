@@ -764,7 +764,7 @@ mod tests {
 
     fn regular_polygon(n: usize) -> (Mesh3d64, EU) {
         let mut mesh = Mesh3d64::default();
-        let e = mesh.insert_regular_polygon(1.0, n);
+        let e = mesh.insert_regular_polygon(1.0, n).id();
         (mesh, e)
     }
 

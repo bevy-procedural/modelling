@@ -2,7 +2,7 @@ use crate::{
     math::{Scalar, Transformable},
     mesh::{
         CursorData, DefaultEdgePayload, DefaultFacePayload, EdgeBasics, EdgeCursorBasics,
-        EdgeCursorHalfedgeBasics, EuclideanMeshType, FaceCursorBasics, HalfEdge,
+        EdgeCursorHalfedgeBasics, EdgeCursorMut, EuclideanMeshType, FaceCursorBasics, HalfEdge,
         MeshTypeHalfEdge, VertexBasics,
     },
     operations::MeshLoft,
@@ -38,7 +38,7 @@ where
     /// Returns an edge on the boundary of the extrusion.
     ///
     /// Uses one row of quad faces.
-    fn extrude<const D: usize>(&mut self, e: T::E, transform: T::Trans) -> T::E
+    fn extrude<const D: usize>(&mut self, e: T::E, transform: T::Trans) -> EdgeCursorMut<'_, T>
     where
         T::VP: Transformable<D, Trans = T::Trans, S = T::S>,
         T: EuclideanMeshType<D, Mesh = Self>,
@@ -51,36 +51,40 @@ where
             .collect();
         let start = self.loft_back(e, 2, 2, vps).unwrap().0; // TODO
         self.insert_face(start, Default::default()).unwrap(); // TODO
-        start
+        self.edge_mut(start)
     }
 
     /// Remove the given face and extrude the boundary using the given transformation.
-    fn extrude_face<const D: usize>(&mut self, f: T::F, transform: T::Trans) -> T::E
+    fn extrude_face<const D: usize>(&mut self, f: T::F, transform: T::Trans) -> EdgeCursorMut<'_, T>
     where
         T::VP: Transformable<D, Trans = T::Trans, S = T::S>,
         T: EuclideanMeshType<D, Mesh = Self>,
     {
         let e = self.face(f).edge_id();
         self.remove_face(f);
-        return self.extrude(e, transform);
+        self.extrude(e, transform)
     }
 
     /// Remove the given face and extrude the boundary using the given transformation.
-    fn extrude_tri_face<const D: usize>(&mut self, f: T::F, transform: T::Trans) -> T::E
+    fn extrude_tri_face<const D: usize>(
+        &mut self,
+        f: T::F,
+        transform: T::Trans,
+    ) -> EdgeCursorMut<'_, T>
     where
         T::VP: Transformable<D, Trans = T::Trans, S = T::S>,
         T: EuclideanMeshType<D, Mesh = Self>,
     {
         let e = self.face(f).edge_id();
         self.remove_face(f);
-        return self.extrude_tri(e, transform);
+        self.extrude_tri(e, transform)
     }
 
     /// Extrudes the given boundary using the given transformation.
     /// Returns an edge on the boundary of the extrusion.
     ///
     /// Uses two rows of triangle faces.
-    fn extrude_tri<const D: usize>(&mut self, e: T::E, transform: T::Trans) -> T::E
+    fn extrude_tri<const D: usize>(&mut self, e: T::E, transform: T::Trans) -> EdgeCursorMut<'_, T>
     where
         T::VP: Transformable<D, Trans = T::Trans, S = T::S>,
         T: EuclideanMeshType<D, Mesh = Self>,
@@ -93,14 +97,14 @@ where
             .collect();
         let start = self.loft_tri_closed(e, vps).unwrap();
         self.insert_face(start, Default::default()).unwrap();
-        start
+        self.edge_mut(start)
     }
 
     /// Extrudes the given boundary using the given transformation.
     /// Returns an edge on the boundary of the extrusion.
     ///
     /// Uses two rows of triangle faces.
-    fn extrude_tri2<const D: usize>(&mut self, e: T::E, transform: T::Trans) -> T::E
+    fn extrude_tri2<const D: usize>(&mut self, e: T::E, transform: T::Trans) -> EdgeCursorMut<'_, T>
     where
         T::VP: Transformable<D, Trans = T::Trans, S = T::S>,
         T: EuclideanMeshType<D, Mesh = Self>,
@@ -119,7 +123,7 @@ where
         vps.rotate_right(1);
         let start = self.loft_tri_closed(e, vps).unwrap();
         self.insert_face(start, Default::default()).unwrap();
-        start
+        self.edge_mut(start)
     }
 
     /// Assumes `start` is on the boundary of the edge.

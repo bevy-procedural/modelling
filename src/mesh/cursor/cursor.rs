@@ -138,4 +138,13 @@ pub trait CursorData: Sized + Debug {
     fn unwrap<'b>(&'b self) -> &'b Self::S {
         self.get().unwrap()
     }
+
+    /// Applies the function in the closure to the cursor but return a cursor pointing to the same id as before calling the closure.
+    #[inline]
+    #[must_use]
+    fn stay<F: FnOnce(Self) -> Self>(self, f: F) -> Self {
+        let id = self.try_id();
+        let c = f(self);
+        c.move_to(id)
+    }
 }

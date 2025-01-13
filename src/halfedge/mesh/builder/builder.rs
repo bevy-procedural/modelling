@@ -547,7 +547,7 @@ mod tests {
     #[test]
     fn test_remove_edge() {
         let mut mesh = Mesh3d64::default();
-        let e0 = mesh.insert_regular_polygon(1.0, 3);
+        let e0 = mesh.insert_regular_polygon(1.0, 3).id();
         assert_eq!(mesh.is_open_2manifold(), true);
         let (e1, _v1) = mesh
             .insert_vertex_e(e0, vp(42.0, 0.0, 0.0), Default::default())
@@ -1044,7 +1044,7 @@ mod tests {
     #[test]
     fn test_subdivide_edge() {
         let mut mesh = Mesh3d64::default();
-        let e0 = mesh.insert_regular_polygon(1.0, 3);
+        let e0 = mesh.insert_regular_polygon(1.0, 3).id();
         assert_eq!(mesh.check(), Ok(()));
         let f = mesh.edge(e0).twin().face_id();
 
@@ -1074,7 +1074,7 @@ mod tests {
                 assert_eq!(mesh.has_edge(e0), true);
                 assert_eq!(mesh.has_edge(e1), i == 1);
                 assert_eq!(mesh.has_edge(e2), false);
-                if 5 - i >= 3 {
+                if 5 - i >= 2 {
                     assert_eq!(mesh.check(), Ok(()));
                 }
                 assert_eq!(mesh.is_connected(), true);
@@ -1106,7 +1106,7 @@ mod tests {
     #[test]
     fn test_subdivide_face() {
         let mut mesh = Mesh3d64::default();
-        let e0b = mesh.insert_regular_polygon(1.0, 4);
+        let e0b = mesh.insert_regular_polygon(1.0, 4).id();
         let e0 = mesh.edge(e0b).twin_id();
         assert_eq!(mesh.check(), Ok(()));
 

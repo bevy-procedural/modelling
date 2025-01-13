@@ -131,14 +131,14 @@ impl<'a, T: MeshType> VertexCursor<'a, T> {
     }
 }
 
-impl<'a, T: MeshType + 'a> VertexCursor<'a, T>
+impl<'a, T: MeshType > VertexCursor<'a, T>
 where
     T::Edge: HalfEdge<T>,
 {
     //
 }
 
-impl<'a, T: MeshType + 'a> VertexCursorData<'a, T> for VertexCursor<'a, T> {
+impl<'a, T: MeshType > VertexCursorData<'a, T> for VertexCursor<'a, T> {
     type EC = EdgeCursor<'a, T>;
     type FC = FaceCursor<'a, T>;
 
@@ -153,7 +153,7 @@ impl<'a, T: MeshType + 'a> VertexCursorData<'a, T> for VertexCursor<'a, T> {
     }
 }
 
-impl<'a, T: MeshType + 'a> CursorData for VertexCursor<'a, T> {
+impl<'a, T: MeshType > CursorData for VertexCursor<'a, T> {
     type I = T::V;
     type S = T::Vertex;
     type T = T;
@@ -184,8 +184,8 @@ impl<'a, T: MeshType + 'a> CursorData for VertexCursor<'a, T> {
     }
 }
 
-impl<'a, T: MeshType + 'a> VertexCursorBasics<'a, T> for VertexCursor<'a, T> {}
-impl<'a, T: MeshType + 'a> VertexCursorHalfedgeBasics<'a, T> for VertexCursor<'a, T>
+impl<'a, T: MeshType > VertexCursorBasics<'a, T> for VertexCursor<'a, T> {}
+impl<'a, T: MeshType > VertexCursorHalfedgeBasics<'a, T> for VertexCursor<'a, T>
 where
     T::Edge: HalfEdge<T>,
     T::Vertex: HalfEdgeVertex<T>,
