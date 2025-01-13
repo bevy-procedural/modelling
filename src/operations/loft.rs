@@ -485,37 +485,6 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
             }
         }
     }
-
-    /// see `crochet(start, n, m, true, true, false, vp)`
-    fn loft_back(
-        &mut self,
-        start: T::E,
-        n: usize,
-        m: usize,
-        vp: impl IntoIterator<Item = T::VP>,
-    ) -> Option<(T::E, T::E)>
-    where
-        T::EP: DefaultEdgePayload,
-        T::FP: DefaultFacePayload,
-    {
-        self.crochet(start, n, m, true, true, false, vp)
-    }
-
-    /// see `crochet(start, n, m, true, false, false, vp)`
-    #[must_use]
-    fn loft(
-        &mut self,
-        start: T::E,
-        n: usize,
-        m: usize,
-        vp: impl IntoIterator<Item = T::VP>,
-    ) -> Option<(T::E, T::E)>
-    where
-        T::EP: DefaultEdgePayload,
-        T::FP: DefaultFacePayload,
-    {
-        self.crochet(start, n, m, false, true, false, vp)
-    }
 }
 
 #[cfg(test)]
@@ -572,10 +541,10 @@ mod tests {
         }
         if config.backwards.is_none() {
             let mut c = config.clone();
-            c.backwards = Some(true);
+            c.backwards = Some(false);
             run_crochet_test(c);
             let mut c = config.clone();
-            c.backwards = Some(false);
+            c.backwards = Some(true);
             c.vp = c.vp.iter().rev().cloned().collect_vec();
             run_crochet_test(c);
             return;
@@ -779,7 +748,7 @@ mod tests {
 
     #[test]
     fn test_crochet_2_2() {
-        for n in [3] { //, 4, 6, 7, 20] {
+        for n in [3, 4, 6, 7, 20] {
             let vp = circle_iter::<3, MeshType3d64PNU>(n, 2.0, 0.0).collect_vec();
             for c in [
                 LoftTestConfig {
@@ -808,7 +777,7 @@ mod tests {
                     first_edge_is_start: false,
                     last_edge_is_start: false,
                 },
-                /*LoftTestConfig {
+                LoftTestConfig {
                     n: 2,
                     m: 2,
                     backwards: None,
@@ -859,7 +828,7 @@ mod tests {
                     first_last_reach_old_boundary: true,
                     first_edge_is_start: false,
                     last_edge_is_start: false,
-                },*/
+                },
             ] {
                 run_crochet_test(c);
             }

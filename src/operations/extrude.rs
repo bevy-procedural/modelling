@@ -49,7 +49,7 @@ where
             .edges_back_from(self.edge(e).next_id())
             .map(|v| v.origin(self).payload().transformed(&transform))
             .collect();
-        let start = self.loft_back(e, 2, 2, vps).unwrap().0; // TODO
+        let start = self.edge_mut(e).loft_back(2, 2, vps).unwrap().id(); // TODO
         self.insert_face(start, Default::default()).unwrap(); // TODO
         self.edge_mut(start)
     }

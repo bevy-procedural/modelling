@@ -4,7 +4,11 @@ use super::{
 };
 use crate::{
     math::IndexType,
-    mesh::{HalfEdge, MeshBasics, MeshBuilder, MeshType},
+    mesh::{
+        DefaultEdgePayload, DefaultFacePayload, HalfEdge, MeshBasics, MeshBuilder, MeshType,
+        MeshTypeHalfEdge,
+    },
+    prelude::{MeshExtrude, MeshLoft},
 };
 
 /// An edge cursor pointing to an edge of a mesh with a mutable reference to the mesh.
@@ -355,6 +359,72 @@ impl<'a, T: MeshType> EdgeCursorMut<'a, T> {
             c = c.insert_vertex(vp, ep).unwrap();
         }
         c
+    }
+
+    /// Applies `crochet(current_edge, n, m, true, false, false, vp)`.
+    /// See [MeshLoft::crochet] for more information.
+    ///
+    /// Moves to the first edge of the new boundary.
+    #[inline]
+    #[must_use]
+    pub fn loft(self, n: usize, m: usize, vp: impl IntoIterator<Item = T::VP>) -> Option<Self>
+    where
+        T: MeshTypeHalfEdge,
+        T::Mesh: MeshLoft<T>,
+        T::FP: DefaultFacePayload,
+        T::EP: DefaultEdgePayload,
+    {
+        let (first, _last) = self.mesh.crochet(self.id(), n, m, false, true, false, vp)?;
+        Some(self.move_to(first))
+    }
+
+    /// Applies `self.crochet(start, n, m, true, true, false, vp)`.
+    /// See [MeshLoft::crochet] for more information.
+    ///
+    /// Moves to the first edge of the new boundary.
+    #[inline]
+    #[must_use]
+    pub fn loft_back(self, n: usize, m: usize, vp: impl IntoIterator<Item = T::VP>) -> Option<Self>
+    where
+        T: MeshTypeHalfEdge,
+        T::Mesh: MeshLoft<T>,
+        T::FP: DefaultFacePayload,
+        T::EP: DefaultEdgePayload,
+    {
+        let (first, _last) = self.mesh.crochet(self.id(), n, m, true, true, false, vp)?;
+        Some(self.move_to(first))
+    }
+
+    /// See [MeshExtrude::windmill].
+    /// Doesn't move the cursor.
+    /// Panics if the cursor is void.
+    #[inline]
+    #[must_use]
+    pub fn windmill(self, vp: T::VP) -> Option<Self>
+    where
+        T: MeshTypeHalfEdge,
+        T::Mesh: MeshExtrude<T>,
+        T::FP: DefaultFacePayload,
+        T::EP: DefaultEdgePayload,
+    {
+        self.mesh.windmill(self.id(), vp)?;
+        Some(self)
+    }
+
+    /// See [MeshExtrude::windmill_back].
+    /// Doesn't move the cursor.
+    /// Panics if the cursor is void.
+    #[inline]
+    #[must_use]
+    pub fn windmill_back(self, vp: T::VP) -> Option<Self>
+    where
+        T: MeshTypeHalfEdge,
+        T::Mesh: MeshExtrude<T>,
+        T::FP: DefaultFacePayload,
+        T::EP: DefaultEdgePayload,
+    {
+        self.mesh.windmill_back(self.id(), vp)?;
+        Some(self)
     }
 }
 

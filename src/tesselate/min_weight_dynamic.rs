@@ -3,7 +3,7 @@ use std::time::Instant;
 
 use crate::{
     math::{IndexType, Polygon, Scalar, Vector2D},
-    mesh::{Face3d, FaceBasics, IndexedVertex2D, MeshType3D, Triangulation},
+    mesh::{Face3d, IndexedVertex2D, MeshType3D, Triangulation},
     tesselate::try_min_weight_small,
 };
 

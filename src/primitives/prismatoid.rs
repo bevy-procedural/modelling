@@ -150,8 +150,7 @@ where
         top: impl IntoIterator<Item = T::VP>,
         smooth: bool,
     ) -> EdgeCursorMut<'_, T> {
-        let first = self.insert_polygon(base).id();
-        let top_edge = self.loft(first, 2, 2, top).unwrap().0;
+        let top_edge = self.insert_polygon(base).loft(2, 2, top).unwrap().id();
         self.insert_face(top_edge, Default::default()).unwrap();
         // TODO: smooth
         assert!(!smooth, "Smooth frustums not yet implemented");
@@ -175,29 +174,26 @@ where
         let mut mesh = Self::default();
         let vp = |x, y, z| T::VP::from_pos(T::Vec::from_xyz(x, y, z));
 
-        let front_edge = mesh
-            .insert_polygon([
+        mesh.insert_polygon([
+            vp(-p.x(), -p.y(), -p.z()),
+            vp(p.x(), -p.y(), -p.z()),
+            vp(p.x(), p.y(), -p.z()),
+            vp(-p.x(), p.y(), -p.z()),
+        ])
+        .next()
+        .loft(
+            2,
+            2,
+            [
                 vp(-p.x(), -p.y(), p.z()),
                 vp(p.x(), -p.y(), p.z()),
                 vp(p.x(), p.y(), p.z()),
                 vp(-p.x(), p.y(), p.z()),
-            ])
-            .id();
-        let back_edge = mesh
-            .loft_back(
-                front_edge,
-                2,
-                2,
-                [
-                    vp(-p.x(), -p.y(), -p.z()),
-                    vp(p.x(), -p.y(), -p.z()),
-                    vp(p.x(), p.y(), -p.z()),
-                    vp(-p.x(), p.y(), -p.z()),
-                ],
-            )
-            .unwrap()
-            .0;
-        mesh.insert_face(back_edge, Default::default()).unwrap();
+            ],
+        )
+        .unwrap()
+        .insert_face(Default::default())
+        .unwrap();
         mesh
     }
 

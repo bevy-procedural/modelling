@@ -56,20 +56,19 @@ where
         // top pole
         let mut prev = mesh
             .insert_loop((0..m).map(|j| (Default::default(), make_vp(1, j))))
-            .id();
-        mesh.windmill_back(mesh.edge(prev).twin_id(), make_vp(0, 0))
-            .unwrap();
+            .windmill_back(make_vp(0, 0))
+            .unwrap()
+            .twin();
 
         // normal squares
         for i in 1..(n - 1) {
-            prev = mesh
-                .loft_back(prev, 2, 2, (0..m).map(|j| make_vp(i + 1, j)))
-                .unwrap()
-                .0;
+            prev = prev
+                .loft_back(2, 2, (0..m).map(|j| make_vp(i + 1, j)))
+                .unwrap();
         }
 
         // bottom pole
-        mesh.windmill_back(prev, make_vp(n, 0)).unwrap();
+        prev.windmill_back(make_vp(n, 0)).unwrap();
 
         mesh
     }
@@ -94,9 +93,9 @@ where
 
         // TODO: polygon should return something more helpful
         let start = mesh.shared_edge_id(T::V::new(1), T::V::new(0)).unwrap();
-        let (start_middle, _) = mesh
+        let start_middle = mesh
+            .edge_mut(start)
             .loft_back(
-                start,
                 3,
                 2,
                 [
@@ -112,11 +111,13 @@ where
                     make_vp(phi, -iphi, zero),  // pink
                 ],
             )
-            .unwrap();
+            .unwrap()
+            .id();
 
-        let (start_bottom, _) = mesh
+        let start_bottom = mesh
+            .edge_mut(start_middle)
+            .next()
             .loft_back(
-                mesh.edge(start_middle).next_id(),
                 2,
                 3,
                 [
@@ -127,7 +128,8 @@ where
                     make_vp(zero, -phi, -iphi), // green
                 ],
             )
-            .unwrap();
+            .unwrap()
+            .id();
 
         mesh.insert_face(start_bottom, Default::default()).unwrap();
 
