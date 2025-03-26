@@ -19,7 +19,7 @@ struct MyVertex {
 }
 
 fn create_vertices(t: f64) -> (Vec<MyVertex>, Vec<u16>) {
-    let mesh = Mesh3d64::icosphere(1.0, 2)
+    let mesh = Mesh3d64::fake_uv_sphere(1.0, 4, 4)
         .rotated(&NdRotate::from_axis_angle(VecN::<f64, 3>::z_axis(), t));
     let (is, vs) = mesh.triangulate_and_generate_flat_normals_post(TriangulationAlgorithm::Auto);
     let mut vertices = Vec::new();
@@ -164,7 +164,7 @@ async fn run(event_loop: EventLoop<()>, window: Window) {
     queue.write_texture(
         texture.as_image_copy(),
         &texels,
-        wgpu::ImageDataLayout {
+        wgpu::TexelCopyBufferLayout {
             offset: 0,
             bytes_per_row: Some(t_size),
             rows_per_image: None,

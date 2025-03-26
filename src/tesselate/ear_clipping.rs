@@ -47,7 +47,7 @@ pub fn ear_clipping_direct<Vec2: Vector2D, V: IndexType>(
     let mut clipped = vec![false; n0];
     let mut i_a = 0;
     if randomize {
-        i_a = rand::random::<usize>() % n0;
+        i_a = rand::random_range(0..=n0);
     }
     let mut n = n0;
     let mut fails_since_advance = 0;
@@ -91,7 +91,7 @@ pub fn ear_clipping_direct<Vec2: Vector2D, V: IndexType>(
         success_since_fail += 1;
 
         if randomize {
-            i_a = rand::random::<usize>() % n0;
+            i_a = rand::random_range(0..=n0);
             while clipped[i_a] {
                 i_a = (i_a + 1) % n0;
             }

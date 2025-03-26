@@ -1,6 +1,6 @@
 //! cargo watch -w playground -w src -x "run -p playground_bevy --profile fast-dev"
 //!
-//! When developing tests, we recommend:
+//! When developing tests on windows, we recommend:
 //! $env:RUST_BACKTRACE=1;cargo watch -w src -x "test some_test"
 //! cargo llvm-cov --html
 //! cargo watch -w src -w examples -x "run --example loft --profile fast-dev --features bevy_example"

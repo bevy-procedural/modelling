@@ -33,13 +33,13 @@ pub fn random_star<Vec2: Vector2D>(
     min_r: f32,
     max_r: f32,
 ) -> impl Iterator<Item = Vec2> {
-    let mut rng = rand::thread_rng();
-    let n = rng.gen_range(min_vert..=max_vert);
+    let mut rng = rand::rng();
+    let n = rng.random_range(min_vert..=max_vert);
 
     (0..n).into_iter().map(move |i| {
         // TODO: which direction should the star be oriented?
         let phi = i as f32 / n as f32 * 2.0 * std::f32::consts::PI;
-        let r = rng.gen_range(min_r..=max_r);
+        let r = rng.random_range(min_r..=max_r);
         let x = r * phi.cos();
         let y = r * phi.sin();
         Vec2::new(Vec2::S::from(x), Vec2::S::from(y))
