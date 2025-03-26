@@ -67,8 +67,13 @@ impl<T: HalfEdgeImplMeshType> EdgeBasics<T> for HalfEdgeImpl<T> {
         BackwardEdgeIterator::new(self, mesh)
     }
 
+    type FaceIdIterator<'a>
+        = std::vec::IntoIter<T::F>
+    where
+        T: 'a;
+
     #[inline]
-    fn face_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::F> + 'a {
+    fn face_ids<'a>(&'a self, mesh: &'a T::Mesh) -> Self::FaceIdIterator<'a> {
         // TODO: only works for manifold meshes
         let mut res = Vec::new();
         let id = self.face_id();

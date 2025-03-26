@@ -116,7 +116,7 @@ impl<'a, T: MeshType > CursorData for FaceCursor<'a, T> {
     type T = T;
 
     #[inline]
-    fn get<'b>(&'b self) -> Option<&'b T::Face> {
+    fn inner<'b>(&'b self) -> Option<&'b T::Face> {
         self.mesh().get_face(self.try_id())
     }
 

@@ -1,6 +1,5 @@
 use super::{
-    CursorData, EdgeCursorMut, FaceCursorBasics, FaceCursorData, FaceCursorHalfedgeBasics,
-    VertexCursorMut,
+    CursorData, EdgeCursorMut, FaceCursor, FaceCursorBasics, FaceCursorData, FaceCursorHalfedgeBasics, VertexCursorMut
 };
 use crate::{
     math::IndexType,
@@ -34,12 +33,12 @@ impl<'a, T: MeshType> FaceCursorMut<'a, T> {
         Self::new(mesh, IndexType::max())
     }
 
-    /*/// Returns an immutable clone pointing to the same face.
+    /// Converts the mutable cursor to an immutable cursor.
     #[inline]
     #[must_use]
-    pub fn as_immutable(&'a self) -> FaceCursor<'a, T> {
+    pub fn into_immutable(self) -> FaceCursor<'a, T> {
         FaceCursor::new(self.mesh, self.try_id())
-    }*/
+    }
 
     /// Returns a mutable reference to the payload of the face.
     /// Panics if the face is void.
@@ -71,7 +70,7 @@ impl<'a, T: MeshType> CursorData for FaceCursorMut<'a, T> {
     type T = T;
 
     #[inline]
-    fn get<'b>(&'b self) -> Option<&'b T::Face> {
+    fn inner<'b>(&'b self) -> Option<&'b T::Face> {
         self.mesh().get_face(self.try_id())
     }
 

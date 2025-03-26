@@ -1,7 +1,7 @@
 use super::{CursorData, FaceCursorData, VertexCursorData};
 use crate::{
     math::IndexType,
-    mesh::{EdgeBasics, EuclideanMeshType, HalfEdge, MeshType},
+    mesh::{EdgeBasics, EuclideanMeshType, HalfEdge, MeshType}, util::CreateEmptyIterator,
 };
 
 /// This trait defines the basic functionality for accessing the data fields of an edge cursor.
@@ -46,6 +46,7 @@ pub trait EdgeCursorBasics<'a, T: MeshType>: EdgeCursorData<'a, T> {
     #[inline]
     #[must_use]
     fn origin_id(&self) -> T::V {
+        // TODO: self.get().map(|e| e.origin_id(self.mesh()))
         self.unwrap().origin_id(self.mesh())
     }
 
@@ -59,7 +60,7 @@ pub trait EdgeCursorBasics<'a, T: MeshType>: EdgeCursorData<'a, T> {
 
     /// Returns the ids of all faces adjacent to the edge
     /// (including the twin for halfedges and parallel edges' faces if the edge is non-manifold).
-    /// Panics if the edge is void.
+    /// Returns an empty iterator if the edge is void.
     #[inline]
     #[must_use]
     fn face_ids<'b>(&'b self) -> impl Iterator<Item = T::F> + 'b
@@ -67,7 +68,11 @@ pub trait EdgeCursorBasics<'a, T: MeshType>: EdgeCursorData<'a, T> {
         T: 'b,
         'a: 'b,
     {
-        self.unwrap().face_ids(self.mesh())
+        if let Some(edge) = self.inner() {
+            edge.face_ids(self.mesh())
+        } else {
+            CreateEmptyIterator::create_empty()
+        }
     }
 
     /// Whether the edge (or its halfedgetwin) is boundary.
@@ -248,7 +253,7 @@ where
     #[inline]
     #[must_use]
     fn same_boundary(self, v: T::V) -> Option<Self> {
-        let id = HalfEdge::same_boundary(self.get()?, self.mesh(), v)?;
+        let id = HalfEdge::same_boundary(self.inner()?, self.mesh(), v)?;
         Some(self.move_to(id))
     }
 
@@ -259,7 +264,7 @@ where
     #[inline]
     #[must_use]
     fn same_boundary_back(self, v: T::V) -> Option<Self> {
-        let id = HalfEdge::same_boundary_back(self.get()?, self.mesh(), v)?;
+        let id = HalfEdge::same_boundary_back(self.inner()?, self.mesh(), v)?;
         Some(self.move_to(id))
     }
 }

@@ -21,7 +21,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     #[inline]
     fn try_remove_vertex(&mut self, v: T::V) -> bool {
         let c = self.vertex(v);
-        let Some(vertex) = c.get() else {
+        let Some(vertex) = c.inner() else {
             return false;
         };
         if vertex.edge_id(self) != IndexType::max() {

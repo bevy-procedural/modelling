@@ -1,6 +1,5 @@
 use super::{
-    CursorData, EdgeCursorHalfedgeBasics, EdgeCursorMut, FaceCursorMut, VertexCursorBasics,
-    VertexCursorData, VertexCursorHalfedgeBasics,
+    CursorData, EdgeCursorHalfedgeBasics, EdgeCursorMut, FaceCursorMut, VertexCursor, VertexCursorBasics, VertexCursorData, VertexCursorHalfedgeBasics
 };
 use crate::{
     math::IndexType,
@@ -40,12 +39,12 @@ impl<'a, T: MeshType> VertexCursorMut<'a, T> {
         VertexBasics::payload_mut(self.mesh.vertex_ref_mut(self.try_id()))
     }
 
-    /*/// Returns an immutable clone pointing to the same vertex.
+    /// Converts the mutable cursor to an immutable cursor.
     #[inline]
     #[must_use]
-    pub fn as_immutable(&'a self) -> VertexCursor<'a, T> {
+    pub fn into_immutable(self) -> VertexCursor<'a, T> {
         VertexCursor::new(self.mesh, self.try_id())
-    }*/
+    }
 
     /// Appends multiple edges to the current vertex given by the iterator.
     /// Each edge payload will be used for the edge leading to the given vertex payload.
@@ -172,7 +171,7 @@ impl<'a, T: MeshType> CursorData for VertexCursorMut<'a, T> {
     }
 
     #[inline]
-    fn get<'b>(&'b self) -> Option<&'b T::Vertex> {
+    fn inner<'b>(&'b self) -> Option<&'b T::Vertex> {
         self.mesh().get_vertex(self.try_id())
     }
 }

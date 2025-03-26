@@ -19,7 +19,7 @@ use bevy_inspector_egui::{
     InspectorOptions,
 };
 use bevy_panorbit_camera::*;
-use procedural_modelling::{extensions::bevy::*, prelude::*};
+use procedural_modelling::{extensions::bevy::*, math::impls::E32, prelude::*};
 use std::{env, f32::consts::PI};
 
 #[derive(Reflect, Resource, InspectorOptions)]
@@ -50,6 +50,13 @@ fn make_mesh(_settings: &GlobalSettings) -> BevyMesh3d {
         .min_by(|a, b| a.partial_cmp(b).unwrap())
         .unwrap_or(0.0);
     mesh.translate(&Vec3::new(0.0, -min_y, 0.0));
+
+    let mc = mesh.edge_mut(E32::new(0));
+    let c = mc.into_immutable();
+    let d = c.clone();
+
+    println!("{:?} {:?}", c, d);
+
     mesh
 }
 

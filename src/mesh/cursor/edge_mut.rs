@@ -1,6 +1,5 @@
 use super::{
-    CursorData, EdgeCursorBasics, EdgeCursorData, EdgeCursorHalfedgeBasics, FaceCursorMut,
-    VertexCursorMut,
+    CursorData, EdgeCursor, EdgeCursorBasics, EdgeCursorData, EdgeCursorHalfedgeBasics, FaceCursorMut, VertexCursorMut
 };
 use crate::{
     math::IndexType,
@@ -39,12 +38,12 @@ impl<'a, T: MeshType> EdgeCursorMut<'a, T> {
         Self::new(mesh, IndexType::max())
     }
 
-    /*/// Returns an immutable clone pointing to the same edge.
+    /// Converts the mutable cursor to an immutable cursor.
     #[inline]
     #[must_use]
-    pub fn as_immutable(self) -> EdgeCursor<'a, T> {
+    pub fn into_immutable(self) -> EdgeCursor<'a, T> {
         EdgeCursor::new(&*self.mesh, self.edge)
-    }*/
+    }
 
     /// Returns a mutable reference to the payload of the edge.
     /// Panics if the edge is void.
@@ -81,7 +80,7 @@ impl<'a, T: MeshType> CursorData for EdgeCursorMut<'a, T> {
     }
 
     #[inline]
-    fn get<'b>(&'b self) -> Option<&'b T::Edge> {
+    fn inner<'b>(&'b self) -> Option<&'b T::Edge> {
         self.mesh().get_edge(self.try_id())
     }
 

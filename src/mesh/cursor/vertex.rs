@@ -179,7 +179,7 @@ impl<'a, T: MeshType > CursorData for VertexCursor<'a, T> {
     }
 
     #[inline]
-    fn get<'b>(&'b self) -> Option<&'b T::Vertex> {
+    fn inner<'b>(&'b self) -> Option<&'b T::Vertex> {
         self.mesh().get_vertex(self.try_id())
     }
 }

@@ -20,7 +20,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
 
     fn check_vertex_invariants(&self) -> Result<(), String> {
         if let Some(bad_vertex) = self.vertices().find(|v| {
-            if let Some(e) = v.fork().edge().get() {
+            if let Some(e) = v.fork().edge().inner() {
                 e.origin_id(self) != v.id()
             } else {
                 false

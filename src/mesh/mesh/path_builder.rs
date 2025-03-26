@@ -76,7 +76,7 @@ where
     {
         // TODO: implement this without requiring `HalfEdge`
 
-        if let Some(edge) = mesh.vertex(v).edge().get() {
+        if let Some(edge) = mesh.vertex(v).edge().inner() {
             Self::start_at_edge(mesh, edge.prev_id())
         } else {
             Self {

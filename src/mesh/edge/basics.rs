@@ -1,6 +1,7 @@
 use crate::{
     math::Scalar,
     mesh::{EuclideanMeshType, MeshType, VertexBasics},
+    util::CreateEmptyIterator,
 };
 
 /// Basic edge traits for a mesh. Can be directed or undirected.
@@ -57,10 +58,16 @@ pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone {
     where
         T: 'a;
 
+    /// Iterator type for face ids incident to the edge
+    type FaceIdIterator<'a>: Iterator<Item = T::F> + CreateEmptyIterator + 'a
+    where
+        Self: 'a,
+        T: 'a;
+
     /// Iterates all face ids incident to the edge
     /// (even for half-edges, this will return both faces if there are two
     /// or more than that if the edge is non-manifold)
-    fn face_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::F> + 'a;
+    fn face_ids<'a>(&'a self, mesh: &'a T::Mesh) -> Self::FaceIdIterator<'a>;
 
     /// Determines whether the edge is manifold, i.e., has one or two incident faces.
     /// Degenerate edges where the same face is incident twice are not considered manifold.

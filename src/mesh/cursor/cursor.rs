@@ -16,6 +16,7 @@ pub trait CursorData: Sized + Debug {
     #[must_use]
     #[inline]
     fn id(&self) -> Self::I {
+        // TODO: Returns `None` if the cursor is void or the id points to a deleted instance.
         assert!(self.is_valid(), "Expected {:?} to be valid", self);
         self.try_id()
     }
@@ -39,7 +40,7 @@ pub trait CursorData: Sized + Debug {
 
     /// Returns a reference to the instance if it exists and is not deleted, otherwise `void`.
     #[must_use]
-    fn get<'b>(&'b self) -> Option<&'b Self::S>;
+    fn inner<'b>(&'b self) -> Option<&'b Self::S>;
 
     /// Returns a reference to the mesh the cursor points to.
     #[must_use]
@@ -110,7 +111,7 @@ pub trait CursorData: Sized + Debug {
     #[inline]
     #[must_use]
     fn try_move<F: FnOnce(&Self::S) -> Self::I>(self, f: F) -> Self {
-        if let Some(e) = self.get() {
+        if let Some(e) = self.inner() {
             let id = f(e);
             self.move_to(id)
         } else {
@@ -122,21 +123,21 @@ pub trait CursorData: Sized + Debug {
     /// The default is always evaluated.
     #[inline]
     fn map_or<U, F: FnOnce(&Self::S) -> U>(&self, default: U, f: F) -> U {
-        self.get().map(f).unwrap_or(default)
+        self.inner().map(f).unwrap_or(default)
     }
 
     /// Applies a closure to the instance if it exists and is not deleted, returning the result or the default.
     /// The default is only evaluated if necessary.
     #[inline]
     fn map_or_else<U, F: FnOnce(&Self::S) -> U, E: FnOnce() -> U>(&self, default: E, f: F) -> U {
-        self.get().map(f).unwrap_or_else(default)
+        self.inner().map(f).unwrap_or_else(default)
     }
 
     /// Returns a reference to the instance the cursor points to..
     /// Panics if it does'nt exist or is deleted.
     #[inline]
     fn unwrap<'b>(&'b self) -> &'b Self::S {
-        self.get().unwrap()
+        self.inner().unwrap()
     }
 
     /// Applies the function in the closure to the cursor but return a cursor pointing to the same id as before calling the closure.

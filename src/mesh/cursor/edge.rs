@@ -72,7 +72,7 @@ impl<'a, T: MeshType> EdgeCursor<'a, T> {
 
     /// Returns face cursors for all faces adjacent to the edge
     /// (including the twin for halfedges and parallel edges' faces if the edge is non-manifold).
-    /// Panics if the edge is void.
+    /// Returns an empty iterator if the edge is void.
     #[inline]
     #[must_use]
     pub fn faces<'b>(&'b self) -> impl Iterator<Item = FaceCursor<'b, T>>
@@ -80,8 +80,7 @@ impl<'a, T: MeshType> EdgeCursor<'a, T> {
         T::Edge: 'b,
         'a: 'b,
     {
-        self.unwrap()
-            .face_ids(self.mesh())
+        self.face_ids()
             .map(move |id| FaceCursor::new(self.mesh, id))
     }
 
@@ -150,7 +149,7 @@ impl<'a, T: MeshType> CursorData for EdgeCursor<'a, T> {
     }
 
     #[inline]
-    fn get<'b>(&'b self) -> Option<&'b T::Edge> {
+    fn inner<'b>(&'b self) -> Option<&'b T::Edge> {
         self.mesh().get_edge(self.try_id())
     }
 
