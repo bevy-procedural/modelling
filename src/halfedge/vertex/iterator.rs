@@ -41,15 +41,15 @@ impl<'a, T: HalfEdgeImplMeshType> Iterator for IncidentToVertexIterator<'a, T> {
         if self.current == IndexType::max() {
             return None;
         }
-        let current = self.mesh.edge(self.current);
+        let current = self.mesh.edge(self.current).load()?;
         if self.is_first {
             self.is_first = false;
             return Some(current.id());
         }
-        let next = current.twin().next();
+        let next = current.twin().next().load()?;
         debug_assert_eq!(
             next.origin_id(),
-            self.mesh.edge(self.first).origin_id(),
+            self.mesh.edge(self.first).unwrap().origin_id(),
             "The edge wheel around vertex {} is not closed. The mesh is invalid.",
             next.origin_id()
         );

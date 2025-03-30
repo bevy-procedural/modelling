@@ -79,7 +79,7 @@ where
         T: 'a,
     {
         self.edges_out(mesh)
-            .map(|e| mesh.vertex_ref(mesh.edge(e).target_id()))
+            .map(|e| mesh.vertex_ref(mesh.edge(e).unwrap().target_id()))
     }
 
     /// Iterates all faces adjacent to this vertex in the same manifold edge wheel (clockwise)
@@ -99,14 +99,15 @@ where
             return false;
         }
         let mut e = e0;
-        let mut last_state = mesh.edge(e).has_face();
+        // TODO: unwrap
+        let mut last_state = mesh.edge(e).unwrap().has_face();
         let mut state_changes = 0;
         loop {
-            let edge = mesh.edge(e);
-            debug_assert_eq!(edge.origin_id(), self.id());
+            let edge = mesh.edge(e).unwrap();
+            debug_assert_eq!(edge.fork().unwrap().origin_id(), self.id());
 
             // go to the next sibling sib
-            let sibling = edge.next_sibling();
+            let sibling = edge.next_sibling().unwrap();
             e = sibling.id();
 
             if sibling.has_face() != last_state {

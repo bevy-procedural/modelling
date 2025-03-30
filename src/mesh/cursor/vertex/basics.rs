@@ -1,9 +1,6 @@
 use crate::{
     math::{HasPosition, Scalar, Vector},
-    mesh::{
-        cursor::*, EdgeBasics, HalfEdge, HalfEdgeMesh, HalfEdgeVertex, MeshBasics, MeshTopology,
-        MeshType, VertexBasics,
-    },
+    mesh::{cursor::*, EdgeBasics, HalfEdge, HalfEdgeVertex, MeshBasics, MeshType, VertexBasics},
 };
 
 /// This trait defines the basic functionality for accessing the data fields of a vertex cursor.

@@ -258,8 +258,8 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
             }
 
             let (to_a, from_b, _) = bv.load()?.shortest_path(a)?;
-            debug_assert_eq!(self.edge(to_a).target_id(), a);
-            debug_assert_eq!(self.edge(from_b).origin_id(), b);
+            debug_assert_eq!(self.edge(to_a).unwrap().target_id(), a);
+            debug_assert_eq!(self.edge(from_b).unwrap().origin_id(), b);
             return self.insert_edge_ee(to_a, from_b, ep);
         }
     }
@@ -290,9 +290,12 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
             debug_assert_eq!(self.edge(e1).check(), Ok(()));
             debug_assert_eq!(self.edge(e2).check(), Ok(()));
             debug_assert_eq!(self.edge(e).check(), Ok(()));
-            debug_assert_eq!(self.edge(e1).target_id(), v);
-            debug_assert_eq!(self.edge(e1).origin_id(), self.edge(e).target_id());
-            debug_assert_eq!(self.edge(e2).origin_id(), v);
+            debug_assert_eq!(self.edge(e1).unwrap().target_id(), v);
+            debug_assert_eq!(
+                self.edge(e1).unwrap().origin_id(),
+                self.edge(e).unwrap().target_id()
+            );
+            debug_assert_eq!(self.edge(e2).unwrap().origin_id(), v);
 
             return Some(e1);
         }
@@ -452,7 +455,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         if f == IndexType::max() || f != self.edge(to).load()?.face_id() {
             return None;
         }
-        if self.edge(from).target_id() == self.edge(to).origin_id() {
+        if self.edge(from).load()?.target_id() == self.edge(to).load()?.origin_id() {
             // won't create self-loops
             // TODO: Actually, we should allow this.
             return None;
@@ -648,8 +651,8 @@ mod tests {
         assert_eq!(mesh.is_connected(), true);
         assert_eq!(mesh.vertex(v2).neighbor_ids().collect_vec(), vec![v1]);
         assert_eq!(mesh.vertex(v1).neighbor_ids().collect_vec(), vec![v2]);
-        assert_eq!(mesh.edge(e12).origin_id(), v1);
-        assert_eq!(mesh.edge(e12).target_id(), v2);
+        assert_eq!(mesh.edge(e12).unwrap().origin_id(), v1);
+        assert_eq!(mesh.edge(e12).unwrap().target_id(), v2);
 
         let vp3 = vp(1.0, 0.0, 0.0);
         let (e23, v3) = mesh.insert_vertex_v(v2, vp3, Default::default()).unwrap();
@@ -667,8 +670,8 @@ mod tests {
         assert_eq!(mesh.vertex(v3).neighbor_ids().collect_vec(), vec![v2]);
         assert_eq!(sorted(mesh.vertex(v2).neighbor_ids()), sorted([v1, v3]));
         assert_eq!(mesh.vertex(v1).neighbor_ids().collect_vec(), vec![v2]);
-        assert_eq!(mesh.edge(e23).origin_id(), v2);
-        assert_eq!(mesh.edge(e23).target_id(), v3);
+        assert_eq!(mesh.edge(e23).unwrap().origin_id(), v2);
+        assert_eq!(mesh.edge(e23).unwrap().target_id(), v3);
 
         let e31 = mesh.insert_edge_vv(v3, v1, Default::default()).unwrap();
         assert_eq!(
@@ -684,8 +687,8 @@ mod tests {
         assert_eq!(sorted(mesh.vertex(v3).neighbor_ids()), sorted([v2, v1]));
         assert_eq!(sorted(mesh.vertex(v2).neighbor_ids()), sorted([v1, v3]));
         assert_eq!(sorted(mesh.vertex(v1).neighbor_ids()), sorted([v2, v3]));
-        assert_eq!(mesh.edge(e31).origin_id(), v3);
-        assert_eq!(mesh.edge(e31).target_id(), v1);
+        assert_eq!(mesh.edge(e31).unwrap().origin_id(), v3);
+        assert_eq!(mesh.edge(e31).unwrap().target_id(), v1);
 
         let es = [e12, e23, e31];
         for e in es.iter() {
@@ -713,8 +716,8 @@ mod tests {
             let es = mesh.face(f).edge_ids().collect_vec();
             for i in 0..es.len() {
                 assert_eq!(
-                    mesh.edge(es[i]).target_id(),
-                    mesh.edge(es[(i + 1) % es.len()]).origin_id()
+                    mesh.edge(es[i]).unwrap().target_id(),
+                    mesh.edge(es[(i + 1) % es.len()]).unwrap().origin_id()
                 );
                 assert_eq!(mesh.edge(es[i]).unwrap().next_id(), es[(i + 1) % es.len()]);
             }
@@ -726,8 +729,14 @@ mod tests {
         let mut mesh = Mesh3d64::default();
         let e12 =
             mesh.insert_isolated_edge(vp(0.0, 0.0, 0.0), vp(1.0, 0.0, 0.0), Default::default());
-        let v1 = mesh.vertex(mesh.edge(e12).origin_id()).id().unwrap();
-        let v2 = mesh.vertex(mesh.edge(e12).target_id()).id().unwrap();
+        let v1 = mesh
+            .vertex(mesh.edge(e12).unwrap().origin_id())
+            .id()
+            .unwrap();
+        let v2 = mesh
+            .vertex(mesh.edge(e12).unwrap().target_id())
+            .id()
+            .unwrap();
         assert_eq!(
             sorted([e12, mesh.edge(e12).unwrap().twin_id()]),
             vec![IndexType::new(0), IndexType::new(1)]
@@ -765,8 +774,8 @@ mod tests {
         assert_eq!(mesh.vertex(v3).neighbor_ids().collect_vec(), vec![v2]);
         assert_eq!(sorted(mesh.vertex(v2).neighbor_ids()), sorted([v1, v3]));
         assert_eq!(mesh.vertex(v1).neighbor_ids().collect_vec(), vec![v2]);
-        assert_eq!(mesh.edge(e23).origin_id(), v2);
-        assert_eq!(mesh.edge(e23).target_id(), v3);
+        assert_eq!(mesh.edge(e23).unwrap().origin_id(), v2);
+        assert_eq!(mesh.edge(e23).unwrap().target_id(), v3);
 
         let (e34, v4) = mesh
             .insert_vertex_e(e23, vp(1.0, 1.0, 1.0), Default::default())
@@ -785,8 +794,8 @@ mod tests {
         assert_eq!(mesh.vertex(v4).neighbor_ids().collect_vec(), vec![v3]);
         assert_eq!(sorted(mesh.vertex(v3).neighbor_ids()), sorted([v2, v4]));
         assert_eq!(sorted(mesh.vertex(v2).neighbor_ids()), sorted([v1, v3]));
-        assert_eq!(mesh.edge(e34).origin_id(), v3);
-        assert_eq!(mesh.edge(e34).target_id(), v4);
+        assert_eq!(mesh.edge(e34).unwrap().origin_id(), v3);
+        assert_eq!(mesh.edge(e34).unwrap().target_id(), v4);
 
         let (e25, v5) = mesh
             .insert_vertex_e(e12, vp(0.0, 1.0, 0.0), Default::default())
@@ -806,8 +815,8 @@ mod tests {
         assert_eq!(mesh.vertex(v5).neighbor_ids().collect_vec(), vec![v2]);
         assert_eq!(sorted(mesh.vertex(v1).neighbor_ids()), sorted([v2]));
         assert_eq!(sorted(mesh.vertex(v2).neighbor_ids()), sorted([v1, v3, v5]));
-        assert_eq!(mesh.edge(e25).origin_id(), v2);
-        assert_eq!(mesh.edge(e25).target_id(), v5);
+        assert_eq!(mesh.edge(e25).unwrap().origin_id(), v2);
+        assert_eq!(mesh.edge(e25).unwrap().target_id(), v5);
 
         // connect based on vertices
         {
@@ -877,8 +886,8 @@ mod tests {
                 sorted(mesh.vertex(v2).neighbor_ids()),
                 sorted([v1, v3, v5, v6])
             );
-            assert_eq!(mesh.edge(e26).origin_id(), v2);
-            assert_eq!(mesh.edge(e26).target_id(), v6);
+            assert_eq!(mesh.edge(e26).unwrap().origin_id(), v2);
+            assert_eq!(mesh.edge(e26).unwrap().target_id(), v6);
 
             {
                 // we now have a mesh like this:
@@ -908,8 +917,8 @@ mod tests {
                     for i in 0..4 {
                         let (e42, f) = res[i];
                         assert_eq!(f, IndexType::new(0));
-                        assert_eq!(m[i].edge(e42).target_id(), v2);
-                        assert_eq!(m[i].edge(e42).origin_id(), v4);
+                        assert_eq!(m[i].edge(e42).unwrap().target_id(), v2);
+                        assert_eq!(m[i].edge(e42).unwrap().origin_id(), v4);
                         assert_eq!(m[i].check(), Ok(()));
                         assert!(!m[i].is_open_2manifold());
                         assert!(m[i].is_trivially_isomorphic(&m[0]).eq());
@@ -1156,12 +1165,12 @@ mod tests {
         assert_eq!(mesh.num_edges(), 8);
         assert_eq!(mesh.num_faces(), 4);
 
-        let center = mesh.edge(d1bt).origin_id();
-        assert_eq!(mesh.edge(d2a).target_id(), center);
-        assert_eq!(mesh.edge(d2b).target_id(), center);
-        assert_eq!(mesh.edge(d1a).target_id(), center);
-        assert_eq!(mesh.edge(d1bt).origin_id(), center);
-        assert_eq!(mesh.edge(d1at).origin_id(), center);
+        let center = mesh.edge(d1bt).unwrap().origin_id();
+        assert_eq!(mesh.edge(d2a).unwrap().target_id(), center);
+        assert_eq!(mesh.edge(d2b).unwrap().target_id(), center);
+        assert_eq!(mesh.edge(d1a).unwrap().target_id(), center);
+        assert_eq!(mesh.edge(d1bt).unwrap().origin_id(), center);
+        assert_eq!(mesh.edge(d1at).unwrap().origin_id(), center);
 
         for f in mesh.faces() {
             assert_eq!(f.num_edges(), 3);

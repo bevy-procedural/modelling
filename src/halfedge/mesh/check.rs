@@ -1,6 +1,7 @@
 use super::HalfEdgeMeshImpl;
 use crate::{
     halfedge::HalfEdgeImplMeshType,
+    math::IndexType,
     mesh::{cursor::*, EdgeBasics, HalfEdgeMesh, MeshBasics, MeshChecker},
 };
 
@@ -27,7 +28,9 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
                 "Vertex {} has edge {} with origin {}",
                 bad_vertex.id(),
                 bad_vertex.clone().edge().try_id(),
-                bad_vertex.edge().origin_id()
+                bad_vertex
+                    .edge()
+                    .load_or(IndexType::max(), |v| v.origin_id())
             ));
         }
 

@@ -108,22 +108,17 @@ mod tests {
         assert_eq!(edge.payload().is_empty(), true);
 
         // TODO: Cursor
+        assert_eq!(edge.face_ids().collect::<Vec<_>>(), vec![IndexType::new(0)]);
+        assert!(edge.boundary().count() == 3);
+        assert!(edge.boundary_back().count() == 3);
         assert_eq!(
-            edge.unwrap().face_ids(&mesh).collect::<Vec<_>>(),
-            vec![IndexType::new(0)]
-        );
-        assert!(edge.unwrap().boundary(&mesh).count() == 3);
-        assert!(edge.unwrap().boundary_back(&mesh).count() == 3);
-        assert_eq!(
-            edge.unwrap()
-                .boundary(&mesh)
+            edge.boundary()
                 .map(|e| e.id())
                 .collect_vec()
                 .iter()
                 .rev()
                 .collect_vec(),
-            edge.unwrap()
-                .boundary_back(&mesh)
+            edge.boundary_back()
                 .map(|e| e.id())
                 .collect_vec()
                 .iter()

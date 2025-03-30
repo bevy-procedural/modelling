@@ -173,8 +173,8 @@ impl<T: HalfEdgeImplMeshTypePlus> HalfEdgeMeshImpl<T> {
             )
         };
 
-        debug_assert_eq!(self.edge(input).target_id(), v);
-        debug_assert_eq!(self.edge(output).origin_id(), w);
+        debug_assert_eq!(self.edge(input).unwrap().target_id(), v);
+        debug_assert_eq!(self.edge(output).unwrap().origin_id(), w);
 
         let (e1, e2) = if should_be_valid {
             self.insert_halfedge_pair(input, v, fv, tw, w, output, f_face, b_face, ep)

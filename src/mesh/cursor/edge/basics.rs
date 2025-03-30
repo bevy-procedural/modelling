@@ -103,23 +103,6 @@ pub trait EdgeCursorBasics<'a, T: MeshType>: EdgeCursorData<'a, T> {
         self.move_to_vertex(id)
     }
 
-    /// Returns the id of the origin vertex of the edge.
-    /// Panics if the edge is void.
-    #[inline]
-    #[must_use]
-    fn origin_id(&self) -> T::V {
-        // TODO: self.get().map(|e| e.origin_id(self.mesh()))
-        self.unwrap().origin_id(self.mesh())
-    }
-
-    /// Returns the id of the target vertex of the edge.
-    /// Panics if the edge is void.
-    #[inline]
-    #[must_use]
-    fn target_id(&self) -> T::V {
-        self.unwrap().target_id(self.mesh())
-    }
-
     /// Returns the ids of all faces adjacent to the edge
     /// (including the twin for halfedges and parallel edges' faces if the edge is non-manifold).
     /// Returns an empty iterator if the edge is void.
@@ -166,12 +149,31 @@ pub trait ValidEdgeCursorBasics<'a, T: MeshType>:
     {
         self.inner().centroid(self.mesh())
     }
+
+    /// Returns the id of the origin vertex of the edge.
+    /// Panics if the edge is void.
+    #[inline]
+    #[must_use]
+    fn origin_id(&self) -> T::V {
+        // TODO: self.get().map(|e| e.origin_id(self.mesh()))
+        self.inner().origin_id(self.mesh())
+    }
+
+    /// Returns the id of the target vertex of the edge.
+    /// Panics if the edge is void.
+    #[inline]
+    #[must_use]
+    fn target_id(&self) -> T::V {
+        self.inner().target_id(self.mesh())
+    }
 }
 
 /// This trait implements some basic functionality for edge cursors that works with halfedge meshes and both mutable and immutable cursors.
-pub trait EdgeCursorHalfedgeBasics<'a, T: MeshType>: EdgeCursorData<'a, T>
+pub trait EdgeCursorHalfedgeBasics<'a, T: MeshType, Maybe>:
+    EdgeCursorData<'a, T, Maybe = Maybe>
 where
     T::Edge: HalfEdge<T>,
+    Maybe: EdgeCursorHalfedgeBasics<'a, T, Maybe>,
 {
     /// Moves the cursor to the next halfedge of the edge.
     /// Won't move if the edge is void.

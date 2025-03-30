@@ -102,7 +102,7 @@ impl<'a, T: MeshType> ValidFaceCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType> ValidFaceCursorBasics for ValidFaceCursorMut<'a, T> where T: 'a {}
+impl<'a, T: MeshType> ValidFaceCursorBasics<'a, T> for ValidFaceCursorMut<'a, T> where T: 'a {}
 impl<'a, T: MeshType> FaceCursorBasics<'a, T> for ValidFaceCursorMut<'a, T> {}
 impl<'a, T: MeshType> FaceCursorHalfedgeBasics<'a, T> for ValidFaceCursorMut<'a, T> where
     T::Edge: HalfEdge<T>

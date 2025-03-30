@@ -183,7 +183,7 @@ where
 }
 impl<'a, T: MeshType> ValidEdgeCursorBasics<'a, T> for ValidEdgeCursorMut<'a, T> where T: 'a {}
 impl<'a, T: MeshType> EdgeCursorBasics<'a, T> for ValidEdgeCursorMut<'a, T> {}
-impl<'a, T: MeshType> EdgeCursorHalfedgeBasics<'a, T> for ValidEdgeCursorMut<'a, T> where
+impl<'a, T: MeshType> EdgeCursorHalfedgeBasics<'a, T, EdgeCursorMut<'a, T>> for ValidEdgeCursorMut<'a, T> where
     T::Edge: HalfEdge<T>
 {
 }
