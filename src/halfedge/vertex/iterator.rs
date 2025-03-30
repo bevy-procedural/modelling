@@ -1,7 +1,7 @@
 use crate::{
     halfedge::HalfEdgeImplMeshType,
     math::IndexType,
-    mesh::{CursorData, EdgeCursorBasics, EdgeCursorHalfedgeBasics, MeshBasics},
+    mesh::{cursor::*, MeshBasics},
 };
 
 /// Iterator over all half-edges incident to the same vertex (clockwise)

@@ -2,9 +2,8 @@ use crate::{
     halfedge::{HalfEdgeImplMeshTypePlus, HalfEdgeMeshImpl},
     math::IndexType,
     mesh::{
-        CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, EdgePayload,
-        FaceCursorBasics, HalfEdge, HalfEdgeVertex, MeshBasics, MeshBuilder, MeshHalfEdgeBuilder,
-        MeshTypeHalfEdge, VertexBasics, VertexCursorBasics, VertexCursorHalfedgeBasics,
+        cursor::*, EdgeBasics, EdgePayload, HalfEdge, HalfEdgeVertex, MeshBasics, MeshBuilder,
+        MeshHalfEdgeBuilder, MeshTypeHalfEdge, VertexBasics,
     },
     prelude::HalfEdgeFaceImpl,
 };
@@ -21,7 +20,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     #[inline]
     fn try_remove_vertex(&mut self, v: T::V) -> bool {
         let c = self.vertex(v);
-        let Some(vertex) = c.inner() else {
+        let Some(vertex) = c.try_inner() else {
             return false;
         };
         if vertex.edge_id(self) != IndexType::max() {
@@ -33,8 +32,16 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
 
     #[inline]
     fn try_remove_edge(&mut self, e: T::E) -> bool {
-        let edge = self.edge(e);
-        if edge.is_void() || edge.has_face() || edge.twin().has_face() {
+        let Some(edge) = self.edge(e).load() else {
+            return false;
+        };
+        if edge.has_face() {
+            return false;
+        }
+        let Some(twin) = edge.twin().load() else {
+            return false;
+        };
+        if twin.has_face() {
             return false;
         }
         self.try_remove_edge_forced(e)
@@ -82,10 +89,14 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
 
             // The next edge of the previous must be updated
             if edge.prev_id() != edge.twin_id() {
-                mesh.edge_mut(edge.prev_id()).set_next(twin.next_id());
+                mesh.edge_mut(edge.prev_id())
+                    .unwrap()
+                    .set_next(twin.next_id());
             }
             if edge.next_id() != edge.twin_id() {
-                mesh.edge_mut(edge.next_id()).set_prev(twin.prev_id());
+                mesh.edge_mut(edge.next_id())
+                    .unwrap()
+                    .set_prev(twin.prev_id());
             }
         }
 
@@ -129,13 +140,13 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
             self.insert_edge_unchecked(input, output, ep, IndexType::max(), IndexType::max(), true);
 
         // update faces to match the previous edges
-        let f1 = self.edge(e1).prev().face_id();
+        let f1 = self.edge(e1).prev().load()?.face_id();
         if f1 != IndexType::max() {
-            self.edge_mut(e1).set_face(f1);
+            self.edge_mut(e1).load()?.set_face(f1);
         }
-        let f2 = self.edge(e2).prev().face_id();
+        let f2 = self.edge(e2).prev().load()?.face_id();
         if f2 != IndexType::max() {
-            self.edge_mut(e2).set_face(f2);
+            self.edge_mut(e2).load()?.set_face(f2);
         }
 
         debug_assert_eq!(self.edge(e1).check(), Ok(()));
@@ -180,14 +191,14 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
                 let Some(b_in) = bv.ingoing_boundary_edge() else {
                     return None;
                 };
-                let face = self.edge(b_in).face_id();
+                let face = self.edge(b_in).load()?.face_id();
                 let (e1, e2) = self.insert_halfedge_pair_forced(
                     IndexType::max(),
                     a,
                     IndexType::max(),
                     b_in,
                     b,
-                    self.edge(b_in).next_id(),
+                    self.edge(b_in).load()?.next_id(),
                     face,
                     face,
                     ep,
@@ -204,7 +215,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
             let Some(a_in) = av.ingoing_boundary_edge() else {
                 return None;
             };
-            let face = self.edge(a_in).face_id();
+            let face = self.edge(a_in).load()?.face_id();
             let next = self.edge_ref(a_in).next_id();
             let (e1, e2) = self.insert_halfedge_pair_forced(
                 a_in,
@@ -218,8 +229,8 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
                 ep,
             );
             self.vertex_mut(b).set_edge(e2);
-            self.edge_mut(a_in).set_next(e1);
-            self.edge_mut(next).set_prev(e2);
+            self.edge_mut(a_in).load()?.set_next(e1);
+            self.edge_mut(next).load()?.set_prev(e2);
 
             debug_assert_eq!(self.edge(e1).check(), Ok(()));
             debug_assert_eq!(self.edge(e2).check(), Ok(()));
@@ -246,7 +257,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
                 return None;
             }
 
-            let (to_a, from_b, _) = bv.unwrap().shortest_path(self, a)?;
+            let (to_a, from_b, _) = bv.load()?.shortest_path(a)?;
             debug_assert_eq!(self.edge(to_a).target_id(), a);
             debug_assert_eq!(self.edge(from_b).origin_id(), b);
             return self.insert_edge_ee(to_a, from_b, ep);
@@ -257,7 +268,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     fn insert_edge_ev(&mut self, e: T::E, v: T::V, ep: T::EP) -> Option<T::E> {
         if self.vertex(v).is_isolated() {
             // Trivial case where the connectivity is already given
-            let edge = self.edge(e);
+            let edge = self.edge(e).load()?;
             let origin = edge.target_id();
             let fo = edge.next_id();
             let face = edge.face_id();
@@ -272,8 +283,8 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
                 face,
                 ep,
             );
-            self.edge_mut(e).set_next(e1);
-            self.edge_mut(fo).set_prev(e2);
+            self.edge_mut(e).load()?.set_next(e1);
+            self.edge_mut(fo).load()?.set_prev(e2);
             self.vertex_mut(v).set_edge(e2);
 
             debug_assert_eq!(self.edge(e1).check(), Ok(()));
@@ -293,7 +304,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
 
         // Otherwise, find a unique boundary from e to v
         if let Some(outgoing) = self.edge(e).same_boundary_back(v) {
-            return self.insert_edge_ee(e, outgoing.id(), ep);
+            return self.insert_edge_ee(e, outgoing.id()?, ep);
         }
 
         None
@@ -313,7 +324,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
 
     #[inline]
     fn insert_face(&mut self, e: T::E, fp: T::FP) -> Option<T::F> {
-        if self.edge(e).has_face() {
+        if self.edge(e).load()?.has_face() {
             return None;
         }
         Some(self.insert_face_forced(e, fp))
@@ -347,13 +358,15 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
             ep,
         );
 
+        // TODO: Remove the unwraps and use load instead
+
         self.vertex_mut(origin).set_edge(new_e);
         self.vertex_mut(target).set_edge(new_t);
-        self.edge_mut(edge.next_id()).set_prev(new_e);
-        self.edge_mut(twin.prev_id()).set_next(new_t);
-        self.edge_mut(edge.id()).set_next(new_e);
-        self.edge_mut(twin.id()).set_prev(new_t);
-        self.edge_mut(twin.id()).set_origin(origin);
+        self.edge_mut(edge.next_id()).unwrap().set_prev(new_e);
+        self.edge_mut(twin.prev_id()).unwrap().set_next(new_t);
+        self.edge_mut(edge.id()).unwrap().set_next(new_e);
+        self.edge_mut(twin.id()).unwrap().set_prev(new_t);
+        self.edge_mut(twin.id()).unwrap().set_origin(origin);
 
         debug_assert_eq!(self.edge(new_e).check(), Ok(()));
         debug_assert_eq!(self.edge(new_t).check(), Ok(()));
@@ -362,13 +375,10 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     }
 
     fn collapse_edge(&mut self, edge_id: T::E) -> Option<T::E> {
-        let edge = self.edge(edge_id);
-        if edge.is_void() {
-            return None;
-        }
-        let twin = edge.fork().twin();
-        let next = edge.fork().next();
-        let next_twin = next.fork().twin();
+        let edge = self.edge(edge_id).load()?;
+        let twin: ValidEdgeCursor<T> = edge.fork().twin().load()?;
+        let next = edge.fork().next().load()?;
+        let next_twin = next.fork().twin().load()?;
 
         let removed_v = twin.origin_id();
         let target = next_twin.origin_id();
@@ -395,10 +405,10 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
             self.vertex_mut(target).set_edge(edge_id);
             self.vertex_mut(removed_v).set_edge(twin_id);
 
-            self.edge_mut(edge_id).link(twin_id);
+            self.edge_mut(edge_id).load()?.link(twin_id);
             if next_twin_prev_id == twin_id {
                 // both parallel
-                self.edge_mut(twin_id).link(edge_id);
+                self.edge_mut(twin_id).load()?.link(edge_id);
             }
 
             // The enclosed face must be removed
@@ -420,10 +430,11 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
             // TODO: test this and other functions with self-loops and parallel edges
             todo!();
         } else {
+            // TODO: Make sure the loads cannot cause invalid intermediate states
             self.vertex_mut(target).set_edge(twin_id);
-            self.edge_mut(twin_id).set_origin(target);
-            self.edge_mut(edge_id).link(next_next_id);
-            self.edge_mut(next_twin_prev_id).link(twin_id);
+            self.edge_mut(twin_id).load()?.set_origin(target);
+            self.edge_mut(edge_id).load()?.link(next_next_id);
+            self.edge_mut(next_twin_prev_id).load()?.link(twin_id);
 
             self.vertices.delete(removed_v);
             self.halfedges.delete(next_id);
@@ -437,8 +448,8 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
 
     #[inline]
     fn subdivide_face(&mut self, from: T::E, to: T::E, ep: T::EP, fp: T::FP) -> Option<T::E> {
-        let f = self.edge(from).face_id();
-        if f == IndexType::max() || f != self.edge(to).face_id() {
+        let f = self.edge(from).load()?.face_id();
+        if f == IndexType::max() || f != self.edge(to).load()?.face_id() {
             return None;
         }
         if self.edge(from).target_id() == self.edge(to).origin_id() {
@@ -448,7 +459,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         }
         let new_e = self.insert_edge_ee(from, to, ep)?;
         self.insert_face_forced(new_e, fp);
-        let new_twin = self.edge(new_e).twin_id();
+        let new_twin = self.edge(new_e).load()?.twin_id();
         self.face_mut(f).set_edge(new_twin);
         Some(new_e)
     }
@@ -606,7 +617,7 @@ mod tests {
         assert_eq!(mesh.num_vertices(), 1);
         assert_eq!(mesh.num_halfedges(), 0);
         assert_eq!(mesh.num_faces(), 0);
-        assert_eq!(*mesh.vertex(v1).payload(), vp1);
+        assert_eq!(*mesh.vertex(v1).unwrap().payload(), vp1);
         assert_eq!(mesh.vertex(v1).edge_id(), IndexType::max());
         assert_eq!(mesh.vertex(v1).neighbors().count(), 0);
         assert_eq!(mesh.is_connected(), true);
@@ -619,14 +630,14 @@ mod tests {
         assert_eq!(mesh.num_vertices(), 2);
         assert_eq!(mesh.num_halfedges(), 0);
         assert_eq!(mesh.num_faces(), 0);
-        assert_eq!(*mesh.vertex(v2).payload(), vp2);
+        assert_eq!(*mesh.vertex(v2).unwrap().payload(), vp2);
         assert_eq!(mesh.vertex(v2).edge_id(), IndexType::max());
         assert_eq!(mesh.vertex(v2).neighbors().count(), 0);
         assert_eq!(mesh.is_connected(), false);
 
         let e12 = mesh.insert_edge_vv(v1, v2, Default::default()).unwrap();
         assert_eq!(
-            sorted([e12, mesh.edge(e12).twin_id()]),
+            sorted([e12, mesh.edge(e12).unwrap().twin_id()]),
             vec![IndexType::new(0), IndexType::new(1)]
         );
         assert_eq!(mesh.check(), Ok(()));
@@ -643,7 +654,7 @@ mod tests {
         let vp3 = vp(1.0, 0.0, 0.0);
         let (e23, v3) = mesh.insert_vertex_v(v2, vp3, Default::default()).unwrap();
         assert_eq!(
-            sorted([e23, mesh.edge(e23).twin_id()]),
+            sorted([e23, mesh.edge(e23).unwrap().twin_id()]),
             vec![IndexType::new(2), IndexType::new(3)]
         );
         assert_eq!(v3, IndexType::new(2));
@@ -661,7 +672,7 @@ mod tests {
 
         let e31 = mesh.insert_edge_vv(v3, v1, Default::default()).unwrap();
         assert_eq!(
-            sorted([e31, mesh.edge(e31).twin_id()]),
+            sorted([e31, mesh.edge(e31).unwrap().twin_id()]),
             vec![IndexType::new(4), IndexType::new(5)]
         );
         assert_eq!(mesh.check(), Ok(()));
@@ -694,8 +705,8 @@ mod tests {
             assert_eq!(mesh.is_connected(), true);
             assert_eq!(mesh.face(f).edge_id(), *e);
             for e in es.iter() {
-                assert_eq!(mesh.edge(*e).face_id(), f);
-                assert_eq!(mesh.edge(*e).twin().has_face(), false);
+                assert_eq!(mesh.edge(*e).unwrap().face_id(), f);
+                assert_eq!(mesh.edge(*e).twin().unwrap().has_face(), false);
             }
 
             // the edges should be in the correct order
@@ -705,7 +716,7 @@ mod tests {
                     mesh.edge(es[i]).target_id(),
                     mesh.edge(es[(i + 1) % es.len()]).origin_id()
                 );
-                assert_eq!(mesh.edge(es[i]).next_id(), es[(i + 1) % es.len()]);
+                assert_eq!(mesh.edge(es[i]).unwrap().next_id(), es[(i + 1) % es.len()]);
             }
         }
     }
@@ -715,10 +726,10 @@ mod tests {
         let mut mesh = Mesh3d64::default();
         let e12 =
             mesh.insert_isolated_edge(vp(0.0, 0.0, 0.0), vp(1.0, 0.0, 0.0), Default::default());
-        let v1 = mesh.vertex(mesh.edge(e12).origin_id()).id();
-        let v2 = mesh.vertex(mesh.edge(e12).target_id()).id();
+        let v1 = mesh.vertex(mesh.edge(e12).origin_id()).id().unwrap();
+        let v2 = mesh.vertex(mesh.edge(e12).target_id()).id().unwrap();
         assert_eq!(
-            sorted([e12, mesh.edge(e12).twin_id()]),
+            sorted([e12, mesh.edge(e12).unwrap().twin_id()]),
             vec![IndexType::new(0), IndexType::new(1)]
         );
         assert_eq!(mesh.check(), Ok(()));
@@ -742,7 +753,7 @@ mod tests {
 
         let e23 = mesh.insert_edge_ev(e12, v3, Default::default()).unwrap();
         assert_eq!(
-            sorted([e23, mesh.edge(e23).twin_id()]),
+            sorted([e23, mesh.edge(e23).unwrap().twin_id()]),
             vec![IndexType::new(2), IndexType::new(3)]
         );
         assert_eq!(mesh.check(), Ok(()));
@@ -761,7 +772,7 @@ mod tests {
             .insert_vertex_e(e23, vp(1.0, 1.0, 1.0), Default::default())
             .unwrap();
         assert_eq!(
-            sorted([e34, mesh.edge(e34).twin_id()]),
+            sorted([e34, mesh.edge(e34).unwrap().twin_id()]),
             vec![IndexType::new(4), IndexType::new(5)]
         );
         assert_eq!(v4, IndexType::new(3));
@@ -780,7 +791,7 @@ mod tests {
         let (e25, v5) = mesh
             .insert_vertex_e(e12, vp(0.0, 1.0, 0.0), Default::default())
             .unwrap();
-        let e52 = mesh.edge(e25).twin_id();
+        let e52 = mesh.edge(e25).unwrap().twin_id();
         assert_eq!(
             sorted([e25, e52]),
             vec![IndexType::new(6), IndexType::new(7)]
@@ -815,8 +826,8 @@ mod tests {
             let es = vec![e45, e52, e23, e34];
             assert_eq!(mesh.face(f).edge_ids().collect_vec(), es);
             for e in es.iter() {
-                assert_eq!(mesh.edge(*e).face_id(), f);
-                assert_eq!(mesh.edge(*e).twin().has_face(), false);
+                assert_eq!(mesh.edge(*e).unwrap().face_id(), f);
+                assert_eq!(mesh.edge(*e).twin().unwrap().has_face(), false);
             }
         }
 
@@ -837,8 +848,8 @@ mod tests {
             let es = vec![e45, e52, e23, e34];
             assert_eq!(mesh.face(f).edge_ids().collect_vec(), es);
             for e in es.iter() {
-                assert_eq!(mesh.edge(*e).face_id(), f);
-                assert_eq!(mesh.edge(*e).twin().has_face(), false);
+                assert_eq!(mesh.edge(*e).unwrap().face_id(), f);
+                assert_eq!(mesh.edge(*e).twin().unwrap().has_face(), false);
             }
         }
 
@@ -909,8 +920,8 @@ mod tests {
                         let es = vec![e42, e23, e34];
                         assert_eq!(m[i].face(f).edge_ids().collect_vec(), es);
                         for e in es.iter() {
-                            assert_eq!(m[i].edge(*e).face_id(), f);
-                            assert_eq!(m[i].edge(*e).twin().has_face(), false);
+                            assert_eq!(m[i].edge(*e).unwrap().face_id(), f);
+                            assert_eq!(m[i].edge(*e).twin().unwrap().has_face(), false);
                         }
 
                         // inserting again should fail (duplicate face)
@@ -932,8 +943,8 @@ mod tests {
                         assert!(cloned.is_trivially_isomorphic(&m[i]).eq());
 
                         // However, with some explicit connectivity info, we can still construct the backface
-                        let e32 = cloned.edge(e23).twin_id();
-                        let e43 = cloned.edge(e34).twin_id();
+                        let e32 = cloned.edge(e23).unwrap().twin_id();
+                        let e43 = cloned.edge(e34).unwrap().twin_id();
                         let (e24, backface) = cloned
                             .close_face_ee(e32, e43, Default::default(), Default::default())
                             .unwrap();
@@ -954,7 +965,7 @@ mod tests {
                 {
                     // We can make a degenerate face v4-v6-v2-v5-v2-v3-v4. This is fine!
                     let mut mesh = mesh.clone();
-                    let e52 = mesh.edge(e25).twin_id();
+                    let e52 = mesh.edge(e25).unwrap().twin_id();
                     let (e45, f1) = mesh
                         .close_face_ee(e34, e52, Default::default(), Default::default())
                         .unwrap();
@@ -966,7 +977,7 @@ mod tests {
                     assert_eq!(mesh.num_faces(), 1);
                     assert_eq!(mesh.is_connected(), true);
                     assert_eq!(mesh.face(f1).edge_id(), e45);
-                    let e62 = mesh.edge(e26).twin_id();
+                    let e62 = mesh.edge(e26).unwrap().twin_id();
                     let es = vec![e45, e52, e26, e62, e23, e34];
                     assert_eq!(mesh.face(f1).edge_ids().collect_vec(), es);
 
@@ -977,7 +988,7 @@ mod tests {
                     );
 
                     // another degenerate face: v5-v3-v2-v1-v2-v5
-                    let e32 = mesh.edge(e23).twin_id();
+                    let e32 = mesh.edge(e23).unwrap().twin_id();
                     let (e53, f2) = mesh
                         .close_face_ee(e25, e32, Default::default(), Default::default())
                         .unwrap();
@@ -989,7 +1000,7 @@ mod tests {
                     assert_eq!(mesh.num_faces(), 2);
                     assert_eq!(mesh.is_connected(), true);
                     assert_eq!(mesh.face(f2).edge_id(), e53);
-                    let e21 = mesh.edge(e12).twin_id();
+                    let e21 = mesh.edge(e12).unwrap().twin_id();
                     let es = vec![e53, e32, e21, e12, e25];
                     assert_eq!(mesh.face(f2).edge_ids().collect_vec(), es);
 
@@ -1046,7 +1057,7 @@ mod tests {
         let mut mesh = Mesh3d64::default();
         let e0 = mesh.insert_regular_polygon(1.0, 3).id();
         assert_eq!(mesh.check(), Ok(()));
-        let f = mesh.edge(e0).twin().face_id();
+        let f = mesh.edge(e0).twin().unwrap().face_id();
 
         let e1 = mesh.subdivide_edge(e0, vp(0.0, 0.0, 0.0), Default::default());
         assert_eq!(mesh.check(), Ok(()));
@@ -1055,7 +1066,7 @@ mod tests {
         assert_eq!(mesh.num_vertices(), 4);
         assert_eq!(mesh.num_edges(), 4);
         assert_eq!(mesh.num_faces(), 1);
-        assert_eq!(mesh.face(f).num_edges(), 4);
+        assert_eq!(mesh.face(f).unwrap().num_edges(), 4);
 
         let e2 = mesh.subdivide_edge(e0, vp(0.1, 0.0, 0.0), Default::default());
         assert_eq!(mesh.check(), Ok(()));
@@ -1064,7 +1075,7 @@ mod tests {
         assert_eq!(mesh.num_vertices(), 5);
         assert_eq!(mesh.num_edges(), 5);
         assert_eq!(mesh.num_faces(), 1);
-        assert_eq!(mesh.face(f).num_edges(), 5);
+        assert_eq!(mesh.face(f).unwrap().num_edges(), 5);
 
         {
             let mut mesh = mesh.clone();
@@ -1107,12 +1118,12 @@ mod tests {
     fn test_subdivide_face() {
         let mut mesh = Mesh3d64::default();
         let e0b = mesh.insert_regular_polygon(1.0, 4).id();
-        let e0 = mesh.edge(e0b).twin_id();
+        let e0 = mesh.edge(e0b).unwrap().twin_id();
         assert_eq!(mesh.check(), Ok(()));
 
-        let e1 = mesh.edge(e0).next_id();
-        let e2 = mesh.edge(e1).next_id();
-        let e3 = mesh.edge(e2).next_id();
+        let e1 = mesh.edge(e0).unwrap().next_id();
+        let e2 = mesh.edge(e1).unwrap().next_id();
+        let e3 = mesh.edge(e2).unwrap().next_id();
 
         let d1a = mesh
             .subdivide_face(e0, e3, Default::default(), Default::default())
@@ -1125,9 +1136,9 @@ mod tests {
         assert_eq!(mesh.num_faces(), 2);
 
         let d1bt = mesh.subdivide_edge(d1a, vp(0.0, 0.0, 0.0), Default::default());
-        let d1at = mesh.edge(d1bt).twin().next_id();
+        let d1at = mesh.edge(d1bt).twin().unwrap().next_id();
         assert_ne!(d1a, d1bt);
-        assert_eq!(d1a, mesh.edge(d1at).twin_id());
+        assert_eq!(d1a, mesh.edge(d1at).unwrap().twin_id());
 
         assert_eq!(mesh.num_vertices(), 5);
 
@@ -1175,7 +1186,7 @@ mod tests {
         assert_eq!(
             mesh.subdivide_face(
                 e0,
-                mesh.edge(e0).next_id(),
+                mesh.edge(e0).unwrap().next_id(),
                 Default::default(),
                 Default::default()
             ),
@@ -1186,8 +1197,8 @@ mod tests {
         // subdiving the outside is also not possible
         assert_eq!(
             mesh.subdivide_face(
-                mesh.edge(e0).twin_id(),
-                mesh.edge(e3).twin_id(),
+                mesh.edge(e0).unwrap().twin_id(),
+                mesh.edge(e3).unwrap().twin_id(),
                 Default::default(),
                 Default::default(),
             ),
@@ -1196,13 +1207,13 @@ mod tests {
         assert_eq!(mesh.is_trivially_isomorphic(&mesh_clone).eq(), true);
 
         // though, we can insert an outside face:
-        mesh.insert_face(mesh.edge(e0).twin_id(), Default::default())
+        mesh.insert_face(mesh.edge(e0).unwrap().twin_id(), Default::default())
             .unwrap();
         assert_eq!(mesh.check(), Ok(()));
         let _d3 = mesh
             .subdivide_face(
-                mesh.edge(e0).twin_id(),
-                mesh.edge(e1).twin_id(),
+                mesh.edge(e0).unwrap().twin_id(),
+                mesh.edge(e1).unwrap().twin_id(),
                 Default::default(),
                 Default::default(),
             )

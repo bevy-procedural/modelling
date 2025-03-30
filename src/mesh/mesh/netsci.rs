@@ -1,8 +1,6 @@
 use crate::{
     math::{IndexType, Scalar, Vector},
-    mesh::{
-        CursorData, EdgeCursorBasics, EuclideanMeshType, MeshBasics, MeshType, VertexCursorBasics,
-    },
+    mesh::{cursor::*, EuclideanMeshType, MeshBasics, MeshType},
 };
 use std::collections::HashMap;
 

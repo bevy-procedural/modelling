@@ -1,10 +1,7 @@
 use crate::{
     halfedge::{HalfEdgeFaceImpl, HalfEdgeMeshImpl, HalfEdgeVertexImpl},
     math::IndexType,
-    mesh::{
-        CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, FaceCursorBasics,
-        HalfEdge, HalfEdgeMesh, MeshBasics, MeshType, VertexCursorBasics,
-    },
+    mesh::{cursor::*, EdgeBasics, HalfEdge, HalfEdgeMesh, MeshBasics, MeshType},
     prelude::HalfEdgeImplMeshTypePlus,
 };
 
@@ -64,7 +61,7 @@ impl<T: HalfEdgeImplMeshTypePlus> HalfEdgeMeshImpl<T> {
                 edge_map[&edge.prev_id()],
                 edge_map[&edge.twin_id()],
                 edge_map[&edge.next_id()],
-                edge.unwrap().payload_self().map(|x| fe(x)),
+                edge.unwrap().inner().payload_self().map(|x| fe(x)),
             );
         }
 

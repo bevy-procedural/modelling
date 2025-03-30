@@ -2,8 +2,8 @@ use super::{HalfEdgeImplMeshType, HalfEdgeMeshImpl};
 use crate::{
     math::IndexType,
     mesh::{
-        CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, HalfEdge,
-        HalfEdgeMesh, MeshBasics, Triangulation, VertexBasics, VertexPayload,
+        cursor::*, EdgeBasics, HalfEdge, HalfEdgeMesh, MeshBasics, Triangulation, VertexBasics,
+        VertexPayload,
     },
     prelude::IncidentToVertexIterator,
 };
@@ -63,19 +63,20 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
 
     #[inline]
     fn vertex_edges_in(&self, v: T::V) -> impl Iterator<Item = T::E> {
-        self.vertex_edges_out(v).map(|e| self.edge(e).twin_id())
+        self.vertex_edges_out(v)
+            .map(|e| self.edge(e).unwrap().twin_id())
     }
 
     #[inline]
     fn vertex_neighbors(&self, v: T::V) -> impl Iterator<Item = T::V> {
         self.vertex_edges_out(v)
-            .map(move |e| self.edge(e).target_id())
+            .map(move |e| self.edge(e).unwrap().target_id())
     }
 
     #[inline]
     fn vertex_faces(&self, v: T::V) -> impl Iterator<Item = T::F> {
         self.vertex_edges_out(v).filter_map(move |e| {
-            let f = self.edge(e).face_id();
+            let f = self.edge(e).unwrap().face_id();
             if f == IndexType::max() {
                 None
             } else {

@@ -1,21 +1,9 @@
 mod cursor;
 mod edge;
-mod edge_basics;
-mod edge_mut;
 mod face;
-mod face_basics;
-mod face_mut;
 mod vertex;
-mod vertex_basics;
-mod vertex_mut;
 
 pub use cursor::*;
 pub use edge::*;
-pub use edge_basics::*;
-pub use edge_mut::*;
 pub use face::*;
-pub use face_basics::*;
-pub use face_mut::*;
 pub use vertex::*;
-pub use vertex_basics::*;
-pub use vertex_mut::*;

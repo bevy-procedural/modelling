@@ -1,4 +1,4 @@
-use crate::mesh::{EdgeBasics, EdgeCursor, HalfEdge};
+use crate::mesh::{cursor::*, EdgeBasics, HalfEdge};
 
 use super::{MeshBasics, MeshType};
 
@@ -15,11 +15,12 @@ where
 
     /// Returns an iterator over all non-deleted halfedges.
     #[must_use]
-    fn halfedges<'a>(&'a self) -> impl Iterator<Item = EdgeCursor<'a, T>>
+    fn halfedges<'a>(&'a self) -> impl Iterator<Item = ValidEdgeCursor<'a, T>>
     where
         T: 'a,
     {
-        self.halfedge_ids().map(move |e| EdgeCursor::new(self, e))
+        self.halfedge_ids()
+            .map(move |e| ValidEdgeCursor::new(self, self.edge_ref(e)))
     }
 
     /// Returns an iterator over all non-deleted halfedge's ids

@@ -1,6 +1,4 @@
-use crate::mesh::{
-    CursorData, EdgeCursorBasics, EdgeCursorHalfedgeBasics, MeshBasics, MeshTypeHalfEdge,
-};
+use crate::mesh::{cursor::*, MeshBasics, MeshTypeHalfEdge};
 
 /// Some low-level operations to build meshes with halfedges.
 pub trait MeshHalfEdgeBuilder<T: MeshTypeHalfEdge<Mesh = Self>>: MeshBasics<T> {

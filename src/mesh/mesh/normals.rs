@@ -1,6 +1,6 @@
 use crate::{
     math::{HasNormal, Scalar, Vector, VectorIteratorExt},
-    mesh::{CursorData, EuclideanMeshType, Face3d, MeshType3D, VertexBasics},
+    mesh::{cursor::*, EuclideanMeshType, Face3d, MeshType3D, VertexBasics},
 };
 use std::collections::HashMap;
 

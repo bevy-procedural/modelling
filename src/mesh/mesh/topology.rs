@@ -1,4 +1,4 @@
-use crate::mesh::{CursorData, MeshBasics, MeshType};
+use crate::mesh::{cursor::*, MeshBasics, MeshType};
 use std::collections::{HashMap, HashSet, VecDeque};
 
 /// Methods concerned with mesh topology.

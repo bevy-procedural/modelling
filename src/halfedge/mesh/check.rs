@@ -1,10 +1,7 @@
 use super::HalfEdgeMeshImpl;
 use crate::{
     halfedge::HalfEdgeImplMeshType,
-    mesh::{
-        CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, FaceCursorBasics,
-        HalfEdgeMesh, MeshBasics, MeshChecker, VertexCursorBasics,
-    },
+    mesh::{cursor::*, EdgeBasics, HalfEdgeMesh, MeshBasics, MeshChecker},
 };
 
 impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
@@ -20,7 +17,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
 
     fn check_vertex_invariants(&self) -> Result<(), String> {
         if let Some(bad_vertex) = self.vertices().find(|v| {
-            if let Some(e) = v.fork().edge().inner() {
+            if let Some(e) = v.fork().edge().try_inner() {
                 e.origin_id(self) != v.id()
             } else {
                 false
@@ -29,7 +26,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
             return Err(format!(
                 "Vertex {} has edge {} with origin {}",
                 bad_vertex.id(),
-                bad_vertex.clone().edge().id(),
+                bad_vertex.clone().edge().try_id(),
                 bad_vertex.edge().origin_id()
             ));
         }
@@ -79,9 +76,10 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
 
     /// This is somewhat optional; the algorithms shouldn't break when using this, but there isn't really a reason for it existing in a wellformed mesh
     fn check_edges_have_face(&self) -> Result<(), String> {
+        // TODO: unwrap
         if let Some(bad_edge) = self
             .halfedges()
-            .find(|e| e.is_boundary_self() && e.fork().twin().is_boundary_self())
+            .find(|e| e.is_boundary_self() && e.fork().twin().unwrap().is_boundary_self())
         {
             return Err(format!("HalfEdge {} has no face!", bad_edge.id()));
         }
@@ -89,12 +87,16 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     }
 
     fn check_face_invariants(&self) -> Result<(), String> {
-        if let Some(bad_face) = self.faces().find(|f| f.fork().edge().face_id() != f.id()) {
+        // TODO: unwrap
+        if let Some(bad_face) = self
+            .faces()
+            .find(|f| f.fork().edge().unwrap().face_id() != f.id())
+        {
             return Err(format!(
                 "Face {} has edge {} with face {}",
                 bad_face.id(),
-                bad_face.fork().edge().id(),
-                bad_face.edge().face_id()
+                bad_face.fork().edge().try_id(),
+                bad_face.edge().unwrap().face_id()
             ));
         }
         Ok(())

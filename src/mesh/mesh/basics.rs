@@ -1,10 +1,6 @@
 use crate::{
     math::IndexType,
-    mesh::{
-        CursorData, EdgeBasics, EdgeCursor, EdgeCursorBasics, EdgeCursorMut, FaceBasics,
-        FaceCursor, FaceCursorMut, MeshType, VertexBasics, VertexCursor, VertexCursorBasics,
-        VertexCursorMut,
-    },
+    mesh::{cursor::*, EdgeBasics, FaceBasics, MeshType, VertexBasics},
 };
 use std::collections::HashSet;
 
@@ -77,11 +73,12 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     /// Returns an iterator of cursors for each non-deleted vertex
     #[inline]
     #[must_use]
-    fn vertices<'a>(&'a self) -> impl Iterator<Item = VertexCursor<'a, T>>
+    fn vertices<'a>(&'a self) -> impl Iterator<Item = ValidVertexCursor<'a, T>>
     where
         T: 'a,
     {
-        self.vertex_ids().map(move |id| VertexCursor::new(self, id))
+        self.vertex_ids()
+            .map(move |id| ValidVertexCursor::load_new(self, id))
     }
 
     /// Returns an mutable iterator over all non-deleted vertices
@@ -306,11 +303,12 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     /// Returns an iterator of cursors for each non-deleted face
     #[inline]
     #[must_use]
-    fn faces<'a>(&'a self) -> impl Iterator<Item = FaceCursor<'a, T>>
+    fn faces<'a>(&'a self) -> impl Iterator<Item = ValidFaceCursor<'a, T>>
     where
         T: 'a,
     {
-        self.face_ids().map(move |id| FaceCursor::new(self, id))
+        self.face_ids()
+            .map(move |id| ValidFaceCursor::new(self, self.face_ref(id)))
     }
 
     /// If the mesh has exactly one face, returns a cursor to that face.

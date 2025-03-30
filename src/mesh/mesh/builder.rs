@@ -1,6 +1,4 @@
-use crate::mesh::{
-    CursorData, DefaultEdgePayload, EdgeCursorBasics, EdgeCursorMut, MeshBasics, MeshType,
-};
+use crate::mesh::{cursor::*, DefaultEdgePayload, MeshBasics, MeshType};
 use itertools::Itertools;
 
 /// Some basic operations to build meshes.

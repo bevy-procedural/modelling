@@ -1,8 +1,7 @@
 use crate::{
     math::{HasPosition, IndexType, Scalar, Vector},
     mesh::{
-        CursorData, CurvedEdge, EdgeBasics, EdgeCursorBasics, EuclideanMeshType, FaceCursorBasics,
-        MeshBasics, MeshType, VertexBasics,
+        cursor::*, CurvedEdge, EdgeBasics, EuclideanMeshType, MeshBasics, MeshType, VertexBasics,
     },
 };
 use itertools::Itertools;

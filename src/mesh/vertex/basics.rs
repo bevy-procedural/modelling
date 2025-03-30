@@ -29,7 +29,7 @@ pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone {
     /// Returns a mutable reference to the payload of the vertex
     fn payload_mut(&mut self) -> &mut T::VP;
 
-    /// Returns an outgoing edge incident to the vertex
+    /// Returns an outgoing edge incident to the vertex or `IndexType::max()` if the vertex is isolated
     fn edge_id(&self, mesh: &T::Mesh) -> T::E;
 
     /// Returns an outgoing edge incident to the vertex

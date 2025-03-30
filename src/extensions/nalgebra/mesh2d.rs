@@ -3,11 +3,14 @@ use crate::{
     halfedge::{
         HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeImplMeshType, HalfEdgeMeshImpl, HalfEdgeVertexImpl,
     },
-    math::{impls::{EU, FU, VU}, HasPosition, Vector},
+    math::{
+        impls::{EU, FU, VU},
+        HasPosition, Vector,
+    },
     mesh::{
-        CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EdgeBasics, EdgePayload, EmptyEdgePayload,
-        EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshBasicsCurved,
-        MeshType, MeshTypeHalfEdge,
+        cursor::*, CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EdgeBasics, EdgePayload,
+        EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshBasics,
+        MeshBasicsCurved, MeshType, MeshTypeHalfEdge,
     },
     prelude::HalfEdgeImplMeshTypePlus,
 };
@@ -113,11 +116,11 @@ mod tests {
 
         let f = m3d.the_face().expect("no face");
         let f = f.unwrap();
-        assert!(f.is_convex(&m3d));
-        assert!(f.is_planar2(&m3d));
+        assert!(f.is_convex());
+        assert!(f.is_planar2());
         //assert!(f.is_simple(&m3d));
-        assert_eq!(f.normal(&m3d).normalize(), Vec3::from_xyz(0.0, 0.0, 1.0));
-        let p = f.as_polygon(&m3d);
+        assert_eq!(f.normal().normalize(), Vec3::from_xyz(0.0, 0.0, 1.0));
+        let p = f.as_polygon();
         assert!(
             (p.signed_area().abs() - (regular_polygon_area(radius, n))).abs()
                 <= f64::EPSILON.sqrt()

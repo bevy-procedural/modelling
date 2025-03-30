@@ -1,9 +1,7 @@
 use super::VertexBasics;
 use crate::{
     math::IndexType,
-    mesh::{
-        CursorData, EdgeCursorBasics, EdgeCursorHalfedgeBasics, HalfEdge, MeshBasics, MeshType,
-    },
+    mesh::{cursor::*, HalfEdge, MeshBasics, MeshType},
 };
 use itertools::Itertools;
 
@@ -47,6 +45,7 @@ where
     /// Returns `None` if there is no path or if there are multiple shortest paths.
     /// Returns the outgoing edge id from this vertex, the incoming edge id to the other vertex, and the length of the path.
     fn shortest_path(&self, mesh: &T::Mesh, goal: T::V) -> Option<(T::E, T::E, usize)> {
+        // TODO: Duplicate of [`MeshTopology::shortest_path`]
         let v0 = self.id();
 
         let mut m = None;

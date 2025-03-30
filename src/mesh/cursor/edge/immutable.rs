@@ -1,13 +1,13 @@
-use super::{
-    CursorData, EdgeCursorBasics, EdgeCursorData, EdgeCursorHalfedgeBasics, FaceCursor,
-    VertexCursor,
-};
 use crate::{
     math::IndexType,
-    mesh::{EdgeBasics, HalfEdge, MeshBasics, MeshType},
+    mesh::{cursor::*, HalfEdge, MeshBasics, MeshType},
 };
 
 /// An edge cursor pointing to an edge of a mesh with an immutable reference to the mesh.
+/// It can be `void`, i.e., point to an invalid or deleted edge.
+/// You can move the cursor even if it is void -- it will simply stay void without panicking.
+///
+/// To access the data of the edge, you have to call `load` on the cursor to get a `ValidEdgeCursor`.
 ///
 /// You should prefer using Cursors over direct access to the mesh data structures whenever possible.
 /// You don't have to worry about performance, as the rust compiler will completely optimize them away.
@@ -33,6 +33,23 @@ impl<'a, T: MeshType> std::fmt::Debug for EdgeCursor<'a, T> {
     }
 }
 
+impl<'a, T: MeshType> PartialEq for EdgeCursor<'a, T> {
+    /// same edge id and pointing to the same mesh instance
+    fn eq(&self, other: &Self) -> bool {
+        self.edge == other.edge && std::ptr::eq(self.mesh, other.mesh)
+    }
+}
+
+impl<'a, T: MeshType> ImmutableCursor for EdgeCursor<'a, T>
+where
+    T: 'a,
+{
+    #[inline]
+    fn fork(&self) -> Self {
+        Self::new(self.mesh, self.edge)
+    }
+}
+
 impl<'a, T: MeshType> EdgeCursor<'a, T> {
     /// Creates a new edge cursor pointing to the given edge.
     #[inline]
@@ -41,18 +58,13 @@ impl<'a, T: MeshType> EdgeCursor<'a, T> {
         Self { mesh, edge }
     }
 
-    /// Clones the cursor.
-    #[inline]
-    #[must_use]
-    pub fn fork(&self) -> Self {
-        Self::new(self.mesh, self.edge)
-    }
-
-    /// Creates a new void edge cursor.
     #[inline]
     #[must_use]
     pub fn new_void(mesh: &'a T::Mesh) -> Self {
-        Self::new(mesh, IndexType::max())
+        Self {
+            mesh,
+            edge: IndexType::max(),
+        }
     }
 
     // TODO: this cannot be called. How to realize this?
@@ -61,69 +73,12 @@ impl<'a, T: MeshType> EdgeCursor<'a, T> {
         assert!(self.mesh as *const _ == mesh as *const _);
         EdgeCursorMut::new(mesh, self.edge)
     }*/
-
-    /// Returns a reference to the payload of the edge.
-    /// Panics if the edge is void.
-    #[inline]
-    #[must_use]
-    pub fn payload(&self) -> &'a T::EP {
-        self.mesh.edge_payload(self.edge)
-    }
-
-    /// Returns face cursors for all faces adjacent to the edge
-    /// (including the twin for halfedges and parallel edges' faces if the edge is non-manifold).
-    /// Returns an empty iterator if the edge is void.
-    #[inline]
-    #[must_use]
-    pub fn faces<'b>(&'b self) -> impl Iterator<Item = FaceCursor<'b, T>>
-    where
-        T::Edge: 'b,
-        'a: 'b,
-    {
-        self.face_ids()
-            .map(move |id| FaceCursor::new(self.mesh, id))
-    }
-
-    /// Returns face cursors for each edge on the same boundary as this edge.
-    /// Starts with the current edge.
-    /// Returns an empty iterator if the edge is void.
-    #[inline]
-    #[must_use]
-    pub fn boundary<'b>(&'b self) -> impl Iterator<Item = EdgeCursor<'b, T>>
-    where
-        T::Edge: 'b,
-        'a: 'b,
-    {
-        self.unwrap()
-            .boundary(self.mesh())
-            .map(move |e| EdgeCursor::new(self.mesh, e.id()))
-    }
-
-    /// Returns face cursors for each edge on the same boundary as this edge.
-    /// Starts with the current edge.
-    /// Traverses the boundary backwards.
-    /// Returns an empty iterator if the edge is void.
-    #[inline]
-    #[must_use]
-    pub fn boundary_back<'b>(&'b self) -> impl Iterator<Item = EdgeCursor<'b, T>>
-    where
-        T::Edge: 'b,
-        'a: 'b,
-    {
-        self.unwrap()
-            .boundary_back(self.mesh())
-            .map(move |e| EdgeCursor::new(self.mesh, e.id()))
-    }
 }
 
-impl<'a, T: MeshType> PartialEq for EdgeCursor<'a, T> {
-    fn eq(&self, other: &Self) -> bool {
-        // same edge id and pointing to the same mesh instance
-        self.edge == other.edge && self.mesh as *const _ == other.mesh as *const _
-    }
-}
-
-impl<'a, T: MeshType> EdgeCursorData<'a, T> for EdgeCursor<'a, T> {
+impl<'a, T: MeshType> EdgeCursorData<'a, T> for EdgeCursor<'a, T>
+where
+    T: 'a,
+{
     type VC = VertexCursor<'a, T>;
     type FC = FaceCursor<'a, T>;
 
@@ -138,20 +93,15 @@ impl<'a, T: MeshType> EdgeCursorData<'a, T> for EdgeCursor<'a, T> {
     }
 }
 
-impl<'a, T: MeshType> CursorData for EdgeCursor<'a, T> {
+impl<'a, T: MeshType> CursorData for EdgeCursor<'a, T>
+where
+    T: 'a,
+{
     type I = T::E;
     type S = T::Edge;
     type T = T;
-
-    #[inline]
-    fn is_void(&self) -> bool {
-        self.try_id() == IndexType::max() || !self.mesh().has_edge(self.try_id())
-    }
-
-    #[inline]
-    fn inner<'b>(&'b self) -> Option<&'b T::Edge> {
-        self.mesh().get_edge(self.try_id())
-    }
+    type Maybe = Self;
+    type Valid = ValidEdgeCursor<'a, T>;
 
     #[inline]
     fn try_id(&self) -> T::E {
@@ -167,11 +117,44 @@ impl<'a, T: MeshType> CursorData for EdgeCursor<'a, T> {
     fn move_to(self, id: T::E) -> EdgeCursor<'a, T> {
         Self::new(self.mesh, id)
     }
+
+    #[inline]
+    fn load(self) -> Option<Self::Valid> {
+        if self.is_valid() {
+            // PERF: Avoid re-checking the edge validity
+            Some(ValidEdgeCursor::load_new(self.mesh, self.edge))
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    fn try_inner<'b>(&'b self) -> Option<&'b T::Edge> {
+        self.mesh().get_edge(self.try_id())
+    }
+
+    #[inline]
+    fn maybe(self) -> Self::Maybe {
+        self
+    }
 }
 
-impl<'a, T: MeshType> EdgeCursorBasics<'a, T> for EdgeCursor<'a, T> {}
-impl<'a, T: MeshType> EdgeCursorHalfedgeBasics<'a, T> for EdgeCursor<'a, T> where
-    T::Edge: HalfEdge<T>
+impl<'a, T: MeshType> MaybeCursor for EdgeCursor<'a, T>
+where
+    T: 'a,
+{
+    #[inline]
+    fn is_void(&self) -> bool {
+        self.try_id() == IndexType::max() || !self.mesh().has_edge(self.try_id())
+    }
+}
+
+impl<'a, T: MeshType> ImmutableEdgeCursor<'a, T> for EdgeCursor<'a, T> where T: 'a {}
+impl<'a, T: MeshType> EdgeCursorBasics<'a, T> for EdgeCursor<'a, T> where T: 'a {}
+impl<'a, T: MeshType> EdgeCursorHalfedgeBasics<'a, T> for EdgeCursor<'a, T>
+where
+    T::Edge: HalfEdge<T>,
+    T: 'a,
 {
 }
 

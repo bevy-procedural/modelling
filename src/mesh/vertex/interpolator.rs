@@ -1,7 +1,7 @@
 use super::HasPosition;
 use crate::{
     math::{Scalar, Vector, Vector3D},
-    mesh::{EuclideanMeshType, MeshBasics, MeshType, VertexCursorBasics},
+    mesh::{cursor::*, EuclideanMeshType, MeshBasics, MeshType},
 };
 
 /// A trait that defines how vertex interpolators should behave.

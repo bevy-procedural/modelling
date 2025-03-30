@@ -1,9 +1,6 @@
-use super::{
-    CursorData, EdgeCursorMut, FaceCursor, FaceCursorBasics, FaceCursorData, FaceCursorHalfedgeBasics, VertexCursorMut
-};
 use crate::{
     math::IndexType,
-    mesh::{FaceBasics, HalfEdge, MeshBasics, MeshBuilder, MeshType},
+    mesh::{cursor::*, FaceBasics, HalfEdge, MeshBasics, MeshBuilder, MeshType},
 };
 
 /// A face cursor pointing to a face of a mesh with a mutable reference to the mesh.
@@ -26,26 +23,11 @@ impl<'a, T: MeshType> FaceCursorMut<'a, T> {
         Self { mesh, face }
     }
 
-    /// Creates a new void face cursor.
-    #[inline]
-    #[must_use]
-    pub fn new_void(mesh: &'a mut T::Mesh) -> Self {
-        Self::new(mesh, IndexType::max())
-    }
-
     /// Converts the mutable cursor to an immutable cursor.
     #[inline]
     #[must_use]
     pub fn into_immutable(self) -> FaceCursor<'a, T> {
         FaceCursor::new(self.mesh, self.try_id())
-    }
-
-    /// Returns a mutable reference to the payload of the face.
-    /// Panics if the face is void.
-    #[inline]
-    #[must_use]
-    pub fn payload_mut(&mut self) -> &mut T::FP {
-        self.mesh.face_ref_mut(self.try_id()).payload_mut()
     }
 }
 
@@ -68,16 +50,8 @@ impl<'a, T: MeshType> CursorData for FaceCursorMut<'a, T> {
     type I = T::F;
     type S = T::Face;
     type T = T;
-
-    #[inline]
-    fn inner<'b>(&'b self) -> Option<&'b T::Face> {
-        self.mesh().get_face(self.try_id())
-    }
-
-    #[inline]
-    fn is_void(&self) -> bool {
-        self.try_id() == IndexType::max() || !self.mesh().has_face(self.try_id())
-    }
+    type Maybe = Self;
+    type Valid = ValidFaceCursorMut<'a, T>;
 
     #[inline]
     fn try_id(&self) -> T::F {
@@ -92,6 +66,32 @@ impl<'a, T: MeshType> CursorData for FaceCursorMut<'a, T> {
     #[inline]
     fn move_to(self, id: T::F) -> FaceCursorMut<'a, T> {
         Self::new(self.mesh, id)
+    }
+
+    #[inline]
+    fn load(self) -> Option<Self::Valid> {
+        if self.is_void() {
+            None
+        } else {
+            todo!()
+        }
+    }
+
+    #[inline]
+    fn try_inner<'b>(&'b self) -> Option<&'b T::Face> {
+        self.mesh().get_face(self.try_id())
+    }
+
+    #[inline]
+    fn maybe(self) -> Self::Maybe {
+        self
+    }
+}
+
+impl<'a, T: MeshType> MaybeCursor for FaceCursorMut<'a, T> {
+    #[inline]
+    fn is_void(&self) -> bool {
+        self.try_id() == IndexType::max() || !self.mesh().has_face(self.try_id())
     }
 }
 

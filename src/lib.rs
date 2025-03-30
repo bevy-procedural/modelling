@@ -15,7 +15,7 @@ pub mod util;
 pub mod prelude {
     pub use crate::halfedge::*;
     pub use crate::math::*;
-    pub use crate::mesh::*;
+    pub use crate::mesh::{cursor::*, *};
     pub use crate::operations::*;
     pub use crate::primitives::*;
     pub use crate::tesselate::*;

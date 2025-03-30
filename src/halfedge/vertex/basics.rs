@@ -1,10 +1,7 @@
 use super::{HalfEdgeImplMeshType, HalfEdgeVertexImpl};
 use crate::{
     math::IndexType,
-    mesh::{
-        CursorData, EdgeCursorBasics, EdgeCursorHalfedgeBasics, HalfEdge, MeshBasics, MeshType,
-        VertexBasics,
-    },
+    mesh::{cursor::*, HalfEdge, MeshBasics, MeshType, VertexBasics},
 };
 
 impl<T: MeshType> VertexBasics<T> for HalfEdgeVertexImpl<T>
@@ -36,7 +33,8 @@ where
     /// Returns whether the vertex is a boundary vertex
     #[inline]
     fn is_boundary(&self, mesh: &T::Mesh) -> bool {
-        self.edges_out(mesh).any(|e| mesh.edge(e).is_boundary())
+        self.edges_out(mesh)
+            .any(|e| mesh.edge(e).load_or(false, |v| v.is_boundary()))
     }
 
     /*
@@ -91,7 +89,7 @@ where
         T: 'a,
     {
         self.edges_out(mesh)
-            .filter_map(|e| mesh.get_face(mesh.edge(e).face_id()))
+            .filter_map(|e| mesh.get_face(mesh.edge(e).load()?.face_id()))
     }
 
     fn is_manifold(&self, mesh: &T::Mesh) -> bool {

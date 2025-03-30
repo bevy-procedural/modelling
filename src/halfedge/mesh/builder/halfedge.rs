@@ -1,10 +1,7 @@
 use crate::{
     halfedge::{HalfEdgeImpl, HalfEdgeImplMeshTypePlus, HalfEdgeMeshImpl, HalfEdgeVertexImpl},
     math::IndexType,
-    mesh::{
-        EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, HalfEdge, MeshBasics,
-        MeshHalfEdgeBuilder,
-    },
+    mesh::{cursor::*, EdgeBasics, HalfEdge, MeshBasics, MeshHalfEdgeBuilder},
 };
 
 impl<T: HalfEdgeImplMeshTypePlus> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T> {
@@ -62,11 +59,9 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T>
 
     #[inline]
     fn try_remove_halfedge(&mut self, e: T::E) -> bool {
-        let edge = self.edge(e);
-        if edge.face_id() != IndexType::max() {
+        if self.edge(e).is_void() {
             return false;
         }
-
         self.halfedges.delete(e);
         true
     }
@@ -93,8 +88,11 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T>
         self.vertices
             .set(new_v, HalfEdgeVertexImpl::new(new_edge, vp));
 
-        self.edge_mut(old_edge.next_id()).set_prev(new_edge);
-        self.edge_mut(old_edge.id()).set_next(new_edge);
+        // TODO: Unwrap
+        self.edge_mut(old_edge.next_id())
+            .unwrap()
+            .set_prev(new_edge);
+        self.edge_mut(old_edge.id()).unwrap().set_next(new_edge);
 
         new_edge
     }
@@ -137,11 +135,13 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T>
             ),
         );
 
+        // TODO: Handle invalid intermediate state
+
         // update the neighbors
-        self.edge_mut(old_edge.id()).set_twin(oi);
-        self.edge_mut(other_old).set_twin(new_edge);
-        self.edge_mut(old_edge.next_id()).set_prev(new_edge);
-        self.edge_mut(old_edge.id()).set_next(new_edge);
+        self.edge_mut(old_edge.id()).load()?.set_twin(oi);
+        self.edge_mut(other_old).load()?.set_twin(new_edge);
+        self.edge_mut(old_edge.next_id()).load()?.set_prev(new_edge);
+        self.edge_mut(old_edge.id()).load()?.set_next(new_edge);
 
         Some(new_edge)
     }
@@ -162,8 +162,9 @@ impl<T: HalfEdgeImplMeshTypePlus> HalfEdgeMeshImpl<T> {
         should_be_valid: bool,
     ) -> (T::E, T::E) {
         let (fv, tw, v, w) = {
-            let e_input = self.edge(input);
-            let e_output = self.edge(output);
+            // TODO: unwrap
+            let e_input = self.edge(input).unwrap();
+            let e_output = self.edge(output).unwrap();
             (
                 e_input.next_id(),
                 e_output.prev_id(),
@@ -181,10 +182,11 @@ impl<T: HalfEdgeImplMeshTypePlus> HalfEdgeMeshImpl<T> {
             self.insert_halfedge_pair_forced(input, v, fv, tw, w, output, f_face, b_face, ep)
         };
 
-        self.edge_mut(fv).set_prev(e2);
-        self.edge_mut(tw).set_next(e2);
-        self.edge_mut(output).set_prev(e1);
-        self.edge_mut(input).set_next(e1);
+        // TODO: unwrap
+        self.edge_mut(fv).unwrap().set_prev(e2);
+        self.edge_mut(tw).unwrap().set_next(e2);
+        self.edge_mut(output).unwrap().set_prev(e1);
+        self.edge_mut(input).unwrap().set_next(e1);
         self.vertex_mut(v).set_edge(e1);
         self.vertex_mut(w).set_edge(e2);
 

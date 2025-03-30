@@ -2,9 +2,7 @@ use super::HalfEdgeImpl;
 use crate::{
     halfedge::{HalfEdgeImplMeshType, HalfEdgeMeshImpl},
     math::IndexType,
-    mesh::{
-        CursorData, EdgeBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, HalfEdge, MeshBasics,
-    },
+    mesh::{cursor::*, EdgeBasics, HalfEdge, MeshBasics},
 };
 
 impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
@@ -115,7 +113,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
     }
 
     fn flip(e: T::E, mesh: &mut HalfEdgeMeshImpl<T>) {
-        let edge = mesh.edge(e);
+        let edge = mesh.edge(e).unwrap();
         let origin_id = edge.origin_id();
         let target_id = edge.target_id();
         let next_id = edge.next_id();
@@ -123,26 +121,28 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
         let face_id = edge.face_id();
         let twin_id = edge.twin_id();
 
-        let twin = mesh.edge(twin_id);
+        let twin = mesh.edge(twin_id).unwrap();
         let t_next_id = twin.next_id();
         let t_prev_id = twin.prev_id();
         let t_face_id = twin.face_id();
 
         mesh.edge_mut(e)
+            .unwrap()
             .set_next(t_next_id)
             .set_prev(t_prev_id)
             .set_face(t_face_id)
             .set_origin(target_id);
-        mesh.edge_mut(t_next_id).set_prev(e);
-        mesh.edge_mut(t_prev_id).set_next(e);
+        mesh.edge_mut(t_next_id).unwrap().set_prev(e);
+        mesh.edge_mut(t_prev_id).unwrap().set_next(e);
 
         mesh.edge_mut(twin_id)
+            .unwrap()
             .set_next(next_id)
             .set_prev(prev_id)
             .set_face(face_id)
             .set_origin(origin_id);
-        mesh.edge_mut(next_id).set_prev(twin_id);
-        mesh.edge_mut(prev_id).set_next(twin_id);
+        mesh.edge_mut(next_id).unwrap().set_prev(twin_id);
+        mesh.edge_mut(prev_id).unwrap().set_next(twin_id);
 
         mesh.vertex_mut(origin_id).set_edge(twin_id);
         mesh.vertex_mut(target_id).set_edge(e);

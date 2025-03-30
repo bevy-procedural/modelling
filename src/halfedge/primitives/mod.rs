@@ -1,9 +1,8 @@
 use super::{HalfEdgeImplMeshType, HalfEdgeImplMeshTypePlus, HalfEdgeMeshImpl};
 use crate::{
     mesh::{
-        CursorData, DefaultEdgePayload, DefaultFacePayload, EdgeBasics, EdgeCursorHalfedgeBasics,
-        EdgeCursorMut, EuclideanMeshType, FaceBasics, FaceCursorBasics, HalfEdge, MeshBuilder,
-        MeshPosition, MeshType3D, MeshTypeHalfEdge,
+        cursor::*, DefaultEdgePayload, DefaultFacePayload, EdgeBasics, EuclideanMeshType,
+        FaceBasics, HalfEdge, MeshBuilder, MeshPosition, MeshType3D, MeshTypeHalfEdge,
     },
     operations::{MeshExtrude, MeshLoft, MeshSubdivision},
     primitives::{Make2dShape, MakePlane, MakePrismatoid, MakeSphere},

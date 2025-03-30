@@ -1,6 +1,6 @@
 use crate::{
     math::{Vector, VectorIteratorExt},
-    mesh::{EuclideanMeshType, MeshBasics, VertexBasics, VertexCursorBasics},
+    mesh::{cursor::*, EuclideanMeshType, MeshBasics, VertexBasics},
 };
 
 /// Methods for transforming meshes.

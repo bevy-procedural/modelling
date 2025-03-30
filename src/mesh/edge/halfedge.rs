@@ -91,6 +91,8 @@ pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
 
     /// Flips the direction of the edge and its twin.
     /// Updates the neighboring edges, vertices, and faces.
+    /// 
+    /// Panics if the edge or its twin does not exist.
     fn flip(e: T::E, mesh: &mut T::Mesh);
 
     /// Checks whether the adjacent edges, the face and the twin exist and don't

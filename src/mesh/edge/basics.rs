@@ -99,7 +99,7 @@ mod tests {
     #[test]
     fn test_edge_basics_triangle() {
         let mesh = Mesh3d64::regular_polygon(1.0, 3);
-        let edge = mesh.edge(IndexType::new(0));
+        let edge = mesh.edge(IndexType::new(0)).load().unwrap();
         assert_eq!(mesh.check(), Ok(()));
         assert_eq!(edge.origin_id(), IndexType::new(0));
         assert_eq!(edge.target_id(), IndexType::new(1));

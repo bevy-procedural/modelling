@@ -3,8 +3,8 @@ use ab_glyph::{Font as AbFont, FontRef, GlyphId, ScaleFont};
 use crate::{
     math::{HasPosition, IndexType, Vector},
     mesh::{
-        CurvedEdge, CurvedEdgeType, DefaultEdgePayload, DefaultFacePayload, EdgeBasics,
-        EdgeCursorBasics, HalfEdge, MeshBasics, MeshBuilder,
+        cursor::*, CurvedEdge, CurvedEdgeType, DefaultEdgePayload, DefaultFacePayload, EdgeBasics,
+        HalfEdge, MeshBasics, MeshBuilder,
     },
 };
 
