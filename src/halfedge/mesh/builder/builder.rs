@@ -158,12 +158,8 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     fn insert_edge_vv(&mut self, a: T::V, b: T::V, ep: T::EP) -> Option<T::E> {
         // TODO: When allowing non-manifold meshes, their vertices might not be at boundary and in the same component, e.g., we could allow an edge from one interior point to another.
 
-        if !self.has_vertex(a) || !self.has_vertex(b) {
-            return None;
-        }
-
-        let av = self.vertex(a);
-        let bv = self.vertex(b);
+        let av = self.vertex(a).load()?;
+        let bv = self.vertex(b).load()?;
 
         if av.is_isolated() {
             if bv.is_isolated() {
@@ -266,7 +262,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
 
     #[inline]
     fn insert_edge_ev(&mut self, e: T::E, v: T::V, ep: T::EP) -> Option<T::E> {
-        if self.vertex(v).is_isolated() {
+        if self.vertex(v).load()?.is_isolated() {
             // Trivial case where the connectivity is already given
             let edge = self.edge(e).load()?;
             let origin = edge.target_id();
@@ -315,10 +311,9 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
 
     #[inline]
     fn try_remove_face(&mut self, f: T::F) -> bool {
-        let face = self.face(f);
-        if face.is_void() {
+        let Some(face) = self.face(f).load() else {
             return false;
-        }
+        };
         let e = self.edge_ref(face.edge_id()).clone();
         self.faces.delete(f);
         e.boundary_mut(self).for_each(|e| e.remove_face());
@@ -517,6 +512,8 @@ mod tests {
 
     #[test]
     fn test_remove_vertex() {
+        // TODO: Reduce duplication in these tests
+
         let mut mesh = Mesh3d64::default();
         let v1 = mesh.insert_vertex(vp(0.0, 0.0, 0.0));
         let v2 = mesh.insert_vertex(vp(1.0, 0.0, 0.0));
@@ -541,7 +538,7 @@ mod tests {
         assert_eq!(mesh.num_halfedges(), 0);
         assert_eq!(mesh.num_faces(), 0);
         assert_eq!(mesh.is_connected(), true);
-        assert_eq!(mesh.vertex(v2).edge_id(), IndexType::max());
+        assert_eq!(mesh.vertex(v2).unwrap().edge_id(), IndexType::max());
         assert_eq!(mesh.vertex(v2).neighbors().count(), 0);
 
         // should fail when trying to remove again
@@ -621,7 +618,7 @@ mod tests {
         assert_eq!(mesh.num_halfedges(), 0);
         assert_eq!(mesh.num_faces(), 0);
         assert_eq!(*mesh.vertex(v1).unwrap().payload(), vp1);
-        assert_eq!(mesh.vertex(v1).edge_id(), IndexType::max());
+        assert_eq!(mesh.vertex(v1).unwrap().edge_id(), IndexType::max());
         assert_eq!(mesh.vertex(v1).neighbors().count(), 0);
         assert_eq!(mesh.is_connected(), true);
 
@@ -634,7 +631,7 @@ mod tests {
         assert_eq!(mesh.num_halfedges(), 0);
         assert_eq!(mesh.num_faces(), 0);
         assert_eq!(*mesh.vertex(v2).unwrap().payload(), vp2);
-        assert_eq!(mesh.vertex(v2).edge_id(), IndexType::max());
+        assert_eq!(mesh.vertex(v2).unwrap().edge_id(), IndexType::max());
         assert_eq!(mesh.vertex(v2).neighbors().count(), 0);
         assert_eq!(mesh.is_connected(), false);
 
@@ -704,9 +701,9 @@ mod tests {
             assert_eq!(mesh.num_faces(), 1);
             assert_eq!(sorted(mesh.face(f).edge_ids()), sorted([e12, e23, e31]));
             assert_eq!(sorted(mesh.face(f).vertex_ids()), sorted([v1, v2, v3]));
-            assert_eq!(mesh.face(f).edge_id(), *e);
+            assert_eq!(mesh.face(f).unwrap().edge_id(), *e);
             assert_eq!(mesh.is_connected(), true);
-            assert_eq!(mesh.face(f).edge_id(), *e);
+            assert_eq!(mesh.face(f).unwrap().edge_id(), *e);
             for e in es.iter() {
                 assert_eq!(mesh.edge(*e).unwrap().face_id(), f);
                 assert_eq!(mesh.edge(*e).twin().unwrap().has_face(), false);
@@ -831,7 +828,7 @@ mod tests {
             assert_eq!(mesh.num_edges(), 5);
             assert_eq!(mesh.num_faces(), 1);
             assert_eq!(mesh.is_connected(), true);
-            assert_eq!(mesh.face(f).edge_id(), e45);
+            assert_eq!(mesh.face(f).unwrap().edge_id(), e45);
             let es = vec![e45, e52, e23, e34];
             assert_eq!(mesh.face(f).edge_ids().collect_vec(), es);
             for e in es.iter() {
@@ -853,7 +850,7 @@ mod tests {
             assert_eq!(mesh.num_edges(), 5);
             assert_eq!(mesh.num_faces(), 1);
             assert_eq!(mesh.is_connected(), true);
-            assert_eq!(mesh.face(f).edge_id(), e45);
+            assert_eq!(mesh.face(f).unwrap().edge_id(), e45);
             let es = vec![e45, e52, e23, e34];
             assert_eq!(mesh.face(f).edge_ids().collect_vec(), es);
             for e in es.iter() {
@@ -925,7 +922,7 @@ mod tests {
                         assert_eq!(m[i].num_vertices(), 6);
                         assert_eq!(m[i].num_edges(), 6);
                         assert_eq!(m[i].num_faces(), 1);
-                        assert_eq!(m[i].face(f).edge_id(), e42);
+                        assert_eq!(m[i].face(f).unwrap().edge_id(), e42);
                         let es = vec![e42, e23, e34];
                         assert_eq!(m[i].face(f).edge_ids().collect_vec(), es);
                         for e in es.iter() {
@@ -963,7 +960,7 @@ mod tests {
                         assert_eq!(cloned.num_vertices(), 6);
                         assert_eq!(cloned.num_edges(), 7);
                         assert_eq!(cloned.num_faces(), 2);
-                        assert_eq!(cloned.face(backface).edge_id(), e24);
+                        assert_eq!(cloned.face(backface).unwrap().edge_id(), e24);
                         let es = vec![e24, e43, e32];
                         assert_eq!(cloned.face(backface).edge_ids().collect_vec(), es);
                         // notice that there are multiple edges between v2 and v4 now
@@ -985,7 +982,7 @@ mod tests {
                     assert_eq!(mesh.num_edges(), 6);
                     assert_eq!(mesh.num_faces(), 1);
                     assert_eq!(mesh.is_connected(), true);
-                    assert_eq!(mesh.face(f1).edge_id(), e45);
+                    assert_eq!(mesh.face(f1).unwrap().edge_id(), e45);
                     let e62 = mesh.edge(e26).unwrap().twin_id();
                     let es = vec![e45, e52, e26, e62, e23, e34];
                     assert_eq!(mesh.face(f1).edge_ids().collect_vec(), es);
@@ -1008,7 +1005,7 @@ mod tests {
                     assert_eq!(mesh.num_edges(), 7);
                     assert_eq!(mesh.num_faces(), 2);
                     assert_eq!(mesh.is_connected(), true);
-                    assert_eq!(mesh.face(f2).edge_id(), e53);
+                    assert_eq!(mesh.face(f2).unwrap().edge_id(), e53);
                     let e21 = mesh.edge(e12).unwrap().twin_id();
                     let es = vec![e53, e32, e21, e12, e25];
                     assert_eq!(mesh.face(f2).edge_ids().collect_vec(), es);
