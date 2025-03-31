@@ -1,8 +1,7 @@
 use crate::{
     math::{Scalar, Transformable},
     mesh::{
-        CursorData, DefaultEdgePayload, DefaultFacePayload, EdgeBasics, EdgeCursorBasics,
-        EdgeCursorHalfedgeBasics, EdgeCursorMut, EuclideanMeshType, FaceCursorBasics, HalfEdge,
+        cursor::*, DefaultEdgePayload, DefaultFacePayload, EdgeBasics, EuclideanMeshType, HalfEdge,
         MeshTypeHalfEdge, VertexBasics,
     },
     operations::MeshLoft,

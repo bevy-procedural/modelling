@@ -148,8 +148,9 @@ where
         T::Edge: HalfEdge<T>,
     {
         // TODO: implement this without requiring `HalfEdge`
+        // TODO: avoid unwrap
 
-        let edge = mesh.edge(e);
+        let edge = mesh.edge(e).unwrap();
         let start_edges = Some((e, edge.prev_id()));
         let start_vertex = edge.target_id();
         Self {

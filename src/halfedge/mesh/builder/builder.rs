@@ -2,8 +2,8 @@ use crate::{
     halfedge::{HalfEdgeImplMeshTypePlus, HalfEdgeMeshImpl},
     math::IndexType,
     mesh::{
-        cursor::*, EdgeBasics, EdgePayload, HalfEdge, HalfEdgeVertex, MeshBasics, MeshBuilder,
-        MeshHalfEdgeBuilder, MeshTypeHalfEdge, VertexBasics,
+        cursor::*, EdgeBasics, EdgePayload, HalfEdge, MeshBasics, MeshBuilder, MeshHalfEdgeBuilder,
+        MeshTypeHalfEdge, VertexBasics,
     },
     prelude::HalfEdgeFaceImpl,
 };

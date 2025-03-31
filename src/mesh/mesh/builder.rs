@@ -200,8 +200,14 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     ) -> Option<(T::E, T::F)> {
         // TODO: should we check that there is a path from `to` to `from`?
         let e = self.insert_edge_ee(from, to, ep)?;
-        debug_assert_eq!(self.edge(e).target_id(), self.edge(to).origin_id());
-        debug_assert_eq!(self.edge(e).origin_id(), self.edge(from).target_id());
+        debug_assert_eq!(
+            self.edge(e).unwrap().target_id(),
+            self.edge(to).unwrap().origin_id()
+        );
+        debug_assert_eq!(
+            self.edge(e).unwrap().origin_id(),
+            self.edge(from).unwrap().target_id()
+        );
 
         // `insert_face` fails if there is already a face using the boundary
         if let Some(f) = self.insert_face(e, fp) {
@@ -232,8 +238,11 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     ) -> Option<(T::E, T::F)> {
         // TODO: debug_assert!(self.edge(from).same_boundary_back(to));
         let e = self.insert_edge_ev(from, to, ep)?;
-        debug_assert_eq!(self.edge(e).target_id(), to);
-        debug_assert_eq!(self.edge(e).origin_id(), self.edge(from).target_id());
+        debug_assert_eq!(self.edge(e).unwrap().target_id(), to);
+        debug_assert_eq!(
+            self.edge(e).unwrap().origin_id(),
+            self.edge(from).unwrap().target_id()
+        );
 
         // `insert_face` fails if there is already a face using the boundary
         if let Some(f) = self.insert_face(e, fp) {
@@ -261,8 +270,8 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         fp: T::FP,
     ) -> Option<(T::E, T::F)> {
         let e = self.insert_edge_vv(from, to, ep)?;
-        debug_assert_eq!(self.edge(e).target_id(), to);
-        debug_assert_eq!(self.edge(e).origin_id(), from);
+        debug_assert_eq!(self.edge(e).unwrap().target_id(), to);
+        debug_assert_eq!(self.edge(e).unwrap().origin_id(), from);
 
         // `insert_face` fails if there is already a face using the boundary
         if let Some(f) = self.insert_face(e, fp) {
@@ -373,10 +382,10 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         for (ep, vp) in iter.into_iter() {
             last_e = last_e.insert_vertex(vp, ep);
         }
-        if last_e.is_void() {
+        let Some(valid) = last_e.load() else {
             return None;
-        }
-        Some((first_e, last_e.id()))
+        };
+        Some((first_e, valid.id()))
     }
 
     /// Insert a path of vertices and edges starting at `vp`.
@@ -408,8 +417,8 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         let (second_e, last_e) = self.insert_path(vp, iter);
         let first_e = self.insert_edge_ee(last_e, second_e, ep).unwrap();
         debug_assert_eq!(
-            self.edge(first_e).target_id(),
-            self.edge(second_e).origin_id()
+            self.edge(first_e).unwrap().target_id(),
+            self.edge(second_e).unwrap().origin_id()
         );
         self.edge_mut(first_e)
     }

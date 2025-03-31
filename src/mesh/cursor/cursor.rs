@@ -276,9 +276,9 @@ pub trait MaybeCursor: CursorData {
 
     /// Asserts that the cursor points to a valid id.
     #[inline]
-    fn assert_valid(self) -> Self {
+    fn assert_valid(self) -> Self::Valid {
         assert!(self.is_valid(), "Expected {:?} to be valid", self);
-        self
+        self.load().unwrap()
     }
 
     /// Asserts that the cursor points to an invalid id.
@@ -291,11 +291,11 @@ pub trait MaybeCursor: CursorData {
     /// Panics if the cursor points to an invalid id.
     /// Returns the same cursor otherwise.
     #[inline]
-    fn expect(self, msg: &str) -> Self {
+    fn expect(self, msg: &str) -> Self::Valid {
         if !self.is_valid() {
             panic!("{}", msg);
         }
-        self
+        self.load().unwrap()
     }
 
     /// Panics if the cursor *doesn't* point to an invalid id.

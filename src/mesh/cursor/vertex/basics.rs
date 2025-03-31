@@ -1,5 +1,5 @@
 use crate::{
-    math::{HasPosition, Scalar, Vector},
+    math::{HasPosition, IndexType, Scalar, Vector},
     mesh::{cursor::*, EdgeBasics, HalfEdge, HalfEdgeVertex, MeshBasics, MeshType, VertexBasics},
 };
 
@@ -106,53 +106,17 @@ pub trait VertexCursorBasics<'a, T: MeshType>: VertexCursorData<'a, T> {
     /// Returns an edge cursor pointing to a representative edge incident to the vertex.
     #[inline]
     #[must_use]
-    fn edge(self) -> Self::EC {
-        let edge = self.unwrap().edge_id(self.mesh());
-        self.move_to_edge(edge)
-    }
-
-    /// Returns the id of a representative edge incident to the vertex, `IndexType::max()` if it has none, or panic if the vertex is void.
-    #[inline]
-    #[must_use]
-    fn edge_id(&self) -> T::E {
-        self.unwrap().edge_id(self.mesh())
-    }
-
-    /// Whether the vertex is isolated.
-    /// Panics if the vertex is void.
-    /// See [VertexBasics::is_isolated] for more information.
-    #[inline]
-    #[must_use]
-    fn is_isolated(&self) -> bool {
-        self.unwrap().is_isolated(self.mesh())
-    }
-
-    /// Returns the vertex position.
-    /// Panics if the vertex is void.
-    #[inline]
-    #[must_use]
-    fn pos<S: Scalar, const D: usize, Vec: Vector<S, D>>(&self) -> Vec
+    fn edge(self) -> Self::EC
     where
-        T::VP: HasPosition<D, Vec, S = S>,
+        Self::Valid: ValidVertexCursorBasics<'a, T> + VertexCursorData<'a, T, EC = Self::EC>,
     {
-        self.unwrap().pos()
-    }
-
-    /// Returns the vertex degree.
-    /// Panics if the vertex is void.
-    #[inline]
-    #[must_use]
-    fn degree(&self) -> usize {
-        self.unwrap().degree(self.mesh())
-    }
-
-    /// Whether the vertex is manifold.
-    /// See [VertexBasics::is_manifold] for more information.
-    /// Panics if the vertex is void.
-    #[inline]
-    #[must_use]
-    fn is_manifold(&self) -> bool {
-        self.unwrap().is_manifold(self.mesh())
+        self.load_or_else::<Self::EC, _, _>(
+            |c| c.move_to_edge(IndexType::max()),
+            |valid| {
+                let id = valid.edge_id();
+                valid.move_to_edge(id)
+            },
+        )
     }
 }
 
@@ -172,20 +136,20 @@ where
     }*/
 
     /// Returns an ingoing boundary edge incident to the vertex.
-    /// Panics if the vertex is void.
     /// See [HalfEdgeVertex::ingoing_boundary_edge] for more information.
     #[inline]
     #[must_use]
     fn ingoing_boundary_edge(&self) -> Option<T::E> {
-        HalfEdgeVertex::ingoing_boundary_edge(self.unwrap(), self.mesh())
+        // TODO: Weird signature
+        HalfEdgeVertex::ingoing_boundary_edge(self.try_inner()?, self.mesh())
     }
 
     /// Returns an outgoing boundary edge incident to the vertex.
-    /// Panics if the vertex is void.
     /// See [HalfEdgeVertex::ingoing_boundary_edge] for more information.
     #[inline]
     #[must_use]
     fn outgoing_boundary_edge(&self) -> Option<T::E> {
-        HalfEdgeVertex::outgoing_boundary_edge(self.unwrap(), self.mesh())
+        // TODO: Weird signature
+        HalfEdgeVertex::outgoing_boundary_edge(self.try_inner()?, self.mesh())
     }
 }

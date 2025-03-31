@@ -14,16 +14,21 @@ where
     T::FP: DefaultFacePayload,
 {
     #[inline]
-    fn insert_polygon(&mut self, vp: impl IntoIterator<Item = T::VP>) -> EdgeCursorMut<'_, T> {
+    fn insert_polygon(&mut self, vp: impl IntoIterator<Item = T::VP>) -> ValidEdgeCursorMut<'_, T> {
         self.insert_loop_default(vp)
             .stay(|c| c.twin().insert_face(Default::default()).edge())
+            .unwrap()
     }
 
     #[inline]
-    fn insert_dihedron(&mut self, vp: impl IntoIterator<Item = T::VP>) -> EdgeCursorMut<'_, T> {
+    fn insert_dihedron(
+        &mut self,
+        vp: impl IntoIterator<Item = T::VP>,
+    ) -> ValidEdgeCursorMut<'_, T> {
         self.insert_polygon(vp)
             .insert_face(Default::default())
             .edge()
+            .unwrap()
     }
 }
 

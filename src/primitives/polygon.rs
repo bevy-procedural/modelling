@@ -1,8 +1,8 @@
 use crate::{
     math::{HasPosition, Scalar, Vector},
     mesh::{
-        CurvedEdge, DefaultEdgePayload, DefaultFacePayload, EdgeCursorMut, EuclideanMeshType,
-        HalfEdge, MeshBuilder, MeshTrait, MeshType, MeshTypeHalfEdge, PathBuilder,
+        cursor::*, CurvedEdge, DefaultEdgePayload, DefaultFacePayload, EuclideanMeshType, HalfEdge,
+        MeshBuilder, MeshTrait, MeshType, MeshTypeHalfEdge, PathBuilder,
     },
 };
 
@@ -26,7 +26,7 @@ where
     /// The payloads should be given ccw.
     /// Return the edge from the second to the first inserted vertex, i.e., the first edge on the outside of the polygon.
     /// Panics if the Iterator has less than 2 elements.
-    fn insert_polygon(&mut self, vp: impl IntoIterator<Item = T::VP>) -> EdgeCursorMut<'_, T>;
+    fn insert_polygon(&mut self, vp: impl IntoIterator<Item = T::VP>) -> ValidEdgeCursorMut<'_, T>;
 
     /// Calls `insert_polygon` on a default mesh.
     fn polygon(vp: impl IntoIterator<Item = T::VP>) -> Self {
@@ -39,7 +39,7 @@ where
     /// The payloads should be given ccw.
     /// Return the edge from the second to the first inserted vertex, i.e., the first edge from the backface.
     /// Panics if the Iterator has less than 2 elements.
-    fn insert_dihedron(&mut self, _vp: impl IntoIterator<Item = T::VP>) -> EdgeCursorMut<'_, T>;
+    fn insert_dihedron(&mut self, _vp: impl IntoIterator<Item = T::VP>) -> ValidEdgeCursorMut<'_, T>;
 
     /// Calls [Make2dShape::insert_dihedron] on a default mesh.
     fn dihedron(vp: impl IntoIterator<Item = T::VP>) -> Self {
@@ -49,14 +49,14 @@ where
     }
 
     /// Create a regular star, i.e., a regular polygon with two radii.
-    /// 
+    ///
     /// Returns the edge from the second to the first inserted vertex, i.e., the first edge on the outside of the star.
     fn insert_regular_star<'a, const D: usize>(
         &'a mut self,
         inner_radius: T::S,
         outer_radius: T::S,
         n: usize,
-    ) -> EdgeCursorMut<'a, T>
+    ) -> ValidEdgeCursorMut<'a, T>
     where
         T: EuclideanMeshType<D>,
     {
@@ -80,13 +80,13 @@ where
     }
 
     /// Inserts a regular polygon with `n` sides and a given `radius`.
-    /// 
+    ///
     /// Returns the edge from the second to the first inserted vertex, i.e., the first edge on the outside of the star.
     fn insert_regular_polygon<'a, const D: usize>(
         &'a mut self,
         radius: T::S,
         n: usize,
-    ) -> EdgeCursorMut<'a, T>
+    ) -> ValidEdgeCursorMut<'a, T>
     where
         T: EuclideanMeshType<D>,
     {
@@ -163,13 +163,13 @@ mod tests {
             assert_eq!(mesh.is_connected(), true);
 
             let v0 = mesh.vertex_ids().next().unwrap();
-            assert_eq!(mesh.edge(e0).target_id(), v0);
+            assert_eq!(mesh.edge(e0).unwrap().target_id(), v0);
 
-            let f = mesh.the_face();
+            let f = mesh.the_face().unwrap();
             for i in 0..n {
-                let ei = mesh.edge(e0).next_n(i);
+                let ei = mesh.edge(e0).next_n(i).unwrap();
                 assert_eq!(ei.has_face(), false);
-                assert_eq!(ei.twin().face_id(), f.id());
+                assert_eq!(ei.twin().unwrap().face_id(), f.id());
             }
         }
     }

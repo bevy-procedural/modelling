@@ -31,13 +31,6 @@ impl<'a, T: MeshType> ValidEdgeCursorMut<'a, T> {
     pub fn into_immutable(self) -> ValidEdgeCursor<'a, T> {
         ValidEdgeCursor::new(&*self.mesh, self.mesh.get_edge(self.edge).unwrap())
     }
-
-    #[inline]
-    #[must_use]
-    pub fn set_payload(self, payload: T::EP) -> Self {
-        *self.mesh.edge_payload_mut(self.id()) = payload;
-        self
-    }
 }
 
 impl<'a, T: MeshType> EdgeCursorData<'a, T> for ValidEdgeCursorMut<'a, T>
@@ -148,14 +141,6 @@ where
     T::Edge: HalfEdge<T>,
     T: 'a,
 {
-    /// Returns a mutable reference to the payload of the edge.
-    /// Panics if the edge is void.
-    #[inline]
-    #[must_use]
-    pub fn payload(&mut self) -> &mut T::EP {
-        self.mesh.edge_payload_mut(self.edge)
-    }
-
     /// Runs the closure on all outgoing halfedges of the target.
     /// Panics if one of the outgoing halfedges doesn't have a twin.
     pub fn for_each_next<F: Fn(Self) -> Self>(self, f: F) -> Self {
@@ -241,3 +226,9 @@ where
 {
 }
 impl<'a, T: MeshType> EdgeCursorBuilder<'a, T> for ValidEdgeCursorMut<'a, T> where T: 'a {}
+impl<'a, T: MeshType> EdgeCursorHalfedgeBuilder<'a, T> for ValidEdgeCursorMut<'a, T>
+where
+    T::Edge: HalfEdge<T>,
+    T: 'a,
+{
+}

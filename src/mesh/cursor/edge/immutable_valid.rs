@@ -147,6 +147,11 @@ where
     fn inner<'b>(&'b self) -> &'b Self::S {
         self.edge
     }
+
+    #[inline]
+    fn payload<'b>(&'b self) -> &'b Self::Payload {
+        self.mesh.edge_payload(self.edge.id())
+    }
 }
 
 impl<'a, T: MeshType> ValidEdgeCursorHalfedgeBasics<'a, T> for ValidEdgeCursor<'a, T>

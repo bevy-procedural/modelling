@@ -31,7 +31,7 @@ pub trait FaceCursorData<'a, T: MeshType>:
         Maybe = Self::VC,
     >;
 
-    /// The associated edge cursor type
+    /// The associated maybe edge cursor type
     type EC: EdgeCursorData<
         'a,
         T,

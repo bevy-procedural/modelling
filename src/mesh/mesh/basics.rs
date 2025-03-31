@@ -1,6 +1,7 @@
 use crate::{
     math::IndexType,
     mesh::{cursor::*, EdgeBasics, FaceBasics, MeshType, VertexBasics},
+    util::CreateEmptyIterator,
 };
 use std::collections::HashSet;
 
@@ -54,21 +55,27 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     #[must_use]
     fn num_vertices(&self) -> usize;
 
+    type VertexRefIter<'a>: Iterator<Item = &'a T::Vertex> + CreateEmptyIterator
+    where
+        T: 'a,
+        Self: 'a;
+
     /// Returns an iterator over all non-deleted vertices
     #[must_use]
-    fn vertex_refs<'a>(&'a self) -> impl Iterator<Item = &'a T::Vertex>
+    fn vertex_refs<'a>(&'a self) -> Self::VertexRefIter<'a>
     where
         T: 'a;
 
-    /// Returns an iterator over all non-deleted vertice's ids
-    #[inline]
-    #[must_use]
-    fn vertex_ids<'a>(&'a self) -> impl Iterator<Item = T::V>
+    type VertexIdIter<'a>: Iterator<Item = T::V> + CreateEmptyIterator + 'a
     where
         T: 'a,
-    {
-        self.vertex_refs().map(|v| v.id())
-    }
+        Self: 'a;
+
+    /// Returns an iterator over all non-deleted vertice's ids
+    #[must_use]
+    fn vertex_ids<'a>(&'a self) -> Self::VertexIdIter<'a>
+    where
+        T: 'a;
 
     /// Returns an iterator of cursors for each non-deleted vertex
     #[inline]
@@ -179,34 +186,41 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     #[must_use]
     fn edge_payload_mut<'a>(&'a mut self, edge: T::E) -> &'a mut T::EP;
 
+    type EdgeRefIter<'a>: Iterator<Item = &'a T::Edge> + CreateEmptyIterator
+    where
+        T: 'a,
+        Self: 'a;
+
     /// Returns an iterator over all non-deleted edges.
     /// For halfedge graphs, this will enumerate only one halfedge per edge.
     #[must_use]
-    fn edge_refs<'a>(&'a self) -> impl Iterator<Item = &'a T::Edge>
+    fn edge_refs<'a>(&'a self) -> Self::EdgeRefIter<'a>
     where
         T: 'a;
 
-    /// Returns an edge cursor for each non-deleted edge.
-    /// For halfedge graphs, this will enumerate only one halfedge per edge.
-    #[inline]
-    #[must_use]
-    fn edges<'a>(&'a self) -> impl Iterator<Item = EdgeCursor<'a, T>>
+    type EdgeIter<'a>: Iterator<Item = ValidEdgeCursor<'a, T>> + CreateEmptyIterator
     where
         T: 'a,
-    {
-        self.edge_ids().map(move |id| EdgeCursor::new(self, id))
-    }
+        Self: 'a;
+
+    /// Returns an edge cursor for each non-deleted edge.
+    /// For halfedge graphs, this will enumerate only one halfedge per edge.
+    #[must_use]
+    fn edges<'a>(&'a self) -> Self::EdgeIter<'a>
+    where
+        T: 'a;
+
+    type EdgeIdIter<'a>: Iterator<Item = T::E> + CreateEmptyIterator
+    where
+        T: 'a,
+        Self: 'a;
 
     /// Returns an iterator over all non-deleted edges' ids.
     /// For halfedge graphs, this will enumerate only one halfedge per edge.
-    #[inline]
     #[must_use]
-    fn edge_ids<'a>(&'a self) -> impl Iterator<Item = T::E> + 'a
+    fn edge_ids<'a>(&'a self) -> Self::EdgeIdIter<'a>
     where
-        T: 'a,
-    {
-        self.edge_refs().map(|e| e.id())
-    }
+        T: 'a;
 
     /// Returns an mutable iterator over all non-deleted vertices
     #[must_use]

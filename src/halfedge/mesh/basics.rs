@@ -1,11 +1,12 @@
-use super::{HalfEdgeImplMeshType, HalfEdgeMeshImpl};
+use super::{adaptor::Edge2ValidEdgeCursorAdapter, HalfEdgeImplMeshType, HalfEdgeMeshImpl};
 use crate::{
     math::IndexType,
     mesh::{
-        cursor::*, EdgeBasics, HalfEdge, HalfEdgeMesh, MeshBasics, Triangulation, VertexBasics,
-        VertexPayload,
+        cursor::*, EdgeBasics, HalfEdge, HalfEdgeMesh, MeshBasics, MeshType, Triangulation,
+        VertexBasics, VertexPayload,
     },
     prelude::IncidentToVertexIterator,
+    util::{CreateEmptyIterator, DeletableVectorIter},
 };
 use std::collections::HashMap;
 
@@ -37,12 +38,30 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         self.vertices.len()
     }
 
+    type VertexRefIter<'a>
+        = DeletableVectorIter<'a, T::Vertex>
+    where
+        T: 'a;
+
     #[inline]
-    fn vertex_refs<'a>(&'a self) -> impl Iterator<Item = &'a T::Vertex>
+    fn vertex_refs<'a>(&'a self) -> Self::VertexRefIter<'a>
     where
         T::Vertex: 'a,
     {
         self.vertices.iter()
+    }
+
+    type VertexIdIter<'a>
+        = std::iter::Map<DeletableVectorIter<'a, T::Vertex>, fn(&'a T::Vertex) -> T::V>
+    where
+        T: 'a;
+
+    #[inline]
+    fn vertex_ids<'a>(&'a self) -> Self::VertexIdIter<'a>
+    where
+        T: 'a,
+    {
+        self.vertex_refs().map(|v| v.id())
     }
 
     #[inline]
@@ -109,12 +128,44 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         n / 2
     }
 
+    type EdgeRefIter<'a>
+        = std::iter::Filter<DeletableVectorIter<'a, T::Edge>, fn(&&T::Edge) -> bool>
+    where
+        T: 'a;
+
     #[inline]
-    fn edge_refs<'a>(&'a self) -> impl Iterator<Item = &'a T::Edge>
+    fn edge_refs<'a>(&'a self) -> Self::EdgeRefIter<'a>
     where
         T::Edge: 'a,
     {
         self.halfedges.iter().filter(|e| e.twin_id() > e.id())
+    }
+
+    type EdgeIter<'a>
+        = Edge2ValidEdgeCursorAdapter<'a, T, Self::EdgeRefIter<'a>>
+    where
+        T: 'a;
+
+    #[inline]
+    fn edges<'a>(&'a self) -> Self::EdgeIter<'a>
+    where
+        T: 'a,
+    {
+        Edge2ValidEdgeCursorAdapter::new(self, self.edge_refs())
+        //self.edge_refs().map(move |edge| ValidEdgeCursor::new(self, edge))
+    }
+
+    type EdgeIdIter<'a>
+        = std::iter::Map<Self::EdgeRefIter<'a>, fn(&'a T::Edge) -> T::E>
+    where
+        T: 'a;
+
+    #[inline]
+    fn edge_ids<'a>(&'a self) -> Self::EdgeIdIter<'a>
+    where
+        T: 'a,
+    {
+        self.edge_refs().map(|e| e.id())
     }
 
     #[inline]

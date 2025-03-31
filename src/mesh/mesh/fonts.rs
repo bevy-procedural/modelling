@@ -176,8 +176,9 @@ impl<'a> Font<'a> {
                     Default::default(),
                 );
 
-                let v0 = mesh.edge(e).origin_id();
-                let v1 = mesh.edge(e).target_id();
+                // TODO: unwrap
+                let v0 = mesh.edge(e).unwrap().origin_id();
+                let v1 = mesh.edge(e).unwrap().target_id();
                 cur_v = v1;
                 prev_v = v0;
                 start_v = v0;

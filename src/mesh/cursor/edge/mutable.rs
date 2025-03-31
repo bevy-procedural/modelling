@@ -123,3 +123,9 @@ where
 {
 }
 impl<'a, T: MeshType> EdgeCursorBuilder<'a, T> for EdgeCursorMut<'a, T> where T: 'a {}
+impl<'a, T: MeshType> EdgeCursorHalfedgeBuilder<'a, T> for EdgeCursorMut<'a, T>
+where
+    T::Edge: HalfEdge<T>,
+    T: 'a,
+{
+}

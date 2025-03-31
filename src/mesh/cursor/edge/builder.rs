@@ -208,19 +208,20 @@ where
     /// Moves to the first edge of the new boundary.
     #[inline]
     #[must_use]
-    fn loft(self, n: usize, m: usize, vp: impl IntoIterator<Item = T::VP>) -> Self::Maybe
+    fn loft(self, n: usize, m: usize, vp: impl IntoIterator<Item = T::VP>) -> Self
     where
         T: MeshTypeHalfEdge,
         T::Mesh: MeshLoft<T>,
         T::FP: DefaultFacePayload,
         T::EP: DefaultEdgePayload,
     {
-        self.load_move_or_void(|mut valid: &mut Self::Valid, id| {
+        // TODO: is self from_maybe ok?
+        Self::from_maybe(self.load_move_or_void(|mut valid: &mut Self::Valid, id| {
             valid
                 .mesh_mut()
                 .crochet(id, n, m, false, true, false, vp)
                 .map(|(first, _last)| first)
-        })
+        }))
     }
 
     /// Applies `self.crochet(start, n, m, true, true, false, vp)`.
@@ -229,19 +230,20 @@ where
     /// Moves to the first edge of the new boundary.
     #[inline]
     #[must_use]
-    fn loft_back(self, n: usize, m: usize, vp: impl IntoIterator<Item = T::VP>) -> Self::Maybe
+    fn loft_back(self, n: usize, m: usize, vp: impl IntoIterator<Item = T::VP>) -> Self
     where
         T: MeshTypeHalfEdge,
         T::Mesh: MeshLoft<T>,
         T::FP: DefaultFacePayload,
         T::EP: DefaultEdgePayload,
     {
-        self.load_move_or_void(|mut valid, id| {
+        // TODO: is self from_maybe ok?
+        Self::from_maybe(self.load_move_or_void(|mut valid, id| {
             valid
                 .mesh_mut()
                 .crochet(id, n, m, true, true, false, vp)
                 .map(|(first, _last)| first)
-        })
+        }))
     }
 
     /// See [MeshExtrude::windmill].

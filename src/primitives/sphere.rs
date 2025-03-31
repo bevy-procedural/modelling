@@ -1,8 +1,8 @@
 use crate::{
     math::{HasPosition, IndexType, Scalar, Vector},
     mesh::{
-        CursorData, DefaultEdgePayload, DefaultFacePayload, EdgeCursorHalfedgeBasics, MeshType3D,
-        MeshTypeHalfEdge, SlerpVertexInterpolator,
+        cursor::*, DefaultEdgePayload, DefaultFacePayload, MeshType3D, MeshTypeHalfEdge,
+        SlerpVertexInterpolator,
     },
     operations::{MeshExtrude, MeshLoft, MeshSubdivision, SubdivisionDescription},
     primitives::{Make2dShape, MakePrismatoid},

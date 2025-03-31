@@ -1,5 +1,6 @@
 //! A module for soft-deletable elements.
 
+use super::CreateEmptyIterator;
 use crate::math::IndexType;
 
 /// A trait for soft-deletable elements.
@@ -17,6 +18,43 @@ pub trait Deletable<I> {
     /// Allocates a new, "deleted" instance (it isn't valid)
     #[must_use]
     fn allocate() -> Self;
+}
+
+pub type DeletableVectorIter<'a, T> = std::iter::Filter<std::slice::Iter<'a, T>, fn(&&T) -> bool>;
+
+impl<'a, T> CreateEmptyIterator for DeletableVectorIter<'a, T> {
+    #[inline]
+    fn create_empty() -> Self {
+        (&[] as &[T]).iter().filter(|_| false)
+    }
+}
+
+impl<'a, T, V: Default> CreateEmptyIterator
+    for std::iter::Map<DeletableVectorIter<'a, T>, fn(&'a T) -> V>
+{
+    fn create_empty() -> Self {
+        DeletableVectorIter::<'a, T>::create_empty().map(|_| V::default())
+    }
+}
+
+impl<'a, T> CreateEmptyIterator for std::iter::Filter<DeletableVectorIter<'a, T>, fn(&&T) -> bool> {
+    fn create_empty() -> Self {
+        DeletableVectorIter::<'a, T>::create_empty().filter(|_| false)
+    }
+}
+
+impl<'a, T, V: Default> CreateEmptyIterator
+    for std::iter::Map<
+        std::iter::Filter<DeletableVectorIter<'a, T>, fn(&&T) -> bool>,
+        fn(&'a T) -> V,
+    >
+where
+    T: 'a,
+{
+    #[inline]
+    fn create_empty() -> Self {
+        <std::iter::Filter<DeletableVectorIter<'a, T>, fn(&&T) -> bool> as CreateEmptyIterator>::create_empty().map(|_| V::default())
+    }
 }
 
 /// A vector that also keeps track of deleted elements to reallocate them.
@@ -44,7 +82,7 @@ impl<T: Deletable<I>, I: IndexType> DeletableVector<T, I> {
 
     /// Returns an iterator over the non-deleted elements.
     #[inline]
-    pub fn iter(&self) -> impl Iterator<Item = &T> {
+    pub fn iter(&self) -> DeletableVectorIter<T> {
         self.data.iter().filter(|f| !f.is_deleted())
     }
 

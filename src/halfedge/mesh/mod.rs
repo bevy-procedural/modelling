@@ -3,6 +3,7 @@ mod builder;
 mod check;
 mod halfedge;
 mod pseudo_winged;
+mod adaptor;
 
 use super::{HalfEdgeImplMeshType, HalfEdgeImplMeshTypePlus};
 use crate::{

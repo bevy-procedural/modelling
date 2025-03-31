@@ -1,6 +1,4 @@
-use crate::mesh::{
-    cursor::*, EdgeBasics, EuclideanMeshType, Face, FaceBasics, MeshType, MeshType3D,
-};
+use crate::mesh::{cursor::*, EuclideanMeshType, Face, Face3d, FaceBasics, MeshType, MeshType3D};
 
 pub trait ValidFaceCursorBasics<'a, T: MeshType>:
     ValidCursor<S = T::Face, I = T::F, T = T>
@@ -70,5 +68,13 @@ where
         T: MeshType3D,
     {
         self.inner().normal(self.mesh())
+    }
+
+    /// Returns the representative halfedge of the face.
+    /// Panics if the face is void.
+    #[inline]
+    #[must_use]
+    fn edge_id(&self) -> T::E {
+        self.inner().edge_id()
     }
 }

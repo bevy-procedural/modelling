@@ -1,6 +1,7 @@
 use crate::{
     math::IndexType,
     mesh::{cursor::*, FaceBasics, HalfEdge, MeshBasics, MeshType},
+    util::CreateEmptyIterator,
 };
 
 pub trait ImmutableFaceCursor<'a, T: MeshType>:
@@ -40,7 +41,11 @@ pub trait FaceCursorBasics<'a, T: MeshType>: FaceCursorData<'a, T> {
     where
         T: 'b,
     {
-        self.unwrap().vertex_ids(self.mesh())
+        if let Some(inner) = self.try_inner() {
+            inner.vertex_ids(self.mesh())
+        } else {
+            CreateEmptyIterator::create_empty()
+        }
     }
 
     /// Returns an iterator of edge ids of the face.
@@ -51,7 +56,11 @@ pub trait FaceCursorBasics<'a, T: MeshType>: FaceCursorData<'a, T> {
     where
         T: 'b,
     {
-        self.unwrap().edge_ids(self.mesh())
+        if let Some(inner) = self.try_inner() {
+            inner.edge_ids(self.mesh())
+        } else {
+            CreateEmptyIterator::create_empty()
+        }
     }
 
     /// Moves the cursor to the representative halfedge of the face.
@@ -59,19 +68,13 @@ pub trait FaceCursorBasics<'a, T: MeshType>: FaceCursorData<'a, T> {
     #[inline]
     #[must_use]
     fn edge(self) -> Self::EC {
-        if self.is_void() {
-            return self.move_to_edge(IndexType::max());
-        }
-        let id = self.unwrap().edge_id();
+        // TODO: make it return a valid edge cursor if self is valid!
+        let id = if let Some(inner) = self.try_inner() {
+            inner.edge_id()
+        } else {
+            IndexType::max()
+        };
         self.move_to_edge(id)
-    }
-
-    /// Returns the representative halfedge of the face.
-    /// Panics if the face is void.
-    #[inline]
-    #[must_use]
-    fn edge_id(&self) -> T::E {
-        self.unwrap().edge_id()
     }
 }
 

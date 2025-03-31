@@ -15,12 +15,13 @@ where
 
     /// Returns an outgoing boundary edge incident to the vertex if it exists and is unique
     fn outgoing_boundary_edge(&self, mesh: &T::Mesh) -> Option<T::E> {
+        // TODO: Is unwrap ok here?
         if let Ok(e) = self
             .edges_out(mesh)
-            .filter(|e| mesh.edge(*e).is_boundary_self())
+            .filter(|e| mesh.edge(*e).unwrap().is_boundary_self())
             .exactly_one()
         {
-            debug_assert_eq!(mesh.edge(e).origin_id(), self.id());
+            debug_assert_eq!(mesh.edge(e).unwrap().origin_id(), self.id());
             Some(e)
         } else {
             None
@@ -29,12 +30,13 @@ where
 
     /// Returns an ingoing boundary edge incident to the vertex if it exists and is unique
     fn ingoing_boundary_edge(&self, mesh: &T::Mesh) -> Option<T::E> {
+        // TODO: Is unwrap ok here?
         if let Ok(e) = self
             .edges_in(mesh)
-            .filter(|e| mesh.edge(*e).is_boundary_self())
+            .filter(|e| mesh.edge(*e).unwrap().is_boundary_self())
             .exactly_one()
         {
-            debug_assert_eq!(mesh.edge(e).target_id(), self.id());
+            debug_assert_eq!(mesh.edge(e).unwrap().target_id(), self.id());
             Some(e)
         } else {
             None
@@ -57,11 +59,9 @@ where
             len += 1;
 
             for i in 0..paths.len() {
-                let e = mesh.edge(paths[i]);
-
-                if e.is_void() {
+                let Some(e) = mesh.edge(paths[i]).load() else {
                     continue;
-                }
+                };
                 productive = true;
 
                 if e.target_id() == v0 {

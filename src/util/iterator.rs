@@ -33,7 +33,6 @@ pub fn circle_iter_back<const D: usize, T: EuclideanMeshType<D>>(
     })
 }
 
-
 /// Trait for iterators that can be created empty.
 pub trait CreateEmptyIterator {
     /// Creates an empty iterator.
@@ -47,4 +46,3 @@ impl<T> CreateEmptyIterator for std::vec::IntoIter<T> {
         Vec::new().into_iter()
     }
 }
-

@@ -1,8 +1,8 @@
 use crate::{
     math::{HasPosition, Scalar, TransformTrait, Vector},
     mesh::{
-        CursorData, DefaultEdgePayload, DefaultFacePayload, EdgeCursorHalfedgeBasics,
-        EdgeCursorMut, Face3d, MeshType3D, MeshTypeHalfEdge, VertexPayload,
+        cursor::*, DefaultEdgePayload, DefaultFacePayload, Face3d, MeshType3D, MeshTypeHalfEdge,
+        VertexPayload,
     },
     operations::{MeshExtrude, MeshLoft, MeshSubdivision},
     primitives::polygon::Make2dShape,
@@ -61,7 +61,7 @@ where
             .twin()
             .face()
             .expect("The polygon must have a face");
-        let normal = Face3d::normal(f.unwrap(), self).normalize();
+        let normal = f.normal().normalize();
         self.extrude(first, T::Trans::from_translation(-normal * height))
     }
 
@@ -88,9 +88,10 @@ where
             .edge(first)
             .face()
             .expect("The polygon must have a face");
-        let normal = f.unwrap().normal(self).normalize();
+        let normal = f.normal().normalize();
+        // TODO: Is unwrap ok?
         self.extrude_tri2(
-            self.edge(first).twin_id(),
+            self.edge(first).unwrap().twin_id(),
             T::Trans::from_translation(-normal * height),
         )
     }
@@ -126,14 +127,17 @@ where
     }
 
     /// Creates a pyramid by connecting the polygon given by `vp` with the point `apex`.
-    fn insert_pyramid(
-        &mut self,
+    fn insert_pyramid<'a>(
+        &'a mut self,
         base: impl IntoIterator<Item = T::VP>,
         apex: T::VP,
-    ) -> EdgeCursorMut<'_, T> {
+    ) -> ValidEdgeCursorMut<'a, T>
+    where
+        T: 'a,
+    {
         let first = self.insert_polygon(base).id();
         self.windmill_back(first, apex).unwrap();
-        self.edge_mut(first).twin()
+        self.edge_mut(first).twin().unwrap()
     }
 
     /// calls `insert_pyramid` on a new mesh
@@ -149,12 +153,12 @@ where
         base: impl IntoIterator<Item = T::VP>,
         top: impl IntoIterator<Item = T::VP>,
         smooth: bool,
-    ) -> EdgeCursorMut<'_, T> {
+    ) -> ValidEdgeCursorMut<'_, T> {
         let top_edge = self.insert_polygon(base).loft(2, 2, top).id();
         self.insert_face(top_edge, Default::default()).unwrap();
         // TODO: smooth
         assert!(!smooth, "Smooth frustums not yet implemented");
-        self.edge_mut(top_edge)
+        self.edge_mut(top_edge).unwrap()
     }
 
     /// calls `insert_frustum` on a new mesh
@@ -249,7 +253,7 @@ where
                 T::VP::from_pos(T::Vec::from_xyz(zero, h, zero)),
             )
             .id();
-        mesh.remove_face(mesh.edge(e).face_id());
+        mesh.remove_face(mesh.edge(e).unwrap().face_id());
         mesh.windmill_back(e, T::VP::from_pos(T::Vec::from_xyz(zero, -h, zero)))
             .unwrap();
         mesh

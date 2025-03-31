@@ -66,22 +66,23 @@ pub trait MeshHalfEdgeBuilder<T: MeshTypeHalfEdge<Mesh = Self>>: MeshBasics<T> {
             if !self.has_vertex(target) {
                 return Err(format!("Target Vertex {} does not exist", target));
             }
-            if !self.has_edge(to_origin) {
-                return Err(format!("to_origin Edge {} does not exist", to_origin));
-            }
-            if !self.has_edge(from_origin) {
-                return Err(format!("from_origin Edge {} does not exist", from_origin));
-            }
-            if !self.has_edge(to_target) {
-                return Err(format!("to_target Edge {} does not exist", to_target));
-            }
-            if !self.has_edge(from_target) {
-                return Err(format!("from_target Edge {} does not exist", from_target));
-            }
-            let to_origin = self.edge(to_origin);
-            let from_origin = self.edge(from_origin);
-            let to_target = self.edge(to_target);
-            let from_target = self.edge(from_target);
+
+            let to_origin = self
+                .edge(to_origin)
+                .load()
+                .ok_or_else(|| format!("to_origin Edge {} does not exist", to_origin))?;
+            let from_origin = self
+                .edge(from_origin)
+                .load()
+                .ok_or_else(|| format!("from_origin Edge {} does not exist", from_origin))?;
+            let to_target = self
+                .edge(to_target)
+                .load()
+                .ok_or_else(|| format!("to_target Edge {} does not exist", to_target))?;
+            let from_target = self
+                .edge(from_target)
+                .load()
+                .ok_or_else(|| format!("from_target Edge {} does not exist", from_target))?;
             if to_origin.next_id() != from_origin.id() {
                 return Err(format!(
                     "to_origin.next_id() != from_origin.id(): {} != {}",
