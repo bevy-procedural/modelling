@@ -100,6 +100,7 @@ where
     type I = T::E;
     type S = T::Edge;
     type T = T;
+    type Payload = T::EP;
     type Maybe = Self;
     type Valid = ValidEdgeCursor<'a, T>;
 
@@ -137,21 +138,27 @@ where
     fn maybe(self) -> Self::Maybe {
         self
     }
-}
 
-impl<'a, T: MeshType> MaybeCursor for EdgeCursor<'a, T>
-where
-    T: 'a,
-{
+    #[inline]
+    fn from_maybe(from: Self::Maybe) -> Self {
+        from
+    }
+
+    #[inline]
+    fn from_valid(from: Self::Valid) -> Self {
+        from.maybe()
+    }
+    
     #[inline]
     fn is_void(&self) -> bool {
         self.try_id() == IndexType::max() || !self.mesh().has_edge(self.try_id())
     }
 }
 
+impl<'a, T: MeshType> MaybeCursor for EdgeCursor<'a, T> where T: 'a {}
 impl<'a, T: MeshType> ImmutableEdgeCursor<'a, T> for EdgeCursor<'a, T> where T: 'a {}
 impl<'a, T: MeshType> EdgeCursorBasics<'a, T> for EdgeCursor<'a, T> where T: 'a {}
-impl<'a, T: MeshType> EdgeCursorHalfedgeBasics<'a, T, EdgeCursor<'a, T>> for EdgeCursor<'a, T>
+impl<'a, T: MeshType> EdgeCursorHalfedgeBasics<'a, T> for EdgeCursor<'a, T>
 where
     T::Edge: HalfEdge<T>,
     T: 'a,

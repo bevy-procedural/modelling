@@ -48,13 +48,23 @@ pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone {
         (v1 + v2) * T::S::HALF
     }
 
+    type BoundaryIterator<'a>: Iterator<Item = &'a T::Edge> + CreateEmptyIterator + 'a
+    where
+        Self: 'a,
+        T: 'a;
+
     /// Iterates all (half)edges incident to the same face or boundary (counter-clockwise)
-    fn boundary<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge> + 'a
+    fn boundary<'a>(&'a self, mesh: &'a T::Mesh) -> Self::BoundaryIterator<'a>
     where
         T: 'a;
 
+    type BoundaryBackIterator<'a>: Iterator<Item = &'a T::Edge> + CreateEmptyIterator + 'a
+    where
+        Self: 'a,
+        T: 'a;
+
     /// Iterates all (half)edges incident to the same face or boundary (clockwise)
-    fn boundary_back<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge> + 'a
+    fn boundary_back<'a>(&'a self, mesh: &'a T::Mesh) -> Self::BoundaryBackIterator<'a>
     where
         T: 'a;
 
@@ -93,13 +103,13 @@ pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone {
 #[cfg(test)]
 #[cfg(feature = "nalgebra")]
 mod tests {
-    use crate::{extensions::nalgebra::*, prelude::*};
+    use crate::{extensions::nalgebra::*, math::impls::EU, prelude::*};
     use itertools::Itertools;
 
     #[test]
     fn test_edge_basics_triangle() {
         let mesh = Mesh3d64::regular_polygon(1.0, 3);
-        let edge = mesh.edge(IndexType::new(0)).load().unwrap();
+        let edge = mesh.edge(IndexType::new(0)).unwrap();
         assert_eq!(mesh.check(), Ok(()));
         assert_eq!(edge.origin_id(), IndexType::new(0));
         assert_eq!(edge.target_id(), IndexType::new(1));
@@ -114,18 +124,18 @@ mod tests {
         assert_eq!(
             edge.boundary()
                 .map(|e| e.id())
-                .collect_vec()
+                .collect::<Vec<EU>>()
                 .iter()
                 .rev()
-                .collect_vec(),
+                .collect::<Vec<&EU>>(),
             edge.boundary_back()
                 .map(|e| e.id())
-                .collect_vec()
+                .collect::<Vec<EU>>()
                 .iter()
                 .cycle()
                 .skip(1)
                 .take(3)
-                .collect_vec()
+                .collect::<Vec<&EU>>()
         );
         for edge in mesh.halfedges() {
             assert!(edge.is_boundary());

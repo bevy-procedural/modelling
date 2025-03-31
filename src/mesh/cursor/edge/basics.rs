@@ -1,30 +1,14 @@
 use crate::{
     math::IndexType,
-    mesh::{cursor::*, EdgeBasics, EuclideanMeshType, HalfEdge, MeshType},
+    mesh::{cursor::*, EdgeBasics, HalfEdge, MeshBasics, MeshType},
     util::CreateEmptyIterator,
 };
 
-use super::EdgeCursor;
-
-/// This trait defines the basic functionality for accessing the data fields of an edge cursor.
-pub trait EdgeCursorData<'a, T: MeshType>: CursorData<T = T, I = T::E, S = T::Edge> {
-    /// The associated vertex cursor type
-    type VC: VertexCursorData<'a, T>;
-
-    /// The associated face cursor type
-    type FC: FaceCursorData<'a, T>;
-
-    /// Derives a new vertex cursor pointing to the given vertex id.
-    #[must_use]
-    fn move_to_vertex(self, id: T::V) -> Self::VC;
-
-    /// Derives a new face cursor pointing to the given face id.
-    #[must_use]
-    fn move_to_face(self, id: T::F) -> Self::FC;
-}
-
-pub trait ImmutableEdgeCursor<'a, T: MeshType>: CursorData<T = T, I = T::E, S = T::Edge>
+pub trait ImmutableEdgeCursor<'a, T: MeshType>:
+    CursorData<T = T, I = T::E, S = T::Edge> + EdgeCursorBasics<'a, T>
 where
+    Self::Valid: EdgeCursorData<'a, T, FC = Self::FC, VC = Self::VC>,
+    Self::Maybe: EdgeCursorData<'a, T, FC = Self::FC, VC = Self::VC>,
     T: 'a,
 {
     // TODO: move these to edgecursordata?
@@ -34,13 +18,13 @@ where
     /// Returns an empty iterator if the edge is void.
     #[inline]
     #[must_use]
-    fn faces<'b>(&'b self) -> impl Iterator<Item = FaceCursor<'b, T>>
+    fn faces<'b>(&'b self) -> impl Iterator<Item = ValidFaceCursor<'b, T>>
     where
         T::Edge: 'b,
         'a: 'b,
     {
         self.face_ids()
-            .map(move |id| FaceCursor::new(self.mesh, id))
+            .map(move |id| ValidFaceCursor::load_new(self.mesh(), id))
     }
 
     /// Returns face cursors for each edge on the same boundary as this edge.
@@ -48,14 +32,17 @@ where
     /// Returns an empty iterator if the edge is void.
     #[inline]
     #[must_use]
-    fn boundary<'b>(&'b self) -> impl Iterator<Item = EdgeCursor<'b, T>>
+    fn boundary<'b>(&'b self) -> impl Iterator<Item = ValidEdgeCursor<'b, T>>
     where
         T::Edge: 'b,
         'a: 'b,
     {
-        self.unwrap()
-            .boundary(self.mesh())
-            .map(move |e| EdgeCursor::new(self.mesh, e.id()))
+        if let Some(inner) = self.try_inner() {
+            inner.boundary(self.mesh())
+        } else {
+            CreateEmptyIterator::create_empty()
+        }
+        .map(move |e| ValidEdgeCursor::new(self.mesh(), e))
     }
 
     /// Returns face cursors for each edge on the same boundary as this edge.
@@ -64,33 +51,47 @@ where
     /// Returns an empty iterator if the edge is void.
     #[inline]
     #[must_use]
-    fn boundary_back<'b>(&'b self) -> impl Iterator<Item = EdgeCursor<'b, T>>
+    fn boundary_back<'b>(&'b self) -> impl Iterator<Item = ValidEdgeCursor<'b, T>>
     where
         T::Edge: 'b,
         'a: 'b,
     {
-        self.unwrap()
-            .boundary_back(self.mesh())
-            .map(move |e| EdgeCursor::new(self.mesh, e.id()))
+        if let Some(inner) = self.try_inner() {
+            inner.boundary_back(self.mesh())
+        } else {
+            CreateEmptyIterator::create_empty()
+        }
+        .map(move |e| ValidEdgeCursor::new(self.mesh(), e))
     }
 
     /// Returns a reference to the payload of the edge.
     /// Panics if the edge is void.
     #[inline]
     #[must_use]
-    fn payload(&self) -> &'a T::EP {
+    fn payload<'b>(&'b self) -> &'b T::EP
+    where
+        'a: 'b,
+    {
         self.mesh().edge_payload(self.try_id())
     }
 }
 
 /// This trait implements some basic functionality for edge cursors that works with any type of mesh and both mutable and immutable cursors.
-pub trait EdgeCursorBasics<'a, T: MeshType>: EdgeCursorData<'a, T> {
+pub trait EdgeCursorBasics<'a, T: MeshType>: EdgeCursorData<'a, T>
+where
+    Self::Valid: EdgeCursorData<'a, T, FC = Self::FC, VC = Self::VC>,
+    Self::Maybe: EdgeCursorData<'a, T, FC = Self::FC, VC = Self::VC>,
+{
     /// Moves the cursor to the origin vertex of the edge.
     /// Won't move if the edge is void.
     #[inline]
     #[must_use]
     fn origin(self) -> Self::VC {
-        let id = self.map_or(IndexType::max(), |e| e.origin_id(self.mesh()));
+        let id = if let Some(inner) = self.try_inner() {
+            inner.origin_id(self.mesh())
+        } else {
+            IndexType::max()
+        };
         self.move_to_vertex(id)
     }
 
@@ -99,7 +100,11 @@ pub trait EdgeCursorBasics<'a, T: MeshType>: EdgeCursorData<'a, T> {
     #[inline]
     #[must_use]
     fn target(self) -> Self::VC {
-        let id = self.map_or(IndexType::max(), |e| e.target_id(self.mesh()));
+        let id = if let Some(inner) = self.try_inner() {
+            inner.target_id(self.mesh())
+        } else {
+            IndexType::max()
+        };
         self.move_to_vertex(id)
     }
 
@@ -121,59 +126,13 @@ pub trait EdgeCursorBasics<'a, T: MeshType>: EdgeCursorData<'a, T> {
     }
 }
 
-pub trait ValidEdgeCursorBasics<'a, T: MeshType>:
-    ValidCursor<T = T, I = T::E, S = T::Edge>
-{
-    /// Whether the edge (or its halfedgetwin) is boundary.
-    /// Panics if the edge is void.
-    #[inline]
-    #[must_use]
-    fn is_boundary(&self) -> bool {
-        self.inner().is_boundary(self.mesh())
-    }
-
-    /// Whether the edge is manifold.
-    /// See [EdgeBasics::is_manifold] for more information.
-    #[inline]
-    #[must_use]
-    fn is_manifold(&self) -> bool {
-        self.inner().is_manifold(self.mesh())
-    }
-
-    /// Returns the centroid of the edge, i.e., the average of the origin and target vertices.
-    #[inline]
-    #[must_use]
-    fn centroid<const D: usize>(&self) -> T::Vec
-    where
-        T: EuclideanMeshType<D>,
-    {
-        self.inner().centroid(self.mesh())
-    }
-
-    /// Returns the id of the origin vertex of the edge.
-    /// Panics if the edge is void.
-    #[inline]
-    #[must_use]
-    fn origin_id(&self) -> T::V {
-        // TODO: self.get().map(|e| e.origin_id(self.mesh()))
-        self.inner().origin_id(self.mesh())
-    }
-
-    /// Returns the id of the target vertex of the edge.
-    /// Panics if the edge is void.
-    #[inline]
-    #[must_use]
-    fn target_id(&self) -> T::V {
-        self.inner().target_id(self.mesh())
-    }
-}
-
 /// This trait implements some basic functionality for edge cursors that works with halfedge meshes and both mutable and immutable cursors.
-pub trait EdgeCursorHalfedgeBasics<'a, T: MeshType, Maybe>:
-    EdgeCursorData<'a, T, Maybe = Maybe>
+pub trait EdgeCursorHalfedgeBasics<'a, T: MeshType>: EdgeCursorData<'a, T>
 where
+    Self::Valid: EdgeCursorData<'a, T, FC = Self::FC, VC = Self::VC>,
+    Self::Maybe:
+        EdgeCursorData<'a, T, FC = Self::FC, VC = Self::VC> + EdgeCursorHalfedgeBasics<'a, T>,
     T::Edge: HalfEdge<T>,
-    Maybe: EdgeCursorHalfedgeBasics<'a, T, Maybe>,
 {
     /// Moves the cursor to the next halfedge of the edge.
     /// Won't move if the edge is void.
@@ -249,7 +208,11 @@ where
     #[inline]
     #[must_use]
     fn face(self) -> Self::FC {
-        let id = self.maybe().map_or(IndexType::max(), |e| e.face_id());
+        let id = if let Some(inner) = self.try_inner() {
+            inner.face_id()
+        } else {
+            IndexType::max()
+        };
         self.move_to_face(id)
     }
 
@@ -259,10 +222,11 @@ where
     #[inline]
     #[must_use]
     fn check(&self) -> Result<(), String> {
-        self.maybe()
-            .map_or(Err(format!("Edge {} is invalid", self.try_id())), |e| {
-                HalfEdge::check(e, self.mesh())
-            })
+        if let Some(inner) = self.try_inner() {
+            inner.check(self.mesh())
+        } else {
+            Err(format!("Edge {} is invalid", self.try_id()))
+        }
     }
 
     /// Returns an outgoing edge from `v` that is part of the same boundary as the edge.
@@ -285,54 +249,5 @@ where
     fn same_boundary_back(self, v: T::V) -> Option<Self::Maybe> {
         let id = HalfEdge::same_boundary_back(self.try_inner()?, self.mesh(), v)?;
         Some(self.move_to(id))
-    }
-}
-
-pub trait ValidEdgeCursorHalfedgeBasics<'a, T: MeshType>:
-    EdgeCursorData<'a, T> + ValidCursor<T = T, I = T::E, S = T::Edge>
-where
-    T::Edge: HalfEdge<T>,
-{
-    /// Returns the id of the next halfedge of the edge.
-    #[inline]
-    #[must_use]
-    fn next_id(&self) -> T::E {
-        self.inner().next_id()
-    }
-
-    /// Returns the id of the previous halfedge of the edge.
-    #[inline]
-    #[must_use]
-    fn prev_id(&self) -> T::E {
-        self.inner().prev_id()
-    }
-
-    /// Returns the id of the twin halfedge of the edge.
-    #[inline]
-    #[must_use]
-    fn twin_id(&self) -> T::E {
-        self.inner().twin_id()
-    }
-
-    /// Returns the id of the face of the edge.
-    #[inline]
-    #[must_use]
-    fn face_id(&self) -> T::F {
-        self.inner().face_id()
-    }
-
-    /// Returns whether the edge has a face.
-    #[inline]
-    #[must_use]
-    fn has_face(&self) -> bool {
-        self.face_id() != IndexType::max()
-    }
-
-    /// Returns whether the edge is a boundary edge itself.
-    /// See [HalfEdge::is_boundary_self] for more information.
-    #[inline]
-    #[must_use]
-    fn is_boundary_self(&self) -> bool {
-        self.inner().is_boundary_self()
     }
 }

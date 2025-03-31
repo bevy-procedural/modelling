@@ -76,6 +76,7 @@ where
     type I = T::F;
     type S = T::Face;
     type T = T;
+    type Payload = T::FP;
     type Maybe = Self;
     type Valid = ValidFaceCursor<'a, T>;
 
@@ -112,18 +113,24 @@ where
     fn maybe(self) -> Self::Maybe {
         self
     }
-}
 
-impl<'a, T: MeshType> MaybeCursor for FaceCursor<'a, T>
-where
-    T: 'a,
-{
+    #[inline]
+    fn from_maybe(from: Self::Maybe) -> Self {
+        from
+    }
+
+    #[inline]
+    fn from_valid(from: Self::Valid) -> Self {
+        from.maybe()
+    }
+
     #[inline]
     fn is_void(&self) -> bool {
         self.try_id() == IndexType::max() || !self.mesh().has_face(self.try_id())
     }
 }
 
+impl<'a, T: MeshType> MaybeCursor for FaceCursor<'a, T> where T: 'a {}
 impl<'a, T: MeshType> FaceCursorBasics<'a, T> for FaceCursor<'a, T> where T: 'a {}
 impl<'a, T: MeshType> FaceCursorHalfedgeBasics<'a, T> for FaceCursor<'a, T>
 where

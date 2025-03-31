@@ -28,7 +28,10 @@ impl<'a, T: MeshType> ValidFaceCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType> FaceCursorData<'a, T> for ValidFaceCursorMut<'a, T> {
+impl<'a, T: MeshType> FaceCursorData<'a, T> for ValidFaceCursorMut<'a, T>
+where
+    T: 'a,
+{
     type VC = VertexCursorMut<'a, T>;
     type EC = EdgeCursorMut<'a, T>;
 
@@ -43,10 +46,14 @@ impl<'a, T: MeshType> FaceCursorData<'a, T> for ValidFaceCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType> CursorData for ValidFaceCursorMut<'a, T> {
+impl<'a, T: MeshType> CursorData for ValidFaceCursorMut<'a, T>
+where
+    T: 'a,
+{
     type I = T::F;
     type S = T::Face;
     type T = T;
+    type Payload = T::FP;
     type Maybe = FaceCursorMut<'a, T>;
     type Valid = Self;
 
@@ -79,9 +86,27 @@ impl<'a, T: MeshType> CursorData for ValidFaceCursorMut<'a, T> {
     fn maybe(self) -> Self::Maybe {
         FaceCursorMut::new(self.mesh, self.face)
     }
+
+    #[inline]
+    fn from_maybe(from: Self::Maybe) -> Self {
+        from.load().unwrap()
+    }
+
+    #[inline]
+    fn from_valid(from: Self::Valid) -> Self {
+        from
+    }
+
+    #[inline]
+    fn is_void(&self) -> bool {
+        false
+    }
 }
 
-impl<'a, T: MeshType> ValidCursor for ValidFaceCursorMut<'a, T> {
+impl<'a, T: MeshType> ValidCursor for ValidFaceCursorMut<'a, T>
+where
+    T: 'a,
+{
     #[inline]
     fn id(&self) -> Self::I {
         self.face
@@ -90,6 +115,36 @@ impl<'a, T: MeshType> ValidCursor for ValidFaceCursorMut<'a, T> {
     #[inline]
     fn inner<'b>(&'b self) -> &'b Self::S {
         self.mesh.get_face(self.face).unwrap()
+    }
+
+    #[inline]
+    fn payload<'b>(&'b self) -> &'b Self::Payload {
+        self.mesh.face_ref(self.try_id()).payload()
+    }
+}
+
+impl<'a, T: MeshType> ValidCursorMut for ValidFaceCursorMut<'a, T>
+where
+    T: 'a,
+{
+    #[inline]
+    fn payload_mut<'b>(&'b mut self) -> &'b mut Self::Payload {
+        self.mesh.face_ref_mut(self.try_id()).payload_mut()
+    }
+
+    #[inline]
+    fn inner_mut<'b>(&'b mut self) -> &'b mut Self::S {
+        self.mesh.get_face_mut(self.face).unwrap()
+    }
+}
+
+impl<'a, T: MeshType> MutableCursor for ValidFaceCursorMut<'a, T>
+where
+    T: 'a,
+{
+    #[inline]
+    fn mesh_mut<'b>(&'b mut self) -> &'b mut <Self::T as MeshType>::Mesh {
+        self.mesh
     }
 }
 
@@ -102,9 +157,12 @@ impl<'a, T: MeshType> ValidFaceCursorMut<'a, T> {
     }
 }
 
+impl<'a, T: MeshType> FaceCursorBuilder<'a, T> for ValidFaceCursorMut<'a, T> where T: 'a {}
 impl<'a, T: MeshType> ValidFaceCursorBasics<'a, T> for ValidFaceCursorMut<'a, T> where T: 'a {}
-impl<'a, T: MeshType> FaceCursorBasics<'a, T> for ValidFaceCursorMut<'a, T> {}
-impl<'a, T: MeshType> FaceCursorHalfedgeBasics<'a, T> for ValidFaceCursorMut<'a, T> where
-    T::Edge: HalfEdge<T>
+impl<'a, T: MeshType> FaceCursorBasics<'a, T> for ValidFaceCursorMut<'a, T> where T: 'a {}
+impl<'a, T: MeshType> FaceCursorHalfedgeBasics<'a, T> for ValidFaceCursorMut<'a, T>
+where
+    T::Edge: HalfEdge<T>,
+    T: 'a,
 {
 }

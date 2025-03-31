@@ -69,6 +69,7 @@ where
     type I = T::V;
     type S = T::Vertex;
     type T = T;
+    type Payload = T::VP;
     type Maybe = Self;
     type Valid = ValidVertexCursor<'a, T>;
 
@@ -106,18 +107,24 @@ where
     fn maybe(self) -> Self::Maybe {
         self
     }
-}
 
-impl<'a, T: MeshType> MaybeCursor for VertexCursor<'a, T>
-where
-    T: 'a,
-{
+    #[inline]
+    fn from_maybe(from: Self::Maybe) -> Self {
+        from
+    }
+
+    #[inline]
+    fn from_valid(from: Self::Valid) -> Self {
+        from.maybe()
+    }
+
     #[inline]
     fn is_void(&self) -> bool {
         self.try_id() == IndexType::max() || !self.mesh().has_vertex(self.try_id())
     }
 }
 
+impl<'a, T: MeshType> MaybeCursor for VertexCursor<'a, T> where T: 'a {}
 impl<'a, T: MeshType> ImmutableVertexCursor<'a, T> for VertexCursor<'a, T> where T: 'a {}
 impl<'a, T: MeshType> VertexCursorBasics<'a, T> for VertexCursor<'a, T> where T: 'a {}
 impl<'a, T: MeshType> VertexCursorHalfedgeBasics<'a, T> for VertexCursor<'a, T>

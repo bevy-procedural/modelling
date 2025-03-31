@@ -29,6 +29,7 @@ impl<'a, T: MeshType> ValidFaceCursor<'a, T> {
     }
 
     /// Creates a new face cursor pointing to the given face.
+    /// Panics if the face does not exist in the mesh.
     #[inline]
     #[must_use]
     pub fn load_new(mesh: &'a T::Mesh, face: T::F) -> Self {
@@ -70,6 +71,7 @@ where
     type I = T::F;
     type S = T::Face;
     type T = T;
+    type Payload = T::FP;
     type Maybe = FaceCursor<'a, T>;
     type Valid = Self;
 
@@ -102,6 +104,21 @@ where
     fn maybe(self) -> Self::Maybe {
         FaceCursor::new(self.mesh, self.face.id())
     }
+
+    #[inline]
+    fn from_maybe(from: Self::Maybe) -> Self {
+        from.load().unwrap()
+    }
+
+    #[inline]
+    fn from_valid(from: Self::Valid) -> Self {
+        from
+    }
+
+    #[inline]
+    fn is_void(&self) -> bool {
+        false
+    }
 }
 
 impl<'a, T: MeshType> ValidCursor for ValidFaceCursor<'a, T>
@@ -117,9 +134,14 @@ where
     fn inner<'b>(&'b self) -> &'b Self::S {
         self.face
     }
+
+    #[inline]
+    fn payload<'b>(&'b self) -> &'b Self::Payload {
+        self.mesh.face_ref(self.try_id()).payload()
+    }
 }
 
-impl<'a, T: MeshType> ValidFaceCursorBasics for ValidFaceCursor<'a, T> where T: 'a {}
+impl<'a, T: MeshType> ValidFaceCursorBasics<'a, T> for ValidFaceCursor<'a, T> where T: 'a {}
 impl<'a, T: MeshType> FaceCursorBasics<'a, T> for ValidFaceCursor<'a, T> where T: 'a {}
 impl<'a, T: MeshType> FaceCursorHalfedgeBasics<'a, T> for ValidFaceCursor<'a, T>
 where

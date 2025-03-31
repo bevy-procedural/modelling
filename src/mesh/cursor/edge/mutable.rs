@@ -1,6 +1,6 @@
 use crate::{
     math::IndexType,
-    mesh::{cursor::*, HalfEdge, MeshBasics, MeshType},
+    mesh::{cursor::*, EdgeBasics, HalfEdge, MeshBasics, MeshType},
 };
 
 /// An edge cursor pointing to an edge of a mesh with a mutable reference to the mesh.
@@ -32,7 +32,10 @@ impl<'a, T: MeshType> EdgeCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType> EdgeCursorData<'a, T> for EdgeCursorMut<'a, T> {
+impl<'a, T: MeshType> EdgeCursorData<'a, T> for EdgeCursorMut<'a, T>
+where
+    T: 'a,
+{
     type VC = VertexCursorMut<'a, T>;
     type FC = FaceCursorMut<'a, T>;
 
@@ -51,6 +54,7 @@ impl<'a, T: MeshType> CursorData for EdgeCursorMut<'a, T> {
     type I = T::E;
     type S = T::Edge;
     type T = T;
+    type Payload = T::EP;
     type Maybe = Self;
     type Valid = ValidEdgeCursorMut<'a, T>;
 
@@ -86,18 +90,36 @@ impl<'a, T: MeshType> CursorData for EdgeCursorMut<'a, T> {
     fn maybe(self) -> Self::Maybe {
         self
     }
-}
 
-impl<'a, T: MeshType> MaybeCursor for EdgeCursorMut<'a, T> {
+    #[inline]
+    fn from_maybe(from: Self::Maybe) -> Self {
+        from
+    }
+
+    #[inline]
+    fn from_valid(from: Self::Valid) -> Self {
+        from.maybe()
+    }
+
     #[inline]
     fn is_void(&self) -> bool {
         self.try_id() == IndexType::max() || !self.mesh().has_edge(self.try_id())
     }
 }
 
-impl<'a, T: MeshType> EdgeCursorBasics<'a, T> for EdgeCursorMut<'a, T> {}
-impl<'a, T: MeshType> EdgeCursorHalfedgeBasics<'a, T, EdgeCursorMut<'a, T>> for EdgeCursorMut<'a, T> where
-    T::Edge: HalfEdge<T>
+impl<'a, T: MeshType> MutableCursor for EdgeCursorMut<'a, T> {
+    #[inline]
+    fn mesh_mut<'b>(&'b mut self) -> &'b mut <Self::T as MeshType>::Mesh {
+        self.mesh
+    }
+}
+
+impl<'a, T: MeshType> MaybeCursor for EdgeCursorMut<'a, T> {}
+impl<'a, T: MeshType> EdgeCursorBasics<'a, T> for EdgeCursorMut<'a, T> where T: 'a {}
+impl<'a, T: MeshType> EdgeCursorHalfedgeBasics<'a, T> for EdgeCursorMut<'a, T>
+where
+    T::Edge: HalfEdge<T>,
+    T: 'a,
 {
 }
 impl<'a, T: MeshType> EdgeCursorBuilder<'a, T> for EdgeCursorMut<'a, T> where T: 'a {}

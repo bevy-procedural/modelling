@@ -29,7 +29,10 @@ impl<'a, T: MeshType> VertexCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType> VertexCursorData<'a, T> for VertexCursorMut<'a, T> {
+impl<'a, T: MeshType> VertexCursorData<'a, T> for VertexCursorMut<'a, T>
+where
+    T: 'a,
+{
     type EC = EdgeCursorMut<'a, T>;
     type FC = FaceCursorMut<'a, T>;
 
@@ -48,6 +51,7 @@ impl<'a, T: MeshType> CursorData for VertexCursorMut<'a, T> {
     type I = T::V;
     type S = T::Vertex;
     type T = T;
+    type Payload = T::VP;
     type Maybe = Self;
     type Valid = ValidVertexCursorMut<'a, T>;
 
@@ -84,14 +88,24 @@ impl<'a, T: MeshType> CursorData for VertexCursorMut<'a, T> {
     fn maybe(self) -> Self::Maybe {
         self
     }
-}
 
-impl<'a, T: MeshType> MaybeCursor for VertexCursorMut<'a, T> {
+    #[inline]
+    fn from_maybe(from: Self::Maybe) -> Self {
+        from
+    }
+
+    #[inline]
+    fn from_valid(from: Self::Valid) -> Self {
+        from.maybe()
+    }
+
     #[inline]
     fn is_void(&self) -> bool {
         self.try_id() == IndexType::max() || !self.mesh().has_vertex(self.try_id())
     }
 }
+
+impl<'a, T: MeshType> MaybeCursor for VertexCursorMut<'a, T> {}
 
 impl<'a, T: MeshType> VertexCursorMut<'a, T> {
     /// Updates the representative edge incident to the vertex in the mesh.
@@ -106,10 +120,11 @@ impl<'a, T: MeshType> VertexCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType> VertexCursorBasics<'a, T> for VertexCursorMut<'a, T> {}
+impl<'a, T: MeshType> VertexCursorBasics<'a, T> for VertexCursorMut<'a, T> where T: 'a {}
 impl<'a, T: MeshType> VertexCursorHalfedgeBasics<'a, T> for VertexCursorMut<'a, T>
 where
     T::Edge: HalfEdge<T>,
     T::Vertex: HalfEdgeVertex<T>,
+    T: 'a,
 {
 }

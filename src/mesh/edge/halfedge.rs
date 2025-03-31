@@ -112,9 +112,9 @@ mod tests {
     fn test_halfedge_triangle() {
         let mut mesh = Mesh3d64::regular_polygon(1.0, 3);
         for edge in mesh.halfedges() {
-            assert!(edge.is_boundary_self() ^ (edge.fork().twin().is_boundary_self()));
+            assert!(edge.is_boundary_self() ^ (edge.fork().twin().unwrap().is_boundary_self()));
             if edge.is_boundary_self() {
-                assert!(edge.fork().twin().has_face());
+                assert!(edge.fork().twin().unwrap().has_face());
             }
         }
 
@@ -123,14 +123,14 @@ mod tests {
             .find(|e| !e.is_boundary_self())
             .unwrap()
             .id();
-        let f0 = mesh.edge(e0).face_id();
+        let f0 = mesh.edge(e0).unwrap().face_id();
         mesh.edge_mut(e0).remove_face();
         let edge = mesh.edge(e0);
-        assert!(edge.is_boundary_self());
+        assert!(edge.unwrap().is_boundary_self());
 
-        mesh.edge_mut(e0).set_face(f0);
+        mesh.edge_mut(e0).unwrap().set_face(f0);
         let edge = mesh.edge(e0);
-        assert!(!edge.is_boundary_self());
+        assert!(!edge.unwrap().is_boundary_self());
 
         assert!(mesh.flipped().check().is_ok());
         assert!(mesh
@@ -145,7 +145,7 @@ mod tests {
         let mesh = Mesh3d64::cube(1.0);
         for edge in mesh.halfedges() {
             assert!(!edge.is_boundary_self());
-            assert!(edge.twin().has_face());
+            assert!(edge.twin().unwrap().has_face());
         }
 
         for face in mesh.faces() {

@@ -31,7 +31,10 @@ impl<'a, T: MeshType> FaceCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType> FaceCursorData<'a, T> for FaceCursorMut<'a, T> {
+impl<'a, T: MeshType> FaceCursorData<'a, T> for FaceCursorMut<'a, T>
+where
+    T: 'a,
+{
     type VC = VertexCursorMut<'a, T>;
     type EC = EdgeCursorMut<'a, T>;
 
@@ -46,10 +49,14 @@ impl<'a, T: MeshType> FaceCursorData<'a, T> for FaceCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType> CursorData for FaceCursorMut<'a, T> {
+impl<'a, T: MeshType> CursorData for FaceCursorMut<'a, T>
+where
+    T: 'a,
+{
     type I = T::F;
     type S = T::Face;
     type T = T;
+    type Payload = T::FP;
     type Maybe = Self;
     type Valid = ValidFaceCursorMut<'a, T>;
 
@@ -86,9 +93,17 @@ impl<'a, T: MeshType> CursorData for FaceCursorMut<'a, T> {
     fn maybe(self) -> Self::Maybe {
         self
     }
-}
 
-impl<'a, T: MeshType> MaybeCursor for FaceCursorMut<'a, T> {
+    #[inline]
+    fn from_maybe(from: Self::Maybe) -> Self {
+        from
+    }
+
+    #[inline]
+    fn from_valid(from: Self::Valid) -> Self {
+        from.maybe()
+    }
+
     #[inline]
     fn is_void(&self) -> bool {
         self.try_id() == IndexType::max() || !self.mesh().has_face(self.try_id())
@@ -104,26 +119,22 @@ impl<'a, T: MeshType> FaceCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType> FaceCursorBasics<'a, T> for FaceCursorMut<'a, T> {}
-impl<'a, T: MeshType> FaceCursorHalfedgeBasics<'a, T> for FaceCursorMut<'a, T> where
-    T::Edge: HalfEdge<T>
+impl<'a, T: MeshType> MutableCursor for FaceCursorMut<'a, T>
+where
+    T: 'a,
 {
+    #[inline]
+    fn mesh_mut<'b>(&'b mut self) -> &'b mut <Self::T as MeshType>::Mesh {
+        self.mesh
+    }
 }
 
-/// This trait implements some shorthands to quickly modify a mesh without thinking about local variables,
-/// i.e., you can quickly modify the mesh multiple times and change the face etc. using a chaining syntax.
-impl<'a, T: MeshType> FaceCursorMut<'a, T> {
-    /// Removes the face the cursor is pointing to.
-    /// Returns an empty cursor if the face was removed successfully or didn't exist.
-    /// Returns the same cursor if the face couldn't be removed and still exists.
-    #[inline]
-    pub fn remove(self) -> Self {
-        if self.mesh.try_remove_face(self.face) {
-            self.void()
-        } else if self.mesh.has_face(self.face) {
-            self
-        } else {
-            self.void()
-        }
-    }
+impl<'a, T: MeshType> FaceCursorBuilder<'a, T> for FaceCursorMut<'a, T> where T: 'a {}
+impl<'a, T: MeshType> MaybeCursor for FaceCursorMut<'a, T> where T: 'a {}
+impl<'a, T: MeshType> FaceCursorBasics<'a, T> for FaceCursorMut<'a, T> where T: 'a {}
+impl<'a, T: MeshType> FaceCursorHalfedgeBasics<'a, T> for FaceCursorMut<'a, T>
+where
+    T::Edge: HalfEdge<T>,
+    T: 'a,
+{
 }

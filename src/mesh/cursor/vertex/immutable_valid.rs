@@ -27,14 +27,6 @@ impl<'a, T: MeshType> ValidVertexCursor<'a, T> {
     pub fn load_new(mesh: &'a T::Mesh, vertex: T::V) -> Self {
         Self::new(mesh, mesh.vertex_ref(vertex))
     }
-
-    /// Returns a reference to the payload of the vertex.
-    /// Panics if the vertex is void.
-    #[inline]
-    #[must_use]
-    pub fn payload(&self) -> &T::VP {
-        self.vertex.payload()
-    }
 }
 
 impl<'a, T: MeshType> ImmutableCursor for ValidVertexCursor<'a, T>
@@ -72,6 +64,7 @@ where
     type I = T::V;
     type S = T::Vertex;
     type T = T;
+    type Payload = T::VP;
     type Maybe = VertexCursor<'a, T>;
     type Valid = Self;
 
@@ -104,6 +97,21 @@ where
     fn maybe(self) -> Self::Maybe {
         VertexCursor::new(self.mesh, self.vertex.id())
     }
+
+    #[inline]
+    fn from_maybe(from: Self::Maybe) -> Self {
+        from.load().unwrap()
+    }
+
+    #[inline]
+    fn from_valid(from: Self::Valid) -> Self {
+        from
+    }
+
+    #[inline]
+    fn is_void(&self) -> bool {
+        false
+    }
 }
 
 impl<'a, T: MeshType> ValidCursor for ValidVertexCursor<'a, T>
@@ -118,6 +126,11 @@ where
     #[inline]
     fn inner<'b>(&'b self) -> &'b Self::S {
         self.vertex
+    }
+
+    #[inline]
+    fn payload<'b>(&'b self) -> &'b Self::Payload {
+        self.vertex.payload()
     }
 }
 

@@ -1,7 +1,9 @@
 use super::HalfEdgeImpl;
 use crate::{
     halfedge::HalfEdgeImplMeshType,
+    math::IndexType,
     mesh::{cursor::*, EdgeBasics, HalfEdge, MeshBasics},
+    util::CreateEmptyIterator,
 };
 
 impl<T: HalfEdgeImplMeshType> HalfEdgeImpl<T> {
@@ -21,8 +23,19 @@ where
 {
     is_first: bool,
     first: T::E,
-    current: &'a HalfEdgeImpl<T>,
-    mesh: &'a T::Mesh,
+    current: Option<&'a HalfEdgeImpl<T>>,
+    mesh: Option<&'a T::Mesh>,
+}
+
+impl<'a, T: HalfEdgeImplMeshType> CreateEmptyIterator for ForwardEdgeIterator<'a, T> {
+    fn create_empty() -> Self {
+        Self {
+            is_first: false,
+            first: IndexType::max(),
+            current: None,
+            mesh: None,
+        }
+    }
 }
 
 impl<'a, T: HalfEdgeImplMeshType> ForwardEdgeIterator<'a, T> {
@@ -30,8 +43,8 @@ impl<'a, T: HalfEdgeImplMeshType> ForwardEdgeIterator<'a, T> {
     pub fn new(first: &'a HalfEdgeImpl<T>, mesh: &'a T::Mesh) -> Self {
         Self {
             first: first.id(),
-            current: first,
-            mesh,
+            current: Some(first),
+            mesh: Some(mesh),
             is_first: true,
         }
     }
@@ -47,13 +60,13 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         if self.is_first {
             self.is_first = false;
-            return Some(self.current);
+            return self.current;
         }
-        let next = self.current.next(self.mesh);
+        let next = self.current?.next(self.mesh?);
         if next.id() == self.first {
             return None;
         } else {
-            self.current = next;
+            self.current = Some(next);
             return Some(next);
         }
     }
@@ -62,11 +75,16 @@ where
     /// This is an O(n) operation where n is the number of edges in the face.
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let mut curr = self.current;
+        let Some(mut curr) = self.current else {
+            return (0, Some(0));
+        };
+        let Some(mesh) = self.mesh else {
+            return (0, Some(0));
+        };
         let mut len = 1;
-        while curr.next(self.mesh).id() != self.first {
+        while curr.next(mesh).id() != self.first {
             len += 1;
-            curr = curr.next(self.mesh);
+            curr = curr.next(mesh);
         }
         (len, Some(len))
     }
@@ -78,8 +96,19 @@ impl<'a, T: HalfEdgeImplMeshType> ExactSizeIterator for ForwardEdgeIterator<'a, 
 pub struct BackwardEdgeIterator<'a, T: HalfEdgeImplMeshType + 'a> {
     is_first: bool,
     first: T::E,
-    current: &'a HalfEdgeImpl<T>,
-    mesh: &'a T::Mesh,
+    current: Option<&'a HalfEdgeImpl<T>>,
+    mesh: Option<&'a T::Mesh>,
+}
+
+impl<'a, T: HalfEdgeImplMeshType> CreateEmptyIterator for BackwardEdgeIterator<'a, T> {
+    fn create_empty() -> Self {
+        Self {
+            is_first: false,
+            first: IndexType::max(),
+            current: None,
+            mesh: None,
+        }
+    }
 }
 
 impl<'a, T: HalfEdgeImplMeshType> BackwardEdgeIterator<'a, T> {
@@ -87,8 +116,8 @@ impl<'a, T: HalfEdgeImplMeshType> BackwardEdgeIterator<'a, T> {
     pub fn new(first: &'a HalfEdgeImpl<T>, mesh: &'a T::Mesh) -> Self {
         Self {
             first: first.id(),
-            current: first,
-            mesh,
+            current: Some(first),
+            mesh: Some(mesh),
             is_first: true,
         }
     }
@@ -101,13 +130,13 @@ impl<'a, T: HalfEdgeImplMeshType> Iterator for BackwardEdgeIterator<'a, T> {
     fn next(&mut self) -> Option<Self::Item> {
         if self.is_first {
             self.is_first = false;
-            return Some(self.current);
+            return self.current;
         }
-        let prev = self.current.prev(self.mesh);
+        let prev = self.current?.prev(self.mesh?);
         if prev.id() == self.first {
             return None;
         } else {
-            self.current = prev;
+            self.current = Some(prev);
             return Some(prev);
         }
     }

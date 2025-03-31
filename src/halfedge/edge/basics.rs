@@ -50,17 +50,27 @@ impl<T: HalfEdgeImplMeshType> EdgeBasics<T> for HalfEdgeImpl<T> {
         self.payload.as_mut()
     }
 
+    type BoundaryIterator<'a>
+        = ForwardEdgeIterator<'a, T>
+    where
+        T: 'a;
+
     #[inline]
-    fn boundary<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge> + 'a
+    fn boundary<'a>(&'a self, mesh: &'a T::Mesh) -> Self::BoundaryIterator<'a>
     where
         T: 'a,
     {
         ForwardEdgeIterator::<'a, T>::new(self, mesh)
     }
 
+    type BoundaryBackIterator<'a>
+        = BackwardEdgeIterator<'a, T>
+    where
+        T: 'a;
+
     #[inline]
     #[allow(refining_impl_trait)]
-    fn boundary_back<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge> + 'a
+    fn boundary_back<'a>(&'a self, mesh: &'a T::Mesh) -> Self::BoundaryBackIterator<'a>
     where
         T: 'a,
     {

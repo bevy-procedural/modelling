@@ -3,21 +3,6 @@ use crate::{
     mesh::{cursor::*, EdgeBasics, HalfEdge, HalfEdgeVertex, MeshBasics, MeshType, VertexBasics},
 };
 
-/// This trait defines the basic functionality for accessing the data fields of a vertex cursor.
-pub trait VertexCursorData<'a, T: MeshType>: CursorData<T = T, I = T::V, S = T::Vertex> {
-    /// The associated face cursor type
-    type FC: FaceCursorData<'a, T>;
-
-    /// The associated edge cursor type
-    type EC: EdgeCursorData<'a, T>;
-
-    /// Derives a new face cursor pointing to the given face id.
-    fn move_to_face(self, id: T::F) -> Self::FC;
-
-    /// Derives a new edge cursor pointing to the given vertex id.
-    fn move_to_edge(self, id: T::E) -> Self::EC;
-}
-
 pub trait ImmutableVertexCursor<'a, T: MeshType>:
     CursorData<T = T, I = T::V, S = T::Vertex> + VertexCursorData<'a, T>
 where
@@ -202,15 +187,5 @@ where
     #[must_use]
     fn outgoing_boundary_edge(&self) -> Option<T::E> {
         HalfEdgeVertex::outgoing_boundary_edge(self.unwrap(), self.mesh())
-    }
-}
-
-pub trait ValidVertexCursorBasics<'a, T: MeshType>: VertexCursorData<'a, T> + ValidCursor {
-    fn shortest_path(self, other: T::V) -> Option<(T::E, T::E, usize)>
-    where
-        T::Edge: HalfEdge<T>,
-        Self::S: HalfEdgeVertex<T>,
-    {
-        self.inner().shortest_path(self.mesh(), other)
     }
 }

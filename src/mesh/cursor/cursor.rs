@@ -6,17 +6,34 @@ pub trait CursorData: Sized + Debug {
     /// The associated index type
     type I: IndexType;
 
-    /// The associated index type
+    /// The associated value type
     type S: Sized;
 
     /// The associated mesh type
     type T: MeshType;
 
+    /// The associated payload type
+    type Payload: Sized;
+
     /// The associated maybe cursor type
-    type Maybe: MaybeCursor<I = Self::I, S = Self::S, T = Self::T>;
+    type Maybe: MaybeCursor<
+        I = Self::I,
+        S = Self::S,
+        T = Self::T,
+        Maybe = Self::Maybe,
+        Valid = Self::Valid,
+        Payload = Self::Payload,
+    >;
 
     /// The associated valid cursor type
-    type Valid: ValidCursor<I = Self::I, S = Self::S, T = Self::T>;
+    type Valid: ValidCursor<
+        I = Self::I,
+        S = Self::S,
+        T = Self::T,
+        Maybe = Self::Maybe,
+        Valid = Self::Valid,
+        Payload = Self::Payload,
+    >;
 
     /*
     /// Returns the id the cursor is pointing to. Panics if the cursor is void.
@@ -77,9 +94,15 @@ pub trait CursorData: Sized + Debug {
         c.move_to(id)
     }
 
+    /// If the cursor is valid, it will be loaded and returned.
+    /// If the cursor is void, `None` will be returned.
     #[must_use]
     fn load(self) -> Option<Self::Valid>;
 
+    /// Load the cursor and apply the function in the closure to it or return the default value if it is void.
+    ///
+    /// WARNING: The default value is always evaluated.
+    #[inline]
     #[must_use]
     fn load_or<Res, F: FnOnce(Self::Valid) -> Res>(self, default: Res, f: F) -> Res {
         if let Some(c) = self.load() {
@@ -89,6 +112,69 @@ pub trait CursorData: Sized + Debug {
         }
     }
 
+    /// Load the cursor and apply the function in the closure to it or return the default value if it is void.
+    /// The default is evaluated only if the cursor is void.
+    #[inline]
+    #[must_use]
+    fn load_or_else<Res, Default: FnOnce(Self) -> Res, F: FnOnce(Self::Valid) -> Res>(
+        self,
+        default: Default,
+        f: F,
+    ) -> Res {
+        if self.is_valid() {
+            f(self.unwrap())
+        } else {
+            default(self)
+        }
+    }
+
+    /// Load the cursor and apply the function in the closure to it or return `void` if it is void already.
+    #[inline]
+    #[must_use]
+    fn load_or_void<F: FnOnce(Self::Valid) -> Self::Maybe>(self, f: F) -> Self::Maybe {
+        if self.is_valid() {
+            f(self.unwrap())
+        } else {
+            self.void()
+        }
+    }
+
+    /// Load the cursor, apply the function in the closure, and move to the returned id,
+    /// or return `void` if it is void already.
+    ///
+    /// Unlike `load_or_void`, this function will not transfer ownership of the cursor to the closure.
+    #[inline]
+    #[must_use]
+    fn load_move_or_void<F: FnOnce(&mut Self::Valid, Self::I) -> Option<Self::I>>(
+        self,
+        f: F,
+    ) -> Self::Maybe {
+        if self.is_valid() {
+            let mut valid = self.unwrap();
+            let id = valid.id();
+            if let Some(id) = f(&mut valid, id) {
+                valid.move_to(id)
+            } else {
+                valid.void()
+            }
+        } else {
+            self.void()
+        }
+    }
+
+    /// Load the cursor and apply the function in the closure to it or return the cursor as-is if it is void.
+    #[inline]
+    #[must_use]
+    fn load_or_nop<F: FnOnce(Self::Valid) -> Self>(self, f: F) -> Self {
+        if self.is_valid() {
+            f(self.unwrap())
+        } else {
+            self
+        }
+    }
+
+    /// Loads the cursor and panics if it is void.
+    /// For valid cursors, this is a no-op.
     #[inline]
     #[must_use]
     fn unwrap(self) -> Self::Valid {
@@ -111,8 +197,36 @@ pub trait CursorData: Sized + Debug {
         }
     }
 
+    /// Converts the cursor to a maybe cursor.
+    /// For valid cursors, the cursor will be unloaded.
+    /// For maybe cursors, this is a no-op.
     #[must_use]
     fn maybe(self) -> Self::Maybe;
+
+    /// Converts a maybe cursor to the current cursor type.
+    /// For valid cursors, this will load the given cursor and panic if it is void.
+    /// For maybe cursors, this is a no-op.
+    #[must_use]
+    fn from_maybe(from: Self::Maybe) -> Self;
+
+    /// Converts a valid cursor to the current cursor type.
+    /// For valid cursors, this is a no-op.
+    /// For maybe cursors, this will unload the given cursor.
+    #[must_use]
+    fn from_valid(from: Self::Valid) -> Self;
+
+    /// Whether the cursor points to an invalid id, i.e.,
+    /// either having the maximum index or pointing to a deleted instance.
+    #[must_use]
+    fn is_void(&self) -> bool;
+
+    /// Whether the cursor points to a valid id, i.e.,
+    /// not having the maximum index and pointing to an existing instance.
+    #[must_use]
+    #[inline]
+    fn is_valid(&self) -> bool {
+        !self.is_void()
+    }
 }
 
 pub trait ImmutableCursor: CursorData {
@@ -120,6 +234,21 @@ pub trait ImmutableCursor: CursorData {
     #[must_use]
     fn fork(&self) -> Self;
 }
+
+pub trait MutableCursor: CursorData {
+    /// Returns a mutable reference to the mesh the cursor points to.
+    ///
+    /// You might want to consider using instead
+    /// [CursorData::load],
+    /// [CursorData::load_or],
+    /// [CursorData::load_or_else],
+    /// [CursorData::load_or_void],
+    /// [CursorData::load_or_nop],
+    /// etc. since these methods provide more transparent ownership semantics.
+    #[must_use]
+    fn mesh_mut<'b>(&'b mut self) -> &'b mut <Self::T as MeshType>::Mesh;
+}
+
 pub trait MaybeCursor: CursorData {
     /*/// Returns a reference to the instance if it exists and is not deleted, otherwise `void`.
     #[must_use]
@@ -143,19 +272,6 @@ pub trait MaybeCursor: CursorData {
         } else {
             Some(self.try_id())
         }
-    }
-
-    /// Whether the cursor points to an invalid id, i.e.,
-    /// either having the maximum index or pointing to a deleted instance.
-    #[must_use]
-    fn is_void(&self) -> bool;
-
-    /// Whether the cursor points to a valid id, i.e.,
-    /// not having the maximum index and pointing to an existing instance.
-    #[must_use]
-    #[inline]
-    fn is_valid(&self) -> bool {
-        !self.is_void()
     }
 
     /// Asserts that the cursor points to a valid id.
@@ -206,13 +322,6 @@ pub trait MaybeCursor: CursorData {
     fn map_or_else<U, F: FnOnce(&Self::S) -> U, E: FnOnce() -> U>(&self, default: E, f: F) -> U {
         self.try_inner().map(f).unwrap_or_else(default)
     }
-
-    /// Returns a reference to the instance the cursor points to..
-    /// Panics if it does'nt exist or is deleted.
-    #[inline]
-    fn unwrap<'b>(&'b self) -> &'b Self::S {
-        self.try_inner().unwrap()
-    }
 }
 
 pub trait ValidCursor: CursorData {
@@ -226,4 +335,17 @@ pub trait ValidCursor: CursorData {
     /// Returns a reference to the instance if it exists and is not deleted, otherwise `void`.
     #[must_use]
     fn inner<'b>(&'b self) -> &'b Self::S;
+
+    /// Returns a reference to the payload of the face.
+    /// Panics if the face is void.
+    #[must_use]
+    fn payload<'b>(&'b self) -> &'b Self::Payload;
+}
+
+pub trait ValidCursorMut: ValidCursor + MutableCursor {
+    #[must_use]
+    fn payload_mut<'b>(&'b mut self) -> &'b mut Self::Payload;
+
+    #[must_use]
+    fn inner_mut<'b>(&'b mut self) -> &'b mut Self::S;
 }

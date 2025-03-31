@@ -17,17 +17,12 @@ impl<'a, T: MeshType> ValidVertexCursorMut<'a, T> {
     pub fn new(mesh: &'a mut T::Mesh, vertex: T::V) -> Self {
         Self { mesh, vertex }
     }
-
-    /// Returns a mutable reference to the payload of the vertex.
-    /// Panics if the vertex is void.
-    #[inline]
-    #[must_use]
-    pub fn payload(&mut self) -> &mut T::VP {
-        VertexBasics::payload_mut(self.mesh.vertex_ref_mut(self.try_id()))
-    }
 }
 
-impl<'a, T: MeshType> VertexCursorData<'a, T> for ValidVertexCursorMut<'a, T> {
+impl<'a, T: MeshType> VertexCursorData<'a, T> for ValidVertexCursorMut<'a, T>
+where
+    T: 'a,
+{
     type EC = EdgeCursorMut<'a, T>;
     type FC = FaceCursorMut<'a, T>;
 
@@ -46,6 +41,7 @@ impl<'a, T: MeshType> CursorData for ValidVertexCursorMut<'a, T> {
     type I = T::V;
     type S = T::Vertex;
     type T = T;
+    type Payload = T::VP;
     type Maybe = VertexCursorMut<'a, T>;
     type Valid = Self;
 
@@ -78,6 +74,21 @@ impl<'a, T: MeshType> CursorData for ValidVertexCursorMut<'a, T> {
     fn maybe(self) -> Self::Maybe {
         VertexCursorMut::new(self.mesh, self.vertex)
     }
+
+    #[inline]
+    fn from_maybe(from: Self::Maybe) -> Self {
+        from.load().unwrap()
+    }
+
+    #[inline]
+    fn from_valid(from: Self::Valid) -> Self {
+        from
+    }
+
+    #[inline]
+    fn is_void(&self) -> bool {
+        false
+    }
 }
 
 impl<'a, T: MeshType> ValidCursor for ValidVertexCursorMut<'a, T> {
@@ -89,6 +100,30 @@ impl<'a, T: MeshType> ValidCursor for ValidVertexCursorMut<'a, T> {
     #[inline]
     fn inner<'b>(&'b self) -> &'b Self::S {
         self.mesh.get_vertex(self.vertex).unwrap()
+    }
+
+    #[inline]
+    fn payload<'b>(&'b self) -> &'b Self::Payload {
+        self.mesh.vertex_ref(self.try_id()).payload()
+    }
+}
+
+impl<'a, T: MeshType> MutableCursor for ValidVertexCursorMut<'a, T> {
+    #[inline]
+    fn mesh_mut<'b>(&'b mut self) -> &'b mut <Self::T as MeshType>::Mesh {
+        self.mesh
+    }
+}
+
+impl<'a, T: MeshType> ValidCursorMut for ValidVertexCursorMut<'a, T> {
+    #[inline]
+    fn payload_mut<'b>(&'b mut self) -> &'b mut Self::Payload {
+        self.mesh.vertex_ref_mut(self.try_id()).payload_mut()
+    }
+
+    #[inline]
+    fn inner_mut<'b>(&'b mut self) -> &'b mut Self::S {
+        self.mesh.get_vertex_mut(self.vertex).unwrap()
     }
 }
 
@@ -106,10 +141,11 @@ impl<'a, T: MeshType> ValidVertexCursorMut<'a, T> {
 }
 
 impl<'a, T: MeshType> ValidVertexCursorBasics<'a, T> for ValidVertexCursorMut<'a, T> where T: 'a {}
-impl<'a, T: MeshType> VertexCursorBasics<'a, T> for ValidVertexCursorMut<'a, T> {}
+impl<'a, T: MeshType> VertexCursorBasics<'a, T> for ValidVertexCursorMut<'a, T> where T: 'a {}
 impl<'a, T: MeshType> VertexCursorHalfedgeBasics<'a, T> for ValidVertexCursorMut<'a, T>
 where
     T::Edge: HalfEdge<T>,
     T::Vertex: HalfEdgeVertex<T>,
+    T: 'a,
 {
 }
