@@ -217,9 +217,7 @@ where
     {
         // TODO: is self from_maybe ok?
         Self::from_maybe(self.load_move_or_void(|mut valid: &mut Self::Valid, id| {
-            valid
-                .mesh_mut()
-                .crochet(id, n, m, false, true, false, vp)
+            (valid.mesh_mut().crochet(id, n, m, false, true, false, vp) as Option<_>)
                 .map(|(first, _last)| first)
         }))
     }
@@ -239,9 +237,7 @@ where
     {
         // TODO: is self from_maybe ok?
         Self::from_maybe(self.load_move_or_void(|mut valid, id| {
-            valid
-                .mesh_mut()
-                .crochet(id, n, m, true, true, false, vp)
+            (valid.mesh_mut().crochet(id, n, m, true, true, false, vp) as Option<_>)
                 .map(|(first, _last)| first)
         }))
     }
@@ -330,7 +326,7 @@ where
     where
         // TODO: can we avoid this constraint?
         <<Self::Valid as EdgeCursorData<'a, T>>::FC as CursorData>::Valid:
-            ValidFaceCursorBasics<'a, T> + MutableCursor + ValidCursor,
+            ValidFaceCursorBasics<'a, T> + ValidCursorMut,
         T: 'a,
     {
         self.load_or_else(
@@ -356,16 +352,18 @@ where
     ///
     /// Doesn't do anything if the cursor is void.
     #[inline]
-    fn replace_face(self, face: T::F) -> Self {
+    fn replace_face(self, face: T::F) -> Self
+    where
+        // TODO: can we avoid this constraint?
+        Self::Valid: ValidEdgeCursorBasics<'a, T> + ValidCursorMut,
+        T: 'a,
+    {
         self.load_or_nop(|mut valid| {
-            let id = valid.id();
-            let f = if valid.has_face() {
-                valid.remove_face()
-            } else {
-                valid
-            };
+            if valid.has_face() {
+                valid.inner_mut().remove_face();
+            }
             if face != IndexType::max() {
-                f.set_face(face);
+                valid.inner_mut().set_face(face);
             }
             Self::from_valid(valid)
         })
