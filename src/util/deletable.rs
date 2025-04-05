@@ -29,31 +29,9 @@ impl<'a, T> CreateEmptyIterator for DeletableVectorIter<'a, T> {
     }
 }
 
-impl<'a, T, V: Default> CreateEmptyIterator
-    for std::iter::Map<DeletableVectorIter<'a, T>, fn(&'a T) -> V>
-{
-    fn create_empty() -> Self {
-        DeletableVectorIter::<'a, T>::create_empty().map(|_| V::default())
-    }
-}
-
 impl<'a, T> CreateEmptyIterator for std::iter::Filter<DeletableVectorIter<'a, T>, fn(&&T) -> bool> {
     fn create_empty() -> Self {
         DeletableVectorIter::<'a, T>::create_empty().filter(|_| false)
-    }
-}
-
-impl<'a, T, V: Default> CreateEmptyIterator
-    for std::iter::Map<
-        std::iter::Filter<DeletableVectorIter<'a, T>, fn(&&T) -> bool>,
-        fn(&'a T) -> V,
-    >
-where
-    T: 'a,
-{
-    #[inline]
-    fn create_empty() -> Self {
-        <std::iter::Filter<DeletableVectorIter<'a, T>, fn(&&T) -> bool> as CreateEmptyIterator>::create_empty().map(|_| V::default())
     }
 }
 

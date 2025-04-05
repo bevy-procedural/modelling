@@ -2,10 +2,12 @@ use super::{ForwardEdgeIterator, HalfEdgeImplMeshType};
 use crate::{
     math::IndexType,
     mesh::{
-        DefaultFacePayload, EdgeBasics, Face, Face3d,
-        FaceBasics, FacePayload, HalfEdge, MeshBasics, MeshType3D, MeshTypeHalfEdge,
+        self, DefaultFacePayload, EdgeBasics, EdgeRef2TargetRefAdapter, Face, Face3d, FaceBasics,
+        FacePayload, HalfEdge, MeshBasics, MeshType3D, MeshTypeHalfEdge,
+        Vertex2ValidVertexCursorAdapter, VertexBasics,
     },
-    util::Deletable,
+    prelude::{ValidCursor, ValidVertexCursor},
+    util::{CreateEmptyIterator, Deletable},
 };
 
 /// A face in a mesh.
@@ -38,6 +40,7 @@ impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
         self.edge
     }
 
+    #[inline]
     fn may_be_curved(&self) -> bool {
         false
         // TODO
@@ -53,43 +56,101 @@ impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
         self.id
     }
 
+    #[inline]
     fn num_edges(&self, mesh: &T::Mesh) -> usize {
         let (min, max) = self.edge_refs(mesh).size_hint();
         assert!(min == max.unwrap());
         min
     }
 
+    #[inline]
     fn num_vertices(&self, mesh: &T::Mesh) -> usize {
         FaceBasics::num_edges(self, mesh)
     }
 
+    #[inline]
     fn num_triangles(&self, mesh: &T::Mesh) -> usize {
         (FaceBasics::num_vertices(self, mesh) - 2) * 3
     }
 
+    #[inline]
     fn payload(&self) -> &T::FP {
         &self.payload
     }
 
+    #[inline]
     fn payload_mut(&mut self) -> &mut T::FP {
         &mut self.payload
     }
 
-    #[inline]
-    fn vertices<'a>(
-        &'a self,
-        mesh: &'a T::Mesh,
-    ) -> impl Iterator<Item = T::Vertex> + 'a + Clone + ExactSizeIterator {
-        self.edge_refs(mesh).map(|e| e.target(mesh).clone())
+    type VertexRefIterator<'a>
+        = EdgeRef2TargetRefAdapter<'a, T, Self::EdgeRefIterator<'a>>
+    where
+        T: 'a,
+        Self: 'a;
+
+    /// Iterates references to all vertices adjacent to the face
+    fn vertex_refs<'a>(&'a self, mesh: &'a T::Mesh) -> Self::VertexRefIterator<'a>
+    where
+        T: 'a,
+    {
+        EdgeRef2TargetRefAdapter::new(mesh, self.edge_refs(mesh))
     }
 
+    type VertexIterator<'a>
+        = Vertex2ValidVertexCursorAdapter<'a, T, Self::VertexRefIterator<'a>>
+    where
+        T: 'a,
+        Self: 'a;
+
     #[inline]
-    #[allow(refining_impl_trait)]
-    fn edge_refs<'a>(&'a self, mesh: &'a T::Mesh) -> ForwardEdgeIterator<'a, T>
+    fn vertices<'a>(&'a self, mesh: &'a T::Mesh) -> Self::VertexIterator<'a>
+    where
+        T: 'a,
+    {
+        Vertex2ValidVertexCursorAdapter::new(mesh, self.vertex_refs(mesh))
+    }
+
+    type VertexIdIterator<'a>
+        = std::iter::Map<Self::VertexIterator<'a>, fn(ValidVertexCursor<'a, T>) -> T::V>
+    where
+        T: 'a,
+        Self: 'a;
+
+    #[inline]
+    fn vertex_ids<'a>(&'a self, mesh: &'a T::Mesh) -> Self::VertexIdIterator<'a>
+    where
+        T: 'a,
+    {
+        self.vertices(mesh).map(|v| v.id())
+    }
+
+    type EdgeRefIterator<'a>
+        = ForwardEdgeIterator<'a, T>
+    where
+        T: 'a,
+        Self: 'a;
+
+    #[inline]
+    fn edge_refs<'a>(&'a self, mesh: &'a T::Mesh) -> Self::EdgeRefIterator<'a>
     where
         T: 'a,
     {
         ForwardEdgeIterator::new(self.edge(mesh), mesh)
+    }
+
+    type EdgeIdIterator<'a>
+        = std::iter::Map<ForwardEdgeIterator<'a, T>, fn(&'a T::Edge) -> T::E>
+    where
+        T: 'a,
+        Self: 'a;
+
+    #[inline]
+    fn edge_ids<'a>(&'a self, mesh: &'a T::Mesh) -> Self::EdgeIdIterator<'a>
+    where
+        T: 'a,
+    {
+        self.edge_refs(mesh).map(|e| e.id())
     }
 }
 

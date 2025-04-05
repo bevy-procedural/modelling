@@ -1,4 +1,4 @@
-use crate::mesh::{Face3d, FaceBasics, MeshType3D, Triangulation, VertexBasics};
+use crate::mesh::{cursor::*, Face3d, FaceBasics, MeshType3D, Triangulation};
 use itertools::Itertools;
 
 /// Converts the face into a triangle fan. Only works for convex planar faces.

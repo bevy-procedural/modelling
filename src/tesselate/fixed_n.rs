@@ -3,7 +3,7 @@
 
 use crate::{
     math::{IndexType, Polygon, Vector2D},
-    mesh::{Face3d, FaceBasics, IndexedVertex2D, MeshType3D, Triangulation, VertexBasics},
+    mesh::{Face3d, FaceBasics, IndexedVertex2D, MeshType3D, Triangulation},
 };
 use itertools::Itertools;
 
@@ -15,7 +15,7 @@ pub fn try_min_weight_small<T: MeshType3D>(
 ) -> bool {
     let n = face.num_vertices(mesh);
     if n == 3 {
-        let (a, b, c) = face.vertices(mesh).map(|v| v.id()).collect_tuple().unwrap();
+        let (a, b, c) = face.vertex_ids(mesh).collect_tuple().unwrap();
         indices.insert_triangle(a, b, c);
         return true;
     }

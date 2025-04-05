@@ -6,9 +6,11 @@ mod face;
 mod mesh;
 mod triangulation;
 mod vertex;
+mod adaptor;
 
 pub use edge::*;
 pub use face::*;
 pub use mesh::*;
 pub use triangulation::*;
 pub use vertex::*;
+pub use adaptor::*;

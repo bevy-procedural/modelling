@@ -3,6 +3,7 @@
 use crate::{
     math::{HasPosition, Scalar, Vector},
     mesh::{MeshBasics, MeshType},
+    prelude::{ValidEdgeCursor, ValidFaceCursor},
 };
 
 /// Basic vertex functionality for a mesh
@@ -47,11 +48,11 @@ pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone {
         T: 'a;
 
     /// Iterates all faces adjacent to this vertex in the same manifold edge wheel (clockwise)
-    fn faces<'a>(&self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Face>
+    fn faces<'a>(&self, mesh: &'a T::Mesh) -> impl Iterator<Item = ValidFaceCursor<'a, T>>
     where
         T: 'a,
     {
-        mesh.vertex_faces(self.id()).map(move |f| mesh.face_ref(f))
+        mesh.vertex_faces(self.id())
     }
 
     /// Iterates the ids of all neighbors of the vertex
@@ -69,13 +70,19 @@ pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone {
 
     /// Iterates all outgoing (half)edges (resp. all edges in outwards-direction
     /// if undirected) incident to this vertex (clockwise)
-    fn edges_out(&self, mesh: &T::Mesh) -> impl Iterator<Item = T::E> {
+    fn edges_out<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = ValidEdgeCursor<'a, T>>
+    where
+        T: 'a,
+    {
         mesh.vertex_edges_out(self.id())
     }
 
     /// Iterates all ingoing (half)edges (resp. all edges in inwards-direction
     /// if undirected) incident to this vertex (clockwise)
-    fn edges_in(&self, mesh: &T::Mesh) -> impl Iterator<Item = T::E> {
+    fn edges_in<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = ValidEdgeCursor<'a, T>>
+    where
+        T: 'a,
+    {
         mesh.vertex_edges_in(self.id())
     }
 

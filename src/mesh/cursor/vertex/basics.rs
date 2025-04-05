@@ -1,6 +1,6 @@
 use crate::{
-    math::{HasPosition, IndexType, Scalar, Vector},
-    mesh::{cursor::*, EdgeBasics, HalfEdge, HalfEdgeVertex, MeshBasics, MeshType, VertexBasics},
+    math::IndexType,
+    mesh::{cursor::*, HalfEdge, HalfEdgeVertex, MeshBasics, MeshType},
 };
 
 pub trait ImmutableVertexCursor<'a, T: MeshType>:
@@ -13,10 +13,13 @@ where
     /// See [MeshBasics::vertex_edges_out] for more information.
     #[must_use]
     #[inline]
-    fn edges_out(self) -> impl Iterator<Item = ValidEdgeCursor<'a, T>> {
-        self.mesh()
-            .vertex_edges_out(self.try_id())
-            .map(move |e| ValidEdgeCursor::load_new(self.mesh(), e))
+    fn edges_out(self) -> impl Iterator<Item = ValidEdgeCursor<'a, T>>
+    where
+        Self: 'a,
+    {
+        // TODO: I want to consume here but don't require consuming on the mesh. 
+        // If I don't want to use ouroboros I need to make a second implementation of vertex_edges_out that owns the mesh.
+        self.mesh().vertex_edges_out(self.try_id())
     }
 
     /// Returns an iterator of edge ids pointing to the outgoing halfedges of the vertex.
@@ -24,11 +27,11 @@ where
     /// See [MeshBasics::vertex_edges_out] for more information.
     #[must_use]
     #[inline]
-    fn edges_out_ids<'b>(&'b self) -> impl Iterator<Item = T::E> + 'b
+    fn edges_out_ids(self) -> impl Iterator<Item = T::E> + 'a
     where
-        T: 'b,
+        Self: 'a,
     {
-        self.mesh().vertex_edges_out(self.try_id())
+        self.edges_out().map(|e| e.id())
     }
 
     /// Returns an iterator of edge cursors pointing to the incoming halfedges of the vertex.
@@ -36,10 +39,11 @@ where
     /// See [MeshBasics::vertex_edges_in] for more information.
     #[must_use]
     #[inline]
-    fn edges_in(self) -> impl Iterator<Item = ValidEdgeCursor<'a, T>> {
-        self.mesh()
-            .vertex_edges_in(self.try_id())
-            .map(move |e| ValidEdgeCursor::load_new(self.mesh(), e))
+    fn edges_in(self) -> impl Iterator<Item = ValidEdgeCursor<'a, T>>
+    where
+        T: 'a,
+    {
+        self.mesh().vertex_edges_in(self.try_id())
     }
 
     /// Returns an iterator of edge ids pointing to the incoming halfedges of the vertex.
@@ -47,11 +51,11 @@ where
     /// See [MeshBasics::vertex_edges_in] for more information.
     #[must_use]
     #[inline]
-    fn edges_in_ids<'b>(&'b self) -> impl Iterator<Item = T::E> + 'b
+    fn edges_in_ids(self) -> impl Iterator<Item = T::E> + 'a
     where
-        T: 'b,
+        Self: 'a,
     {
-        self.mesh().vertex_edges_in(self.try_id())
+        self.edges_in().map(|e| e.id())
     }
 
     /// Iterates over the neighbors of the vertex.
@@ -59,10 +63,11 @@ where
     /// See [VertexBasics::neighbor_ids] for more information.
     #[inline]
     #[must_use]
-    fn neighbors(self) -> impl Iterator<Item = ValidVertexCursor<'a, T>> {
-        self.mesh()
-            .vertex_neighbors(self.try_id())
-            .map(move |v| ValidVertexCursor::load_new(self.mesh(), v))
+    fn neighbors(self) -> impl Iterator<Item = ValidVertexCursor<'a, T>>
+    where
+        Self: 'a,
+    {
+        self.mesh().vertex_neighbors(self.try_id())
     }
 
     /// Iterates over the neighbors' ids of the vertex.
@@ -70,11 +75,11 @@ where
     /// See [MeshBasics::vertex_neighbors] for more information.
     #[inline]
     #[must_use]
-    fn neighbor_ids<'b>(&'b self) -> impl Iterator<Item = T::V> + 'b
+    fn neighbor_ids(self) -> impl Iterator<Item = T::V> + 'a
     where
-        T: 'b,
+        Self: 'a,
     {
-        self.mesh().vertex_neighbors(self.try_id())
+        self.neighbors().map(|v| v.id())
     }
 
     /// Iterates over the faces adjacent to the vertex.
@@ -83,9 +88,7 @@ where
     #[inline]
     #[must_use]
     fn faces(self) -> impl Iterator<Item = ValidFaceCursor<'a, T>> {
-        self.mesh()
-            .vertex_faces(self.try_id())
-            .map(move |f| ValidFaceCursor::load_new(self.mesh(), f))
+        self.mesh().vertex_faces(self.try_id())
     }
 
     /// Iterates over the ids of the faces adjacent to the vertex.
@@ -93,11 +96,11 @@ where
     /// See [MeshBasics::vertex_faces] for more information.
     #[inline]
     #[must_use]
-    fn face_ids<'b>(&'b self) -> impl Iterator<Item = T::F> + 'b
+    fn face_ids(self) -> impl Iterator<Item = T::F> + 'a
     where
-        T: 'b,
+        Self: 'a,
     {
-        self.mesh().vertex_faces(self.try_id())
+        self.faces().map(|f| f.id())
     }
 }
 

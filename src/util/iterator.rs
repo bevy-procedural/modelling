@@ -46,3 +46,21 @@ impl<T> CreateEmptyIterator for std::vec::IntoIter<T> {
         Vec::new().into_iter()
     }
 }
+
+impl<'a, Input, Output, Iter: CreateEmptyIterator + Iterator<Item = Input>> CreateEmptyIterator
+    for std::iter::Map<Iter, fn(Input) -> Output>
+{
+    fn create_empty() -> Self {
+        // TODO: Or how to formulate this?
+        Iter::create_empty().map(|_| todo!())
+    }
+}
+
+impl<'a, Input, Output, Iter: CreateEmptyIterator + Iterator<Item = Input>> CreateEmptyIterator
+    for std::iter::FilterMap<Iter, fn(Input) -> Option<Output>>
+{
+    fn create_empty() -> Self {
+        // TODO: Or how to formulate this?
+        Iter::create_empty().filter_map(|_| None)
+    }
+}

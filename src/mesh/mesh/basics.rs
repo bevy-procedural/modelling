@@ -94,27 +94,56 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     where
         T: 'a;
 
+    type VertexEdgesOutIterator<'a>: Iterator<Item = ValidEdgeCursor<'a, T>> + CreateEmptyIterator
+    where
+        T: 'a,
+        Self: 'a;
+
     /// Iterates all outgoing (half)edges (resp. all edges in outwards-direction
     /// if undirected) incident to this vertex (clockwise)
     /// Returns an empty iterator if the vertex does not exist.
     #[must_use]
-    fn vertex_edges_out(&self, v: T::V) -> impl Iterator<Item = T::E>;
+    fn vertex_edges_out<'a>(&'a self, v: T::V) -> Self::VertexEdgesOutIterator<'a>
+    where
+        T: 'a;
+
+    type VertexEdgesInIterator<'a>: Iterator<Item = ValidEdgeCursor<'a, T>> + CreateEmptyIterator
+    where
+        T: 'a,
+        Self: 'a;
 
     /// Iterates all ingoing (half)edges (resp. all edges in outwards-direction
     /// if undirected) incident to this vertex (clockwise)
     /// Returns an empty iterator if the vertex does not exist.
     #[must_use]
-    fn vertex_edges_in(&self, v: T::V) -> impl Iterator<Item = T::E>;
+    fn vertex_edges_in<'a>(&'a self, v: T::V) -> Self::VertexEdgesInIterator<'a>
+    where
+        T: 'a;
+
+    type VertexNeighborsIterator<'a>: Iterator<Item = ValidVertexCursor<'a, T>>
+        + CreateEmptyIterator
+    where
+        T: 'a,
+        Self: 'a;
 
     /// Iterates all neighbors of the vertex.
     /// Returns an empty iterator if the vertex does not exist.
     #[must_use]
-    fn vertex_neighbors(&self, v: T::V) -> impl Iterator<Item = T::V>;
+    fn vertex_neighbors<'a>(&'a self, v: T::V) -> Self::VertexNeighborsIterator<'a>
+    where
+        T: 'a;
+
+    type VertexFacesIterator<'a>: Iterator<Item = ValidFaceCursor<'a, T>> + CreateEmptyIterator
+    where
+        T: 'a,
+        Self: 'a;
 
     /// Iterates all faces adjacent to the vertex.
     /// Returns an empty iterator if the vertex does not exist.
     #[must_use]
-    fn vertex_faces(&self, v: T::V) -> impl Iterator<Item = T::F>;
+    fn vertex_faces<'a>(&'a self, v: T::V) -> Self::VertexFacesIterator<'a>
+    where
+        T: 'a;
 
     //======================= Edge Operations =======================//
 
@@ -240,9 +269,14 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     #[must_use]
     fn shared_edge_id(&self, v: T::V, w: T::V) -> Option<T::E>;
 
+    type SharedEdgeIter<'a>: Iterator<Item = ValidEdgeCursor<'a, T>> + CreateEmptyIterator
+    where
+        T: 'a,
+        Self: 'a;
+
     /// Returns all (half)edges from v to w.
     #[must_use]
-    fn shared_edges<'a>(&'a self, v: T::V, w: T::V) -> impl Iterator<Item = &'a T::Edge>
+    fn shared_edges<'a>(&'a self, v: T::V, w: T::V) -> Self::SharedEdgeIter<'a>
     where
         T: 'a;
 

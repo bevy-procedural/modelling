@@ -1,6 +1,5 @@
 use crate::mesh::{
-    DefaultEdgePayload, EdgeBasics, EdgeCursorHalfedgeBasics, FaceBasics, MeshTypeHalfEdge,
-    VertexInterpolator,
+    cursor::*, DefaultEdgePayload, EdgeBasics, FaceBasics, MeshTypeHalfEdge, VertexInterpolator,
 };
 
 /// Describes how to subdivide a mesh.
@@ -105,14 +104,17 @@ where
                 es2[i] = self.subdivide_halfedge(es[i].id(), vp, Default::default());
             }
 
-            let fp = self.face(*face).payload().clone();
+            // TODO: Avoid unwrap
+
+            let fp = self.face(*face).unwrap().payload().clone();
             for i in 0..3 {
                 self.subdivide_face(
-                    self.edge(es2[i]).prev_id(),
+                    self.edge(es2[i]).unwrap().prev_id(),
                     es2[(i + 3) % 3],
                     Default::default(),
                     fp.clone(),
-                ).unwrap();
+                )
+                .unwrap();
             }
 
             /*

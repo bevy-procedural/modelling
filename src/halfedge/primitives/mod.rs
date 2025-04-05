@@ -16,7 +16,13 @@ where
     #[inline]
     fn insert_polygon(&mut self, vp: impl IntoIterator<Item = T::VP>) -> ValidEdgeCursorMut<'_, T> {
         self.insert_loop_default(vp)
-            .stay(|c| c.twin().insert_face(Default::default()).edge())
+            .stay(|c| {
+                c.twin()
+                    .unwrap()
+                    .insert_face(Default::default())
+                    .edge()
+                    .unwrap()
+            })
             .unwrap()
     }
 

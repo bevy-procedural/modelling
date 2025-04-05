@@ -26,9 +26,9 @@ where
     {
         let faces = self.face_ids().collect_vec();
         for f in faces {
-            let e = self.face(f).edge().twin_id();
-            if self.edge(e).unwrap().is_boundary_self() {
-                self.extrude(e, transform);
+            let e = self.face(f).edge().twin().unwrap();
+            if e.is_boundary_self() {
+                self.extrude(e.id(), transform);
             }
         }
     }
@@ -42,10 +42,11 @@ where
         T::VP: Transformable<D, Trans = T::Trans, S = T::S>,
         T: EuclideanMeshType<D, Mesh = Self>,
     {
-        assert!(self.edge(e).is_boundary_self());
+        assert!(self.edge(e).unwrap().is_boundary_self());
         // TODO: avoid collecting
+        // TODO: avoid unwrap
         let vps: Vec<_> = self
-            .edges_back_from(self.edge(e).next_id())
+            .edges_back_from(self.edge(e).unwrap().next_id())
             .map(|v| v.origin(self).payload().transformed(&transform))
             .collect();
         let start = self.edge_mut(e).loft_back(2, 2, vps).unwrap().id(); // TODO
@@ -59,7 +60,8 @@ where
         T::VP: Transformable<D, Trans = T::Trans, S = T::S>,
         T: EuclideanMeshType<D, Mesh = Self>,
     {
-        let e = self.face(f).edge_id();
+        // TODO: avoid unwrap
+        let e = self.face(f).unwrap().edge_id();
         self.remove_face(f);
         self.extrude(e, transform)
     }
@@ -74,7 +76,8 @@ where
         T::VP: Transformable<D, Trans = T::Trans, S = T::S>,
         T: EuclideanMeshType<D, Mesh = Self>,
     {
-        let e = self.face(f).edge_id();
+        // TODO: avoid unwrap
+        let e = self.face(f).unwrap().edge_id();
         self.remove_face(f);
         self.extrude_tri(e, transform)
     }
@@ -88,10 +91,11 @@ where
         T::VP: Transformable<D, Trans = T::Trans, S = T::S>,
         T: EuclideanMeshType<D, Mesh = Self>,
     {
-        assert!(self.edge(e).is_boundary_self());
+        assert!(self.edge(e).unwrap().is_boundary_self());
         // TODO: avoid collecting
+        // TODO: avoid unwrap
         let vps: Vec<_> = self
-            .edges_from(self.edge(e).next_id())
+            .edges_from(self.edge(e).unwrap().next_id())
             .map(|v| v.origin(self).payload().transformed(&transform))
             .collect();
         let start = self.loft_tri(e, false, true, vps).unwrap();
@@ -108,11 +112,11 @@ where
         T::VP: Transformable<D, Trans = T::Trans, S = T::S>,
         T: EuclideanMeshType<D, Mesh = Self>,
     {
-        assert!(self.edge(e).is_boundary_self());
+        assert!(self.edge(e).unwrap().is_boundary_self());
         // TODO: avoid collecting
-
+        // TODO: avoid unwrap
         let mut vps: Vec<_> = self
-            .edges_from(self.edge(e).next_id())
+            .edges_from(self.edge(e).unwrap().next_id())
             .map(|v| v.origin(self).payload().transformed(&transform))
             .collect::<Vec<_>>()
             .iter()
@@ -133,12 +137,13 @@ where
     #[must_use]
     fn windmill_back(&mut self, start: T::E, hub: T::VP) -> Option<T::V> {
         // TODO: replace with loft n=1
-        let start = self.edge(start);
+        // TODO: avoid unwrap
+        let start = self.edge(start).unwrap();
         let origin = start.origin_id();
         let mut input = start.prev_id();
         let (_, v) = self.insert_vertex_e(input, hub, Default::default())?;
         loop {
-            let e = self.edge(input);
+            let e = self.edge(input).unwrap();
             if e.origin_id() == origin {
                 break;
             }
@@ -157,12 +162,13 @@ where
     #[must_use]
     fn windmill(&mut self, start: T::E, hub: T::VP) -> Option<T::V> {
         // TODO: replace with loft n=1
-        let start = self.edge(start);
+        // TODO: avoid unwrap
+        let start = self.edge(start).unwrap();
         let target = start.target_id();
         let mut input = start.next_id();
         let (_, v) = self.insert_vertex_e(start.id(), hub, Default::default())?;
         loop {
-            let e = self.edge(input);
+            let e = self.edge(input).unwrap();
             if e.target_id() == target {
                 break;
             }

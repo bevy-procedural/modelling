@@ -1,4 +1,8 @@
-use crate::mesh::{EdgeBasics, MeshType, VertexBasics};
+use crate::{
+    mesh::{EdgeBasics, MeshType, VertexBasics},
+    prelude::ValidVertexCursor,
+    util::CreateEmptyIterator,
+};
 
 /// A face in a mesh.
 ///
@@ -34,19 +38,35 @@ pub trait FaceBasics<T: MeshType<Face = Self>>: std::fmt::Debug + Clone + Copy {
     /// Returns a mutable reference to the face payload.
     fn payload_mut(&mut self) -> &mut T::FP;
 
-    /// Iterates all vertices adjacent to the face
-    fn vertices<'a>(
-        &'a self,
-        mesh: &'a T::Mesh,
-    ) -> impl Iterator<Item = T::Vertex> + 'a + Clone + ExactSizeIterator;
-
-    /// Iterates all vertex ids adjacent to the face
-    fn vertex_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::V> + 'a
+    type VertexRefIterator<'a>: Iterator<Item = &'a T::Vertex> + 'a + CreateEmptyIterator
     where
         T: 'a,
-    {
-        self.vertices(mesh).map(|v| v.id())
-    }
+        Self: 'a;
+
+    /// Iterates references to all vertices adjacent to the face
+    fn vertex_refs<'a>(&'a self, mesh: &'a T::Mesh) -> Self::VertexRefIterator<'a>
+    where
+        T: 'a;
+
+    type VertexIterator<'a>: Iterator<Item = ValidVertexCursor<'a, T>> + 'a + CreateEmptyIterator
+    where
+        T: 'a,
+        Self: 'a;
+
+    /// Iterates all vertices adjacent to the face
+    fn vertices<'a>(&'a self, mesh: &'a T::Mesh) -> Self::VertexIterator<'a>
+    where
+        T: 'a;
+
+    type VertexIdIterator<'a>: Iterator<Item = T::V> + 'a + CreateEmptyIterator
+    where
+        T: 'a,
+        Self: 'a;
+
+    /// Iterates all vertex ids adjacent to the face
+    fn vertex_ids<'a>(&'a self, mesh: &'a T::Mesh) -> Self::VertexIdIterator<'a>
+    where
+        T: 'a;
 
     /// Whether the face has holes.
     /// The data structure (currently!) cannot represent holes, so this is always false.
@@ -54,16 +74,23 @@ pub trait FaceBasics<T: MeshType<Face = Self>>: std::fmt::Debug + Clone + Copy {
         return false;
     }
 
+    type EdgeRefIterator<'a>: Iterator<Item = &'a T::Edge> + 'a + CreateEmptyIterator
+    where
+        T: 'a,
+        Self: 'a;
+
     /// Iterates all half-edges incident to the face
-    fn edge_refs<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Edge> + 'a
+    fn edge_refs<'a>(&'a self, mesh: &'a T::Mesh) -> Self::EdgeRefIterator<'a>
     where
         T: 'a;
 
-    /// Iterates all half-edge ids incident to the face
-    fn edge_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::E> + 'a
+    type EdgeIdIterator<'a>: Iterator<Item = T::E> + 'a + CreateEmptyIterator
     where
         T: 'a,
-    {
-        self.edge_refs(mesh).map(|e| e.id())
-    }
+        Self: 'a;
+
+    /// Iterates all half-edge ids incident to the face
+    fn edge_ids<'a>(&'a self, mesh: &'a T::Mesh) -> Self::EdgeIdIterator<'a>
+    where
+        T: 'a;
 }

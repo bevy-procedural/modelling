@@ -411,7 +411,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     fn insert_loop(
         &mut self,
         iter: impl IntoIterator<Item = (T::EP, T::VP)>,
-    ) -> EdgeCursorMut<'_, T> {
+    ) -> ValidEdgeCursorMut<'_, T> {
         let mut iter = iter.into_iter();
         let (ep, vp) = iter.next().unwrap();
         let (second_e, last_e) = self.insert_path(vp, iter);
@@ -420,12 +420,12 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
             self.edge(first_e).unwrap().target_id(),
             self.edge(second_e).unwrap().origin_id()
         );
-        self.edge_mut(first_e)
+        self.edge_mut(first_e).unwrap()
     }
 
     /// Same as `insert_loop` but uses the default edge payload.
     #[inline]
-    fn insert_loop_default(&mut self, iter: impl IntoIterator<Item = T::VP>) -> EdgeCursorMut<'_, T>
+    fn insert_loop_default(&mut self, iter: impl IntoIterator<Item = T::VP>) -> ValidEdgeCursorMut<'_, T>
     where
         T::EP: DefaultEdgePayload,
     {

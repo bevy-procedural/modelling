@@ -1,14 +1,14 @@
-use super::{adaptor::Edge2ValidEdgeCursorAdapter, HalfEdgeImplMeshType, HalfEdgeMeshImpl};
+use super::{HalfEdgeImplMeshType, HalfEdgeMeshImpl};
 use crate::{
     math::IndexType,
     mesh::{
-        cursor::*, EdgeBasics, HalfEdge, HalfEdgeMesh, MeshBasics, MeshType, Triangulation,
-        VertexBasics, VertexPayload,
+        cursor::*, Edge2ValidEdgeCursorAdapter, EdgeBasics, HalfEdge, HalfEdgeMesh, MeshBasics,
+        MeshType, Triangulation, VertexBasics, VertexPayload,
     },
     prelude::IncidentToVertexIterator,
     util::{CreateEmptyIterator, DeletableVectorIter},
 };
-use std::collections::HashMap;
+use std::{collections::HashMap, path::Iter};
 
 impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     //======================= Vertex Operations =======================//
@@ -72,36 +72,68 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         self.vertices.iter_mut()
     }
 
+    type VertexEdgesOutIterator<'a>
+        = IncidentToVertexIterator<'a, T>
+    where
+        T: 'a;
+
     #[inline]
-    fn vertex_edges_out(&self, v: T::V) -> impl Iterator<Item = T::E> {
+    fn vertex_edges_out<'a>(&'a self, v: T::V) -> Self::VertexEdgesOutIterator<'a>
+    where
+        T: 'a,
+    {
         self.get_vertex(v).map_or_else(
-            || IncidentToVertexIterator::<'_, T>::empty(self),
-            |v| IncidentToVertexIterator::<'_, T>::new(v.edge_id(self), self),
+            || CreateEmptyIterator::create_empty(),
+            |v| IncidentToVertexIterator::<'a, T>::new(v.edge_id(self), self),
         )
     }
 
-    #[inline]
-    fn vertex_edges_in(&self, v: T::V) -> impl Iterator<Item = T::E> {
-        self.vertex_edges_out(v)
-            .map(|e| self.edge(e).unwrap().twin_id())
-    }
+    type VertexEdgesInIterator<'a>
+        = std::iter::Map<
+        Self::VertexEdgesOutIterator<'a>,
+        fn(ValidEdgeCursor<'a, T>) -> ValidEdgeCursor<'a, T>,
+    >
+    where
+        T: 'a;
 
     #[inline]
-    fn vertex_neighbors(&self, v: T::V) -> impl Iterator<Item = T::V> {
-        self.vertex_edges_out(v)
-            .map(move |e| self.edge(e).unwrap().target_id())
+    fn vertex_edges_in<'a>(&'a self, v: T::V) -> Self::VertexEdgesInIterator<'a>
+    where
+        T: 'a,
+    {
+        self.vertex_edges_out(v).map(|e| e.twin().unwrap())
     }
 
+    type VertexNeighborsIterator<'a>
+        = std::iter::Map<
+        Self::VertexEdgesOutIterator<'a>,
+        fn(ValidEdgeCursor<'a, T>) -> ValidVertexCursor<'a, T>,
+    >
+    where
+        T: 'a;
+
     #[inline]
-    fn vertex_faces(&self, v: T::V) -> impl Iterator<Item = T::F> {
-        self.vertex_edges_out(v).filter_map(move |e| {
-            let f = self.edge(e).unwrap().face_id();
-            if f == IndexType::max() {
-                None
-            } else {
-                Some(f)
-            }
-        })
+    fn vertex_neighbors<'a>(&'a self, v: T::V) -> Self::VertexNeighborsIterator<'a>
+    where
+        T: 'a,
+    {
+        self.vertex_edges_out(v).map(|e| e.target().unwrap())
+    }
+
+    type VertexFacesIterator<'a>
+        = std::iter::FilterMap<
+        Self::VertexEdgesOutIterator<'a>,
+        fn(ValidEdgeCursor<'a, T>) -> Option<ValidFaceCursor<'a, T>>,
+    >
+    where
+        T: 'a;
+
+    #[inline]
+    fn vertex_faces<'a>(&'a self, v: T::V) -> Self::VertexFacesIterator<'a>
+    where
+        T: 'a,
+    {
+        self.vertex_edges_out(v).filter_map(|e| e.face().load())
     }
 
     //======================= Edge Operations =======================//
@@ -224,20 +256,30 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         })
     }
 
+    type SharedEdgeIter<'a>
+        = Iterator<Item = ValidEdgeCursor<'a, T>>
+    where
+        T: 'a;
+
     #[inline]
-    fn shared_edges<'a>(&'a self, v: T::V, w: T::V) -> impl Iterator<Item = &'a T::Edge>
+    fn shared_edges<'a>(&'a self, v: T::V, w: T::V) -> Self::SharedEdgeIter<'a>
     where
         T: 'a,
     {
-        self.shared_edge_ids(v, w).map(move |e| self.edge_ref(e))
+        self.vertex(v).edges_out().filter_map(
+            move |e| {
+                if e.target_id() == w {
+                    Some(e)
+                } else {
+                    None
+                }
+            },
+        )
     }
 
     #[inline]
     fn shared_edge_ids(&self, v: T::V, w: T::V) -> impl Iterator<Item = T::E> {
-        self.vertex(v)
-            .edges_out()
-            .filter(move |e| e.target_id() == w)
-            .map(|e| e.id())
+        self.shared_edges(v, w).map(|e| e.id())
     }
 
     //======================= Face Operations =======================//

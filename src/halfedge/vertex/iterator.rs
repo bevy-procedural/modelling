@@ -2,6 +2,7 @@ use crate::{
     halfedge::HalfEdgeImplMeshType,
     math::IndexType,
     mesh::{cursor::*, MeshBasics},
+    util::CreateEmptyIterator,
 };
 
 /// Iterator over all half-edges incident to the same vertex (clockwise)
@@ -9,7 +10,7 @@ pub struct IncidentToVertexIterator<'a, T: HalfEdgeImplMeshType + 'a> {
     is_first: bool,
     first: T::E,
     current: T::E,
-    mesh: &'a T::Mesh,
+    mesh: Option<&'a T::Mesh>,
 }
 
 impl<'a, T: HalfEdgeImplMeshType> IncidentToVertexIterator<'a, T> {
@@ -18,38 +19,39 @@ impl<'a, T: HalfEdgeImplMeshType> IncidentToVertexIterator<'a, T> {
         Self {
             first,
             current: first,
-            mesh,
+            mesh: Some(mesh),
             is_first: true,
         }
     }
+}
 
-    /// Creates an empty iterator
-    pub fn empty(mesh: &'a T::Mesh) -> Self {
+impl<'a, T: HalfEdgeImplMeshType> CreateEmptyIterator for IncidentToVertexIterator<'a, T> {
+    fn create_empty() -> Self {
         Self {
             first: IndexType::max(),
             current: IndexType::max(),
-            mesh,
+            mesh: None,
             is_first: true,
         }
     }
 }
 
 impl<'a, T: HalfEdgeImplMeshType> Iterator for IncidentToVertexIterator<'a, T> {
-    type Item = T::E;
+    type Item = ValidEdgeCursor<'a, T>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.current == IndexType::max() {
             return None;
         }
-        let current = self.mesh.edge(self.current).load()?;
+        let current = self.mesh?.edge(self.current).load()?;
         if self.is_first {
             self.is_first = false;
-            return Some(current.id());
+            return Some(current);
         }
         let next = current.twin().next().load()?;
         debug_assert_eq!(
             next.origin_id(),
-            self.mesh.edge(self.first).unwrap().origin_id(),
+            self.mesh?.edge(self.first).unwrap().origin_id(),
             "The edge wheel around vertex {} is not closed. The mesh is invalid.",
             next.origin_id()
         );
@@ -59,7 +61,7 @@ impl<'a, T: HalfEdgeImplMeshType> Iterator for IncidentToVertexIterator<'a, T> {
             // self-loop edge
             assert_ne!(self.current, next.id());
             self.current = next.id();
-            return Some(next.id());
+            return Some(next);
         }
     }
 }

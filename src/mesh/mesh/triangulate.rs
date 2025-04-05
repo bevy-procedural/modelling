@@ -4,6 +4,7 @@ use super::{MeshBasics, MeshType, MeshType3D};
 use crate::{
     math::{HasNormal, IndexType, Vector},
     mesh::{Face3d, FaceBasics, Triangulation, VertexBasics},
+    prelude::ValidFaceCursor,
     tesselate::{triangulate_face, TriangulationAlgorithm},
 };
 
@@ -40,7 +41,7 @@ pub trait Triangulateable<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         let mut vertices = Vec::new();
         let mut indices = Vec::new();
 
-        for f in self.face_refs() {
+        for f in self.faces() {
             let mut tri = Triangulation::new(&mut indices);
             let face_normal = Face3d::normal(f, self).normalize();
             let mut id_map = HashMap::new();

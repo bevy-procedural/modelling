@@ -31,9 +31,7 @@ where
     #[inline]
     #[must_use]
     fn remove(self) -> Self::Maybe {
-        self.load_move_or_void(|mut valid, id| {
-            valid.mesh_mut().try_remove_edge(id).not().then(|| id)
-        })
+        self.load_move_or_void(|valid, id| valid.mesh_mut().try_remove_edge(id).not().then(|| id))
     }
     /// Inserts a new vertex and half-edge pair. The halfedge leading to the
     /// new vertex will become the "next" of the current edge and the cursor will move
@@ -66,7 +64,7 @@ where
     #[inline]
     #[must_use]
     fn connect(self, other: T::E, ep: T::EP) -> Self::Maybe {
-        self.load_move_or_void(|mut valid, id| valid.mesh_mut().insert_edge_ee(id, other, ep))
+        self.load_move_or_void(|valid, id| valid.mesh_mut().insert_edge_ee(id, other, ep))
     }
 
     /// Connects the current halfedge to the given vertex.
@@ -76,7 +74,7 @@ where
     #[inline]
     #[must_use]
     fn connect_v(self, other: T::V, ep: T::EP) -> Self::Maybe {
-        self.load_move_or_void(|mut valid, id| valid.mesh_mut().insert_edge_ev(id, other, ep))
+        self.load_move_or_void(|valid, id| valid.mesh_mut().insert_edge_ev(id, other, ep))
     }
 
     /// Removes the face from the edge.
@@ -107,7 +105,7 @@ where
     #[inline]
     #[must_use]
     fn close_face_v(self, v: T::V, ep: T::EP, fp: T::FP) -> Self::Maybe {
-        self.load_move_or_void(|mut valid, id| {
+        self.load_move_or_void(|valid, id| {
             valid
                 .mesh_mut()
                 .close_face_ev(id, v, ep, fp)
@@ -160,7 +158,7 @@ where
     #[inline]
     #[must_use]
     fn collapse(self) -> Self::Maybe {
-        self.load_move_or_void(|mut valid, id| valid.mesh_mut().collapse_edge(id))
+        self.load_move_or_void(|valid, id| valid.mesh_mut().collapse_edge(id))
     }
 
     /// Subdivide the adjacent face by inserting an edge from the current target to the given other edge's origin.
@@ -176,7 +174,7 @@ where
     where
         T::Edge: HalfEdge<T>,
     {
-        self.load_move_or_void(|mut valid: &mut _, id| {
+        self.load_move_or_void(|valid: &mut _, id| {
             valid.mesh_mut().subdivide_face(id, output, ep, fp)
         })
     }
@@ -193,7 +191,7 @@ where
     where
         Self::Valid: EdgeCursorBuilder<'a, T>,
     {
-        self.load_or_nop(|mut valid| {
+        self.load_or_nop(|valid| {
             let mut c = valid;
             for (vp, ep) in iter {
                 c = c.insert_vertex(vp, ep);
@@ -216,7 +214,7 @@ where
         T::EP: DefaultEdgePayload,
     {
         // TODO: is self from_maybe ok?
-        Self::from_maybe(self.load_move_or_void(|mut valid: &mut Self::Valid, id| {
+        Self::from_maybe(self.load_move_or_void(|valid: &mut Self::Valid, id| {
             (valid.mesh_mut().crochet(id, n, m, false, true, false, vp) as Option<_>)
                 .map(|(first, _last)| first)
         }))
@@ -236,7 +234,7 @@ where
         T::EP: DefaultEdgePayload,
     {
         // TODO: is self from_maybe ok?
-        Self::from_maybe(self.load_move_or_void(|mut valid, id| {
+        Self::from_maybe(self.load_move_or_void(|valid, id| {
             (valid.mesh_mut().crochet(id, n, m, true, true, false, vp) as Option<_>)
                 .map(|(first, _last)| first)
         }))
@@ -255,7 +253,7 @@ where
         T::EP: DefaultEdgePayload,
     {
         // TODO: Return valid cursor?
-        self.load_move_or_void(|mut valid, id| valid.mesh_mut().windmill(id, vp).map(|_| id))
+        self.load_move_or_void(|valid, id| valid.mesh_mut().windmill(id, vp).map(|_| id))
     }
 
     /// See [MeshExtrude::windmill_back].
@@ -271,7 +269,7 @@ where
         T::EP: DefaultEdgePayload,
     {
         // TODO: Return valid cursor?
-        self.load_move_or_void(|mut valid, id| valid.mesh_mut().windmill_back(id, vp).map(|_| id))
+        self.load_move_or_void(|valid, id| valid.mesh_mut().windmill_back(id, vp).map(|_| id))
     }
 }
 
@@ -381,7 +379,7 @@ where
     where
         T::Edge: HalfEdge<T>,
     {
-        self.load_move_or_void(|mut valid, _id| {
+        self.load_move_or_void(|valid, _id| {
             let target_id = valid.target_id();
             let face_id = valid.face_id();
             valid

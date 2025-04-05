@@ -148,9 +148,10 @@ where
 
         mesh.windmill(start, make_vp(zero, long, short)).unwrap();
 
+        // TODO: avoid unwrap
         let end = mesh
             .loft_tri(
-                mesh.edge(start).twin().next_id(),
+                mesh.edge(start).twin().unwrap().next_id(),
                 false,
                 true,
                 [
@@ -163,7 +164,7 @@ where
             )
             .unwrap();
 
-        debug_assert!(!mesh.edge(end).has_face());
+        debug_assert!(!mesh.edge(end).unwrap().has_face());
 
         mesh.windmill_back(end, make_vp(zero, -long, -short))
             .unwrap();

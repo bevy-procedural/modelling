@@ -1,9 +1,6 @@
 use crate::{
     math::IndexType,
-    mesh::{
-        DefaultEdgePayload, DefaultFacePayload, EdgeCursorBasics, EdgeCursorHalfedgeBasics,
-        MeshTypeHalfEdge,
-    },
+    mesh::{cursor::*, DefaultEdgePayload, DefaultFacePayload, MeshTypeHalfEdge},
 };
 
 /// Different ways how faces cannot be connected.
@@ -44,6 +41,8 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
         // TODO: a more efficient implementation could bulk-insert everything at once
         // TODO: assertions
 
+        // TODO: avoid .load()?
+
         let mut input = start;
         let mut first = true;
         let mut iter = vp.into_iter();
@@ -51,30 +50,30 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
         let mut ret = start;
 
         if shift && pos.is_some() {
-            let output = self.edge(input).next_id();
+            let output = self.edge(input).load()?.next_id();
             self.insert_vertex_e(input, pos.unwrap(), Default::default())?;
             first = false;
-            ret = self.edge(output).prev_id();
+            ret = self.edge(output).load()?.prev_id();
             pos = iter.next();
         }
 
         while pos.is_some() {
-            let output = self.edge(input).next_id();
+            let output = self.edge(input).load()?.next_id();
             self.insert_vertex_e(input, pos.unwrap(), Default::default())?;
 
-            let input_next = self.edge(input).next_id();
-            input = self.edge(input).prev_id();
+            let input_next = self.edge(input).load()?.next_id();
+            input = self.edge(input).load()?.prev_id();
 
             // the first one shouldn't connect to the previous
             if !first {
                 self.close_face_ee(
                     output,
-                    self.edge(input_next).next_id(),
+                    self.edge(input_next).load()?.next_id(),
                     Default::default(),
                     Default::default(),
                 )?;
             } else {
-                ret = self.edge(output).prev_id();
+                ret = self.edge(output).load()?.prev_id();
             }
 
             pos = iter.next();
@@ -82,7 +81,7 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
             if pos.is_some() || shift {
                 self.close_face_ee(
                     input_next,
-                    self.edge(input).next_id(),
+                    self.edge(input).load()?.next_id(),
                     Default::default(),
                     Default::default(),
                 )?;
@@ -106,18 +105,18 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
     {
         let e = self.loft_tri_back(start, false, vp)?;
         self.close_face_ee(
-            self.edge(e).next().next_id(),
-            self.edge(e).next_id(),
+            self.edge(e).next().load()?.next_id(),
+            self.edge(e).load()?.next_id(),
             Default::default(),
             Default::default(),
         )?;
         self.close_face_ee(
-            self.edge(e).next_id(),
+            self.edge(e).load()?.next_id(),
             e,
             Default::default(),
             Default::default(),
         )?;
-        Some(self.edge(e).next().next().twin_id())
+        Some(self.edge(e).next().next().load()?.twin_id())
     }
 
     /// This will walk counter-clockwise along the given boundary and add a "hem" made from triangles.
@@ -154,33 +153,33 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
         let mut pos = iter.next();
         let mut ret = start;
 
-        debug_assert!(!self.edge(start).has_face());
+        debug_assert!(!self.edge(start).load()?.has_face());
 
         if shift && pos.is_some() {
-            let input = self.edge(output).prev_id();
+            let input = self.edge(output).load()?.prev_id();
             self.insert_vertex_e(input, pos.unwrap(), Default::default())?;
             first = false;
-            ret = self.edge(output).prev_id();
+            ret = self.edge(output).load()?.prev_id();
             pos = iter.next();
         }
 
         while pos.is_some() {
-            let input = self.edge(output).prev_id();
+            let input = self.edge(output).load()?.prev_id();
             self.insert_vertex_e(input, pos.unwrap(), Default::default())?;
 
             // the first one shouldn't connect to the previous
             if !first {
                 self.close_face_ee(
-                    self.edge(input).next_id(),
+                    self.edge(input).load()?.next_id(),
                     input,
                     Default::default(),
                     Default::default(),
                 )?;
             } else {
-                ret = self.edge(output).prev_id();
+                ret = self.edge(output).load()?.prev_id();
             }
 
-            let new_output = self.edge(output).next_id();
+            let new_output = self.edge(output).load()?.next_id();
 
             // only continue if there are more vertices
             pos = iter.next();
@@ -189,7 +188,7 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
             if pos.is_some() || shift {
                 self.close_face_ee(
                     output,
-                    self.edge(output).prev_id(),
+                    self.edge(output).load()?.prev_id(),
                     Default::default(),
                     Default::default(),
                 )?;
@@ -201,21 +200,23 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
             first = false;
         }
 
-        if auto_close && self.edge(output).origin_id() == self.edge(start).origin_id() {
+        if auto_close
+            && self.edge(output).load()?.origin_id() == self.edge(start).load()?.origin_id()
+        {
             // TODO:
             assert!(!shift);
 
             let e = ret;
-            let inside = self.edge(e).twin().prev_id();
-            let outside = self.edge(inside).prev_id();
+            let inside = self.edge(e).twin().load()?.prev_id();
+            let outside = self.edge(inside).load()?.prev_id();
             self.close_face_ee(inside, outside, Default::default(), Default::default())?;
             let (e, _f) = self.close_face_ee(
-                self.edge(inside).next().twin().next_id(),
-                self.edge(inside).next().twin().next().prev_id(),
+                self.edge(inside).next().twin().load()?.next_id(),
+                self.edge(inside).next().twin().next().load()?.prev_id(),
                 Default::default(),
                 Default::default(),
             )?;
-            Some(self.edge(e).twin().next_id())
+            Some(self.edge(e).twin().load()?.next_id())
         } else {
             Some(ret)
         }
@@ -379,12 +380,12 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
 
         // insert the outer boundary
         let mut iter = vp.into_iter();
-        let mut inner = self.edge(start).prev_id();
+        let mut inner = self.edge(start).load()?.prev_id();
         let mut last = false;
         let mut last_inner = if backwards {
-            self.edge(inner).next_id()
+            self.edge(inner).load()?.next_id()
         } else {
-            self.edge(inner).prev_id()
+            self.edge(inner).load()?.prev_id()
         };
         let current_inner = inner;
         let mut outer = IndexType::max();
@@ -399,9 +400,9 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
                     return Some((first_edge, last_edge));
                 }
                 inner = if backwards {
-                    self.edge(inner).prev_id()
+                    self.edge(inner).load()?.prev_id()
                 } else {
-                    self.edge(inner).next_id()
+                    self.edge(inner).load()?.next_id()
                 };
             }
 
@@ -412,9 +413,9 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
                 };
                 let (e, _) = self.insert_vertex_e(current_inner, vp, Default::default())?;
                 last_inner = if backwards {
-                    self.edge(e).twin_id()
+                    self.edge(e).load()?.twin_id()
                 } else {
-                    self.edge(e).prev_id()
+                    self.edge(e).load()?.prev_id()
                 };
                 outer = e;
             }
@@ -435,7 +436,7 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
                 outer = e;
 
                 if backwards {
-                    last_edge = self.edge(e).twin_id();
+                    last_edge = self.edge(e).load()?.twin_id();
                 } else {
                     last_edge = e;
                 }
@@ -448,16 +449,19 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
             if autoclose_now {
                 // automatically close the shape
                 inner = if backwards {
-                    self.edge(inner).prev_id()
+                    self.edge(inner).load()?.prev_id()
                 } else {
-                    self.edge(inner).next_id()
+                    self.edge(inner).load()?.next_id()
                 }
             }
 
             // Insert the diagonal between inner and outer and create a face
-            let inserted =
-                self.insert_edge_ee(inner, self.edge(outer).next_id(), Default::default())?;
-            let inserted_twin = self.edge(inserted).twin_id();
+            let inserted = self.insert_edge_ee(
+                inner,
+                self.edge(outer).load()?.next_id(),
+                Default::default(),
+            )?;
+            let inserted_twin = self.edge(inserted).load()?.twin_id();
             if backwards {
                 outer = inserted;
                 self.insert_face(inserted_twin, Default::default())?;
@@ -611,12 +615,15 @@ mod tests {
                 .map(|e| e.id())
                 .collect_vec(),
         );
-        let old_boundary_vertices: HashSet<VU, RandomState> =
-            HashSet::from_iter(old_boundary.iter().map(|e| mesh.edge(*e).origin_id()));
+        let old_boundary_vertices: HashSet<VU, RandomState> = HashSet::from_iter(
+            old_boundary
+                .iter()
+                .map(|e| mesh.edge(*e).unwrap().origin_id()),
+        );
         let diagonals: HashSet<EU, RandomState> = HashSet::from_iter(
             inserted_halfedges
                 .iter()
-                .filter(|e| old_boundary_vertices.contains(&mesh.edge(**e).origin_id()))
+                .filter(|e| old_boundary_vertices.contains(&mesh.edge(**e).unwrap().origin_id()))
                 .cloned(),
         );
         assert_eq!(diagonals.len(), config.num_diagonals);
@@ -624,7 +631,8 @@ mod tests {
             boundary_edges
                 .iter()
                 .filter(|e| {
-                    !(diagonals.contains(e) || diagonals.contains(&mesh.edge(**e).twin_id()))
+                    !(diagonals.contains(e)
+                        || diagonals.contains(&mesh.edge(**e).unwrap().twin_id()))
                         && inserted_halfedges.contains(e)
                 })
                 .cloned(),
@@ -637,19 +645,19 @@ mod tests {
 
         let small_face = inserted_faces
             .iter()
-            .find(|f| mesh.face(**f).num_vertices() < config.n + config.m)
+            .find(|f| mesh.face(**f).unwrap().num_vertices() < config.n + config.m)
             .cloned();
         assert_eq!(
             inserted_faces
                 .iter()
-                .filter(|f| mesh.face(**f).num_vertices() == config.n + config.m)
+                .filter(|f| mesh.face(**f).unwrap().num_vertices() == config.n + config.m)
                 .count(),
             config.num_appended_faces - if config.small_face_size > 0 { 1 } else { 0 }
         );
         assert_eq!(small_face.is_some(), config.small_face_size > 0);
         if small_face.is_some() {
             assert_eq!(
-                mesh.face(small_face.unwrap()).num_vertices(),
+                mesh.face(small_face.unwrap()).unwrap().num_vertices(),
                 config.small_face_size,
             );
         }
@@ -659,7 +667,7 @@ mod tests {
                 continue;
             }
             if let Some(a) = config.area_in_appended_faces {
-                let poly = mesh.face(face).as_polygon();
+                let poly = mesh.face(face).unwrap().as_polygon();
                 assert!(
                     poly.signed_area().is_about(a, 1e-6),
                     "face {}: {} != {}, {:?}",
@@ -681,8 +689,8 @@ mod tests {
                 assert!(true_boundary.contains(&first_edge));
                 assert!(true_boundary.contains(&last_edge));
             }
-            assert!(mesh.edge(first_edge).is_boundary_self());
-            assert!(mesh.edge(last_edge).is_boundary_self());
+            assert!(mesh.edge(first_edge).unwrap().is_boundary_self());
+            assert!(mesh.edge(last_edge).unwrap().is_boundary_self());
 
             assert_eq!(first_edge == config.mesh.1, config.first_edge_is_start);
             assert_eq!(last_edge == config.mesh.1, config.last_edge_is_start);
@@ -695,39 +703,39 @@ mod tests {
             if config.backwards.unwrap() {
                 assert_eq!(
                     mesh.edge(first_edge)
-                        .same_boundary_back(mesh.edge(last_edge).origin_id())
+                        .same_boundary_back(mesh.edge(last_edge).unwrap().origin_id())
                         .map(|c| c.id()),
-                    Some(last_edge)
+                    Some(Some(last_edge))
                 );
                 assert_eq!(
-                    mesh.edge(last_edge).prev_id() == first_edge,
+                    mesh.edge(last_edge).unwrap().prev_id() == first_edge,
                     config.last_first_adjacent
                 );
                 assert_eq!(
-                    old_boundary.contains(&mesh.edge(last_edge).prev().prev_id()),
+                    old_boundary.contains(&mesh.edge(last_edge).prev().unwrap().prev_id()),
                     config.first_last_reach_old_boundary
                 );
                 assert_eq!(
-                    old_boundary.contains(&mesh.edge(first_edge).next().next_id()),
+                    old_boundary.contains(&mesh.edge(first_edge).next().unwrap().next_id()),
                     config.first_last_reach_old_boundary
                 );
             } else {
                 assert_eq!(
                     mesh.edge(first_edge)
-                        .same_boundary(mesh.edge(last_edge).origin_id())
+                        .same_boundary(mesh.edge(last_edge).unwrap().origin_id())
                         .map(|c| c.id()),
-                    Some(last_edge)
+                    Some(Some(last_edge))
                 );
                 assert_eq!(
-                    mesh.edge(last_edge).next_id() == first_edge,
+                    mesh.edge(last_edge).unwrap().next_id() == first_edge,
                     config.last_first_adjacent
                 );
                 assert_eq!(
-                    old_boundary.contains(&mesh.edge(last_edge).next().next_id()),
+                    old_boundary.contains(&mesh.edge(last_edge).next().unwrap().next_id()),
                     config.first_last_reach_old_boundary
                 );
                 assert_eq!(
-                    old_boundary.contains(&mesh.edge(first_edge).prev().prev_id()),
+                    old_boundary.contains(&mesh.edge(first_edge).prev().unwrap().prev_id()),
                     config.first_last_reach_old_boundary
                 );
             }
@@ -737,7 +745,7 @@ mod tests {
     fn regular_polygon(n: usize) -> (Mesh3d64, EU) {
         let mut mesh = Mesh3d64::default();
         let e = mesh.insert_regular_polygon(1.0, n).id();
-        assert!(mesh.edge(e).is_boundary_self());
+        assert!(mesh.edge(e).unwrap().is_boundary_self());
         (mesh, e)
     }
 
