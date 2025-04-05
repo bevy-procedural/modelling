@@ -1,6 +1,6 @@
 use crate::{
     math::{HasPosition, Scalar, Vector},
-    mesh::{cursor::*, Face3d, FaceBasics, HalfEdge, HalfEdgeVertex, MeshType, VertexBasics},
+    mesh::{cursor::*, HalfEdge, HalfEdgeVertex, MeshType, VertexBasics},
 };
 
 pub trait ValidVertexCursorBasics<'a, T: MeshType>: VertexCursorData<'a, T> + ValidCursor {

@@ -1,7 +1,7 @@
 use crate::{
     math::{HasPosition, Scalar, TransformTrait, Vector},
     mesh::{
-        cursor::*, DefaultEdgePayload, DefaultFacePayload, Face3d, MeshType3D, MeshTypeHalfEdge,
+        cursor::*, DefaultEdgePayload, DefaultFacePayload, MeshType3D, MeshTypeHalfEdge,
         VertexPayload,
     },
     operations::{MeshExtrude, MeshLoft, MeshSubdivision},

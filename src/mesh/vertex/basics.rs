@@ -2,8 +2,7 @@
 
 use crate::{
     math::{HasPosition, Scalar, Vector},
-    mesh::{MeshBasics, MeshType},
-    prelude::{ValidEdgeCursor, ValidFaceCursor},
+    mesh::{cursor::*, MeshBasics, MeshType},
 };
 
 /// Basic vertex functionality for a mesh
@@ -43,7 +42,7 @@ pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone {
     fn has_only_one_edge(&self, mesh: &T::Mesh) -> bool;
 
     /// Iterates all vertices adjacent to the vertex in the same manifold edge wheel (clockwise)
-    fn neighbors<'a>(&self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Vertex>
+    fn neighbors<'a>(&self, mesh: &'a T::Mesh) -> impl Iterator<Item = ValidVertexCursor<'a, T>>
     where
         T: 'a;
 
@@ -70,7 +69,10 @@ pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone {
 
     /// Iterates all outgoing (half)edges (resp. all edges in outwards-direction
     /// if undirected) incident to this vertex (clockwise)
-    fn edges_out<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = ValidEdgeCursor<'a, T>>
+    fn edges_out<'a>(
+        &'a self,
+        mesh: &'a T::Mesh,
+    ) -> <T::Mesh as MeshBasics<T>>::VertexEdgesOutIterator<'a>
     where
         T: 'a,
     {

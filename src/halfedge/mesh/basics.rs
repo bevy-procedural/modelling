@@ -3,12 +3,12 @@ use crate::{
     math::IndexType,
     mesh::{
         cursor::*, Edge2ValidEdgeCursorAdapter, EdgeBasics, HalfEdge, HalfEdgeMesh, MeshBasics,
-        MeshType, Triangulation, VertexBasics, VertexPayload,
+        Triangulation, VertexBasics, VertexPayload,
     },
     prelude::IncidentToVertexIterator,
     util::{CreateEmptyIterator, DeletableVectorIter},
 };
-use std::{collections::HashMap, path::Iter};
+use std::collections::HashMap;
 
 impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     //======================= Vertex Operations =======================//
@@ -257,7 +257,10 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     }
 
     type SharedEdgeIter<'a>
-        = Iterator<Item = ValidEdgeCursor<'a, T>>
+        = std::iter::FilterMap<
+        <T::Mesh as MeshBasics<T>>::VertexEdgesOutIterator<'a>,
+        fn(ValidEdgeCursor<'a, T>) -> Option<ValidEdgeCursor<'a, T>>,
+    >
     where
         T: 'a;
 
@@ -266,15 +269,11 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     where
         T: 'a,
     {
-        self.vertex(v).edges_out().filter_map(
-            move |e| {
-                if e.target_id() == w {
-                    Some(e)
-                } else {
-                    None
-                }
-            },
-        )
+        let Some(v) = self.vertex(v).try_inner() else {
+            return CreateEmptyIterator::create_empty();
+        };
+        v.edges_out(self)
+            .filter_map(move |e| if e.target_id() == w { Some(e) } else { None })
     }
 
     #[inline]

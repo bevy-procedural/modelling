@@ -7,17 +7,15 @@ pub trait ImmutableVertexCursor<'a, T: MeshType>:
     CursorData<T = T, I = T::V, S = T::Vertex> + VertexCursorData<'a, T>
 where
     T: 'a,
+    Self: 'a,
 {
     /// Returns an iterator of edge cursors pointing to the outgoing halfedges of the vertex.
     /// Returns an empty iterator if the vertex is void.
     /// See [MeshBasics::vertex_edges_out] for more information.
     #[must_use]
     #[inline]
-    fn edges_out(self) -> impl Iterator<Item = ValidEdgeCursor<'a, T>>
-    where
-        Self: 'a,
-    {
-        // TODO: I want to consume here but don't require consuming on the mesh. 
+    fn edges_out(self) -> impl Iterator<Item = ValidEdgeCursor<'a, T>> {
+        // TODO: I want to consume here but don't require consuming on the mesh.
         // If I don't want to use ouroboros I need to make a second implementation of vertex_edges_out that owns the mesh.
         self.mesh().vertex_edges_out(self.try_id())
     }
@@ -27,10 +25,7 @@ where
     /// See [MeshBasics::vertex_edges_out] for more information.
     #[must_use]
     #[inline]
-    fn edges_out_ids(self) -> impl Iterator<Item = T::E> + 'a
-    where
-        Self: 'a,
-    {
+    fn edges_out_ids(self) -> impl Iterator<Item = T::E> + 'a {
         self.edges_out().map(|e| e.id())
     }
 
@@ -39,10 +34,7 @@ where
     /// See [MeshBasics::vertex_edges_in] for more information.
     #[must_use]
     #[inline]
-    fn edges_in(self) -> impl Iterator<Item = ValidEdgeCursor<'a, T>>
-    where
-        T: 'a,
-    {
+    fn edges_in(self) -> impl Iterator<Item = ValidEdgeCursor<'a, T>> {
         self.mesh().vertex_edges_in(self.try_id())
     }
 
@@ -51,10 +43,7 @@ where
     /// See [MeshBasics::vertex_edges_in] for more information.
     #[must_use]
     #[inline]
-    fn edges_in_ids(self) -> impl Iterator<Item = T::E> + 'a
-    where
-        Self: 'a,
-    {
+    fn edges_in_ids(self) -> impl Iterator<Item = T::E> + 'a {
         self.edges_in().map(|e| e.id())
     }
 
@@ -63,10 +52,7 @@ where
     /// See [VertexBasics::neighbor_ids] for more information.
     #[inline]
     #[must_use]
-    fn neighbors(self) -> impl Iterator<Item = ValidVertexCursor<'a, T>>
-    where
-        Self: 'a,
-    {
+    fn neighbors(self) -> impl Iterator<Item = ValidVertexCursor<'a, T>> {
         self.mesh().vertex_neighbors(self.try_id())
     }
 
@@ -75,10 +61,7 @@ where
     /// See [MeshBasics::vertex_neighbors] for more information.
     #[inline]
     #[must_use]
-    fn neighbor_ids(self) -> impl Iterator<Item = T::V> + 'a
-    where
-        Self: 'a,
-    {
+    fn neighbor_ids(self) -> impl Iterator<Item = T::V> + 'a {
         self.neighbors().map(|v| v.id())
     }
 
@@ -96,10 +79,7 @@ where
     /// See [MeshBasics::vertex_faces] for more information.
     #[inline]
     #[must_use]
-    fn face_ids(self) -> impl Iterator<Item = T::F> + 'a
-    where
-        Self: 'a,
-    {
+    fn face_ids(self) -> impl Iterator<Item = T::F> + 'a {
         self.faces().map(|f| f.id())
     }
 }

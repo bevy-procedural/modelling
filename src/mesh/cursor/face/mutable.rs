@@ -1,6 +1,6 @@
 use crate::{
     math::IndexType,
-    mesh::{cursor::*, FaceBasics, HalfEdge, MeshBasics, MeshBuilder, MeshType},
+    mesh::{cursor::*, FaceBasics, HalfEdge, MeshBasics, MeshType},
 };
 
 /// A face cursor pointing to a face of a mesh with a mutable reference to the mesh.

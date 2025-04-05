@@ -33,8 +33,7 @@ where
     /// Returns whether the vertex is a boundary vertex
     #[inline]
     fn is_boundary(&self, mesh: &T::Mesh) -> bool {
-        self.edges_out(mesh)
-            .any(|e| mesh.edge(e).load_or(false, |v| v.is_boundary()))
+        self.edges_out(mesh).any(|e| e.is_boundary())
     }
 
     /*
@@ -74,22 +73,22 @@ where
 
     /// Iterates all vertices adjacent to the vertex in the same manifold edge wheel (clockwise)
     #[inline]
-    fn neighbors<'a>(&self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Vertex>
+    fn neighbors<'a>(&self, mesh: &'a T::Mesh) -> impl Iterator<Item = ValidVertexCursor<'a, T>>
     where
         T: 'a,
     {
-        self.edges_out(mesh)
-            .map(|e| mesh.vertex_ref(mesh.edge(e).unwrap().target_id()))
+        self.edges_out::<'a>(mesh)
+            .map(move |e| e.target::<'a>().unwrap())
     }
 
     /// Iterates all faces adjacent to this vertex in the same manifold edge wheel (clockwise)
     #[inline]
-    fn faces<'a>(&self, mesh: &'a T::Mesh) -> impl Iterator<Item = &'a T::Face>
+    fn faces<'a>(&self, mesh: &'a T::Mesh) -> impl Iterator<Item = ValidFaceCursor<'a, T>>
     where
         T: 'a,
     {
-        self.edges_out(mesh)
-            .filter_map(|e| mesh.get_face(mesh.edge(e).load()?.face_id()))
+        self.edges_out::<'a>(mesh)
+            .map(move |e| e.face::<'a>().unwrap())
     }
 
     fn is_manifold(&self, mesh: &T::Mesh) -> bool {

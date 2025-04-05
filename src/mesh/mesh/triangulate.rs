@@ -4,7 +4,6 @@ use super::{MeshBasics, MeshType, MeshType3D};
 use crate::{
     math::{HasNormal, IndexType, Vector},
     mesh::{Face3d, FaceBasics, Triangulation, VertexBasics},
-    prelude::ValidFaceCursor,
     tesselate::{triangulate_face, TriangulationAlgorithm},
 };
 

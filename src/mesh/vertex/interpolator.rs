@@ -21,9 +21,10 @@ where
 {
     /// Subdivides by linear interpolation of the positions of the vertices.
     fn call(&self, mesh: &T::Mesh, [(i, vi), (j, vj), (k, vk)]: [(usize, T::V); 3]) -> T::VP {
-        let pi = mesh.vertex(vi).pos();
-        let pj = mesh.vertex(vj).pos();
-        let pk = mesh.vertex(vk).pos();
+        // TODO: avoid unwrap
+        let pi = mesh.vertex(vi).unwrap().pos();
+        let pj = mesh.vertex(vj).unwrap().pos();
+        let pk = mesh.vertex(vk).unwrap().pos();
         T::VP::from_pos(
             (pi * T::S::from_usize(i) + pj * T::S::from_usize(j) + pk * T::S::from_usize(k))
                 / T::S::from_usize(i + j + k),
@@ -52,11 +53,13 @@ impl<const D: usize, T: EuclideanMeshType<D>> VertexInterpolator<3, T>
 where
     T::Vec: Vector3D<S = T::S>,
 {
+    // TODO: avoid unwrap
+
     /// Subdivides by linear interpolation of the positions of the vertices.
     fn call(&self, mesh: &T::Mesh, [(i, vi), (j, vj), (k, vk)]: [(usize, T::V); 3]) -> T::VP {
-        let pi = (mesh.vertex(vi).pos() - self.center).normalize();
-        let pj = (mesh.vertex(vj).pos() - self.center).normalize();
-        let pk = (mesh.vertex(vk).pos() - self.center).normalize();
+        let pi = (mesh.vertex(vi).unwrap().pos() - self.center).normalize();
+        let pj = (mesh.vertex(vj).unwrap().pos() - self.center).normalize();
+        let pk = (mesh.vertex(vk).unwrap().pos() - self.center).normalize();
 
         // slerp
         let pos = if i == 0 {

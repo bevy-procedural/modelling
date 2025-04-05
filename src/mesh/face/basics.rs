@@ -1,8 +1,4 @@
-use crate::{
-    mesh::{EdgeBasics, MeshType, VertexBasics},
-    prelude::ValidVertexCursor,
-    util::CreateEmptyIterator,
-};
+use crate::{mesh::MeshType, prelude::ValidVertexCursor, util::CreateEmptyIterator};
 
 /// A face in a mesh.
 ///

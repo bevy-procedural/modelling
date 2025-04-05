@@ -1,6 +1,6 @@
 use crate::{
     math::IndexType,
-    mesh::{cursor::*, HalfEdge, HalfEdgeVertex, MeshBasics, MeshType, VertexBasics},
+    mesh::{cursor::*, HalfEdge, HalfEdgeVertex, MeshBasics, MeshType},
 };
 
 /// A vertex cursor pointing to a vertex of a mesh with an immutable reference to the mesh.

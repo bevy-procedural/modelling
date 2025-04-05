@@ -104,7 +104,6 @@ pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone {
 #[cfg(feature = "nalgebra")]
 mod tests {
     use crate::{extensions::nalgebra::*, math::impls::EU, prelude::*};
-    use itertools::Itertools;
 
     #[test]
     fn test_edge_basics_triangle() {
@@ -156,6 +155,7 @@ mod tests {
             assert!(edge
                 .face()
                 .unwrap()
+                .inner()
                 .polygon::<2>(&mesh)
                 .area()
                 .is_about(1.0, 1e-6));

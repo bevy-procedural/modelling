@@ -1,6 +1,6 @@
 use crate::{
     math::IndexType,
-    mesh::{cursor::*, EdgeBasics, HalfEdge, MeshBasics, MeshType},
+    mesh::{cursor::*, HalfEdge, MeshBasics, MeshType},
 };
 
 /// An edge cursor pointing to an edge of a mesh with a mutable reference to the mesh.

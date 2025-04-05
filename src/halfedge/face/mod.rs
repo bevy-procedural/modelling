@@ -2,12 +2,12 @@ use super::{ForwardEdgeIterator, HalfEdgeImplMeshType};
 use crate::{
     math::IndexType,
     mesh::{
-        self, DefaultFacePayload, EdgeBasics, EdgeRef2TargetRefAdapter, Face, Face3d, FaceBasics,
+        DefaultFacePayload, EdgeBasics, EdgeRef2TargetRefAdapter, Face, Face3d, FaceBasics,
         FacePayload, HalfEdge, MeshBasics, MeshType3D, MeshTypeHalfEdge,
-        Vertex2ValidVertexCursorAdapter, VertexBasics,
+        Vertex2ValidVertexCursorAdapter,
     },
     prelude::{ValidCursor, ValidVertexCursor},
-    util::{CreateEmptyIterator, Deletable},
+    util::Deletable,
 };
 
 /// A face in a mesh.

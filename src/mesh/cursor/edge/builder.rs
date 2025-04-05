@@ -122,7 +122,7 @@ where
     #[inline]
     #[must_use]
     fn close_face(self, e: T::E, ep: T::EP, fp: T::FP) -> Self::Maybe {
-        self.load_move_or_void(|mut valid, id| {
+        self.load_move_or_void(|valid, id| {
             valid
                 .mesh_mut()
                 .close_face_ee(id, e, ep, fp)

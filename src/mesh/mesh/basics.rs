@@ -1,6 +1,6 @@
 use crate::{
     math::IndexType,
-    mesh::{cursor::*, EdgeBasics, FaceBasics, MeshType, VertexBasics},
+    mesh::{cursor::*, FaceBasics, MeshType},
     util::CreateEmptyIterator,
 };
 use std::collections::HashSet;
