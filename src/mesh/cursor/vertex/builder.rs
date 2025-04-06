@@ -43,7 +43,7 @@ where
     /// Inserts a new vertex and a edge connecting the current vertex and the new vertex.
     /// Move to the new vertex.
     ///
-    /// Returns void if the insertion wasn't successful.
+    /// Returns void if the insertion wasn't successful (due to ambiguous connectivity).
     /// Will insert a single unconnected vertex if the cursor is void.
     ///
     /// See [MeshBuilder::insert_vertex_v] for more information.

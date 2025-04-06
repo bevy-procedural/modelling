@@ -50,11 +50,14 @@ where
     /// Creates a prism by inserting the flat polygon given by `vp` and inserting an
     /// translated copy at `height` along the normal of the face.
     /// Uses quads for the sides.
-    fn insert_prism(
-        &mut self,
+    fn insert_prism<'a>(
+        &'a mut self,
         vp: impl IntoIterator<Item = T::VP>,
         height: T::S,
-    ) -> EdgeCursorMut<'_, T> {
+    ) -> ValidEdgeCursorMut<'a, T>
+    where
+        T: 'a,
+    {
         let first = self.insert_polygon(vp).id();
         let f = self
             .edge(first)
@@ -63,6 +66,7 @@ where
             .expect("The polygon must have a face");
         let normal = f.normal().normalize();
         self.extrude(first, T::Trans::from_translation(-normal * height))
+            .unwrap()
     }
 
     /// calls `insert_prism` on a new mesh
@@ -78,11 +82,14 @@ where
     ///
     /// WARNING: This doesn't produce a proper regular antiprism since the radius
     /// of the top polygon will be slightly smaller!
-    fn insert_antiprism(
-        &mut self,
+    fn insert_antiprism<'a>(
+        &'a mut self,
         vp: impl IntoIterator<Item = T::VP>,
         height: T::S,
-    ) -> EdgeCursorMut<'_, T> {
+    ) -> ValidEdgeCursorMut<'a, T>
+    where
+        T: 'a,
+    {
         let first = self.insert_polygon(vp).id();
         let f = self
             .edge(first)
@@ -94,6 +101,7 @@ where
             self.edge(first).unwrap().twin_id(),
             T::Trans::from_translation(-normal * height),
         )
+        .unwrap()
     }
 
     /// calls `insert_antiprism` on a new mesh
@@ -105,15 +113,18 @@ where
 
     /// Creates an antiprism by connecting the two polygons given by `vp` and `vp2` with triangles.
     /// Doesn't need to be a antiprism -- can also have a frustum-like shape.
-    fn insert_antiprism_iter(
-        &mut self,
+    fn insert_antiprism_iter<'a>(
+        &'a mut self,
         vp: impl IntoIterator<Item = T::VP>,
         vp2: impl IntoIterator<Item = T::VP>,
-    ) -> EdgeCursorMut<'_, T> {
+    ) -> ValidEdgeCursorMut<'a, T>
+    where
+        T: 'a,
+    {
         let first = self.insert_polygon(vp).id();
         let e = self.loft_tri(first, false, true, vp2).unwrap();
         self.insert_face(e, Default::default()).unwrap();
-        self.edge_mut(e)
+        self.edge_mut(e).unwrap()
     }
 
     /// calls `insert_antiprism_iter` on a new mesh
