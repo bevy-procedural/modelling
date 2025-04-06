@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use super::{MeshBasics, MeshType, MeshType3D};
 use crate::{
     math::{HasNormal, IndexType, Vector},
-    mesh::{cursor::*, Face3d, FaceBasics, Triangulation, VertexBasics},
+    mesh::{cursor::*, Face3d, Triangulation},
     tesselate::{triangulate_face, TriangulationAlgorithm},
 };
 

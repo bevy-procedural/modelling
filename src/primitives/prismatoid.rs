@@ -196,7 +196,7 @@ where
             ],
         )
         .insert_face(Default::default())
-        .unwrap();
+        .ensure();
         mesh
     }
 

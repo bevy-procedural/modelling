@@ -48,6 +48,7 @@ pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone {
         (v1 + v2) * T::S::HALF
     }
 
+    /// Iterator for [EdgeBasics::boundary].
     type BoundaryIterator<'a>: Iterator<Item = &'a T::Edge> + CreateEmptyIterator + 'a
     where
         Self: 'a,
@@ -58,6 +59,7 @@ pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone {
     where
         T: 'a;
 
+    /// Iterator for [EdgeBasics::boundary_back].
     type BoundaryBackIterator<'a>: Iterator<Item = &'a T::Edge> + CreateEmptyIterator + 'a
     where
         Self: 'a,

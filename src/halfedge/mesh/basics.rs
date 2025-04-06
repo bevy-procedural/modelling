@@ -6,7 +6,7 @@ use crate::{
         HalfEdgeMesh, MeshBasics, Triangulation, VertexBasics, VertexPayload,
     },
     prelude::IncidentToVertexIterator,
-    util::{CreateEmptyIterator, DeletableVectorIter},
+    util::{CreateEmptyIterator, DeletableVectorIterator},
 };
 use std::collections::HashMap;
 
@@ -39,7 +39,7 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     }
 
     type VertexRefIter<'a>
-        = DeletableVectorIter<'a, T::Vertex>
+        = DeletableVectorIterator<'a, T::Vertex>
     where
         T: 'a;
 
@@ -52,7 +52,7 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     }
 
     type VertexIdIter<'a>
-        = std::iter::Map<DeletableVectorIter<'a, T::Vertex>, fn(&'a T::Vertex) -> T::V>
+        = std::iter::Map<DeletableVectorIterator<'a, T::Vertex>, fn(&'a T::Vertex) -> T::V>
     where
         T: 'a;
 
@@ -161,7 +161,7 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     }
 
     type EdgeRefIter<'a>
-        = std::iter::Filter<DeletableVectorIter<'a, T::Edge>, fn(&&T::Edge) -> bool>
+        = std::iter::Filter<DeletableVectorIterator<'a, T::Edge>, fn(&&T::Edge) -> bool>
     where
         T: 'a;
 

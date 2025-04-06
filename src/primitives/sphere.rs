@@ -67,7 +67,7 @@ where
         }
 
         // bottom pole
-        prev.windmill(make_vp(n, 0)).unwrap();
+        prev.windmill(make_vp(n, 0)).ensure();
 
         mesh
     }
@@ -122,7 +122,7 @@ where
                 ],
             )
             .insert_face(Default::default())
-            .unwrap();
+            .ensure();
 
         mesh
     }

@@ -3,6 +3,7 @@ use crate::{
     mesh::{cursor::*, EdgeBasics, EuclideanMeshType, HalfEdge, MeshType},
 };
 
+/// Methods specific for edge cursors that are known to point to an existing edge.
 pub trait ValidEdgeCursorBasics<'a, T: MeshType>:
     ValidCursor<T = T, I = T::E, S = T::Edge>
 {
@@ -50,6 +51,7 @@ pub trait ValidEdgeCursorBasics<'a, T: MeshType>:
     }
 }
 
+/// Methods specific for edge cursors on halfedge meshes that are known to point to an existing edge.
 pub trait ValidEdgeCursorHalfedgeBasics<'a, T: MeshType>:
     EdgeCursorData<'a, T> + ValidCursor<T = T, I = T::E, S = T::Edge>
 where

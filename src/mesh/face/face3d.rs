@@ -1,6 +1,6 @@
 use crate::{
     math::{LineSegment2D, Polygon, Scalar, TransformTrait, Vector, Vector3D, Vector3DIteratorExt},
-    mesh::{cursor::*, FaceBasics, IndexedVertex2D, MeshType3D, VertexBasics},
+    mesh::{cursor::*, FaceBasics, IndexedVertex2D, MeshType3D},
 };
 use itertools::Itertools;
 

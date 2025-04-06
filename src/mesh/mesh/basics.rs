@@ -55,6 +55,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     #[must_use]
     fn num_vertices(&self) -> usize;
 
+    /// Iterator for [MeshBasics::vertex_refs].
     type VertexRefIter<'a>: Iterator<Item = &'a T::Vertex> + CreateEmptyIterator
     where
         T: 'a,
@@ -66,6 +67,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     where
         T: 'a;
 
+    /// Iteartor for [MeshBasics::vertex_ids].
     type VertexIdIter<'a>: Iterator<Item = T::V> + CreateEmptyIterator + 'a
     where
         T: 'a,
@@ -94,6 +96,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     where
         T: 'a;
 
+    /// Iterator for [MeshBasics::vertex_edges_out].
     type VertexEdgesOutIterator<'a>: Iterator<Item = ValidEdgeCursor<'a, T>> + CreateEmptyIterator
     where
         T: 'a,
@@ -107,6 +110,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     where
         T: 'a;
 
+    /// Iterator for [MeshBasics::vertex_edges_in].
     type VertexEdgesInIterator<'a>: Iterator<Item = ValidEdgeCursor<'a, T>> + CreateEmptyIterator
     where
         T: 'a,
@@ -120,6 +124,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     where
         T: 'a;
 
+    /// Iterator for [MeshBasics::vertex_edges].
     type VertexNeighborsIterator<'a>: Iterator<Item = ValidVertexCursor<'a, T>>
         + CreateEmptyIterator
     where
@@ -133,6 +138,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     where
         T: 'a;
 
+    /// Iterator for [MeshBasics::vertex_faces].
     type VertexFacesIterator<'a>: Iterator<Item = ValidFaceCursor<'a, T>> + CreateEmptyIterator
     where
         T: 'a,
@@ -215,6 +221,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     #[must_use]
     fn edge_payload_mut<'a>(&'a mut self, edge: T::E) -> &'a mut T::EP;
 
+    /// Iterator for [MeshBasics::edge_refs].
     type EdgeRefIter<'a>: Iterator<Item = &'a T::Edge> + CreateEmptyIterator
     where
         T: 'a,
@@ -227,6 +234,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     where
         T: 'a;
 
+    /// Iterator for [MeshBasics::edges].
     type EdgeIter<'a>: Iterator<Item = ValidEdgeCursor<'a, T>> + CreateEmptyIterator
     where
         T: 'a,
@@ -239,6 +247,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     where
         T: 'a;
 
+    /// Iterator for [MeshBasics::edge_ids].
     type EdgeIdIter<'a>: Iterator<Item = T::E> + CreateEmptyIterator
     where
         T: 'a,
@@ -269,6 +278,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     #[must_use]
     fn shared_edge_id(&self, v: T::V, w: T::V) -> Option<T::E>;
 
+    /// Iterator for [MeshBasics::shared_edges].
     type SharedEdgeIter<'a>: Iterator<Item = ValidEdgeCursor<'a, T>> + CreateEmptyIterator
     where
         T: 'a,

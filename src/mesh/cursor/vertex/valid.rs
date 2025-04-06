@@ -3,7 +3,9 @@ use crate::{
     mesh::{cursor::*, HalfEdge, HalfEdgeVertex, MeshType, VertexBasics},
 };
 
+/// Methods specific to valid vertex cursors, i.e., they are guaranteed to point to an existing vertex. 
 pub trait ValidVertexCursorBasics<'a, T: MeshType>: VertexCursorData<'a, T> + ValidCursor {
+    /// Wrapper around [HalfEdgeVertex::shortest_path].
     fn shortest_path(self, other: T::V) -> Option<(T::E, T::E, usize)>
     where
         T::Edge: HalfEdge<T>,

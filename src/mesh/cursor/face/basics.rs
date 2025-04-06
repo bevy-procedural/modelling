@@ -4,12 +4,15 @@ use crate::{
     util::CreateEmptyIterator,
 };
 
+/// Methods specific to immutable face cursors, i.e., they require cloning the face cursor.
 pub trait ImmutableFaceCursor<'a, T: MeshType>:
     CursorData<T = T, I = T::F, S = T::Face> + ImmutableCursor + FaceCursorBasics<'a, T>
 where
     T: 'a,
     T::Mesh: MeshBasics<T>,
 {
+    // TODO: Can I move some of these to FaceCursorBasics?
+
     /// Returns an iterator of the face's vertices.
     /// Panics if the face is void.
     /// See [FaceBasics::vertex_ids] for more information.
@@ -31,7 +34,7 @@ where
     }
 }
 
-/// This trait implements some basic functionality for face cursors that works with any type of mesh and both mutable and immutable cursors.
+/// Methods that work with all kinds of face cursors, including mutable, immutable, valid and maybe ones.
 pub trait FaceCursorBasics<'a, T: MeshType>: FaceCursorData<'a, T> {
     /// Returns an iterator of vertex ids of the face.
     /// Panics if the face is void.
@@ -78,7 +81,7 @@ pub trait FaceCursorBasics<'a, T: MeshType>: FaceCursorData<'a, T> {
     }
 }
 
-/// This trait implements some basic functionality for face cursors that works with halfedge meshes and both mutable and immutable cursors.
+/// Methods specific to face cursors on halfedge meshes, both valid and maybe ones.
 pub trait FaceCursorHalfedgeBasics<'a, T: MeshType>: FaceCursorData<'a, T>
 where
     T::Edge: HalfEdge<T>,

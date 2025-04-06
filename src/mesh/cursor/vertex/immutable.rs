@@ -24,6 +24,7 @@ impl<'a, T: MeshType> VertexCursor<'a, T> {
         Self { mesh, vertex }
     }
 
+    /// Creates a new vertex cursor pointing nowhere (void).
     #[inline]
     #[must_use]
     pub fn new_void(mesh: &'a T::Mesh) -> Self {

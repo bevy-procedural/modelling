@@ -31,6 +31,7 @@ impl<'a, T: MeshType> FaceCursor<'a, T> {
         Self { mesh, face }
     }
 
+    /// Creates a new face cursor pointing nowhere (void).
     #[inline]
     #[must_use]
     pub fn new_void(mesh: &'a T::Mesh) -> Self {

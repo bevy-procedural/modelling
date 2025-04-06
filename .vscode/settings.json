@@ -3,6 +3,8 @@
         "cartesian",
         "casteljau",
         "delaunay",
+        "destructures",
+        "iphi",
         "kahan",
         "laplacian",
         "lerped",

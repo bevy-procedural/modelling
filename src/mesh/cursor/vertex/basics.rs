@@ -3,6 +3,7 @@ use crate::{
     mesh::{cursor::*, HalfEdge, HalfEdgeVertex, MeshBasics, MeshType},
 };
 
+/// Methods specific to immutable vertex cursors, i.e., they require cloning the vertex cursor.
 pub trait ImmutableVertexCursor<'a, T: MeshType>:
     CursorData<T = T, I = T::V, S = T::Vertex> + VertexCursorData<'a, T>
 where

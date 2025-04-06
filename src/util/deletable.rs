@@ -20,18 +20,22 @@ pub trait Deletable<I> {
     fn allocate() -> Self;
 }
 
-pub type DeletableVectorIter<'a, T> = std::iter::Filter<std::slice::Iter<'a, T>, fn(&&T) -> bool>;
+/// The type of the iterator over the non-deleted elements of a `DeletableVector`.
+pub type DeletableVectorIterator<'a, T> =
+    std::iter::Filter<std::slice::Iter<'a, T>, fn(&&T) -> bool>;
 
-impl<'a, T> CreateEmptyIterator for DeletableVectorIter<'a, T> {
+impl<'a, T> CreateEmptyIterator for DeletableVectorIterator<'a, T> {
     #[inline]
     fn create_empty() -> Self {
         (&[] as &[T]).iter().filter(|_| false)
     }
 }
 
-impl<'a, T> CreateEmptyIterator for std::iter::Filter<DeletableVectorIter<'a, T>, fn(&&T) -> bool> {
+impl<'a, T> CreateEmptyIterator
+    for std::iter::Filter<DeletableVectorIterator<'a, T>, fn(&&T) -> bool>
+{
     fn create_empty() -> Self {
-        DeletableVectorIter::<'a, T>::create_empty().filter(|_| false)
+        DeletableVectorIterator::<'a, T>::create_empty().filter(|_| false)
     }
 }
 
@@ -60,7 +64,7 @@ impl<T: Deletable<I>, I: IndexType> DeletableVector<T, I> {
 
     /// Returns an iterator over the non-deleted elements.
     #[inline]
-    pub fn iter(&self) -> DeletableVectorIter<T> {
+    pub fn iter(&self) -> DeletableVectorIterator<T> {
         self.data.iter().filter(|f| !f.is_deleted())
     }
 

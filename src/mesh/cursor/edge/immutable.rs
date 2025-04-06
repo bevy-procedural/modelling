@@ -58,6 +58,7 @@ impl<'a, T: MeshType> EdgeCursor<'a, T> {
         Self { mesh, edge }
     }
 
+    /// Creates a new edge cursor pointing nowhere (void).
     #[inline]
     #[must_use]
     pub fn new_void(mesh: &'a T::Mesh) -> Self {
@@ -148,7 +149,7 @@ where
     fn from_valid(from: Self::Valid) -> Self {
         from.maybe()
     }
-    
+
     #[inline]
     fn is_void(&self) -> bool {
         self.try_id() == IndexType::max() || !self.mesh().has_edge(self.try_id())

@@ -1,5 +1,6 @@
 use crate::mesh::{cursor::*, EuclideanMeshType, Face, Face3d, FaceBasics, MeshType, MeshType3D};
 
+/// Methods specific to valid face cursors, i.e., they are guaranteed to point to an existing face.
 pub trait ValidFaceCursorBasics<'a, T: MeshType>:
     ValidCursor<S = T::Face, I = T::F, T = T>
 where
@@ -23,6 +24,7 @@ where
         self.inner().num_edges(self.mesh())
     }
 
+    /// the center of the face by averaging the vertex positions.
     #[inline]
     #[must_use]
     fn centroid<const D: usize>(&self) -> T::Vec
@@ -43,6 +45,7 @@ where
         self.inner().as_polygon(self.mesh())
     }
 
+    /// Whether the face is convex.
     #[inline]
     #[must_use]
     fn is_convex(&self) -> bool
@@ -52,6 +55,7 @@ where
         self.inner().is_convex(self.mesh())
     }
 
+    /// Whether the face is planar.
     #[inline]
     #[must_use]
     fn is_planar2(&self) -> bool
@@ -61,6 +65,7 @@ where
         self.inner().is_planar2(self.mesh())
     }
 
+    /// Returns the normal of the face.
     #[inline]
     #[must_use]
     fn normal(&self) -> T::Vec

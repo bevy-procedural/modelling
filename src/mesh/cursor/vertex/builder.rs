@@ -3,6 +3,7 @@ use crate::{
     mesh::{cursor::*, HalfEdge, MeshBasics, MeshBuilder, MeshType},
 };
 
+/// Methods specific to mutable vertex cursors, i.e., to modify the mesh.
 pub trait VertexCursorBuilder<'a, T: MeshType>:
     VertexCursorData<'a, T> + MutableCursor<T = T, I = T::V, S = T::Vertex>
 where

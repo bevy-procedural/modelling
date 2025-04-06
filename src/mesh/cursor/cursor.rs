@@ -175,10 +175,18 @@ pub trait CursorData: Sized + Debug {
 
     /// Loads the cursor and panics if it is void.
     /// For valid cursors, this is a no-op.
+    /// If you don't need to use the result but only ensure validity, use [CursorData::ensure].
     #[inline]
     #[must_use]
     fn unwrap(self) -> Self::Valid {
         self.load().unwrap()
+    }
+
+    /// Ensures that the cursor points to a valid instance.
+    /// Panics if the cursor is void. Does not return a value.
+    #[inline]
+    fn ensure(self) {
+        assert!(self.is_valid(), "Expected {:?} to be valid", self);
     }
 
     /// Returns a reference to the instance if it exists and is not deleted, otherwise `void`.

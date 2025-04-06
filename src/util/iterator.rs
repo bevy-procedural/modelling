@@ -64,36 +64,3 @@ impl<'a, Input, Output, Iter: CreateEmptyIterator + Iterator<Item = Input>> Crea
         Iter::create_empty().filter_map(|_| None)
     }
 }
-
-pub struct FilterNeqIterator<I: Iterator<Item = T>, T: PartialEq> {
-    iter: I,
-    value: T,
-}
-
-impl<I: Iterator<Item = T>, T: PartialEq> FilterNeqIterator<I, T> {
-    fn new(iter: I, value: T) -> Self {
-        Self { iter, value }
-    }
-}
-impl<I: Iterator<Item = T>, T: PartialEq> Iterator for FilterNeqIterator<I, T> {
-    type Item = I::Item;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        while let Some(item) = self.iter.next() {
-            if item == self.value {
-                return Some(item);
-            }
-        }
-        None
-    }
-}
-
-impl<I: Iterator<Item = T>, T: PartialEq> CreateEmptyIterator for FilterNeqIterator<I, T>
-where
-    I: CreateEmptyIterator,
-    T: Default,
-{
-    fn create_empty() -> Self {
-        Self::new(I::create_empty(), T::default())
-    }
-}
