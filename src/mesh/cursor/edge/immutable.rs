@@ -1,6 +1,6 @@
 use crate::{
     math::IndexType,
-    mesh::{cursor::*, HalfEdge, MeshBasics, MeshType},
+    mesh::{cursor::*, HalfEdge, HalfEdgeVertex, MeshBasics, MeshType},
 };
 
 /// An edge cursor pointing to an edge of a mesh with an immutable reference to the mesh.
@@ -26,39 +26,6 @@ pub struct EdgeCursor<'a, T: MeshType> {
     mesh: &'a T::Mesh,
     edge: T::E,
 }
-
-impl<'a, T: MeshType> PartialEq for EdgeCursor<'a, T> {
-    /// same edge id and pointing to the same mesh instance
-    fn eq(&self, other: &Self) -> bool {
-        self.edge == other.edge && std::ptr::eq(self.mesh, other.mesh)
-    }
-}
-
-impl<'a, T: MeshType> ImmutableCursor for EdgeCursor<'a, T>
-where
-    T: 'a,
-{
-    #[inline]
-    fn fork(&self) -> Self {
-        Self::new(self.mesh, self.edge)
-    }
-}
-
-impl_debug_cursor!(EdgeCursor<'a, T: MeshType>, id: edge);
-
-#[rustfmt::skip]
-impl_specific_cursor_data!(
-    EdgeCursorData, EdgeCursor,
-    FC, move_to_face, T::F,FaceCursor,
-    VC, move_to_vertex, T::V, VertexCursor
-);
-
-#[rustfmt::skip]
-impl_cursor_data!(
-    MaybeCursor, EdgeCursor, ValidEdgeCursor, 
-    edge, load_new, E, Edge, EP, 
-    get_edge, has_edge
-);
 
 impl<'a, T: MeshType> EdgeCursor<'a, T> {
     /// Creates a new edge cursor pointing to the given edge.
@@ -86,14 +53,22 @@ impl<'a, T: MeshType> EdgeCursor<'a, T> {
     }*/
 }
 
-impl<'a, T: MeshType> ImmutableEdgeCursor<'a, T> for EdgeCursor<'a, T> where T: 'a {}
-impl<'a, T: MeshType> EdgeCursorBasics<'a, T> for EdgeCursor<'a, T> where T: 'a {}
-impl<'a, T: MeshType> EdgeCursorHalfedgeBasics<'a, T> for EdgeCursor<'a, T>
-where
-    T::Edge: HalfEdge<T>,
-    T: 'a,
-{
-}
+impl_debug_eq_cursor!(EdgeCursor, edge);
+
+#[rustfmt::skip]
+impl_specific_cursor_data!(
+    EdgeCursorData, EdgeCursor,
+    FC, move_to_face, T::F,FaceCursor,
+    VC, move_to_vertex, T::V, VertexCursor
+);
+
+#[rustfmt::skip]
+impl_cursor_data!(
+    MaybeCursor, ImmutableCursor, EdgeCursor, ValidEdgeCursor, 
+    edge, load_new, E, Edge, EP, 
+    get_edge, has_edge,
+    ImmutableEdgeCursor, EdgeCursorBasics, EdgeCursorHalfedgeBasics
+);
 
 #[cfg(test)]
 mod tests {

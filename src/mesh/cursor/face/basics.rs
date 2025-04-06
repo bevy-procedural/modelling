@@ -5,10 +5,9 @@ use crate::{
 };
 
 /// Methods specific to immutable face cursors, i.e., they require cloning the face cursor.
-pub trait ImmutableFaceCursor<'a, T: MeshType>:
+pub trait ImmutableFaceCursor<'a, T: MeshType + 'a>:
     CursorData<T = T, I = T::F, S = T::Face> + ImmutableCursor + FaceCursorBasics<'a, T>
 where
-    T: 'a,
     T::Mesh: MeshBasics<T>,
 {
     // TODO: Can I move some of these to FaceCursorBasics?

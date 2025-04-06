@@ -2,12 +2,12 @@ use crate::{mesh::MeshType, prelude::ValidVertexCursor, util::CreateEmptyIterato
 
 /// A wrapper over an iterator over vertex references that knows the parent mesh.
 /// It allows mapping each vertex reference into a ValidVertexCursor.
-pub struct Vertex2ValidVertexCursorAdapter<'a, T: 'a + MeshType, I: Iterator> {
+pub struct Vertex2ValidVertexCursorAdapter<'a, T: MeshType + 'a, I: Iterator> {
     mesh: Option<&'a T::Mesh>,
     inner: I,
 }
 
-impl<'a, T: 'a + MeshType, I: Iterator<Item = &'a T::Vertex>>
+impl<'a, T: MeshType + 'a, I: Iterator<Item = &'a T::Vertex>>
     Vertex2ValidVertexCursorAdapter<'a, T, I>
 {
     /// Creates a new Vertex2ValidVertexCursorAdapter.
@@ -20,7 +20,7 @@ impl<'a, T: 'a + MeshType, I: Iterator<Item = &'a T::Vertex>>
     }
 }
 
-impl<'a, T: 'a + MeshType, I: Iterator<Item = &'a T::Vertex>> Iterator
+impl<'a, T: MeshType + 'a, I: Iterator<Item = &'a T::Vertex>> Iterator
     for Vertex2ValidVertexCursorAdapter<'a, T, I>
 {
     type Item = ValidVertexCursor<'a, T>;
@@ -34,7 +34,7 @@ impl<'a, T: 'a + MeshType, I: Iterator<Item = &'a T::Vertex>> Iterator
     }
 }
 
-impl<'a, T: 'a + MeshType, I: Iterator + CreateEmptyIterator> CreateEmptyIterator
+impl<'a, T: MeshType + 'a, I: Iterator + CreateEmptyIterator> CreateEmptyIterator
     for Vertex2ValidVertexCursorAdapter<'a, T, I>
 {
     #[inline]

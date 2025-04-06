@@ -239,10 +239,11 @@ pub trait CursorData: Sized + Debug {
 }
 
 macro_rules! impl_cursor_data {
-    (MaybeCursor, $cursor:ident, $valid:ident, 
-        $try_id:ident, $load:ident, $I:ident, $S:ident, $payload:ident, 
-        $get_inner:ident, $check_has:ident) => {
-        impl<'a, T: MeshType> CursorData for $cursor<'a, T> {
+    (MaybeCursor, $mutability:ident, $cursor:ident, $valid:ident,
+        $try_id:ident, $load:ident, $I:ident, $S:ident, $payload:ident,
+        $get_inner:ident, $check_has:ident,
+        $mutability_impl:ident, $basics:ident, $halfedge_basics:ident) => {
+        impl<'a, T: MeshType + 'a> CursorData for $cursor<'a, T> {
             type I = T::$I;
             type S = T::$S;
             type T = T;
@@ -300,13 +301,23 @@ macro_rules! impl_cursor_data {
             }
         }
 
-        impl<'a, T: MeshType> MaybeCursor for $cursor<'a, T>  {}
+        impl<'a, T: MeshType + 'a> MaybeCursor for $cursor<'a, T> {}
+        impl<'a, T: MeshType + 'a> $basics<'a, T> for $cursor<'a, T> {}
+        impl<'a, T: MeshType + 'a> $halfedge_basics<'a, T> for $cursor<'a, T>
+        where
+            T::Edge: HalfEdge<T>,
+            T::Vertex: HalfEdgeVertex<T>,
+        {
+        }
+
+        impl_mutability!($mutability, $cursor, $mutability_impl);
     };
 
-    (ValidCursor, $cursor:ident, $maybe:ident, 
+    (ValidCursor, $mutability:ident, $cursor:ident, $maybe:ident,
         $try_id:ident, $I:ident, $S:ident, $payload:ident,
-        $get_inner:ident, $check_has:ident) => {
-        impl<'a, T: MeshType> CursorData for $cursor<'a, T>  {
+        $get_inner:ident, $get_inner_mut:ident, $check_has:ident,
+        $valid:ident, $basics:ident, $halfedge_basics:ident, $mutability_impl:ident) => {
+        impl<'a, T: MeshType + 'a> CursorData for $cursor<'a, T> {
             type I = T::$I;
             type S = T::$S;
             type T = T;
@@ -336,6 +347,7 @@ macro_rules! impl_cursor_data {
 
             #[inline]
             fn try_inner<'b>(&'b self) -> Option<&'b Self::S> {
+                // TODO: use the cashed inner value for valid immutable cursors
                 self.mesh.$get_inner(self.try_id())
             }
 
@@ -359,8 +371,8 @@ macro_rules! impl_cursor_data {
                 false
             }
         }
-    
-       /* impl<'a, T: MeshType> ValidCursor for $cursor<'a, T> {
+
+        impl<'a, T: MeshType + 'a> ValidCursor for $cursor<'a, T> {
             #[inline]
             fn id(&self) -> Self::I {
                 self.try_id()
@@ -368,13 +380,87 @@ macro_rules! impl_cursor_data {
 
             #[inline]
             fn inner<'b>(&'b self) -> &'b Self::S {
-                self.mesh.get_vertex(self.try_id()).unwrap()
+                self.try_inner().unwrap()
+            }
+
+            impl_payload_method!($payload, $cursor);
+        }
+
+        impl<'a, T: MeshType + 'a> $valid<'a, T> for $cursor<'a, T> {}
+        impl<'a, T: MeshType + 'a> $basics<'a, T> for $cursor<'a, T> {}
+        impl<'a, T: MeshType + 'a> $halfedge_basics<'a, T> for $cursor<'a, T>
+        where
+            T::Edge: HalfEdge<T>,
+            T::Vertex: HalfEdgeVertex<T>,
+        {
+        }
+
+        impl_mutability!($mutability, $cursor, $mutability_impl);
+        impl_valid_mut!($payload, $mutability, $cursor, $get_inner_mut);
+    };
+}
+
+macro_rules! impl_payload_method {
+    (EP, $cursor:ident) => {
+        fn payload<'b>(&'b self) -> &'b Self::Payload {
+            self.mesh.edge_payload(self.try_id())
+        }
+    };
+
+    ($_:ident, $cursor:ident) => {
+        #[inline]
+        fn payload<'b>(&'b self) -> &'b Self::Payload {
+            self.inner().payload()
+        }
+    };
+}
+
+macro_rules! impl_mutability {
+    (ImmutableCursor, $cursor:ident, $immutable:ident) => {
+        impl<'a, T: MeshType + 'a> ImmutableCursor for $cursor<'a, T> {}
+
+        impl<'a, T: MeshType + 'a> $immutable<'a, T> for $cursor<'a, T> {}
+    };
+
+    (MutableCursor, $cursor:ident, $mutable:ident) => {
+        impl<'a, T: MeshType + 'a> MutableCursor for $cursor<'a, T> {
+            #[inline]
+            fn mesh_mut<'b>(&'b mut self) -> &'b mut <Self::T as MeshType>::Mesh {
+                self.mesh
+            }
+        }
+    };
+}
+
+macro_rules! impl_valid_mut {
+    (EP, MutableCursor, $cursor:ident, $get_inner_mut:ident) => {
+        impl<'a, T: MeshType + 'a> ValidCursorMut for $cursor<'a, T> {
+            #[inline]
+            fn payload_mut<'b>(&'b mut self) -> &'b mut Self::Payload {
+                self.mesh.edge_payload_mut(self.try_id())
             }
 
             #[inline]
-            fn payload<'b>(&'b self) -> &'b Self::Payload {
-                self.mesh.vertex_ref(self.try_id()).payload()
+            fn inner_mut<'b>(&'b mut self) -> &'b mut Self::S {
+                self.mesh.$get_inner_mut(self.try_id()).unwrap()
             }
-        }*/
+        }
     };
+
+    ($_:ident, MutableCursor, $cursor:ident, $get_inner_mut:ident) => {
+        impl<'a, T: MeshType + 'a> ValidCursorMut for $cursor<'a, T> {
+            #[inline]
+            fn payload_mut<'b>(&'b mut self) -> &'b mut Self::Payload {
+                self.inner_mut().payload_mut()
+                // self.mesh.edge_payload_mut(self.edge)
+            }
+
+            #[inline]
+            fn inner_mut<'b>(&'b mut self) -> &'b mut Self::S {
+                self.mesh.$get_inner_mut(self.try_id()).unwrap()
+            }
+        }
+    };
+
+    ($_:ident, ImmutableCursor, $cursor:ident, $get_inner_mut:ident) => {};
 }

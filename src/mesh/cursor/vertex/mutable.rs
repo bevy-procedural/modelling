@@ -24,7 +24,7 @@ impl<'a, T: MeshType> VertexCursorMut<'a, T> {
     }
 }
 
-impl_debug_cursor!(VertexCursorMut<'a, T: MeshType>, id: vertex);
+impl_debug_eq_cursor!(VertexCursorMut, vertex);
 
 #[rustfmt::skip]
 impl_specific_cursor_data!(
@@ -35,9 +35,10 @@ impl_specific_cursor_data!(
 
 #[rustfmt::skip]
 impl_cursor_data!(
-   MaybeCursor, VertexCursorMut, ValidVertexCursorMut, 
-   vertex, new, V, Vertex, VP, 
-   get_vertex, has_vertex
+    MaybeCursor, MutableCursor, VertexCursorMut, ValidVertexCursorMut, 
+    vertex, new, V, Vertex, VP, 
+    get_vertex, has_vertex,
+    MutableCursor, VertexCursorBasics, VertexCursorHalfedgeBasics
 );
 
 impl<'a, T: MeshType> VertexCursorMut<'a, T> {
@@ -51,13 +52,4 @@ impl<'a, T: MeshType> VertexCursorMut<'a, T> {
     {
         self.mesh.vertex_ref_mut(self.try_id()).set_edge(edge);
     }
-}
-
-impl<'a, T: MeshType> VertexCursorBasics<'a, T> for VertexCursorMut<'a, T> where T: 'a {}
-impl<'a, T: MeshType> VertexCursorHalfedgeBasics<'a, T> for VertexCursorMut<'a, T>
-where
-    T::Edge: HalfEdge<T>,
-    T::Vertex: HalfEdgeVertex<T>,
-    T: 'a,
-{
 }

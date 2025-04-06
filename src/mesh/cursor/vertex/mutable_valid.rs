@@ -16,7 +16,7 @@ impl<'a, T: MeshType> ValidVertexCursorMut<'a, T> {
     }
 }
 
-impl_debug_cursor!(ValidVertexCursorMut<'a, T: MeshType>, id: vertex);
+impl_debug_eq_cursor!(ValidVertexCursorMut, vertex);
 
 #[rustfmt::skip]
 impl_specific_cursor_data!(
@@ -27,55 +27,11 @@ impl_specific_cursor_data!(
 
 #[rustfmt::skip]
 impl_cursor_data!(
-   ValidCursor, ValidVertexCursorMut, VertexCursorMut,
+   ValidCursor, MutableCursor, ValidVertexCursorMut, VertexCursorMut,
    vertex, V, Vertex, VP, 
-   get_vertex, has_vertex
+   get_vertex, get_vertex_mut, has_vertex,
+   ValidVertexCursorBasics, VertexCursorBasics, VertexCursorHalfedgeBasics, MutableCursor
 );
-
-impl<'a, T: MeshType> ValidCursor for ValidVertexCursorMut<'a, T>
-where
-    T: 'a,
-{
-    #[inline]
-    fn id(&self) -> Self::I {
-        self.vertex
-    }
-
-    #[inline]
-    fn inner<'b>(&'b self) -> &'b Self::S {
-        self.mesh.get_vertex(self.vertex).unwrap()
-    }
-
-    #[inline]
-    fn payload<'b>(&'b self) -> &'b Self::Payload {
-        self.mesh.vertex_ref(self.try_id()).payload()
-    }
-}
-
-impl<'a, T: MeshType> MutableCursor for ValidVertexCursorMut<'a, T>
-where
-    T: 'a,
-{
-    #[inline]
-    fn mesh_mut<'b>(&'b mut self) -> &'b mut <Self::T as MeshType>::Mesh {
-        self.mesh
-    }
-}
-
-impl<'a, T: MeshType> ValidCursorMut for ValidVertexCursorMut<'a, T>
-where
-    T: 'a,
-{
-    #[inline]
-    fn payload_mut<'b>(&'b mut self) -> &'b mut Self::Payload {
-        self.mesh.vertex_ref_mut(self.try_id()).payload_mut()
-    }
-
-    #[inline]
-    fn inner_mut<'b>(&'b mut self) -> &'b mut Self::S {
-        self.mesh.get_vertex_mut(self.vertex).unwrap()
-    }
-}
 
 impl<'a, T: MeshType> ValidVertexCursorMut<'a, T> {
     /// Updates the representative edge incident to the vertex in the mesh.
@@ -90,12 +46,4 @@ impl<'a, T: MeshType> ValidVertexCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType> ValidVertexCursorBasics<'a, T> for ValidVertexCursorMut<'a, T> where T: 'a {}
-impl<'a, T: MeshType> VertexCursorBasics<'a, T> for ValidVertexCursorMut<'a, T> where T: 'a {}
-impl<'a, T: MeshType> VertexCursorHalfedgeBasics<'a, T> for ValidVertexCursorMut<'a, T>
-where
-    T::Edge: HalfEdge<T>,
-    T::Vertex: HalfEdgeVertex<T>,
-    T: 'a,
-{
-}
+impl<'a, T: MeshType + 'a> VertexCursorBuilder<'a, T> for ValidVertexCursorMut<'a, T> {}

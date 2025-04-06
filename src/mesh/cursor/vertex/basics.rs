@@ -4,10 +4,9 @@ use crate::{
 };
 
 /// Methods specific to immutable vertex cursors, i.e., they require cloning the vertex cursor.
-pub trait ImmutableVertexCursor<'a, T: MeshType>:
+pub trait ImmutableVertexCursor<'a, T: MeshType + 'a>:
     CursorData<T = T, I = T::V, S = T::Vertex> + VertexCursorData<'a, T>
 where
-    T: 'a,
     Self: 'a,
 {
     /// Returns an iterator of edge cursors pointing to the outgoing halfedges of the vertex.

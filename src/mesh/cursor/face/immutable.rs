@@ -1,6 +1,6 @@
 use crate::{
     math::IndexType,
-    mesh::{cursor::*, HalfEdge, MeshBasics, MeshType},
+    mesh::{cursor::*, HalfEdge, HalfEdgeVertex, MeshBasics, MeshType},
 };
 
 /// A face cursor pointing to a face of a mesh with an immutable reference to the mesh.
@@ -8,13 +8,6 @@ use crate::{
 pub struct FaceCursor<'a, T: MeshType> {
     mesh: &'a T::Mesh,
     face: T::F,
-}
-
-impl<'a, T: MeshType> PartialEq for FaceCursor<'a, T> {
-    fn eq(&self, other: &Self) -> bool {
-        // same face id and pointing to the same mesh instance
-        self.face == other.face && self.mesh as *const _ == other.mesh as *const _
-    }
 }
 
 impl<'a, T: MeshType> FaceCursor<'a, T> {
@@ -36,7 +29,7 @@ impl<'a, T: MeshType> FaceCursor<'a, T> {
     }
 }
 
-impl_debug_cursor!(FaceCursor<'a, T: MeshType>, id: face);
+impl_debug_eq_cursor!(FaceCursor, face);
 
 #[rustfmt::skip]
 impl_specific_cursor_data!(
@@ -47,26 +40,8 @@ impl_specific_cursor_data!(
 
 #[rustfmt::skip]
 impl_cursor_data!(
-   MaybeCursor, FaceCursor, ValidFaceCursor, 
+   MaybeCursor, ImmutableCursor, FaceCursor, ValidFaceCursor, 
    face, load_new, F, Face, FP, 
-   get_face, has_face
+   get_face, has_face,
+   ImmutableFaceCursor, FaceCursorBasics, FaceCursorHalfedgeBasics
 );
-
-impl<'a, T: MeshType> ImmutableCursor for FaceCursor<'a, T>
-where
-    T: 'a,
-{
-    #[inline]
-    fn fork(&self) -> Self {
-        Self::new(self.mesh, self.face)
-    }
-}
-
-impl<'a, T: MeshType> FaceCursorBasics<'a, T> for FaceCursor<'a, T> where T: 'a {}
-impl<'a, T: MeshType> FaceCursorHalfedgeBasics<'a, T> for FaceCursor<'a, T>
-where
-    T::Edge: HalfEdge<T>,
-    T: 'a,
-{
-}
-impl<'a, T: MeshType> ImmutableFaceCursor<'a, T> for FaceCursor<'a, T> where T: 'a {}

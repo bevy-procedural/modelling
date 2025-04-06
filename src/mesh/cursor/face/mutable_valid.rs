@@ -1,6 +1,6 @@
 use crate::{
     math::IndexType,
-    mesh::{cursor::*, FaceBasics, HalfEdge, MeshBasics, MeshType},
+    mesh::{cursor::*, FaceBasics, HalfEdge, HalfEdgeVertex, MeshBasics, MeshType},
 };
 
 /// A face cursor pointing to a face of a mesh with a mutable reference to the mesh.
@@ -25,7 +25,7 @@ impl<'a, T: MeshType> ValidFaceCursorMut<'a, T> {
     }
 }
 
-impl_debug_cursor!(ValidFaceCursorMut<'a, T: MeshType>, id: face);
+impl_debug_eq_cursor!(ValidFaceCursorMut, face);
 
 #[rustfmt::skip]
 impl_specific_cursor_data!(
@@ -36,55 +36,11 @@ impl_specific_cursor_data!(
 
 #[rustfmt::skip]
 impl_cursor_data!(
-    ValidCursor, ValidFaceCursorMut, FaceCursorMut, 
+    ValidCursor, MutableCursor, ValidFaceCursorMut, FaceCursorMut, 
     face, F, Face, FP, 
-    get_face, has_face
+    get_face, get_face_mut, has_face,
+    ValidFaceCursorBasics, FaceCursorBasics, FaceCursorHalfedgeBasics, MutableCursor
 );
-
-impl<'a, T: MeshType> ValidCursor for ValidFaceCursorMut<'a, T>
-where
-    T: 'a,
-{
-    #[inline]
-    fn id(&self) -> Self::I {
-        self.face
-    }
-
-    #[inline]
-    fn inner<'b>(&'b self) -> &'b Self::S {
-        self.mesh.get_face(self.face).unwrap()
-    }
-
-    #[inline]
-    fn payload<'b>(&'b self) -> &'b Self::Payload {
-        self.mesh.face_ref(self.try_id()).payload()
-    }
-}
-
-impl<'a, T: MeshType> ValidCursorMut for ValidFaceCursorMut<'a, T>
-where
-    T: 'a,
-{
-    #[inline]
-    fn payload_mut<'b>(&'b mut self) -> &'b mut Self::Payload {
-        self.mesh.face_ref_mut(self.try_id()).payload_mut()
-    }
-
-    #[inline]
-    fn inner_mut<'b>(&'b mut self) -> &'b mut Self::S {
-        self.mesh.get_face_mut(self.face).unwrap()
-    }
-}
-
-impl<'a, T: MeshType> MutableCursor for ValidFaceCursorMut<'a, T>
-where
-    T: 'a,
-{
-    #[inline]
-    fn mesh_mut<'b>(&'b mut self) -> &'b mut <Self::T as MeshType>::Mesh {
-        self.mesh
-    }
-}
 
 impl<'a, T: MeshType> ValidFaceCursorMut<'a, T> {
     /// Updates the representative edge incident to the face in the mesh.
@@ -95,12 +51,4 @@ impl<'a, T: MeshType> ValidFaceCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType> FaceCursorBuilder<'a, T> for ValidFaceCursorMut<'a, T> where T: 'a {}
-impl<'a, T: MeshType> ValidFaceCursorBasics<'a, T> for ValidFaceCursorMut<'a, T> where T: 'a {}
-impl<'a, T: MeshType> FaceCursorBasics<'a, T> for ValidFaceCursorMut<'a, T> where T: 'a {}
-impl<'a, T: MeshType> FaceCursorHalfedgeBasics<'a, T> for ValidFaceCursorMut<'a, T>
-where
-    T::Edge: HalfEdge<T>,
-    T: 'a,
-{
-}
+impl<'a, T: MeshType + 'a> FaceCursorBuilder<'a, T> for ValidFaceCursorMut<'a, T> {}

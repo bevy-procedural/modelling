@@ -148,12 +148,15 @@ where
     }
 
     /// Creates a (conical) frustum
-    fn insert_frustum(
-        &mut self,
+    fn insert_frustum<'a>(
+        &'a mut self,
         base: impl IntoIterator<Item = T::VP>,
         top: impl IntoIterator<Item = T::VP>,
         smooth: bool,
-    ) -> ValidEdgeCursorMut<'_, T> {
+    ) -> ValidEdgeCursorMut<'a, T>
+    where
+        T: 'a,
+    {
         let top_edge = self.insert_polygon(base).loft(2, 2, top).id();
         self.insert_face(top_edge, Default::default()).unwrap();
         // TODO: smooth

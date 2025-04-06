@@ -67,7 +67,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     where
         T: 'a;
 
-    /// Iteartor for [MeshBasics::vertex_ids].
+    /// Iterator for [MeshBasics::vertex_ids].
     type VertexIdIter<'a>: Iterator<Item = T::V> + CreateEmptyIterator + 'a
     where
         T: 'a,
@@ -191,7 +191,7 @@ pub trait MeshBasics<T: MeshType<Mesh = Self>>: Default + std::fmt::Debug + Clon
     /// Returns a mutable edge cursor to the requested edge. Doesn't panic, even if the edge does not exist.
     #[inline]
     #[must_use]
-    fn edge_mut(&mut self, index: T::E) -> EdgeCursorMut<'_, T> {
+    fn edge_mut<'a>(&'a mut self, index: T::E) -> EdgeCursorMut<'a, T> {
         EdgeCursorMut::new(self, index)
     }
 

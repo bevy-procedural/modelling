@@ -11,7 +11,7 @@ use std::ops::Not;
 
 /// This trait implements some shorthands to quickly modify a mesh without thinking about local variables,
 /// i.e., you can quickly modify the mesh multiple times and change the edge etc. using a chaining syntax.
-pub trait EdgeCursorBuilder<'a, T: MeshType>:
+pub trait EdgeCursorBuilder<'a, T: MeshType + 'a>:
     EdgeCursorData<'a, T> + MutableCursor<T = T, I = T::E, S = T::Edge>
 where
     T::Mesh: MeshBuilder<T>,
@@ -356,7 +356,6 @@ where
     where
         // TODO: can we avoid this constraint?
         Self::Valid: ValidEdgeCursorBasics<'a, T> + ValidCursorMut,
-        T: 'a,
     {
         self.load_or_nop(|mut valid| {
             if valid.has_face() {

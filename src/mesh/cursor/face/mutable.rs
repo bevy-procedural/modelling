@@ -1,6 +1,6 @@
 use crate::{
     math::IndexType,
-    mesh::{cursor::*, FaceBasics, HalfEdge, MeshBasics, MeshType},
+    mesh::{cursor::*, FaceBasics, HalfEdge, HalfEdgeVertex, MeshBasics, MeshType},
 };
 
 /// A face cursor pointing to a face of a mesh with a mutable reference to the mesh.
@@ -25,7 +25,7 @@ impl<'a, T: MeshType> FaceCursorMut<'a, T> {
     }
 }
 
-impl_debug_cursor!(FaceCursorMut<'a, T: MeshType>, id: face);
+impl_debug_eq_cursor!(FaceCursorMut, face);
 
 #[rustfmt::skip]
 impl_specific_cursor_data!(
@@ -36,9 +36,10 @@ impl_specific_cursor_data!(
 
 #[rustfmt::skip]
 impl_cursor_data!(
-   MaybeCursor, FaceCursorMut, ValidFaceCursorMut, 
+   MaybeCursor, MutableCursor, FaceCursorMut, ValidFaceCursorMut, 
    face, new, F, Face, FP, 
-   get_face, has_face
+   get_face, has_face,
+   MutableCursor, FaceCursorBasics, FaceCursorHalfedgeBasics
 );
 
 impl<'a, T: MeshType> FaceCursorMut<'a, T> {
@@ -50,21 +51,4 @@ impl<'a, T: MeshType> FaceCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType> MutableCursor for FaceCursorMut<'a, T>
-where
-    T: 'a,
-{
-    #[inline]
-    fn mesh_mut<'b>(&'b mut self) -> &'b mut <Self::T as MeshType>::Mesh {
-        self.mesh
-    }
-}
-
-impl<'a, T: MeshType> FaceCursorBuilder<'a, T> for FaceCursorMut<'a, T> where T: 'a {}
-impl<'a, T: MeshType> FaceCursorBasics<'a, T> for FaceCursorMut<'a, T> where T: 'a {}
-impl<'a, T: MeshType> FaceCursorHalfedgeBasics<'a, T> for FaceCursorMut<'a, T>
-where
-    T::Edge: HalfEdge<T>,
-    T: 'a,
-{
-}
+impl<'a, T: MeshType + 'a> FaceCursorBuilder<'a, T> for FaceCursorMut<'a, T> {}

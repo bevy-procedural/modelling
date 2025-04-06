@@ -1,10 +1,10 @@
 use crate::{
     math::IndexType,
-    mesh::{cursor::*, HalfEdge, HalfEdgeVertex, MeshBasics, MeshType},
+    mesh::{cursor::*, HalfEdge, MeshBasics, MeshType, HalfEdgeVertex},
 };
 
 /// A vertex cursor pointing to a vertex of a mesh with an immutable reference to the mesh.
-#[derive(Clone)]
+#[derive(Clone, Eq)]
 pub struct VertexCursor<'a, T: MeshType> {
     mesh: &'a T::Mesh,
     vertex: T::V,
@@ -29,7 +29,7 @@ impl<'a, T: MeshType> VertexCursor<'a, T> {
     }
 }
 
-impl_debug_cursor!(VertexCursor<'a, T: MeshType>, id: vertex);
+impl_debug_eq_cursor!(VertexCursor, vertex);
 
 #[rustfmt::skip]
 impl_specific_cursor_data!(
@@ -40,27 +40,8 @@ impl_specific_cursor_data!(
 
 #[rustfmt::skip]
 impl_cursor_data!(
-   MaybeCursor, VertexCursor, ValidVertexCursor,
+   MaybeCursor, ImmutableCursor, VertexCursor, ValidVertexCursor,
    vertex, load_new, V, Vertex, VP, 
-   get_vertex, has_vertex
+   get_vertex, has_vertex,
+   ImmutableVertexCursor, VertexCursorBasics, VertexCursorHalfedgeBasics
 );
-
-impl<'a, T: MeshType> ImmutableCursor for VertexCursor<'a, T>
-where
-    T: 'a,
-{
-    #[inline]
-    fn fork(&self) -> Self {
-        Self::new(self.mesh, self.vertex)
-    }
-}
-
-impl<'a, T: MeshType> ImmutableVertexCursor<'a, T> for VertexCursor<'a, T> where T: 'a {}
-impl<'a, T: MeshType> VertexCursorBasics<'a, T> for VertexCursor<'a, T> where T: 'a {}
-impl<'a, T: MeshType> VertexCursorHalfedgeBasics<'a, T> for VertexCursor<'a, T>
-where
-    T::Edge: HalfEdge<T>,
-    T::Vertex: HalfEdgeVertex<T>,
-    T: 'a,
-{
-}

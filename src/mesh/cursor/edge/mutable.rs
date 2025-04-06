@@ -1,6 +1,6 @@
 use crate::{
     math::IndexType,
-    mesh::{cursor::*, HalfEdge, MeshBasics, MeshType},
+    mesh::{cursor::*, HalfEdge, HalfEdgeVertex, MeshBasics, MeshType, MeshTypeHalfEdge},
 };
 
 /// An edge cursor pointing to an edge of a mesh with a mutable reference to the mesh.
@@ -26,43 +26,25 @@ impl<'a, T: MeshType> EdgeCursorMut<'a, T> {
     }
 }
 
-impl_debug_cursor!(EdgeCursorMut<'a, T: MeshType>, id: edge);
+impl_debug_eq_cursor!(EdgeCursorMut, edge);
 
 #[rustfmt::skip]
 impl_specific_cursor_data!(
     EdgeCursorData, EdgeCursorMut,
-    FC, move_to_face, T::F,FaceCursorMut,
+    FC, move_to_face, T::F, FaceCursorMut,
     VC, move_to_vertex, T::V, VertexCursorMut
 );
 
 #[rustfmt::skip]
 impl_cursor_data!(
-   MaybeCursor, EdgeCursorMut, ValidEdgeCursorMut, 
+   MaybeCursor, MutableCursor, EdgeCursorMut, ValidEdgeCursorMut, 
    edge, new, E, Edge, EP, 
-   get_edge, has_edge
+   get_edge, has_edge,
+   MutableCursor, EdgeCursorBasics, EdgeCursorHalfedgeBasics
 );
 
-impl<'a, T: MeshType> MutableCursor for EdgeCursorMut<'a, T>
-where
-    T: 'a,
-{
-    #[inline]
-    fn mesh_mut<'b>(&'b mut self) -> &'b mut <Self::T as MeshType>::Mesh {
-        self.mesh
-    }
-}
-
-impl<'a, T: MeshType> EdgeCursorBasics<'a, T> for EdgeCursorMut<'a, T> where T: 'a {}
-impl<'a, T: MeshType> EdgeCursorHalfedgeBasics<'a, T> for EdgeCursorMut<'a, T>
-where
-    T::Edge: HalfEdge<T>,
-    T: 'a,
-{
-}
-impl<'a, T: MeshType> EdgeCursorBuilder<'a, T> for EdgeCursorMut<'a, T> where T: 'a {}
-impl<'a, T: MeshType> EdgeCursorHalfedgeBuilder<'a, T> for EdgeCursorMut<'a, T>
-where
-    T::Edge: HalfEdge<T>,
-    T: 'a,
+impl<'a, T: MeshType + 'a> EdgeCursorBuilder<'a, T> for EdgeCursorMut<'a, T> {}
+impl<'a, T: MeshType + 'a> EdgeCursorHalfedgeBuilder<'a, T> for EdgeCursorMut<'a, T> where
+    T: MeshTypeHalfEdge
 {
 }

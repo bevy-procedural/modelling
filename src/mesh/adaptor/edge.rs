@@ -2,12 +2,12 @@ use crate::{mesh::MeshType, prelude::ValidEdgeCursor, util::CreateEmptyIterator}
 
 /// A wrapper over an iterator over edge references that knows the parent mesh.
 /// It allows mapping each edge reference into a ValidEdgeCursor.
-pub struct Edge2ValidEdgeCursorAdapter<'a, T: 'a + MeshType, I: Iterator> {
+pub struct Edge2ValidEdgeCursorAdapter<'a, T: MeshType + 'a, I: Iterator> {
     mesh: Option<&'a T::Mesh>,
     inner: I,
 }
 
-impl<'a, T: 'a + MeshType, I: Iterator<Item = &'a T::Edge>> Edge2ValidEdgeCursorAdapter<'a, T, I> {
+impl<'a, T: MeshType + 'a, I: Iterator<Item = &'a T::Edge>> Edge2ValidEdgeCursorAdapter<'a, T, I> {
     /// Creates a new Edge2ValidEdgeCursorAdapter.
     #[inline]
     pub fn new(mesh: &'a T::Mesh, inner: I) -> Self {
@@ -18,7 +18,7 @@ impl<'a, T: 'a + MeshType, I: Iterator<Item = &'a T::Edge>> Edge2ValidEdgeCursor
     }
 }
 
-impl<'a, T: 'a + MeshType, I: Iterator<Item = &'a T::Edge>> Iterator
+impl<'a, T: MeshType + 'a, I: Iterator<Item = &'a T::Edge>> Iterator
     for Edge2ValidEdgeCursorAdapter<'a, T, I>
 {
     type Item = ValidEdgeCursor<'a, T>;
@@ -32,7 +32,7 @@ impl<'a, T: 'a + MeshType, I: Iterator<Item = &'a T::Edge>> Iterator
     }
 }
 
-impl<'a, T: 'a + MeshType, I: Iterator + CreateEmptyIterator> CreateEmptyIterator
+impl<'a, T: MeshType + 'a, I: Iterator + CreateEmptyIterator> CreateEmptyIterator
     for Edge2ValidEdgeCursorAdapter<'a, T, I>
 {
     #[inline]

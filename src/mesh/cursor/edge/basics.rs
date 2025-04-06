@@ -5,12 +5,11 @@ use crate::{
 };
 
 /// These methods are specific to immutable edge cursors, i.e., they require cloning the edge cursor.
-pub trait ImmutableEdgeCursor<'a, T: MeshType>:
+pub trait ImmutableEdgeCursor<'a, T: MeshType + 'a>:
     CursorData<T = T, I = T::E, S = T::Edge> + EdgeCursorBasics<'a, T>
 where
     Self::Valid: EdgeCursorData<'a, T, FC = Self::FC, VC = Self::VC>,
     Self::Maybe: EdgeCursorData<'a, T, FC = Self::FC, VC = Self::VC>,
-    T: 'a,
 {
     // TODO: move these to edgecursordata or basics?
 

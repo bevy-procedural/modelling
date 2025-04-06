@@ -408,10 +408,13 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// The first edge's target is the first vertex of the loop.
     /// Panics if the iterator has a length of less than 2.
     #[inline]
-    fn insert_loop(
-        &mut self,
+    fn insert_loop<'a>(
+        &'a mut self,
         iter: impl IntoIterator<Item = (T::EP, T::VP)>,
-    ) -> ValidEdgeCursorMut<'_, T> {
+    ) -> ValidEdgeCursorMut<'a, T>
+    where
+        T: 'a,
+    {
         let mut iter = iter.into_iter();
         let (ep, vp) = iter.next().unwrap();
         let (second_e, last_e) = self.insert_path(vp, iter);
@@ -425,9 +428,13 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
 
     /// Same as `insert_loop` but uses the default edge payload.
     #[inline]
-    fn insert_loop_default(&mut self, iter: impl IntoIterator<Item = T::VP>) -> ValidEdgeCursorMut<'_, T>
+    fn insert_loop_default<'a>(
+        &'a mut self,
+        iter: impl IntoIterator<Item = T::VP>,
+    ) -> ValidEdgeCursorMut<'a, T>
     where
         T::EP: DefaultEdgePayload,
+        T: 'a,
     {
         self.insert_loop(iter.into_iter().map(|v| (Default::default(), v)))
     }

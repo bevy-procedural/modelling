@@ -1,6 +1,6 @@
 use crate::{
     math::IndexType,
-    mesh::{cursor::*, HalfEdge, MeshBasics, MeshType},
+    mesh::{cursor::*, HalfEdge, HalfEdgeVertex, MeshBasics, MeshType, MeshTypeHalfEdge},
 };
 
 /// A `ValidEdgeCursorMut` behaves the same as an `EdgeCursorMut` but is guaranteed to point to a existing non-deleted edge.
@@ -30,7 +30,7 @@ impl<'a, T: MeshType> ValidEdgeCursorMut<'a, T> {
     }
 }
 
-impl_debug_cursor!(ValidEdgeCursorMut<'a, T: MeshType>, id: edge);
+impl_debug_eq_cursor!(ValidEdgeCursorMut, edge);
 
 #[rustfmt::skip]
 impl_specific_cursor_data!(
@@ -41,55 +41,16 @@ impl_specific_cursor_data!(
 
 #[rustfmt::skip]
 impl_cursor_data!(
-    ValidCursor, ValidEdgeCursorMut, EdgeCursorMut, 
+    ValidCursor, MutableCursor, ValidEdgeCursorMut, EdgeCursorMut, 
     edge, E, Edge, EP, 
-    get_edge, has_edge
+    get_edge, get_edge_mut, has_edge,
+    ValidEdgeCursorBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, MutableCursor
 );
 
-impl<'a, T: MeshType> ValidCursor for ValidEdgeCursorMut<'a, T>
-where
-    T: 'a,
-{
-    #[inline]
-    fn inner<'b>(&'b self) -> &'b Self::S {
-        self.mesh.get_edge(self.edge).unwrap()
-    }
-
-    #[inline]
-    fn payload<'b>(&'b self) -> &'b Self::Payload {
-        self.mesh.edge_payload(self.edge)
-    }
-}
-
-impl<'a, T: MeshType> ValidCursorMut for ValidEdgeCursorMut<'a, T>
-where
-    T: 'a,
-{
-    #[inline]
-    fn payload_mut<'b>(&'b mut self) -> &'b mut Self::Payload {
-        self.mesh.edge_payload_mut(self.edge)
-    }
-
-    #[inline]
-    fn inner_mut<'b>(&'b mut self) -> &'b mut Self::S {
-        self.mesh.get_edge_mut(self.edge).unwrap()
-    }
-}
-
-impl<'a, T: MeshType> MutableCursor for ValidEdgeCursorMut<'a, T>
-where
-    T: 'a,
-{
-    #[inline]
-    fn mesh_mut<'b>(&'b mut self) -> &'b mut <Self::T as MeshType>::Mesh {
-        self.mesh
-    }
-}
-
-impl<'a, T: MeshType> ValidEdgeCursorMut<'a, T>
+impl<'a, T: MeshType + 'a> ValidEdgeCursorMut<'a, T>
 where
     T::Edge: HalfEdge<T>,
-    T: 'a,
+    T::Vertex: HalfEdgeVertex<T>,
 {
     /// Runs the closure on all outgoing halfedges of the target.
     /// Panics if one of the outgoing halfedges doesn't have a twin.
@@ -161,24 +122,12 @@ where
     }
 }
 
-impl<'a, T: MeshType> ValidEdgeCursorHalfedgeBasics<'a, T> for ValidEdgeCursorMut<'a, T>
-where
-    T: 'a,
-    T::Edge: HalfEdge<T>,
+impl<'a, T: MeshType + 'a> ValidEdgeCursorHalfedgeBasics<'a, T> for ValidEdgeCursorMut<'a, T> where
+    T::Edge: HalfEdge<T>
 {
 }
-impl<'a, T: MeshType> ValidEdgeCursorBasics<'a, T> for ValidEdgeCursorMut<'a, T> where T: 'a {}
-impl<'a, T: MeshType> EdgeCursorBasics<'a, T> for ValidEdgeCursorMut<'a, T> where T: 'a {}
-impl<'a, T: MeshType> EdgeCursorHalfedgeBasics<'a, T> for ValidEdgeCursorMut<'a, T>
-where
-    T::Edge: HalfEdge<T>,
-    T: 'a,
-{
-}
-impl<'a, T: MeshType> EdgeCursorBuilder<'a, T> for ValidEdgeCursorMut<'a, T> where T: 'a {}
-impl<'a, T: MeshType> EdgeCursorHalfedgeBuilder<'a, T> for ValidEdgeCursorMut<'a, T>
-where
-    T::Edge: HalfEdge<T>,
-    T: 'a,
+impl<'a, T: MeshType + 'a> EdgeCursorBuilder<'a, T> for ValidEdgeCursorMut<'a, T> {}
+impl<'a, T: MeshType + 'a> EdgeCursorHalfedgeBuilder<'a, T> for ValidEdgeCursorMut<'a, T> where
+    T: MeshTypeHalfEdge
 {
 }

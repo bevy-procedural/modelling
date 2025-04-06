@@ -1,13 +1,17 @@
 use super::CursorData;
-use crate::{math::IndexType, mesh::MeshType};
-use std::fmt::Debug;
+use crate::mesh::MeshType;
 
 /// An immutable cursor is a cursor that doesn't hold a mutable reference to the mesh.
 /// This allows the cursor to be freely shared and passed around without worrying about mutable borrow rules.
-pub trait ImmutableCursor: CursorData {
+pub trait ImmutableCursor: CursorData + Clone {
     /// Clones the cursor.
+    /// 
+    /// This can be used if you want to be explicit about the fact that ownership is forked to a new cursor.
     #[must_use]
-    fn fork(&self) -> Self;
+    #[inline]
+    fn fork(&self) -> Self {
+        self.clone()
+    }
 }
 
 /// A mutable cursor is a cursor that holds a mutable reference to the mesh.

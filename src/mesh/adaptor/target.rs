@@ -4,12 +4,12 @@ use crate::{
 };
 
 /// A wrapper over an iterator over edge references that maps each edge to its target vertex reference.
-pub struct EdgeRef2TargetRefAdapter<'a, T: 'a + MeshType, I> {
+pub struct EdgeRef2TargetRefAdapter<'a, T: MeshType + 'a, I> {
     mesh: Option<&'a T::Mesh>,
     inner: I,
 }
 
-impl<'a, T: 'a + MeshType, I: Iterator<Item = &'a T::Edge>> EdgeRef2TargetRefAdapter<'a, T, I> {
+impl<'a, T: MeshType + 'a, I: Iterator<Item = &'a T::Edge>> EdgeRef2TargetRefAdapter<'a, T, I> {
     /// Creates a new EdgeRef2TargetRefAdapter.
     #[inline]
     pub fn new(mesh: &'a T::Mesh, inner: I) -> Self {
@@ -20,7 +20,7 @@ impl<'a, T: 'a + MeshType, I: Iterator<Item = &'a T::Edge>> EdgeRef2TargetRefAda
     }
 }
 
-impl<'a, T: 'a + MeshType, I: Iterator<Item = &'a T::Edge>> Iterator
+impl<'a, T: MeshType + 'a, I: Iterator<Item = &'a T::Edge>> Iterator
     for EdgeRef2TargetRefAdapter<'a, T, I>
 {
     type Item = &'a T::Vertex;
@@ -32,7 +32,7 @@ impl<'a, T: 'a + MeshType, I: Iterator<Item = &'a T::Edge>> Iterator
     }
 }
 
-impl<'a, T: 'a + MeshType, I: Iterator + CreateEmptyIterator> CreateEmptyIterator
+impl<'a, T: MeshType + 'a, I: Iterator + CreateEmptyIterator> CreateEmptyIterator
     for EdgeRef2TargetRefAdapter<'a, T, I>
 {
     #[inline]

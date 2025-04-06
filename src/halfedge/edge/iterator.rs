@@ -162,7 +162,7 @@ impl<'a, T: HalfEdgeImplMeshType> ForwardEdgeIteratorMut<'a, T> {
     }
 }
 
-impl<'a, T: HalfEdgeImplMeshType> Iterator for ForwardEdgeIteratorMut<'a, T> {
+impl<'a, T: HalfEdgeImplMeshType + 'a> Iterator for ForwardEdgeIteratorMut<'a, T> {
     type Item = &'a mut HalfEdgeImpl<T>;
 
     fn next(&mut self) -> Option<Self::Item> {

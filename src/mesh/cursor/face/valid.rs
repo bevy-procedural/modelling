@@ -1,11 +1,10 @@
 use crate::mesh::{cursor::*, EuclideanMeshType, Face, Face3d, FaceBasics, MeshType, MeshType3D};
 
 /// Methods specific to valid face cursors, i.e., they are guaranteed to point to an existing face.
-pub trait ValidFaceCursorBasics<'a, T: MeshType>:
+pub trait ValidFaceCursorBasics<'a, T: MeshType + 'a>:
     ValidCursor<S = T::Face, I = T::F, T = T>
 where
     Self::S: FaceBasics<T>,
-    T: 'a,
     T::Face: 'a,
 {
     /// Returns the number of vertices of the face.

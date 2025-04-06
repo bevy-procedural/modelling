@@ -6,17 +6,14 @@ use crate::{
 };
 
 /// Iterator adaptor for filtering edges by their target vertex id.
-pub struct FilterTargetIdIterator<'a, T: MeshType, I: Iterator<Item = ValidEdgeCursor<'a, T>>>
-where
-    T: 'a,
+pub struct FilterTargetIdIterator<'a, T: MeshType + 'a, I: Iterator<Item = ValidEdgeCursor<'a, T>>>
 {
     iter: I,
     target: T::V,
 }
 
-impl<'a, T: MeshType, I: Iterator<Item = ValidEdgeCursor<'a, T>>> FilterTargetIdIterator<'a, T, I>
-where
-    T: 'a,
+impl<'a, T: MeshType + 'a, I: Iterator<Item = ValidEdgeCursor<'a, T>>>
+    FilterTargetIdIterator<'a, T, I>
 {
     /// Creates a new iterator that filters edges by their target vertex id.
     pub fn new(iter: I, value: T::V) -> Self {
@@ -26,10 +23,8 @@ where
         }
     }
 }
-impl<'a, T: MeshType, I: Iterator<Item = ValidEdgeCursor<'a, T>>> Iterator
+impl<'a, T: MeshType + 'a, I: Iterator<Item = ValidEdgeCursor<'a, T>>> Iterator
     for FilterTargetIdIterator<'a, T, I>
-where
-    T: 'a,
 {
     type Item = I::Item;
 
@@ -43,11 +38,8 @@ where
     }
 }
 
-impl<'a, T: MeshType, I: Iterator<Item = ValidEdgeCursor<'a, T>>> CreateEmptyIterator
-    for FilterTargetIdIterator<'a, T, I>
-where
-    I: CreateEmptyIterator,
-    T: 'a,
+impl<'a, T: MeshType + 'a, I: CreateEmptyIterator + Iterator<Item = ValidEdgeCursor<'a, T>>>
+    CreateEmptyIterator for FilterTargetIdIterator<'a, T, I>
 {
     fn create_empty() -> Self {
         Self::new(I::create_empty(), IndexType::max())
