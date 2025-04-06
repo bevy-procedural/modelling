@@ -30,7 +30,7 @@ impl_cursor_data!(
    ValidCursor, MutableCursor, ValidVertexCursorMut, VertexCursorMut,
    vertex, V, Vertex, VP, 
    get_vertex, get_vertex_mut, has_vertex,
-   ValidVertexCursorBasics, VertexCursorBasics, VertexCursorHalfedgeBasics, MutableCursor
+   ValidVertexCursorBasics, VertexCursorBasics, VertexCursorHalfedgeBasics, VertexCursorBuilder
 );
 
 impl<'a, T: MeshType> ValidVertexCursorMut<'a, T> {
@@ -45,5 +45,3 @@ impl<'a, T: MeshType> ValidVertexCursorMut<'a, T> {
         self.mesh.vertex_ref_mut(self.try_id()).set_edge(edge);
     }
 }
-
-impl<'a, T: MeshType + 'a> VertexCursorBuilder<'a, T> for ValidVertexCursorMut<'a, T> {}

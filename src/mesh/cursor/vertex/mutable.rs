@@ -38,7 +38,7 @@ impl_cursor_data!(
     MaybeCursor, MutableCursor, VertexCursorMut, ValidVertexCursorMut, 
     vertex, new, V, Vertex, VP, 
     get_vertex, has_vertex,
-    MutableCursor, VertexCursorBasics, VertexCursorHalfedgeBasics
+    VertexCursorBuilder, VertexCursorBasics, VertexCursorHalfedgeBasics
 );
 
 impl<'a, T: MeshType> VertexCursorMut<'a, T> {

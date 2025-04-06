@@ -417,6 +417,8 @@ macro_rules! impl_mutability {
                 self.mesh
             }
         }
+
+        impl<'a, T: MeshType + 'a> $mutable<'a, T> for $cursor<'a, T> {}
     };
 }
 

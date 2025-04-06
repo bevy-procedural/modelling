@@ -40,10 +40,9 @@ impl_cursor_data!(
    MaybeCursor, MutableCursor, EdgeCursorMut, ValidEdgeCursorMut, 
    edge, new, E, Edge, EP, 
    get_edge, has_edge,
-   MutableCursor, EdgeCursorBasics, EdgeCursorHalfedgeBasics
+   EdgeCursorBuilder, EdgeCursorBasics, EdgeCursorHalfedgeBasics
 );
 
-impl<'a, T: MeshType + 'a> EdgeCursorBuilder<'a, T> for EdgeCursorMut<'a, T> {}
 impl<'a, T: MeshType + 'a> EdgeCursorHalfedgeBuilder<'a, T> for EdgeCursorMut<'a, T> where
     T: MeshTypeHalfEdge
 {

@@ -39,7 +39,7 @@ impl_cursor_data!(
    MaybeCursor, MutableCursor, FaceCursorMut, ValidFaceCursorMut, 
    face, new, F, Face, FP, 
    get_face, has_face,
-   MutableCursor, FaceCursorBasics, FaceCursorHalfedgeBasics
+   FaceCursorBuilder, FaceCursorBasics, FaceCursorHalfedgeBasics
 );
 
 impl<'a, T: MeshType> FaceCursorMut<'a, T> {
@@ -50,5 +50,3 @@ impl<'a, T: MeshType> FaceCursorMut<'a, T> {
         self.mesh.face_ref_mut(self.try_id()).set_edge(edge);
     }
 }
-
-impl<'a, T: MeshType + 'a> FaceCursorBuilder<'a, T> for FaceCursorMut<'a, T> {}
