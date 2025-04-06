@@ -52,7 +52,7 @@ where
     fn insert_vertex(self, vp: T::VP, ep: T::EP) -> Self::Maybe {
         self.load_or_else(
             |mut cursor| {
-                let v = cursor.mesh_mut().insert_vertex(vp.clone());
+                let v = cursor.mesh_mut().insert_vertex_id(vp.clone());
                 cursor.move_to(v)
             },
             |mut valid| {

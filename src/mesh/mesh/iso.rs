@@ -494,8 +494,8 @@ mod tests {
         let (x, y, z) = (size * 0.5).tuple();
         let mut mesh = Mesh3d64::new();
         //let (v0, v1) = mesh.insert_isolated_edge(vp(x, y, z), vp(-x, y, z));
-        let v0 = mesh.insert_vertex(vp(x, y, z));
-        let v1 = mesh.insert_vertex(vp(-x, y, z));
+        let v0 = mesh.insert_vertex_id(vp(x, y, z));
+        let v1 = mesh.insert_vertex_id(vp(-x, y, z));
         mesh.insert_edge_vv(v0, v1, Default::default())?;
         let (_, v2) = mesh.insert_vertex_v(v1, vp(-x, -y, z), Default::default())?;
         let (_, v3) = mesh.insert_vertex_v(v2, vp(x, -y, z), Default::default())?;

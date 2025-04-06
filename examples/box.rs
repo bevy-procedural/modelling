@@ -13,6 +13,7 @@ fn vp(x: f32, y: f32, z: f32) -> BevyVertexPayload3d {
     BevyVertexPayload3d::from_pos(Vec3::new(x, y, z))
 }
 
+/*
 /// Creates a cuboid with a given `size`.
 ///
 /// This method attempts the most intuitive approach:
@@ -40,6 +41,62 @@ fn cuboid_from_vertices(size: Vec3) -> BevyMesh3d {
     mesh.close_face_vertices_default(v0, v6, v4, false);
     mesh.insert_face(mesh.shared_edge(v6, v7).unwrap().id(), Default::default());
     mesh
+}*/
+
+/// Creates a cuboid with a given `size`.
+///
+/// Cursors provide a functional API for mesh traversal and modification.
+///
+/// They automatically keep track of the current edge/vertex/face and help with error handling.
+/// That way, you can "walk" around the mesh as you build it and insert new vertices/edges/faces.
+///
+/// We are using a unnecessarily complex strategy here to demonstrate a larger palette of methods.
+///
+/// Since we are not using any custom payloads except for vertex positions, we can use the `Default` trait to initialize all other payloads.
+fn cuboid_from_cursor(size: Vec3) -> BevyMesh3d {
+    let (x, y, z) = (size * 0.5).tuple();
+    let mut mesh = BevyMesh3d::new();
+
+    mesh
+        // First face (back)
+        .insert_polygon([vp(x, y, -z), vp(-x, y, -z), vp(-x, -y, -z), vp(x, -y, -z)].into_iter())
+        // Second face (right)
+        .with_id(|c, e0| {
+            c.insert_vertex(vp(x, y, z), Default::default())
+                .insert_vertex(vp(x, -y, z), Default::default())
+                .close_face(e0, Default::default(), Default::default())
+                .unwrap()
+        })
+        // Third face (front)
+        .twin()
+        .next()
+        .with_id(|c, e1| {
+            c.insert_vertex(vp(-x, y, z), Default::default())
+                .insert_vertex(vp(-x, -y, z), Default::default())
+                .close_face(e1, Default::default(), Default::default())
+        })
+        // Fourth face (bottom)
+        .twin()
+        .stay(|c| {
+            c.next_n(2)
+                .with_id(|c, e2| c.next_n(2).connect(e2, Default::default()))
+                .insert_face(Default::default())
+                .edge()
+        })
+        // A large non-planar six-sided temporary face
+        .insert_face(Default::default())
+        .edge()
+        // Fifth+sixth face (bottom + left)
+        .prev_n(2)
+        .with_id(|c, e3| {
+            c.next_n(2)
+                // Split the large face into two planar quads
+                .subdivide_face(e3, Default::default(), Default::default())
+        })
+        // Assert the whole construction was successful
+        .ensure();
+
+    mesh
 }
 
 /// Creates a cuboid with a given `size`.
@@ -51,6 +108,7 @@ fn cuboid_from_edges(_size: Vec3) -> BevyMesh3d {
     todo!("cuboid_from_edges")
 }
 
+/*
 /// Creates a cuboid with a given `size`.
 ///
 /// The loft function is a powerful tool to create rows of polygons
@@ -76,7 +134,7 @@ fn cuboid_from_loft(size: Vec3) -> BevyMesh3d {
     // close the top face
     mesh.insert_face(top_edge, Default::default());
     mesh
-}
+}*/
 
 /// Creates a cuboid with a given `size`.
 ///
@@ -191,19 +249,19 @@ fn setup_meshes(
 ) {
     let size = Vec3::new(1.0, 1.0, 2.0);
     let generated_meshes = [
-        cuboid_from_vertices(size),
-        //cuboid_from_edges(size),
-        cuboid_from_loft(size),
-        cuboid_from_builder(size),
-        cuboid_from_prism(size),
-        cuboid_from_prism_generic::<BevyMeshType3d32>(size),
-        cuboid_from_cuboid(size),
+        cuboid_from_cursor(size), /*cuboid_from_vertices(size),
+                                  //cuboid_from_edges(size),
+                                  cuboid_from_loft(size),
+                                  cuboid_from_builder(size),
+                                  cuboid_from_prism(size),
+                                  cuboid_from_prism_generic::<BevyMeshType3d32>(size),
+                                  cuboid_from_cuboid(size),*/
     ];
 
     // When printing a mesh, the output will be a list of vertices and edges.
     // This method will also do some sanity checks to ensure that the mesh is
     // correctly constructed and will warn you, e.g., if there are non-planar
-    // faces or if the mesh is not manifold.
+    // faces or if the mesh is non-manifold.
     println!("{:?}", generated_meshes[0]);
 
     // When adding a mesh to bevy, we need to convert it to a bevy mesh first.

@@ -11,7 +11,7 @@ use itertools::Itertools;
 
 impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     #[inline]
-    fn insert_vertex(&mut self, vp: T::VP) -> T::V {
+    fn insert_vertex_id(&mut self, vp: T::VP) -> T::V {
         let new = self.vertices.allocate();
         self.vertices.set(new, T::Vertex::new(IndexType::max(), vp));
         new
@@ -343,7 +343,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         let twin = self.edge_ref(edge.twin_id()).clone();
         let target = twin.origin_id(self);
 
-        let origin = self.insert_vertex(vp);
+        let origin = self.insert_vertex_id(vp);
         let (new_e, new_t) = self.insert_halfedge_pair_forced(
             edge.id(),
             origin,
@@ -515,8 +515,8 @@ mod tests {
         // TODO: Reduce duplication in these tests
 
         let mut mesh = Mesh3d64::default();
-        let v1 = mesh.insert_vertex(vp(0.0, 0.0, 0.0));
-        let v2 = mesh.insert_vertex(vp(1.0, 0.0, 0.0));
+        let v1 = mesh.insert_vertex_id(vp(0.0, 0.0, 0.0));
+        let v2 = mesh.insert_vertex_id(vp(1.0, 0.0, 0.0));
         let e12 = mesh.insert_edge_vv(v1, v2, Default::default()).unwrap();
         assert_eq!(mesh.check(), Ok(()));
         assert_eq!(mesh.is_open_2manifold(), false);
@@ -610,7 +610,7 @@ mod tests {
     fn test_insert_vertex() {
         let mut mesh = Mesh3d64::default();
         let vp1 = vp(42.0, 42.0, 42.0);
-        let v1 = mesh.insert_vertex(vp1);
+        let v1 = mesh.insert_vertex_id(vp1);
         assert_eq!(v1, IndexType::new(0));
         assert_eq!(mesh.check(), Ok(()));
         assert_eq!(mesh.is_open_2manifold(), false);
@@ -623,7 +623,7 @@ mod tests {
         assert_eq!(mesh.is_connected(), true);
 
         let vp2 = vp(0.0, 0.0, 0.0);
-        let v2 = mesh.insert_vertex(vp2);
+        let v2 = mesh.insert_vertex_id(vp2);
         assert_eq!(v2, IndexType::new(1));
         assert_eq!(mesh.check(), Ok(()));
         assert_eq!(mesh.is_open_2manifold(), false);
@@ -747,7 +747,7 @@ mod tests {
         assert_eq!(mesh.vertex(v1).neighbor_ids().collect_vec(), vec![v2]);
         assert_eq!(mesh.vertex(v2).neighbor_ids().collect_vec(), vec![v1]);
 
-        let v3 = mesh.insert_vertex(vp(1.0, 1.0, 0.0));
+        let v3 = mesh.insert_vertex_id(vp(1.0, 1.0, 0.0));
         assert_eq!(v3, IndexType::new(2));
         assert_eq!(mesh.check(), Ok(()));
         assert_eq!(mesh.is_open_2manifold(), false);
@@ -862,7 +862,7 @@ mod tests {
         // insert some non-manifold edges to make things complicated
         {
             let mut mesh = mesh.clone();
-            let v6 = mesh.insert_vertex(vp(0.0, 1.0, 1.0));
+            let v6 = mesh.insert_vertex_id(vp(0.0, 1.0, 1.0));
             assert_eq!(mesh.is_connected(), false);
             let mesh_copy = mesh.clone();
             // inserting this based on vertices is ambiguous - it should fail without changing anything

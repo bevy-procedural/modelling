@@ -4,7 +4,16 @@ use itertools::Itertools;
 /// Some basic operations to build meshes.
 pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// add a new vertex and return it's id
-    fn insert_vertex(&mut self, vp: T::VP) -> T::V;
+    fn insert_vertex_id(&mut self, vp: T::VP) -> T::V;
+
+    /// add a new vertex and return a valid vertex cursor
+    fn insert_vertex<'a>(&'a mut self, vp: T::VP) -> ValidVertexCursorMut<'a, T>
+    where
+        T: 'a,
+    {
+        let v = self.insert_vertex_id(vp);
+        self.vertex_mut(v).unwrap()
+    }
 
     /// Removes the vertex `v`.
     /// Panics if the vertex doesn't exist or if it is not isolated.
@@ -35,7 +44,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// from `a` to `b`. This is also the half-edge that is returned.
     #[inline]
     fn insert_isolated_edge(&mut self, a: T::VP, b: T::VP, ep: T::EP) -> T::E {
-        let v = self.insert_vertex(a);
+        let v = self.insert_vertex_id(a);
         self.insert_vertex_v(v, b, ep).unwrap().0
     }
 
@@ -50,7 +59,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     #[inline]
     #[must_use]
     fn insert_vertex_v(&mut self, v: T::V, vp: T::VP, ep: T::EP) -> Option<(T::E, T::V)> {
-        let w = self.insert_vertex(vp);
+        let w = self.insert_vertex_id(vp);
         if let Some(e) = self.insert_edge_vv(v, w, ep) {
             Some((e, w))
         } else {
@@ -69,7 +78,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     #[inline]
     #[must_use]
     fn insert_vertex_e(&mut self, e: T::E, vp: T::VP, ep: T::EP) -> Option<(T::E, T::V)> {
-        let v = self.insert_vertex(vp);
+        let v = self.insert_vertex_id(vp);
         self.insert_edge_ev(e, v, ep).map(|e| (e, v))
     }
 
@@ -397,7 +406,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         vp: T::VP,
         iter: impl IntoIterator<Item = (T::EP, T::VP)>,
     ) -> (T::E, T::E) {
-        let v = self.insert_vertex(vp);
+        let v = self.insert_vertex_id(vp);
         self.append_path(v, iter).unwrap()
     }
 

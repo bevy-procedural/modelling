@@ -557,7 +557,7 @@ mod tests {
         assert!(mesh.is_connected());
         mesh.insert_regular_polygon(1.0, 10);
         assert!(mesh.is_connected());
-        let v = mesh.insert_vertex(VertexPayloadPNU::from_pos(Vec3::default()));
+        let v = mesh.insert_vertex_id(VertexPayloadPNU::from_pos(Vec3::default()));
         assert!(!mesh.is_connected());
         mesh.remove_vertex(v);
         assert!(mesh.is_connected());

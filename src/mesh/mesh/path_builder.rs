@@ -64,7 +64,7 @@ where
     {
         // TODO: implement this without requiring `HalfEdge`
 
-        let v = mesh.insert_vertex(vp);
+        let v = mesh.insert_vertex_id(vp);
         Self::start_at(mesh, v)
     }
 
@@ -286,7 +286,7 @@ where
         T::EP: DefaultEdgePayload,
     {
         let w = self.transform.apply(pos);
-        let v = self.mesh().insert_vertex(T::VP::from_pos(w));
+        let v = self.mesh().insert_vertex_id(T::VP::from_pos(w));
         self.line_to(v);
         self
     }
@@ -303,7 +303,7 @@ where
         Transform: TransformTrait<T::S, D, Vec = T::Vec>,
     {
         let w = self.transform.apply(pos);
-        self.mesh().insert_vertex(T::VP::from_pos(w))
+        self.mesh().insert_vertex_id(T::VP::from_pos(w))
     }
 
     /// Creates a new vertex at the given position and moves to it.
@@ -332,7 +332,7 @@ where
         Transform: TransformTrait<T::S, D, Vec = T::Vec>,
     {
         let vp2 = vp.transformed(&self.transform);
-        let v = self.mesh().insert_vertex(vp2);
+        let v = self.mesh().insert_vertex_id(vp2);
         self.line_to_ex(v, ep);
         self
     }

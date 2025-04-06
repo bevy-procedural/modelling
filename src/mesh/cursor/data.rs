@@ -77,10 +77,23 @@ pub trait CursorData: Sized + Debug {
     /// Applies the function in the closure to the cursor but return a cursor pointing to the same id as before calling the closure.
     #[inline]
     #[must_use]
-    fn stay<F: FnOnce(Self) -> Self>(self, f: F) -> Self::Maybe {
+    fn stay<F: FnOnce(Self) -> Self>(self, f: F) -> Self {
         let id = self.try_id();
         let c = f(self);
-        c.move_to(id)
+        Self::from_maybe(c.move_to(id))
+    }
+
+    /// Transfers the ownership of the cursor to the closure and provides the id of the cursor at the start of the closure.
+    /// no-op if the cursor is void.
+    ///
+    /// The closure moves the returned cursor.
+    #[inline]
+    #[must_use]
+    fn with_id<F: FnOnce(Self::Valid, Self::I) -> Self>(self, f: F) -> Self {
+        self.load_or_nop(|c| {
+            let id = c.try_id();
+            f(c, id)
+        })
     }
 
     /// If the cursor is valid, it will be loaded and returned.
