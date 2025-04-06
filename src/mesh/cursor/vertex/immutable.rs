@@ -55,7 +55,6 @@ where
     }
 }
 
-impl<'a, T: MeshType> MaybeCursor for VertexCursor<'a, T> where T: 'a {}
 impl<'a, T: MeshType> ImmutableVertexCursor<'a, T> for VertexCursor<'a, T> where T: 'a {}
 impl<'a, T: MeshType> VertexCursorBasics<'a, T> for VertexCursor<'a, T> where T: 'a {}
 impl<'a, T: MeshType> VertexCursorHalfedgeBasics<'a, T> for VertexCursor<'a, T>

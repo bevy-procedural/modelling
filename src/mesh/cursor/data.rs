@@ -242,7 +242,7 @@ macro_rules! impl_cursor_data {
     (MaybeCursor, $cursor:ident, $valid:ident, 
         $try_id:ident, $load:ident, $I:ident, $S:ident, $payload:ident, 
         $get_inner:ident, $check_has:ident) => {
-        impl<'a, T: MeshType> CursorData for $cursor<'a, T> where T: 'a{
+        impl<'a, T: MeshType> CursorData for $cursor<'a, T> {
             type I = T::$I;
             type S = T::$S;
             type T = T;
@@ -299,12 +299,14 @@ macro_rules! impl_cursor_data {
                 self.try_id() == IndexType::max() || !self.mesh().$check_has(self.try_id())
             }
         }
+
+        impl<'a, T: MeshType> MaybeCursor for $cursor<'a, T>  {}
     };
 
     (ValidCursor, $cursor:ident, $maybe:ident, 
         $try_id:ident, $I:ident, $S:ident, $payload:ident,
         $get_inner:ident, $check_has:ident) => {
-        impl<'a, T: MeshType> CursorData for $cursor<'a, T> where T:'a {
+        impl<'a, T: MeshType> CursorData for $cursor<'a, T>  {
             type I = T::$I;
             type S = T::$S;
             type T = T;
@@ -357,5 +359,22 @@ macro_rules! impl_cursor_data {
                 false
             }
         }
+    
+       /* impl<'a, T: MeshType> ValidCursor for $cursor<'a, T> {
+            #[inline]
+            fn id(&self) -> Self::I {
+                self.try_id()
+            }
+
+            #[inline]
+            fn inner<'b>(&'b self) -> &'b Self::S {
+                self.mesh.get_vertex(self.try_id()).unwrap()
+            }
+
+            #[inline]
+            fn payload<'b>(&'b self) -> &'b Self::Payload {
+                self.mesh.vertex_ref(self.try_id()).payload()
+            }
+        }*/
     };
 }

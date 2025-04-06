@@ -86,7 +86,6 @@ impl<'a, T: MeshType> EdgeCursor<'a, T> {
     }*/
 }
 
-impl<'a, T: MeshType> MaybeCursor for EdgeCursor<'a, T> where T: 'a {}
 impl<'a, T: MeshType> ImmutableEdgeCursor<'a, T> for EdgeCursor<'a, T> where T: 'a {}
 impl<'a, T: MeshType> EdgeCursorBasics<'a, T> for EdgeCursor<'a, T> where T: 'a {}
 impl<'a, T: MeshType> EdgeCursorHalfedgeBasics<'a, T> for EdgeCursor<'a, T>

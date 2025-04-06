@@ -40,67 +40,6 @@ impl_cursor_data!(
    get_vertex, has_vertex
 );
 
-/*
-impl<'a, T: MeshType> CursorData for VertexCursorMut<'a, T> {
-    type I = T::V;
-    type S = T::Vertex;
-    type T = T;
-    type Payload = T::VP;
-    type Maybe = Self;
-    type Valid = ValidVertexCursorMut<'a, T>;
-
-    #[inline]
-    fn try_id(&self) -> T::V {
-        self.vertex
-    }
-
-    #[inline]
-    fn mesh<'b>(&'b self) -> &'b T::Mesh {
-        self.mesh
-    }
-
-    #[inline]
-    fn move_to(self, id: T::V) -> VertexCursorMut<'a, T> {
-        Self::new(self.mesh, id)
-    }
-
-    #[inline]
-    fn load(self) -> Option<Self::Valid> {
-        if self.is_void() {
-            None
-        } else {
-            Some(ValidVertexCursorMut::new(self.mesh, self.try_id()))
-        }
-    }
-
-    #[inline]
-    fn try_inner<'b>(&'b self) -> Option<&'b T::Vertex> {
-        self.mesh().get_vertex(self.try_id())
-    }
-
-    #[inline]
-    fn maybe(self) -> Self::Maybe {
-        self
-    }
-
-    #[inline]
-    fn from_maybe(from: Self::Maybe) -> Self {
-        from
-    }
-
-    #[inline]
-    fn from_valid(from: Self::Valid) -> Self {
-        from.maybe()
-    }
-
-    #[inline]
-    fn is_void(&self) -> bool {
-        self.try_id() == IndexType::max() || !self.mesh().has_vertex(self.try_id())
-    }
-}*/
-
-impl<'a, T: MeshType> MaybeCursor for VertexCursorMut<'a, T> where T: 'a {}
-
 impl<'a, T: MeshType> VertexCursorMut<'a, T> {
     /// Updates the representative edge incident to the vertex in the mesh.
     /// Panics if the vertex is void.

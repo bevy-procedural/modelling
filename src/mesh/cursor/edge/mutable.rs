@@ -52,7 +52,6 @@ where
     }
 }
 
-impl<'a, T: MeshType> MaybeCursor for EdgeCursorMut<'a, T> where T: 'a {}
 impl<'a, T: MeshType> EdgeCursorBasics<'a, T> for EdgeCursorMut<'a, T> where T: 'a {}
 impl<'a, T: MeshType> EdgeCursorHalfedgeBasics<'a, T> for EdgeCursorMut<'a, T>
 where

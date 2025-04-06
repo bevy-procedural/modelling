@@ -61,7 +61,6 @@ where
 }
 
 impl<'a, T: MeshType> FaceCursorBuilder<'a, T> for FaceCursorMut<'a, T> where T: 'a {}
-impl<'a, T: MeshType> MaybeCursor for FaceCursorMut<'a, T> where T: 'a {}
 impl<'a, T: MeshType> FaceCursorBasics<'a, T> for FaceCursorMut<'a, T> where T: 'a {}
 impl<'a, T: MeshType> FaceCursorHalfedgeBasics<'a, T> for FaceCursorMut<'a, T>
 where
