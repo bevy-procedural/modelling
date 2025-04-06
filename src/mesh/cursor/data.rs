@@ -36,18 +36,6 @@ pub trait CursorData: Sized + Debug {
         Payload = Self::Payload,
     >;
 
-    /*
-    /// Returns the id the cursor is pointing to. Panics if the cursor is void.
-    #[must_use]
-    #[inline]
-    fn id(&self) -> Self::I {
-        // TODO: Returns `None` if the cursor is void or the id points to a deleted instance.
-        assert!(self.is_valid(), "Expected {:?} to be valid", self);
-        self.try_id()
-    }
-
-    */
-
     /// Returns the id the cursor is pointing to no matter if it is
     /// - void (i.e., equals `IndexType::max()`, indicating the cursor was moved to a nonsensical position),
     /// - deleted (i.e., was valid in the past but has been deleted from the mesh by now), or
