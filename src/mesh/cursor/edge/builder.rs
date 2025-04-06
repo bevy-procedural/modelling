@@ -273,6 +273,8 @@ where
     }
 }
 
+/// These methods can be used to modify half edge meshes.
+/// The cursor isn't required to be valid, though, a void cursor usually results in a no-op (with some documented exceptions).
 pub trait EdgeCursorHalfedgeBuilder<'a, T: MeshType>:
     EdgeCursorData<'a, T> + MutableCursor<T = T, I = T::E, S = T::Edge>
 where

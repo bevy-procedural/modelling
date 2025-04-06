@@ -5,7 +5,8 @@ use crate::{
     util::CreateEmptyIterator,
 };
 
-pub struct FilterIdIterator<'a, T: MeshType, I: Iterator<Item = ValidEdgeCursor<'a, T>>>
+/// Iterator adaptor for filtering edges by their target vertex id.
+pub struct FilterTargetIdIterator<'a, T: MeshType, I: Iterator<Item = ValidEdgeCursor<'a, T>>>
 where
     T: 'a,
 {
@@ -13,10 +14,11 @@ where
     target: T::V,
 }
 
-impl<'a, T: MeshType, I: Iterator<Item = ValidEdgeCursor<'a, T>>> FilterIdIterator<'a, T, I>
+impl<'a, T: MeshType, I: Iterator<Item = ValidEdgeCursor<'a, T>>> FilterTargetIdIterator<'a, T, I>
 where
     T: 'a,
 {
+    /// Creates a new iterator that filters edges by their target vertex id.
     pub fn new(iter: I, value: T::V) -> Self {
         Self {
             iter,
@@ -25,7 +27,7 @@ where
     }
 }
 impl<'a, T: MeshType, I: Iterator<Item = ValidEdgeCursor<'a, T>>> Iterator
-    for FilterIdIterator<'a, T, I>
+    for FilterTargetIdIterator<'a, T, I>
 where
     T: 'a,
 {
@@ -42,7 +44,7 @@ where
 }
 
 impl<'a, T: MeshType, I: Iterator<Item = ValidEdgeCursor<'a, T>>> CreateEmptyIterator
-    for FilterIdIterator<'a, T, I>
+    for FilterTargetIdIterator<'a, T, I>
 where
     I: CreateEmptyIterator,
     T: 'a,

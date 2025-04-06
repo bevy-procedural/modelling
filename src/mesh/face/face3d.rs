@@ -14,9 +14,12 @@ pub trait Face3d<T: MeshType3D<Face = Self>>: FaceBasics<T> {
         mesh: &'a T::Mesh,
     ) -> impl Iterator<Item = T::Vec> + 'a + Clone + ExactSizeIterator
     where
-        T::Vertex: 'a,
+        T: 'a,
     {
+        // TODO: avoid collect
         self.vertices(mesh)
+            .collect_vec()
+            .into_iter()
             .circular_tuple_windows::<(_, _, _)>()
             .map(|(a, b, c)| (b.pos() - a.pos()).cross(&(c.pos() - a.pos())))
     }
@@ -55,7 +58,10 @@ pub trait Face3d<T: MeshType3D<Face = Self>>: FaceBasics<T> {
     /// This is a quite slow O(n^2) method. Use with caution.
     fn has_self_intersections(&self, mesh: &T::Mesh) -> bool {
         // TODO: Test this
+        // TODO: avoid collect
         self.vertices_2d(mesh)
+            .collect_vec()
+            .into_iter()
             .circular_tuple_windows::<(_, _)>()
             .tuple_combinations::<(_, _)>()
             .any(|(((a1, _), (a2, _)), ((b1, _), (b2, _)))| {
@@ -97,7 +103,13 @@ pub trait Face3d<T: MeshType3D<Face = Self>>: FaceBasics<T> {
             self
         );*/
 
-        let normal = self.vertices(mesh).map(|v| v.pos()).normal();
+        // TODO: avoid collect
+        let normal = self
+            .vertices(mesh)
+            .map(|v| v.pos())
+            .collect_vec()
+            .into_iter()
+            .normal();
 
         /*debug_assert!(
             normal.length_squared() >= T::S::EPS,
@@ -126,10 +138,10 @@ pub trait Face3d<T: MeshType3D<Face = Self>>: FaceBasics<T> {
     // TODO: move the vec2 / polygon functions to a general trait
 
     /// Get an iterator over the 2d vertices of the face rotated to the XY plane.
-    fn vertices_2d<'a>(
-        &'a self,
-        mesh: &'a T::Mesh,
-    ) -> impl Iterator<Item = (T::Vec2, T::V)> + Clone + ExactSizeIterator + 'a {
+    fn vertices_2d<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = (T::Vec2, T::V)> + 'a
+    where
+        T: 'a,
+    {
         // PERF: Calculating the normal from all vertices in the face is slow. Maybe use a faster normal impl? Also, we're traversing the face twice!
         let z_axis = T::Vec::new(0.0.into(), 0.0.into(), 1.0.into());
         let rotation = <T::Trans as TransformTrait<T::S, 3>>::from_rotation_arc(

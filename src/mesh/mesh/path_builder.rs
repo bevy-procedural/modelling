@@ -269,7 +269,8 @@ where
         assert!(!self.is_closed());
 
         let sv = self.start_vertex();
-        if self.mesh().vertex(sv).pos() == v {
+        // TODO: avoid unwrap
+        if self.mesh().vertex(sv).unwrap().pos() == v {
             return self.start_vertex;
         }
 

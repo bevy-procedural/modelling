@@ -4,6 +4,7 @@ use crate::{
     util::CreateEmptyIterator,
 };
 
+/// These methods are specific to immutable edge cursors, i.e., they require cloning the edge cursor.
 pub trait ImmutableEdgeCursor<'a, T: MeshType>:
     CursorData<T = T, I = T::E, S = T::Edge> + EdgeCursorBasics<'a, T>
 where
@@ -11,7 +12,7 @@ where
     Self::Maybe: EdgeCursorData<'a, T, FC = Self::FC, VC = Self::VC>,
     T: 'a,
 {
-    // TODO: move these to edgecursordata?
+    // TODO: move these to edgecursordata or basics?
 
     /// Returns face cursors for all faces adjacent to the edge
     /// (including the twin for halfedges and parallel edges' faces if the edge is non-manifold).

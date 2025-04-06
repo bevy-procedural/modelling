@@ -8,9 +8,9 @@ use crate::{
         HasPosition, Vector,
     },
     mesh::{
-        cursor::*, CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EdgeBasics, EdgePayload,
-        EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshBasics,
-        MeshBasicsCurved, MeshType, MeshTypeHalfEdge,
+        CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EdgeBasics, EdgePayload, EmptyEdgePayload,
+        EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshBasicsCurved,
+        MeshType, MeshTypeHalfEdge,
     },
     prelude::HalfEdgeImplMeshTypePlus,
 };

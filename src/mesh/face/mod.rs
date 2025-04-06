@@ -7,7 +7,7 @@ pub use basics::*;
 pub use face3d::*;
 pub use payload::*;
 
-use super::{EuclideanMeshType, MeshType, VertexBasics};
+use super::{cursor::*, EuclideanMeshType, MeshType};
 use crate::math::VectorIteratorExt;
 
 // TODO: Remove methods in trait Face

@@ -229,12 +229,17 @@ pub trait CursorData: Sized + Debug {
     }
 }
 
+/// An immutable cursor is a cursor that doesn't hold a mutable reference to the mesh.
+/// This allows the cursor to be freely shared and passed around without worrying about mutable borrow rules.
 pub trait ImmutableCursor: CursorData {
     /// Clones the cursor.
     #[must_use]
     fn fork(&self) -> Self;
 }
 
+/// A mutable cursor is a cursor that holds a mutable reference to the mesh.
+/// This allows the cursor to modify the mesh it points to.
+/// However, you cannot clone a mutable cursor.
 pub trait MutableCursor: CursorData {
     /// Returns a mutable reference to the mesh the cursor points to.
     ///
@@ -249,6 +254,9 @@ pub trait MutableCursor: CursorData {
     fn mesh_mut<'b>(&'b mut self) -> &'b mut <Self::T as MeshType>::Mesh;
 }
 
+/// A maybe cursor (often just called "cursor") is a cursor that may or may not point to an instance.
+/// This is the most common type of cursor and is used in most of the mesh API.
+/// A maybe cursor without a valid instance is called "void", otherwise it is called "valid".
 pub trait MaybeCursor: CursorData {
     /*/// Returns a reference to the instance if it exists and is not deleted, otherwise `void`.
     #[must_use]
@@ -324,6 +332,8 @@ pub trait MaybeCursor: CursorData {
     }
 }
 
+/// A valid cursor is gauranteed to point to an existing instance.
+/// Hence, queries like `id()`, `next_id()`, or `inner()` always succeed.
 pub trait ValidCursor: CursorData {
     /// Returns the id the cursor is pointing to.
     #[must_use]
@@ -342,10 +352,13 @@ pub trait ValidCursor: CursorData {
     fn payload<'b>(&'b self) -> &'b Self::Payload;
 }
 
+/// This trait defines methods specific to cursors that are both mutable and valid.
 pub trait ValidCursorMut: ValidCursor + MutableCursor {
+    /// Returns a mutable reference to the instance's payload.
     #[must_use]
     fn payload_mut<'b>(&'b mut self) -> &'b mut Self::Payload;
 
+    /// Returns a mutable reference to the instance.
     #[must_use]
     fn inner_mut<'b>(&'b mut self) -> &'b mut Self::S;
 }

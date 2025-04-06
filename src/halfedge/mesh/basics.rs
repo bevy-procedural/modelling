@@ -2,7 +2,8 @@ use super::{HalfEdgeImplMeshType, HalfEdgeMeshImpl};
 use crate::{
     math::IndexType,
     mesh::{
-        cursor::*, Edge2ValidEdgeCursorAdapter, EdgeBasics, FilterIdIterator, HalfEdge, HalfEdgeMesh, MeshBasics, MeshType, Triangulation, VertexBasics, VertexPayload
+        cursor::*, Edge2ValidEdgeCursorAdapter, EdgeBasics, FilterTargetIdIterator, HalfEdge,
+        HalfEdgeMesh, MeshBasics, Triangulation, VertexBasics, VertexPayload,
     },
     prelude::IncidentToVertexIterator,
     util::{CreateEmptyIterator, DeletableVectorIter},
@@ -256,7 +257,7 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     }
 
     type SharedEdgeIter<'a>
-        = FilterIdIterator<'a, T, <T::Mesh as MeshBasics<T>>::VertexEdgesOutIterator<'a>>
+        = FilterTargetIdIterator<'a, T, <T::Mesh as MeshBasics<T>>::VertexEdgesOutIterator<'a>>
     where
         T: 'a;
 
@@ -269,7 +270,7 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
             return CreateEmptyIterator::create_empty();
         };
         let (mesh, id) = v.destructure();
-        FilterIdIterator::new(mesh.vertex_ref(id).edges_out(mesh), w)
+        FilterTargetIdIterator::new(mesh.vertex_ref(id).edges_out(mesh), w)
     }
 
     #[inline]

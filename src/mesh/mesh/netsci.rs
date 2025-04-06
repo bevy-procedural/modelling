@@ -41,7 +41,13 @@ pub trait NetworkScience<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         for e in self.edges() {
             let i = e.origin_id().index();
             let j = e.target_id().index();
-            let d: T::S = e.fork().origin().pos().distance(&e.target().pos());
+            // TODO: avoid unwrap
+            let d: T::S = e
+                .fork()
+                .origin()
+                .unwrap()
+                .pos()
+                .distance(&e.target().unwrap().pos());
             adj[(i, j)] = d;
             adj[(j, i)] = d;
         }

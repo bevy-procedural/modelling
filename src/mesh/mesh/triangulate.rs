@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use super::{MeshBasics, MeshType, MeshType3D};
 use crate::{
     math::{HasNormal, IndexType, Vector},
-    mesh::{Face3d, FaceBasics, Triangulation, VertexBasics},
+    mesh::{cursor::*, Face3d, FaceBasics, Triangulation, VertexBasics},
     tesselate::{triangulate_face, TriangulationAlgorithm},
 };
 
@@ -42,16 +42,16 @@ pub trait Triangulateable<T: MeshType<Mesh = Self>>: MeshBasics<T> {
 
         for f in self.faces() {
             let mut tri = Triangulation::new(&mut indices);
-            let face_normal = Face3d::normal(f, self).normalize();
+            let face_normal = Face3d::normal(f.inner(), self).normalize();
             let mut id_map = HashMap::new();
             // generate a new list of vertices (full duplication)
-            f.vertices(self).for_each(|v| {
+            f.vertices().for_each(|v| {
                 let mut p = v.payload().clone();
                 id_map.insert(v.id(), IndexType::new(vertices.len()));
                 p.set_normal(face_normal);
                 vertices.push(p)
             });
-            triangulate_face::<T>(f, self, &mut tri, algorithm);
+            triangulate_face::<T>(f.inner(), self, &mut tri, algorithm);
             tri.map_indices(&id_map);
         }
 

@@ -73,22 +73,20 @@ where
 
     /// Iterates all vertices adjacent to the vertex in the same manifold edge wheel (clockwise)
     #[inline]
-    fn neighbors<'a>(&self, mesh: &'a T::Mesh) -> impl Iterator<Item = ValidVertexCursor<'a, T>>
+    fn neighbors<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = ValidVertexCursor<'a, T>>
     where
         T: 'a,
     {
-        self.edges_out::<'a>(mesh)
-            .map(move |e| e.target::<'a>().unwrap())
+        self.edges_out(mesh).map(move |e| e.target().unwrap())
     }
 
     /// Iterates all faces adjacent to this vertex in the same manifold edge wheel (clockwise)
     #[inline]
-    fn faces<'a>(&self, mesh: &'a T::Mesh) -> impl Iterator<Item = ValidFaceCursor<'a, T>>
+    fn faces<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = ValidFaceCursor<'a, T>>
     where
         T: 'a,
     {
-        self.edges_out::<'a>(mesh)
-            .map(move |e| e.face::<'a>().unwrap())
+        self.edges_out(mesh).map(move |e| e.face().unwrap())
     }
 
     fn is_manifold(&self, mesh: &T::Mesh) -> bool {

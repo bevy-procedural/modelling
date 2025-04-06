@@ -42,12 +42,12 @@ pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone {
     fn has_only_one_edge(&self, mesh: &T::Mesh) -> bool;
 
     /// Iterates all vertices adjacent to the vertex in the same manifold edge wheel (clockwise)
-    fn neighbors<'a>(&self, mesh: &'a T::Mesh) -> impl Iterator<Item = ValidVertexCursor<'a, T>>
+    fn neighbors<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = ValidVertexCursor<'a, T>>
     where
         T: 'a;
 
     /// Iterates all faces adjacent to this vertex in the same manifold edge wheel (clockwise)
-    fn faces<'a>(&self, mesh: &'a T::Mesh) -> impl Iterator<Item = ValidFaceCursor<'a, T>>
+    fn faces<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = ValidFaceCursor<'a, T>>
     where
         T: 'a,
     {

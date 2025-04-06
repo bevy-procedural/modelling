@@ -80,7 +80,7 @@ where
         if self.is_void() {
             None
         } else {
-            todo!()
+            Some(ValidFaceCursorMut::new(self.mesh, self.try_id()))
         }
     }
 

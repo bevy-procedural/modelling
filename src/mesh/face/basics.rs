@@ -34,6 +34,7 @@ pub trait FaceBasics<T: MeshType<Face = Self>>: std::fmt::Debug + Clone + Copy {
     /// Returns a mutable reference to the face payload.
     fn payload_mut(&mut self) -> &mut T::FP;
 
+    /// Iterator for [FaceBasics::vertex_refs].
     type VertexRefIterator<'a>: Iterator<Item = &'a T::Vertex> + 'a + CreateEmptyIterator
     where
         T: 'a,
@@ -44,6 +45,7 @@ pub trait FaceBasics<T: MeshType<Face = Self>>: std::fmt::Debug + Clone + Copy {
     where
         T: 'a;
 
+    /// Iterator for [FaceBasics::vertices].
     type VertexIterator<'a>: Iterator<Item = ValidVertexCursor<'a, T>> + 'a + CreateEmptyIterator
     where
         T: 'a,
@@ -54,6 +56,7 @@ pub trait FaceBasics<T: MeshType<Face = Self>>: std::fmt::Debug + Clone + Copy {
     where
         T: 'a;
 
+    /// Iterator for [FaceBasics::vertex_ids].
     type VertexIdIterator<'a>: Iterator<Item = T::V> + 'a + CreateEmptyIterator
     where
         T: 'a,
@@ -70,6 +73,7 @@ pub trait FaceBasics<T: MeshType<Face = Self>>: std::fmt::Debug + Clone + Copy {
         return false;
     }
 
+    /// Iterator for [FaceBasics::edge_refs].
     type EdgeRefIterator<'a>: Iterator<Item = &'a T::Edge> + 'a + CreateEmptyIterator
     where
         T: 'a,
@@ -80,6 +84,7 @@ pub trait FaceBasics<T: MeshType<Face = Self>>: std::fmt::Debug + Clone + Copy {
     where
         T: 'a;
 
+    /// Iterator for [FaceBasics::edge_ids].
     type EdgeIdIterator<'a>: Iterator<Item = T::E> + 'a + CreateEmptyIterator
     where
         T: 'a,
