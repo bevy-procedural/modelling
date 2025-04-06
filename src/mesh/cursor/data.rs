@@ -304,7 +304,7 @@ macro_rules! impl_cursor_data {
     (ValidCursor, $mutability:ident, $cursor:ident, $maybe:ident,
         $try_id:ident, $I:ident, $S:ident, $payload:ident,
         $get_inner:ident, $get_inner_mut:ident, $check_has:ident,
-        $valid:ident, $basics:ident, $halfedge_basics:ident, $mutability_impl:ident) => {
+        $mutability_impl:ident, $valid:ident, $basics:ident, $halfedge_basics:ident) => {
         impl<'a, T: MeshType + 'a> CursorData for $cursor<'a, T> {
             type I = T::$I;
             type S = T::$S;

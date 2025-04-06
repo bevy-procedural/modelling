@@ -39,7 +39,7 @@ impl_cursor_data!(
     ValidCursor, MutableCursor, ValidFaceCursorMut, FaceCursorMut, 
     face, F, Face, FP, 
     get_face, get_face_mut, has_face,
-    ValidFaceCursorBasics, FaceCursorBasics, FaceCursorHalfedgeBasics, FaceCursorBuilder
+    FaceCursorBuilder, ValidFaceCursorBasics, FaceCursorBasics, FaceCursorHalfedgeBasics
 );
 
 impl<'a, T: MeshType> ValidFaceCursorMut<'a, T> {

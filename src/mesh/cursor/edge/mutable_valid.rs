@@ -44,7 +44,7 @@ impl_cursor_data!(
     ValidCursor, MutableCursor, ValidEdgeCursorMut, EdgeCursorMut, 
     edge, E, Edge, EP, 
     get_edge, get_edge_mut, has_edge,
-    ValidEdgeCursorBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, EdgeCursorBuilder
+    EdgeCursorBuilder, ValidEdgeCursorBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics
 );
 
 impl<'a, T: MeshType + 'a> ValidEdgeCursorMut<'a, T>

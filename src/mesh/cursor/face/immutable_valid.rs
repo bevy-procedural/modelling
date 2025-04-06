@@ -38,5 +38,5 @@ impl_cursor_data!(
     ValidCursor, ImmutableCursor, ValidFaceCursor, FaceCursor, 
     face, F, Face, FP, 
     get_face, get_face_mut, has_face,
-   ValidFaceCursorBasics, FaceCursorBasics, FaceCursorHalfedgeBasics, ImmutableFaceCursor
+    ImmutableFaceCursor, ValidFaceCursorBasics, FaceCursorBasics, FaceCursorHalfedgeBasics
 );

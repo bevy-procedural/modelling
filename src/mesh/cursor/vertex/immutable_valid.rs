@@ -37,5 +37,5 @@ impl_cursor_data!(
     ValidCursor, ImmutableCursor, ValidVertexCursor, VertexCursor,
     vertex, V, Vertex, VP, 
     get_vertex, get_vertex_mut, has_vertex,
-    ValidVertexCursorBasics, VertexCursorBasics, VertexCursorHalfedgeBasics, ImmutableVertexCursor
+    ImmutableVertexCursor, ValidVertexCursorBasics, VertexCursorBasics, VertexCursorHalfedgeBasics
 );

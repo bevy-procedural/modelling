@@ -50,7 +50,7 @@ impl_cursor_data!(
     ValidCursor, ImmutableCursor, ValidEdgeCursor, EdgeCursor, 
     edge, E, Edge, EP, 
     get_edge, get_edge_mut, has_edge,
-    ValidEdgeCursorBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics, ImmutableEdgeCursor
+    ImmutableEdgeCursor, ValidEdgeCursorBasics, EdgeCursorBasics, EdgeCursorHalfedgeBasics
 );
 
 impl<'a, T: MeshType + 'a> ValidEdgeCursorHalfedgeBasics<'a, T> for ValidEdgeCursor<'a, T> where
