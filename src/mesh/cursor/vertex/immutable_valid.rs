@@ -55,6 +55,11 @@ where
     fn move_to_edge(self, id: T::E) -> EdgeCursor<'a, T> {
         EdgeCursor::new(self.mesh, id)
     }
+
+    #[inline]
+    fn destructure(self) -> (&'a T::Mesh, Self::I) {
+        (self.mesh, self.vertex.id())
+    }
 }
 
 impl<'a, T: MeshType> CursorData for ValidVertexCursor<'a, T>

@@ -15,9 +15,8 @@ where
     #[must_use]
     #[inline]
     fn edges_out(self) -> impl Iterator<Item = ValidEdgeCursor<'a, T>> {
-        // TODO: I want to consume here but don't require consuming on the mesh.
-        // If I don't want to use ouroboros I need to make a second implementation of vertex_edges_out that owns the mesh.
-        self.mesh().vertex_edges_out(self.try_id())
+        let (mesh, id) = self.destructure();
+        mesh.vertex_edges_out(id)
     }
 
     /// Returns an iterator of edge ids pointing to the outgoing halfedges of the vertex.
@@ -35,7 +34,8 @@ where
     #[must_use]
     #[inline]
     fn edges_in(self) -> impl Iterator<Item = ValidEdgeCursor<'a, T>> {
-        self.mesh().vertex_edges_in(self.try_id())
+        let (mesh, id) = self.destructure();
+        mesh.vertex_edges_in(id)
     }
 
     /// Returns an iterator of edge ids pointing to the incoming halfedges of the vertex.
@@ -53,7 +53,8 @@ where
     #[inline]
     #[must_use]
     fn neighbors(self) -> impl Iterator<Item = ValidVertexCursor<'a, T>> {
-        self.mesh().vertex_neighbors(self.try_id())
+        let (mesh, id) = self.destructure();
+        mesh.vertex_neighbors(id)
     }
 
     /// Iterates over the neighbors' ids of the vertex.
@@ -71,7 +72,8 @@ where
     #[inline]
     #[must_use]
     fn faces(self) -> impl Iterator<Item = ValidFaceCursor<'a, T>> {
-        self.mesh().vertex_faces(self.try_id())
+        let (mesh, id) = self.destructure();
+        mesh.vertex_faces(id)
     }
 
     /// Iterates over the ids of the faces adjacent to the vertex.

@@ -35,6 +35,11 @@ where
     fn move_to_edge(self, id: T::E) -> EdgeCursorMut<'a, T> {
         EdgeCursorMut::new(self.mesh, id)
     }
+
+    #[inline]
+    fn destructure(self) -> (&'a T::Mesh, Self::I) {
+        (self.mesh, self.vertex)
+    }
 }
 
 impl<'a, T: MeshType> CursorData for ValidVertexCursorMut<'a, T> {

@@ -58,9 +58,6 @@ pub trait CursorData: Sized + Debug {
     #[must_use]
     fn mesh<'b>(&'b self) -> &'b <Self::T as MeshType>::Mesh;
 
-    //#[must_use]
-    //fn destructure(self) -> (<Self::T as MeshType>::Mesh, Self::I);
-
     /// Derives a new cursor pointing to the given id.
     #[must_use]
     fn move_to(self, id: Self::I) -> Self::Maybe;
