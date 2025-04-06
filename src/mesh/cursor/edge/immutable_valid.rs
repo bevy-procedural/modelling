@@ -12,12 +12,6 @@ pub struct ValidEdgeCursor<'a, T: MeshType> {
     edge: &'a T::Edge,
 }
 
-impl<'a, T: MeshType> std::fmt::Debug for ValidEdgeCursor<'a, T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "ValidEdgeCursor({:?})", self.try_id())
-    }
-}
-
 impl<'a, T: MeshType> PartialEq for ValidEdgeCursor<'a, T> {
     /// same edge id and pointing to the same mesh instance
     fn eq(&self, other: &Self) -> bool {
@@ -34,6 +28,22 @@ where
         Self::new(self.mesh, self.edge)
     }
 }
+
+impl_debug_cursor!(ValidEdgeCursor<'a, T: MeshType>, id: edge);
+
+#[rustfmt::skip]
+impl_specific_cursor_data!(
+    EdgeCursorData, ValidEdgeCursor,
+    FC, move_to_face, T::F,FaceCursor,
+    VC, move_to_vertex, T::V, VertexCursor
+);
+
+#[rustfmt::skip]
+impl_cursor_data!(
+    ValidCursor, ValidEdgeCursor, EdgeCursor, 
+    edge, E, Edge, EP, 
+    get_edge, has_edge
+);
 
 impl<'a, T: MeshType> ValidEdgeCursor<'a, T> {
     /// Creates a new edge cursor pointing to the given edge.
@@ -56,81 +66,6 @@ impl<'a, T: MeshType> ValidEdgeCursor<'a, T> {
     #[must_use]
     pub fn payload(&self) -> &'a T::EP {
         self.mesh.edge_payload(self.try_id())
-    }
-}
-
-impl<'a, T: MeshType> EdgeCursorData<'a, T> for ValidEdgeCursor<'a, T>
-where
-    T: 'a,
-{
-    type VC = VertexCursor<'a, T>;
-    type FC = FaceCursor<'a, T>;
-
-    #[inline]
-    fn move_to_vertex(self, id: T::V) -> VertexCursor<'a, T> {
-        VertexCursor::new(self.mesh, id)
-    }
-
-    #[inline]
-    fn move_to_face(self, id: T::F) -> FaceCursor<'a, T> {
-        FaceCursor::new(self.mesh, id)
-    }
-}
-
-impl<'a, T: MeshType> CursorData for ValidEdgeCursor<'a, T>
-where
-    T: 'a,
-{
-    type I = T::E;
-    type S = T::Edge;
-    type T = T;
-    type Payload = T::EP;
-    type Maybe = EdgeCursor<'a, T>;
-    type Valid = Self;
-
-    #[inline]
-    fn try_id(&self) -> T::E {
-        self.edge.id()
-    }
-
-    #[inline]
-    fn mesh<'b>(&'b self) -> &'b T::Mesh {
-        self.mesh
-    }
-
-    #[inline]
-    fn move_to(self, id: T::E) -> Self::Maybe {
-        EdgeCursor::new(self.mesh, id)
-    }
-
-    #[inline]
-    fn load(self) -> Option<Self::Valid> {
-        Some(self)
-    }
-
-    #[inline]
-    fn try_inner<'b>(&'b self) -> Option<&'b Self::S> {
-        Some(self.edge)
-    }
-
-    #[inline]
-    fn maybe(self) -> Self::Maybe {
-        EdgeCursor::new(self.mesh, self.edge.id())
-    }
-
-    #[inline]
-    fn from_maybe(from: Self::Maybe) -> Self {
-        from.load().unwrap()
-    }
-
-    #[inline]
-    fn from_valid(from: Self::Valid) -> Self {
-        from
-    }
-
-    #[inline]
-    fn is_void(&self) -> bool {
-        false
     }
 }
 

@@ -63,6 +63,7 @@ nalgebra = { version = "0.33.2", optional = true }
 num-traits = "0.2.19"
 criterion = { version = "0.5.1", features = ["html_reports"], optional = true }
 
+
 [features]
 default = ["nalgebra", "netsci", "fonts"]
 netsci = ["nalgebra"]

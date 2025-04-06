@@ -10,12 +10,6 @@ pub struct VertexCursor<'a, T: MeshType> {
     vertex: T::V,
 }
 
-impl<'a, T: MeshType> std::fmt::Debug for VertexCursor<'a, T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "VertexCursor({:?})", self.vertex)
-    }
-}
-
 impl<'a, T: MeshType> VertexCursor<'a, T> {
     /// Creates a new vertex cursor pointing to the given vertex.
     #[must_use]
@@ -35,6 +29,22 @@ impl<'a, T: MeshType> VertexCursor<'a, T> {
     }
 }
 
+impl_debug_cursor!(VertexCursor<'a, T: MeshType>, id: vertex);
+
+#[rustfmt::skip]
+impl_specific_cursor_data!(
+    VertexCursorData, VertexCursor,
+    EC, move_to_edge, T::E, EdgeCursor,
+    FC, move_to_face, T::F, FaceCursor
+);
+
+#[rustfmt::skip]
+impl_cursor_data!(
+   MaybeCursor, VertexCursor, ValidVertexCursor,
+   vertex, load_new, V, Vertex, VP, 
+   get_vertex, has_vertex
+);
+
 impl<'a, T: MeshType> ImmutableCursor for VertexCursor<'a, T>
 where
     T: 'a,
@@ -42,91 +52,6 @@ where
     #[inline]
     fn fork(&self) -> Self {
         Self::new(self.mesh, self.vertex)
-    }
-}
-
-impl<'a, T: MeshType> VertexCursorData<'a, T> for VertexCursor<'a, T>
-where
-    T: 'a,
-{
-    type EC = EdgeCursor<'a, T>;
-    type FC = FaceCursor<'a, T>;
-
-    #[inline]
-    fn move_to_face(self, id: T::F) -> Self::FC {
-        FaceCursor::new(self.mesh, id)
-    }
-
-    #[inline]
-    fn move_to_edge(self, id: T::E) -> EdgeCursor<'a, T> {
-        EdgeCursor::new(self.mesh, id)
-    }
-
-    #[inline]
-    fn destructure(self) -> (&'a T::Mesh, Self::I) {
-        (self.mesh, self.vertex)
-    }
-}
-
-impl<'a, T: MeshType> CursorData for VertexCursor<'a, T>
-where
-    T: 'a,
-{
-    type I = T::V;
-    type S = T::Vertex;
-    type T = T;
-    type Payload = T::VP;
-    type Maybe = Self;
-    type Valid = ValidVertexCursor<'a, T>;
-
-    #[inline]
-    fn mesh<'b>(&'b self) -> &'b T::Mesh {
-        self.mesh
-    }
-
-    #[inline]
-    fn move_to(self, id: T::V) -> VertexCursor<'a, T> {
-        Self::new(self.mesh, id)
-    }
-
-    #[inline]
-    fn try_id(&self) -> T::V {
-        self.vertex
-    }
-
-    #[inline]
-    fn load(self) -> Option<Self::Valid> {
-        if self.is_valid() {
-            // PERF: avoid checking twice
-            Some(ValidVertexCursor::load_new(self.mesh, self.vertex))
-        } else {
-            None
-        }
-    }
-
-    #[inline]
-    fn try_inner<'b>(&'b self) -> Option<&'b T::Vertex> {
-        self.mesh().get_vertex(self.try_id())
-    }
-
-    #[inline]
-    fn maybe(self) -> Self::Maybe {
-        self
-    }
-
-    #[inline]
-    fn from_maybe(from: Self::Maybe) -> Self {
-        from
-    }
-
-    #[inline]
-    fn from_valid(from: Self::Valid) -> Self {
-        from.maybe()
-    }
-
-    #[inline]
-    fn is_void(&self) -> bool {
-        self.try_id() == IndexType::max() || !self.mesh().has_vertex(self.try_id())
     }
 }
 

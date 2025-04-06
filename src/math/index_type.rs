@@ -19,6 +19,12 @@ pub trait IndexType:
 
     /// Return the maximum value of the index type.
     fn max() -> Self;
+
+    /// Identity function for the index type.
+    #[inline]
+    fn id(&self) -> Self {
+        *self
+    }
 }
 
 impl IndexType for usize {

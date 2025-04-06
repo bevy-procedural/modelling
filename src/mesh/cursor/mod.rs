@@ -7,13 +7,23 @@
 //! 2) Edge cursors, iterating edges
 //! 3) Face cursors, iterating faces
 //!
-//! Each of them is available in different variants:
+//! Each cursor type has variants based on:
 //!
-//! 1) Valid cursors, which are known to point to an existing element
-//! 2) Maybe cursors (default), which may point to an existing element or be void
+//! **Validity:**
 //!
-//! Which, each, can be mutable or immutable, i.e., hold a mutable or immutable 
-//! reference to the mesh to either allow modifying the mesh or cloning the cursor.
+//!    1) MaybeCursor (default): May or may not point to a valid mesh element (can be void).
+//!    2) ValidCursor: Guaranteed to point to a valid, existing mesh element.
+//!
+//! **Mutability:**
+//!
+//!    1) ImmutableCursor: Can be cloned freely, suitable for read-only access.
+//!    2) MutableCursor: Holds a mutable reference to the mesh, enabling modification.
+
+#[macro_use]
+mod macro_helper;
+
+#[macro_use]
+mod data;
 
 mod cursor;
 mod edge;
@@ -21,6 +31,7 @@ mod face;
 mod vertex;
 
 pub use cursor::*;
+pub use data::*;
 pub use edge::*;
 pub use face::*;
 pub use vertex::*;

@@ -48,4 +48,9 @@ pub trait FaceCursorData<'a, T: MeshType>:
     /// Derives a new edge cursor pointing to the given vertex id.
     #[must_use]
     fn move_to_edge(self, id: T::E) -> Self::EC;
+
+    /// Destructures the cursor into a tuple of the mesh reference and the face id.
+    /// Useful for passing ownership of the mesh reference to other structures.
+    #[must_use]
+    fn destructure(self) -> (&'a <Self::T as MeshType>::Mesh, Self::I);
 }

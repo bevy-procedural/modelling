@@ -4,15 +4,10 @@ use crate::{
 };
 
 /// A vertex cursor pointing to a vertex of a mesh with a mutable reference to the mesh.
+/// #[derive(DebugCursor)]
 pub struct VertexCursorMut<'a, T: MeshType> {
     mesh: &'a mut T::Mesh,
     vertex: T::V,
-}
-
-impl<'a, T: MeshType> std::fmt::Debug for VertexCursorMut<'a, T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "VertexCursorMut({:?})", self.vertex)
-    }
 }
 
 impl<'a, T: MeshType> VertexCursorMut<'a, T> {
@@ -29,29 +24,23 @@ impl<'a, T: MeshType> VertexCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType> VertexCursorData<'a, T> for VertexCursorMut<'a, T>
-where
-    T: 'a,
-{
-    type EC = EdgeCursorMut<'a, T>;
-    type FC = FaceCursorMut<'a, T>;
+impl_debug_cursor!(VertexCursorMut<'a, T: MeshType>, id: vertex);
 
-    #[inline]
-    fn move_to_face(self, id: T::F) -> FaceCursorMut<'a, T> {
-        FaceCursorMut::new(self.mesh, id)
-    }
+#[rustfmt::skip]
+impl_specific_cursor_data!(
+    VertexCursorData, VertexCursorMut,
+    EC, move_to_edge, T::E, EdgeCursorMut,
+    FC, move_to_face, T::F, FaceCursorMut
+);
 
-    #[inline]
-    fn move_to_edge(self, id: T::E) -> EdgeCursorMut<'a, T> {
-        EdgeCursorMut::new(self.mesh, id)
-    }
+#[rustfmt::skip]
+impl_cursor_data!(
+   MaybeCursor, VertexCursorMut, ValidVertexCursorMut, 
+   vertex, new, V, Vertex, VP, 
+   get_vertex, has_vertex
+);
 
-    #[inline]
-    fn destructure(self) -> (&'a T::Mesh, Self::I) {
-        (self.mesh, self.vertex)
-    }
-}
-
+/*
 impl<'a, T: MeshType> CursorData for VertexCursorMut<'a, T> {
     type I = T::V;
     type S = T::Vertex;
@@ -108,9 +97,9 @@ impl<'a, T: MeshType> CursorData for VertexCursorMut<'a, T> {
     fn is_void(&self) -> bool {
         self.try_id() == IndexType::max() || !self.mesh().has_vertex(self.try_id())
     }
-}
+}*/
 
-impl<'a, T: MeshType> MaybeCursor for VertexCursorMut<'a, T> {}
+impl<'a, T: MeshType> MaybeCursor for VertexCursorMut<'a, T> where T: 'a {}
 
 impl<'a, T: MeshType> VertexCursorMut<'a, T> {
     /// Updates the representative edge incident to the vertex in the mesh.

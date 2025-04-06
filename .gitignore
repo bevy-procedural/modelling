@@ -6,3 +6,4 @@ graph.png
 flamegraph.svg
 *.old
 *.data
+*.txt

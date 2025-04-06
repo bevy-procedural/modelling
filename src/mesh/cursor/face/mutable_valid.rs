@@ -1,15 +1,12 @@
-use crate::mesh::{cursor::*, FaceBasics, HalfEdge, MeshBasics, MeshType};
+use crate::{
+    math::IndexType,
+    mesh::{cursor::*, FaceBasics, HalfEdge, MeshBasics, MeshType},
+};
 
 /// A face cursor pointing to a face of a mesh with a mutable reference to the mesh.
 pub struct ValidFaceCursorMut<'a, T: MeshType> {
     mesh: &'a mut T::Mesh,
     face: T::F,
-}
-
-impl<'a, T: MeshType> std::fmt::Debug for ValidFaceCursorMut<'a, T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "ValidFaceCursorMut({:?})", self.face)
-    }
 }
 
 impl<'a, T: MeshType> ValidFaceCursorMut<'a, T> {
@@ -28,80 +25,21 @@ impl<'a, T: MeshType> ValidFaceCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType> FaceCursorData<'a, T> for ValidFaceCursorMut<'a, T>
-where
-    T: 'a,
-{
-    type VC = VertexCursorMut<'a, T>;
-    type EC = EdgeCursorMut<'a, T>;
+impl_debug_cursor!(ValidFaceCursorMut<'a, T: MeshType>, id: face);
 
-    #[inline]
-    fn move_to_vertex(self, id: T::V) -> VertexCursorMut<'a, T> {
-        VertexCursorMut::new(self.mesh, id)
-    }
+#[rustfmt::skip]
+impl_specific_cursor_data!(
+    FaceCursorData, ValidFaceCursorMut,
+    EC, move_to_edge, T::E, EdgeCursorMut,
+    VC, move_to_vertex, T::V, VertexCursorMut
+);
 
-    #[inline]
-    fn move_to_edge(self, id: T::E) -> EdgeCursorMut<'a, T> {
-        EdgeCursorMut::new(self.mesh, id)
-    }
-}
-
-impl<'a, T: MeshType> CursorData for ValidFaceCursorMut<'a, T>
-where
-    T: 'a,
-{
-    type I = T::F;
-    type S = T::Face;
-    type T = T;
-    type Payload = T::FP;
-    type Maybe = FaceCursorMut<'a, T>;
-    type Valid = Self;
-
-    #[inline]
-    fn try_id(&self) -> T::F {
-        self.face
-    }
-
-    #[inline]
-    fn mesh<'b>(&'b self) -> &'b T::Mesh {
-        self.mesh
-    }
-
-    #[inline]
-    fn move_to(self, id: T::F) -> FaceCursorMut<'a, T> {
-        FaceCursorMut::new(self.mesh, id)
-    }
-
-    #[inline]
-    fn load(self) -> Option<Self::Valid> {
-        Some(self)
-    }
-
-    #[inline]
-    fn try_inner<'b>(&'b self) -> Option<&'b Self::S> {
-        self.mesh().get_face(self.try_id())
-    }
-
-    #[inline]
-    fn maybe(self) -> Self::Maybe {
-        FaceCursorMut::new(self.mesh, self.face)
-    }
-
-    #[inline]
-    fn from_maybe(from: Self::Maybe) -> Self {
-        from.load().unwrap()
-    }
-
-    #[inline]
-    fn from_valid(from: Self::Valid) -> Self {
-        from
-    }
-
-    #[inline]
-    fn is_void(&self) -> bool {
-        false
-    }
-}
+#[rustfmt::skip]
+impl_cursor_data!(
+    ValidCursor, ValidFaceCursorMut, FaceCursorMut, 
+    face, F, Face, FP, 
+    get_face, has_face
+);
 
 impl<'a, T: MeshType> ValidCursor for ValidFaceCursorMut<'a, T>
 where

@@ -1,15 +1,12 @@
-use crate::mesh::{cursor::*, HalfEdge, HalfEdgeVertex, MeshBasics, MeshType, VertexBasics};
+use crate::{
+    math::IndexType,
+    mesh::{cursor::*, HalfEdge, HalfEdgeVertex, MeshBasics, MeshType, VertexBasics},
+};
 
 /// A vertex cursor pointing to a vertex of a mesh with a mutable reference to the mesh.
 pub struct ValidVertexCursorMut<'a, T: MeshType> {
     mesh: &'a mut T::Mesh,
     vertex: T::V,
-}
-
-impl<'a, T: MeshType> std::fmt::Debug for ValidVertexCursorMut<'a, T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "ValidVertexCursorMut({:?})", self.vertex)
-    }
 }
 
 impl<'a, T: MeshType> ValidVertexCursorMut<'a, T> {
@@ -19,84 +16,26 @@ impl<'a, T: MeshType> ValidVertexCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType> VertexCursorData<'a, T> for ValidVertexCursorMut<'a, T>
+impl_debug_cursor!(ValidVertexCursorMut<'a, T: MeshType>, id: vertex);
+
+#[rustfmt::skip]
+impl_specific_cursor_data!(
+    VertexCursorData, ValidVertexCursorMut,
+    EC, move_to_edge, T::E, EdgeCursorMut,
+    FC, move_to_face, T::F, FaceCursorMut
+);
+
+#[rustfmt::skip]
+impl_cursor_data!(
+   ValidCursor, ValidVertexCursorMut, VertexCursorMut,
+   vertex, V, Vertex, VP, 
+   get_vertex, has_vertex
+);
+
+impl<'a, T: MeshType> ValidCursor for ValidVertexCursorMut<'a, T>
 where
     T: 'a,
 {
-    type EC = EdgeCursorMut<'a, T>;
-    type FC = FaceCursorMut<'a, T>;
-
-    #[inline]
-    fn move_to_face(self, id: T::F) -> FaceCursorMut<'a, T> {
-        FaceCursorMut::new(self.mesh, id)
-    }
-
-    #[inline]
-    fn move_to_edge(self, id: T::E) -> EdgeCursorMut<'a, T> {
-        EdgeCursorMut::new(self.mesh, id)
-    }
-
-    #[inline]
-    fn destructure(self) -> (&'a T::Mesh, Self::I) {
-        (self.mesh, self.vertex)
-    }
-}
-
-impl<'a, T: MeshType> CursorData for ValidVertexCursorMut<'a, T> {
-    type I = T::V;
-    type S = T::Vertex;
-    type T = T;
-    type Payload = T::VP;
-    type Maybe = VertexCursorMut<'a, T>;
-    type Valid = Self;
-
-    #[inline]
-    fn try_id(&self) -> T::V {
-        self.vertex
-    }
-
-    #[inline]
-    fn mesh<'b>(&'b self) -> &'b T::Mesh {
-        self.mesh
-    }
-
-    #[inline]
-    fn move_to(self, id: T::V) -> VertexCursorMut<'a, T> {
-        VertexCursorMut::new(self.mesh, id)
-    }
-
-    #[inline]
-    fn load(self) -> Option<Self::Valid> {
-        Some(self)
-    }
-
-    #[inline]
-    fn try_inner<'b>(&'b self) -> Option<&'b Self::S> {
-        self.mesh.get_vertex(self.vertex)
-    }
-
-    #[inline]
-    fn maybe(self) -> Self::Maybe {
-        VertexCursorMut::new(self.mesh, self.vertex)
-    }
-
-    #[inline]
-    fn from_maybe(from: Self::Maybe) -> Self {
-        from.load().unwrap()
-    }
-
-    #[inline]
-    fn from_valid(from: Self::Valid) -> Self {
-        from
-    }
-
-    #[inline]
-    fn is_void(&self) -> bool {
-        false
-    }
-}
-
-impl<'a, T: MeshType> ValidCursor for ValidVertexCursorMut<'a, T> {
     #[inline]
     fn id(&self) -> Self::I {
         self.vertex
@@ -113,14 +52,20 @@ impl<'a, T: MeshType> ValidCursor for ValidVertexCursorMut<'a, T> {
     }
 }
 
-impl<'a, T: MeshType> MutableCursor for ValidVertexCursorMut<'a, T> {
+impl<'a, T: MeshType> MutableCursor for ValidVertexCursorMut<'a, T>
+where
+    T: 'a,
+{
     #[inline]
     fn mesh_mut<'b>(&'b mut self) -> &'b mut <Self::T as MeshType>::Mesh {
         self.mesh
     }
 }
 
-impl<'a, T: MeshType> ValidCursorMut for ValidVertexCursorMut<'a, T> {
+impl<'a, T: MeshType> ValidCursorMut for ValidVertexCursorMut<'a, T>
+where
+    T: 'a,
+{
     #[inline]
     fn payload_mut<'b>(&'b mut self) -> &'b mut Self::Payload {
         self.mesh.vertex_ref_mut(self.try_id()).payload_mut()

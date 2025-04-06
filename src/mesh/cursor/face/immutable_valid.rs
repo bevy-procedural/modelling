@@ -14,12 +14,6 @@ impl<'a, T: MeshType> PartialEq for ValidFaceCursor<'a, T> {
     }
 }
 
-impl<'a, T: MeshType> std::fmt::Debug for ValidFaceCursor<'a, T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "ValidFaceCursor({:?})", self.face)
-    }
-}
-
 impl<'a, T: MeshType> ValidFaceCursor<'a, T> {
     /// Creates a new face cursor pointing to the given face.
     #[inline]
@@ -36,6 +30,23 @@ impl<'a, T: MeshType> ValidFaceCursor<'a, T> {
         Self::new(mesh, mesh.face_ref(face))
     }
 }
+
+impl_debug_cursor!(ValidFaceCursor<'a, T: MeshType>, id: face);
+
+#[rustfmt::skip]
+impl_specific_cursor_data!(
+    FaceCursorData, ValidFaceCursor,
+    EC, move_to_edge, T::E, EdgeCursor,
+    VC, move_to_vertex, T::V, VertexCursor
+);
+
+#[rustfmt::skip]
+impl_cursor_data!(
+    ValidCursor, ValidFaceCursor, FaceCursor, 
+    face, F, Face, FP, 
+    get_face, has_face
+);
+
 impl<'a, T: MeshType> ImmutableCursor for ValidFaceCursor<'a, T>
 where
     T: 'a,
@@ -43,81 +54,6 @@ where
     #[inline]
     fn fork(&self) -> Self {
         Self::new(self.mesh, self.face)
-    }
-}
-
-impl<'a, T: MeshType> FaceCursorData<'a, T> for ValidFaceCursor<'a, T>
-where
-    T: 'a,
-{
-    type VC = VertexCursor<'a, T>;
-    type EC = EdgeCursor<'a, T>;
-
-    #[inline]
-    fn move_to_vertex(self, id: T::V) -> VertexCursor<'a, T> {
-        VertexCursor::new(self.mesh, id)
-    }
-
-    #[inline]
-    fn move_to_edge(self, id: T::E) -> EdgeCursor<'a, T> {
-        EdgeCursor::new(self.mesh, id)
-    }
-}
-
-impl<'a, T: MeshType> CursorData for ValidFaceCursor<'a, T>
-where
-    T: 'a,
-{
-    type I = T::F;
-    type S = T::Face;
-    type T = T;
-    type Payload = T::FP;
-    type Maybe = FaceCursor<'a, T>;
-    type Valid = Self;
-
-    #[inline]
-    fn try_id(&self) -> T::F {
-        self.face.id()
-    }
-
-    #[inline]
-    fn mesh<'b>(&'b self) -> &'b T::Mesh {
-        self.mesh
-    }
-
-    #[inline]
-    fn move_to(self, id: T::F) -> FaceCursor<'a, T> {
-        FaceCursor::new(self.mesh, id)
-    }
-
-    #[inline]
-    fn load(self) -> Option<Self::Valid> {
-        Some(self)
-    }
-
-    #[inline]
-    fn try_inner<'b>(&'b self) -> Option<&'b Self::S> {
-        Some(self.face)
-    }
-
-    #[inline]
-    fn maybe(self) -> Self::Maybe {
-        FaceCursor::new(self.mesh, self.face.id())
-    }
-
-    #[inline]
-    fn from_maybe(from: Self::Maybe) -> Self {
-        from.load().unwrap()
-    }
-
-    #[inline]
-    fn from_valid(from: Self::Valid) -> Self {
-        from
-    }
-
-    #[inline]
-    fn is_void(&self) -> bool {
-        false
     }
 }
 
