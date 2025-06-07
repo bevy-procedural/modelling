@@ -1,7 +1,6 @@
 use crate::{
     math::IndexType,
-    mesh::MeshType,
-    prelude::{ValidEdgeCursor, ValidEdgeCursorBasics},
+    mesh::{cursor::*, MeshType},
     util::CreateEmptyIterator,
 };
 

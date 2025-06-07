@@ -2,6 +2,7 @@ use super::{BackwardEdgeIterator, ForwardEdgeIterator, HalfEdgeImpl, HalfEdgeImp
 use crate::{
     math::IndexType,
     mesh::{EdgeBasics, EdgePayload, HalfEdge, MeshBasics},
+    util::CreateEmptyIterator,
 };
 
 impl<T: HalfEdgeImplMeshType> EdgeBasics<T> for HalfEdgeImpl<T> {
@@ -50,40 +51,34 @@ impl<T: HalfEdgeImplMeshType> EdgeBasics<T> for HalfEdgeImpl<T> {
         self.payload.as_mut()
     }
 
-    type BoundaryIterator<'a>
-        = ForwardEdgeIterator<'a, T>
-    where
-        T: 'a;
-
     #[inline]
-    fn boundary<'a>(&'a self, mesh: &'a T::Mesh) -> Self::BoundaryIterator<'a>
+    fn chain<'a>(
+        &'a self,
+        mesh: &'a T::Mesh,
+    ) -> impl Iterator<Item = &'a T::Edge> + CreateEmptyIterator
     where
         T: 'a,
     {
         ForwardEdgeIterator::<'a, T>::new(self, mesh)
     }
 
-    type BoundaryBackIterator<'a>
-        = BackwardEdgeIterator<'a, T>
-    where
-        T: 'a;
-
     #[inline]
     #[allow(refining_impl_trait)]
-    fn boundary_back<'a>(&'a self, mesh: &'a T::Mesh) -> Self::BoundaryBackIterator<'a>
+    fn chain_back<'a>(
+        &'a self,
+        mesh: &'a T::Mesh,
+    ) -> impl Iterator<Item = &'a T::Edge> + CreateEmptyIterator
     where
         T: 'a,
     {
         BackwardEdgeIterator::new(self, mesh)
     }
 
-    type FaceIdIterator<'a>
-        = std::vec::IntoIter<T::F>
-    where
-        T: 'a;
-
     #[inline]
-    fn face_ids<'a>(&'a self, mesh: &'a T::Mesh) -> Self::FaceIdIterator<'a> {
+    fn face_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::F> + CreateEmptyIterator
+    where
+        T: 'a,
+    {
         // TODO: only works for manifold meshes
         let mut res = Vec::new();
         let id = self.face_id();

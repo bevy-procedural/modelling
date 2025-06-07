@@ -7,8 +7,9 @@ pub fn fan_triangulation<T: MeshType3D>(
     mesh: &T::Mesh,
     indices: &mut Triangulation<T::V>,
 ) {
-    debug_assert!(face.may_be_curved() || face.is_planar2(mesh));
+    debug_assert!(!face.is_flat() || face.is_planar2(mesh));
     debug_assert!(face.is_convex(mesh));
+    assert!(!face.has_islands(), "face has islands!");
 
     let center = face.vertices(mesh).next().unwrap();
     face.vertices(mesh)

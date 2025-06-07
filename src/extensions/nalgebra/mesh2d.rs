@@ -1,4 +1,4 @@
-use super::{MeshNd64, NdAffine, NdRotate, Polygon2d, VecN, VertexPayloadPNU};
+use super::{Mesh3d64, MeshNd64, NdHomography, NdRotate, Polygon2d, VecN, VertexPayloadPNU};
 use crate::{
     halfedge::{
         HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeImplMeshType, HalfEdgeMeshImpl, HalfEdgeVertexImpl,
@@ -8,9 +8,9 @@ use crate::{
         HasPosition, Vector,
     },
     mesh::{
-        CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EdgeBasics, EdgePayload, EmptyEdgePayload,
-        EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshBasicsCurved,
-        MeshType, MeshTypeHalfEdge,
+        cursor::*, CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EdgeBasics, EdgePayload,
+        EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshBasics,
+        MeshBasicsCurved, MeshImport, MeshType, MeshTypeHalfEdge,
     },
     prelude::HalfEdgeImplMeshTypePlus,
 };
@@ -43,7 +43,7 @@ impl EuclideanMeshType<2> for MeshType2d64PNUCurved {
     type S = f64;
     type Vec = VecN<f64, 2>;
     type Vec2 = VecN<f64, 2>;
-    type Trans = NdAffine<f64, 2>;
+    type Trans = NdHomography<f64, 2>;
     type Rot = NdRotate<f64, 2>;
     type Poly = Polygon2d<f64>;
 }
@@ -73,7 +73,8 @@ impl HalfEdgeMeshImpl<MeshType2d64PNUCurved> {
     /// Convert a Mesh2d64Curved to a MeshNd64 mesh.
     /// If there are curved edges they will be converted with the given tolerance.
     pub fn to_nd<const D: usize>(&self, tol: f64) -> MeshNd64<D> {
-        MeshNd64::<D>::import_mesh::<_, _, _, _, MeshType2d64PNUCurved>(
+        let mut res = MeshNd64::<D>::empty();
+        res.import_mesh::<_, _, _, _, MeshType2d64PNUCurved>(
             self.clone().flatten_curved_edges(tol),
             |vp| VertexPayloadPNU::<f64, D>::from_pos(Vector::from_xy(vp.pos().x, vp.pos().y)),
             |ep| {
@@ -83,6 +84,31 @@ impl HalfEdgeMeshImpl<MeshType2d64PNUCurved> {
             |_fp| EmptyFacePayload::default(),
             |_mp| EmptyMeshPayload::default(),
         )
+        .ensure();
+        res
+    }
+}
+
+impl HalfEdgeMeshImpl<MeshType2d64PNUCurved> {
+    /// Convert a BevyMesh2d to a 3d mesh.
+    /// If there are curved edges they will be converted with the given tolerance.
+    pub fn to_3d(&self, tol: f64) -> Mesh3d64 {
+        let mut res = Mesh3d64::empty();
+        res.import_mesh::<_, _, _, _, MeshType2d64PNUCurved>(
+            self.clone().flatten_curved_edges(tol),
+            |vp: &VertexPayloadPNU<f64, 2>| {
+                VertexPayloadPNU::<f64, 3>::from_pos(Vector::from_xyz(vp.pos().x, vp.pos().y, 0.0))
+            },
+            |_ep| {
+                // TODO: flatten_curved_edges seems to miss some edges?
+                //assert!(ep.is_empty()); // no curves or anything
+                EmptyEdgePayload::default()
+            },
+            |_fp| EmptyFacePayload::default(),
+            |_mp| EmptyMeshPayload::default(),
+        )
+        .ensure();
+        res
     }
 }
 

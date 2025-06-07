@@ -84,7 +84,7 @@ where
     }
 }
 
-pub(crate) fn import_svg<T: EuclideanMeshType<2> + MeshTypeHalfEdge>(mesh: &mut T::Mesh, svg: &str)
+pub(super) fn import_svg<T: EuclideanMeshType<2> + MeshTypeHalfEdge>(mesh: &mut T::Mesh, svg: &str)
 where
     T::Edge: CurvedEdge<2, T>,
     T::EP: DefaultEdgePayload,

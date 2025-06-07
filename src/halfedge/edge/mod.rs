@@ -39,7 +39,7 @@ pub struct HalfEdgeImpl<T: HalfEdgeImplMeshType> {
 
     /// The face the half-edge is incident to.
     /// The face lies to the left of the half-edge.
-    /// Half-edges traverse the boundary of the face in counter-clockwise order.
+    /// Half-edges traverse the chain of the face in counter-clockwise order.
     /// This index will be FaceIndex.max() if it doesn't exist, i.e., if the edge is a boundary.
     face: T::F,
 

@@ -75,7 +75,7 @@ pub trait Face3d<T: MeshType3D<Face = Self>>: FaceBasics<T> {
     /// Whether the face is simple, i.e., doesn't self-intersect or have holes.
     /// Testing this is quite slow O(n^2). Use with caution.
     fn is_simple(&self, mesh: &T::Mesh) -> bool {
-        !self.has_holes() && !self.has_self_intersections(mesh)
+        !self.has_islands() && !self.has_self_intersections(mesh)
     }
 
     /// A fast methods to get the surface normal, but will only work for convex faces.
@@ -149,7 +149,7 @@ pub trait Face3d<T: MeshType3D<Face = Self>>: FaceBasics<T> {
             z_axis.normalize(),
         );
         self.vertices(mesh)
-            .map(move |v| (rotation.apply(v.pos()).vec2(), v.id()))
+            .map(move |v| (rotation.apply_point(v.pos()).vec2(), v.id()))
     }
 
     /// Get a vector of 2d vertices of the face rotated to the XY plane.

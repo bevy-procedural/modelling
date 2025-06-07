@@ -40,7 +40,7 @@ macro_rules! impl_specific_cursor_data {
 
             #[inline]
             fn destructure(self) -> (&'a T::Mesh, Self::I) {
-                (self.mesh, self.try_id())
+                (self.mesh, self.id_unchecked())
             }
         }
     };

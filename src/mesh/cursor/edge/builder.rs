@@ -1,11 +1,11 @@
 use super::EdgeCursorData;
 use crate::{
-    math::IndexType,
+    math::{IndexType, Transformable},
     mesh::{
-        cursor::*, DefaultEdgePayload, DefaultFacePayload, EdgeBasics, HalfEdge, MeshBuilder,
-        MeshType, MeshTypeHalfEdge,
+        cursor::*, DefaultEdgePayload, DefaultFacePayload, EdgeBasics, EuclideanMeshType, HalfEdge,
+        MeshBuilder, MeshType, MeshTypeHalfEdge,
     },
-    prelude::{MeshExtrude, MeshLoft},
+    operations::{MeshExtrude, MeshLoft},
 };
 use std::ops::Not;
 
@@ -130,19 +130,19 @@ where
         })
     }
 
-    /// Subdivides the given edge by inserting a vertex in the middle, using
+    /// Splits the given edge by inserting a vertex in the middle, using
     /// that vertex as the new target and inserting a new edge from the middle vertex
     /// to the original target.
     ///
     /// Moves the cursor to the new edge (the original edge will be the `prev` of the new edge).
     ///
-    /// See [MeshBuilder::subdivide_edge] for more information.
+    /// See [MeshBuilder::split_edge] for more information.
     #[inline]
     #[must_use]
-    fn subdivide(self, vp: T::VP, ep: T::EP) -> Self {
+    fn split(self, vp: T::VP, ep: T::EP) -> Self {
         self.load_or_nop(|mut valid| {
             let id = valid.id();
-            let e = valid.mesh_mut().subdivide_edge(id, vp, ep);
+            let e = valid.mesh_mut().split_edge(id, vp, ep);
             Self::from_maybe(valid.move_to(e))
         })
     }
@@ -161,21 +161,21 @@ where
         self.load_move_or_void(|valid, id| valid.mesh_mut().collapse_edge(id))
     }
 
-    /// Subdivide the adjacent face by inserting an edge from the current target to the given other edge's origin.
+    /// Split the adjacent face by inserting an edge from the current target to the given other edge's origin.
     ///
     /// Moves the cursor to the new edge. The new face will be that edge's face.
     ///
     /// Returns the void cursor if the other edge is not adjacent to the same face or the resulting faces would've been invalid.
     ///
-    /// See [MeshBuilder::subdivide_face] for more information.
+    /// See [MeshBuilder::split_face] for more information.
     #[inline]
     #[must_use]
-    fn subdivide_face(self, output: T::E, ep: T::EP, fp: T::FP) -> Self::Maybe
+    fn split_face(self, output: T::E, ep: T::EP, fp: T::FP) -> Self::Maybe
     where
         T::Edge: HalfEdge<T>,
     {
         self.load_move_or_void(|valid: &mut _, id| {
-            valid.mesh_mut().subdivide_face(id, output, ep, fp)
+            valid.mesh_mut().split_face(id, output, ep, fp)
         })
     }
 
@@ -197,6 +197,123 @@ where
                 c = c.insert_vertex(vp, ep);
             }
             Self::from_valid(c)
+        })
+    }
+}
+
+/// These methods can be used to modify half edge meshes.
+/// The cursor isn't required to be valid, though, a void cursor usually results in a no-op (with some documented exceptions).
+pub trait EdgeCursorHalfedgeBuilder<'a, T: MeshType>:
+    EdgeCursorData<'a, T> + MutableCursor<T = T, I = T::E, S = T::Edge>
+where
+    T::Mesh: MeshBuilder<T>,
+    T::Edge: HalfEdge<T>,
+    // TODO: We should remove or reduce this bound by implementing face_id for all edges
+    Self::Valid: EdgeCursorData<'a, T, FC = Self::FC, VC = Self::VC>
+        + MutableCursor<T = T, I = T::E, S = T::Edge>
+        + ValidEdgeCursorBasics<'a, T>
+        + EdgeCursorHalfedgeBasics<'a, T>
+        + ValidEdgeCursorHalfedgeBasics<'a, T>,
+    Self::Maybe: EdgeCursorData<'a, T, FC = Self::FC, VC = Self::VC>
+        + MutableCursor<T = T, I = T::E, S = T::Edge>
+        + EdgeCursorHalfedgeBasics<'a, T>,
+{
+    /// "Recursively" removes the edge and all adjacent faces.
+    /// If you want to preserve the faces, use [EdgeCursorMut::collapse] instead.
+    /// Won't do anything if the cursor is void.
+    ///
+    /// Moves the cursor to the next edge.
+    /// If the next edge is the same as the current twin, the cursor will be void, even if the edge was removed successfully.
+    ///
+    /// See [MeshBuilder::remove_edge_r] for more information.
+    #[inline]
+    #[must_use]
+    fn remove_r(self) -> Self::Maybe {
+        self.load_or_void(|valid: Self::Valid| {
+            let id = valid.id();
+            let mut c = if valid.next_id() == valid.twin_id() {
+                valid.void()
+            } else {
+                valid.next()
+            };
+            c.mesh_mut().remove_edge_r(id);
+            c
+        })
+    }
+
+    /// Inserts a face in the chain of the current halfedge and move the cursor to the new face.
+    ///
+    /// If the face already exists, overwrite it with the new payload.
+    ///
+    /// If the cursor was void or an error occurs, return the void cursor.
+    ///
+    /// See [MeshBuilder::insert_face] for more information.
+    #[inline]
+    #[must_use]
+    fn insert_face(self, fp: T::FP) -> Self::FC
+    where
+        // TODO: can we avoid this constraint?
+        <<Self::Valid as EdgeCursorData<'a, T>>::FC as CursorData>::Valid:
+            ValidFaceCursorBasics<'a, T> + ValidCursorMut,
+        T: 'a,
+    {
+        self.load_or_else(
+            |c| c.move_to_face(IndexType::max()),
+            |mut valid| {
+                let id = valid.id();
+                if valid.has_face() {
+                    // Replace the face payload
+                    let mut vfc = valid.face().unwrap();
+                    *vfc.payload_mut() = fp;
+                    vfc.maybe()
+                } else if let Some(f) = valid.mesh_mut().insert_face(id, fp) {
+                    valid.move_to_face(f)
+                } else {
+                    valid.face().void()
+                }
+            },
+        )
+    }
+
+    /// Sets the face of the edge in the mesh even if it already has a face.
+    /// Calling this method with `IndexType::max()` will remove the face.
+    ///
+    /// Doesn't do anything if the cursor is void.
+    #[inline]
+    fn replace_face(self, face: T::F) -> Self
+    where
+        // TODO: can we avoid this constraint?
+        Self::Valid: ValidEdgeCursorBasics<'a, T> + ValidCursorMut,
+    {
+        self.load_or_nop(|mut valid| {
+            if valid.has_face() {
+                valid.inner_mut().remove_face();
+            }
+            if face != IndexType::max() {
+                valid.inner_mut().set_face(face);
+            }
+            Self::from_valid(valid)
+        })
+    }
+
+    /// Splits the adjacent face by inserting an edge from the current target to the given vertex.
+    ///
+    /// Moves the cursor to the new edge. The new face will be that edge's face.
+    /// Returns the void cursor if the resulting faces would've been invalid.
+    ///
+    /// See [MeshBuilder::split_face_v] for more information.
+    #[inline]
+    #[must_use]
+    fn split_face_v(self, v: T::V, ep: T::EP, fp: T::FP) -> Self::Maybe
+    where
+        T::Edge: HalfEdge<T>,
+    {
+        self.load_move_or_void(|valid, _id| {
+            let target_id = valid.target_id();
+            let face_id = valid.face_id();
+            valid
+                .mesh_mut()
+                .split_face_v(face_id, target_id, v, ep, fp)
         })
     }
 
@@ -271,121 +388,34 @@ where
         // TODO: Return valid cursor?
         self.load_move_or_void(|valid, id| valid.mesh_mut().windmill_back(id, vp).map(|_| id))
     }
-}
 
-/// These methods can be used to modify half edge meshes.
-/// The cursor isn't required to be valid, though, a void cursor usually results in a no-op (with some documented exceptions).
-pub trait EdgeCursorHalfedgeBuilder<'a, T: MeshType>:
-    EdgeCursorData<'a, T> + MutableCursor<T = T, I = T::E, S = T::Edge>
-where
-    T::Mesh: MeshBuilder<T>,
-    T::Edge: HalfEdge<T>,
-    // TODO: We should remove or reduce this bound by implementing face_id for all edges
-    Self::Valid: EdgeCursorData<'a, T, FC = Self::FC, VC = Self::VC>
-        + MutableCursor<T = T, I = T::E, S = T::Edge>
-        + ValidEdgeCursorBasics<'a, T>
-        + EdgeCursorHalfedgeBasics<'a, T>
-        + ValidEdgeCursorHalfedgeBasics<'a, T>,
-    Self::Maybe: EdgeCursorData<'a, T, FC = Self::FC, VC = Self::VC>
-        + MutableCursor<T = T, I = T::E, S = T::Edge>
-        + EdgeCursorHalfedgeBasics<'a, T>,
-{
-    /// "Recursively" removes the edge and all adjacent faces.
-    /// If you want to preserve the faces, use [EdgeCursorMut::collapse] instead.
-    /// Won't do anything if the cursor is void.
-    ///
-    /// Moves the cursor to the next edge.
-    /// If the next edge is the same as the current twin, the cursor will be void, even if the edge was removed successfully.
-    ///
-    /// See [MeshBuilder::remove_edge_r] for more information.
+    /// See [MeshExtrude::extrude].
     #[inline]
     #[must_use]
-    fn remove_r(self) -> Self::Maybe {
-        self.load_or_void(|valid: Self::Valid| {
-            let id = valid.id();
-            let mut c = if valid.next_id() == valid.twin_id() {
-                valid.void()
-            } else {
-                valid.next()
-            };
-            c.mesh_mut().remove_edge_r(id);
-            c
-        })
+    fn extrude<const D: usize>(self, transform: &T::Trans) -> Self::Maybe
+    where
+        T: EuclideanMeshType<D> + MeshTypeHalfEdge,
+        T::Mesh: MeshExtrude<T>,
+        T::FP: DefaultFacePayload,
+        T::EP: DefaultEdgePayload,
+        T::VP: Transformable<D, Trans = T::Trans, S = T::S>,
+    {
+        // TODO: Return valid cursor?
+        self.load_move_or_void(|valid, id| valid.mesh_mut().extrude(id, transform))
     }
 
-    /// Inserts a face in the boundary of the current halfedge and move the cursor to the new face.
-    ///
-    /// If the face already exists, overwrite it with the new payload.
-    ///
-    /// If the cursor was void or an error occurs, return the void cursor.
-    ///
-    /// See [MeshBuilder::insert_face] for more information.
+    /// See [MeshExtrude::extrude_tri].
     #[inline]
     #[must_use]
-    fn insert_face(self, fp: T::FP) -> Self::FC
+    fn extrude_tri<const D: usize>(self, transform: &T::Trans) -> Self::Maybe
     where
-        // TODO: can we avoid this constraint?
-        <<Self::Valid as EdgeCursorData<'a, T>>::FC as CursorData>::Valid:
-            ValidFaceCursorBasics<'a, T> + ValidCursorMut,
-        T: 'a,
+        T: EuclideanMeshType<D> + MeshTypeHalfEdge,
+        T::Mesh: MeshExtrude<T>,
+        T::FP: DefaultFacePayload,
+        T::EP: DefaultEdgePayload,
+        T::VP: Transformable<D, Trans = T::Trans, S = T::S>,
     {
-        self.load_or_else(
-            |c| c.move_to_face(IndexType::max()),
-            |mut valid| {
-                let id = valid.id();
-                if valid.has_face() {
-                    // Replace the face payload
-                    let mut vfc = valid.face().unwrap();
-                    *vfc.payload_mut() = fp;
-                    vfc.maybe()
-                } else if let Some(f) = valid.mesh_mut().insert_face(id, fp) {
-                    valid.move_to_face(f)
-                } else {
-                    valid.face().void()
-                }
-            },
-        )
-    }
-
-    /// Sets the face of the edge in the mesh even if it already has a face.
-    /// Calling this method with `IndexType::max()` will remove the face.
-    ///
-    /// Doesn't do anything if the cursor is void.
-    #[inline]
-    fn replace_face(self, face: T::F) -> Self
-    where
-        // TODO: can we avoid this constraint?
-        Self::Valid: ValidEdgeCursorBasics<'a, T> + ValidCursorMut,
-    {
-        self.load_or_nop(|mut valid| {
-            if valid.has_face() {
-                valid.inner_mut().remove_face();
-            }
-            if face != IndexType::max() {
-                valid.inner_mut().set_face(face);
-            }
-            Self::from_valid(valid)
-        })
-    }
-
-    /// Subdivide the adjacent face by inserting an edge from the current target to the given vertex.
-    ///
-    /// Moves the cursor to the new edge. The new face will be that edge's face.
-    /// Returns the void cursor if the resulting faces would've been invalid.
-    ///
-    /// See [MeshBuilder::subdivide_face_v] for more information.
-    #[inline]
-    #[must_use]
-    fn subdivide_face_v(self, v: T::V, ep: T::EP, fp: T::FP) -> Self::Maybe
-    where
-        T::Edge: HalfEdge<T>,
-    {
-        self.load_move_or_void(|valid, _id| {
-            let target_id = valid.target_id();
-            let face_id = valid.face_id();
-            valid
-                .mesh_mut()
-                .subdivide_face_v(face_id, target_id, v, ep, fp)
-        })
+        // TODO: Return valid cursor?
+        self.load_move_or_void(|valid, id| valid.mesh_mut().extrude_tri(id, transform))
     }
 }

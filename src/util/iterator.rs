@@ -47,20 +47,78 @@ impl<T> CreateEmptyIterator for std::vec::IntoIter<T> {
     }
 }
 
-impl<'a, Input, Output, Iter: CreateEmptyIterator + Iterator<Item = Input>> CreateEmptyIterator
+/*impl<'a, Input, Output, Iter: CreateEmptyIterator + Iterator<Item = Input>> CreateEmptyIterator
     for std::iter::Map<Iter, fn(Input) -> Output>
 {
     fn create_empty() -> Self {
-        // TODO: Or how to formulate this?
-        Iter::create_empty().map(|_| todo!())
+        Iter::create_empty().map(|_| unreachable!())
+    }
+}*/
+
+/*impl<
+        'a,
+        F: FnMut(Input) -> Output + Default,
+        Input,
+        Output,
+        Iter: CreateEmptyIterator + Iterator<Item = Input>,
+    > CreateEmptyIterator for std::iter::Map<Iter, F>
+{
+    fn create_empty() -> Self {
+        Iter::create_empty().map(F::default())
+    }
+}*/
+
+impl<I, In, Out> CreateEmptyIterator for std::iter::Map<I, fn(In) -> Out>
+where
+    I: CreateEmptyIterator + Iterator<Item = In>,
+{
+    fn create_empty() -> Self {
+        I::create_empty().map(|_| unreachable!())
     }
 }
 
-impl<'a, Input, Output, Iter: CreateEmptyIterator + Iterator<Item = Input>> CreateEmptyIterator
-    for std::iter::FilterMap<Iter, fn(Input) -> Option<Output>>
+/*
+impl<
+        'a,
+        F: FnMut(Input) -> Option<Output> + Default,
+        Input,
+        Output,
+        Iter: CreateEmptyIterator + Iterator<Item = Input>,
+    > CreateEmptyIterator for std::iter::FilterMap<Iter, F>
 {
     fn create_empty() -> Self {
-        // TODO: Or how to formulate this?
-        Iter::create_empty().filter_map(|_| None)
+        Iter::create_empty().filter_map(F::default())
+    }
+}
+
+impl<
+        'a,
+        F: FnMut(&Input) -> bool + Default,
+        Input,
+        Iter: CreateEmptyIterator + Iterator<Item = Input>,
+    > CreateEmptyIterator for std::iter::Filter<Iter, F>
+{
+    fn create_empty() -> Self {
+        Iter::create_empty().filter(F::default())
+    }
+}*/
+
+
+impl<I, In, Out> CreateEmptyIterator
+    for std::iter::FilterMap<I, fn(In) -> Option<Out>>
+where
+    I: CreateEmptyIterator + Iterator<Item = In>,
+{
+    fn create_empty() -> Self {
+        I::create_empty().filter_map(|_| None)
+    }
+}
+
+impl<I, In> CreateEmptyIterator for std::iter::Filter<I, fn(&In) -> bool>
+where
+    I: CreateEmptyIterator + Iterator<Item = In>,
+{
+    fn create_empty() -> Self {
+        I::create_empty().filter(|_| false)
     }
 }

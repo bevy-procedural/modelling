@@ -14,7 +14,7 @@ mod tests {
             generate_zigzag::<Vec2<f64>>(100).map(|v| VertexPayloadPNU::from_pos(v)),
         ).to_nd(0.01);*/
         for _ in 0..1000 {
-            let (_vs, _is) = mesh.triangulate(TriangulationAlgorithm::Sweep);
+            let (_vs, _is) = mesh.triangulate_raw(TriangulationAlgorithm::Sweep);
         }
     }
 }

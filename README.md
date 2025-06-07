@@ -1,40 +1,45 @@
 # Procedural Modelling
 
+*A framework-agnostic toolkit for constructive geometry and mesh processing.*
+
 [![Documentation](https://docs.rs/procedural_modelling/badge.svg)](https://docs.rs/procedural_modelling)
 [![crates.io](https://img.shields.io/crates/v/procedural_modelling)](https://crates.io/crates/procedural_modelling)
 [![Downloads](https://img.shields.io/crates/d/procedural_modelling)](https://crates.io/crates/procedural_modelling)
-[![License](https://img.shields.io/crates/l/procedural_modelling)](https://bevyengine.org/learn/quick-start/plugin-development/#licensing)
+[![License](https://img.shields.io/crates/l/procedural_modelling)](https://bevy.org/learn/quick-start/plugin-development/#licensing)
 [![Build Status](https://github.com/bevy-procedural/modelling/actions/workflows/rust.yml/badge.svg)](https://github.com/bevy-procedural/modelling/actions)
 [![GitHub Repo stars](https://img.shields.io/github/stars/bevy-procedural/modelling)](https://github.com/bevy-procedural/modelling)
 
-A Framework-Agnostic Procedural Modelling Library.
+`procedural_modelling` provides a **functional, trait-based API** for building and analysing 2-, 3- and _n_-dimensional meshes. It is:
 
-Uses a data structure based on half-edge meshes to represent (open) manifold meshes with optional non-manifold vertices. Our goal is to implement operations like Boolean Operations, Subdivisions, Curved Surfaces, and Stitching. The library aims to support the triangulation of 2d surfaces in a modular way that can be used without any of the 3d features.
-
-Goal of this project is to provide a reusable and framework-agnostic implementation of procedural modelling and geometry algorithms. Flexibility is generally preferred over performance, though, often a good balance can be achieved.
+-   **Renderer-agnostic** – works with either the `bevy`, `wgpu`, or `nalgebra` back-end (Bevy 0.16 supported).
+-   **Versatile** – supports half-edge meshes, Bézier curves, subdivision, triangulation, and more. Boolean operations, stitching, and non-manifold meshes are planned.
+-   **Extensible** – implement a few lightweight traits and the algorithms operate on _your_ mesh data structures, payloads, and scalar types.
+-   **Functional & safe** – immutable [cursors](https://docs.rs/procedural_modelling/latest/procedural_modelling/#cursors) let you traverse / edit meshes without interior mutability, minimizing bugs.
 
 ## WARNING
 
-This crate is still in a _very_ early stage of development. Expect frequent API modifications, bugs, and missing features. Feel free to contribute by opening issues, pull requests or sharing your ideas in [GitHub Discussion](https://github.com/bevy-procedural/modelling/discussions).
+> This crate is still in an early stage of development; breaking changes may arrive without deprecation. Performance has not been tuned, and several algorithms are incomplete or unimplemented. Bug reports and PRs are welcome – see [How to Contribute](#how-to-contribute).
 
 ## Usage
 
 <img src="doc/images/demo.png" alt="drawing" width="300"/>
 
-Install using `cargo add procedural_modelling`. Generate the above mesh using the following code for rendering with bevy:
+Install using `cargo add procedural_modelling`. Generate the above mesh using the following code:
 
 ```rs
-let mut mesh = BevyMesh3d::new();
-let mut edge = mesh.insert_regular_star(1.0, 0.8, 30);
-mesh.flip_yz().translate(&Vec3::new(0.0, -0.99, 0.0));
-let trans = Transform::from_rotation(Quat::from_rotation_y(0.3))
-    .with_translation(Vec3::new(-0.2, 0.3, -0.3));
-edge = mesh.extrude_tri(edge, trans);
+let mut mesh = Mesh3d64::new();
+let trans = NdAffine::from_rotation(NdRotate::from_axis_angle(Vec3::z_axis(), 0.3))
+    .with_translation(Vec3::new(-0.2, -0.3, 0.3));
+let mut edge = mesh.insert_regular_star(1.0, 0.8, 30).extrude_tri(&trans);
 for _ in 0..5 {
-    edge = mesh.extrude_tri_face(mesh.edge(edge).face_id(), trans);
+    edge = edge.face().extrude_tri(&trans);
 }
-mesh.to_bevy(RenderAssetUsages::default())
+mesh.flip_yz().translate(&Vec3::new(0.0, -0.99, 0.0));
+let svg_string = render2svg::<MeshType3d64PNU, _>(&mesh, &s, |t: f64|
+    NdAffine::from_rotation(NdRotate::from_axis_angle(Vec3::<f64>::y_axis(), 0.8 * (std::f64::consts::PI * t).sin())));
 ```
+
+A key component of this library are `Cursors`, which provide a convenient way to traverse and modify the mesh in a functional, performant, and safe way. See the [cursors tutorial](https://docs.rs/procedural_modelling/latest/procedural_modelling/#cursors) for more information.
 
 ## Examples
 
@@ -54,13 +59,14 @@ mesh.to_bevy(RenderAssetUsages::default())
 
 <!-- TODO: demonstrate smooth normals, 4d geometry, triangulation strategies, mesh comparison, net science -->
 
-You can compile and run the [examples](https://github.com/bevy-procedural/modelling/tree/main/examples) like, e.g., `cargo run --features=example_deps --profile fast-dev --example box`. The `fast-dev` profile will enable optimizations for the dependencies, but not for the package itself. This will slow down the first build _significantly_, but incremental builds are slightly faster and bevy's performance (bevy is used as the renderer in the examples) improves a lot.
+You can compile and run the [examples](https://github.com/bevy-procedural/modelling/tree/main/examples) like, e.g., `cargo run --features=bevy_example --profile fast-dev --example box`. The `fast-dev` profile will enable optimizations for the dependencies, but not for the package itself. This will slow down the first build _significantly_, but incremental builds are slightly faster and bevy's performance (bevy is used as the renderer in the examples) improves a lot.
 
 ## Tutorial
 
 We are currently working on some tutorials for the most important features.
 
--   [Getting started](https://docs.rs/procedural_modelling/latest/procedural_modelling/)
+-   [Getting started](https://docs.rs/procedural_modelling/latest/procedural_modelling/#getting-started)
+-   [Cursors](https://docs.rs/procedural_modelling/latest/procedural_modelling/#cursors)
 
 ## Feature Progress
 
@@ -79,7 +85,7 @@ We are currently working on some tutorials for the most important features.
     -   [x] [Bezier Curves for 2d Meshes](https://github.com/bevy-procedural/modelling/blob/main/examples/path.rs)
     -   [ ] Self-intersecting surfaces
     -   [ ] Open PL 2-Manifold in nd Space
-    -   [ ] Open PL $n$-Manifold in md Space <!-- e.g., https://youtu.be/piJkuavhV50?si=1IZdm1PYnA2dvdAL&t=1135 -->
+    -   [ ] Open PL $n$-Manifold in md Space
     -   [ ] Pseudomanifold (with singularities)
     -   [ ] Non-Manifold (with branching surfaces)
     -   [ ] Non-Euclidean
@@ -117,32 +123,6 @@ We are currently working on some tutorials for the most important features.
     -   [ ] Boolean Operations (Union, Intersection, Difference, Symmetric Difference)
     -   [ ] (Anisotropic) Simplification, LODs
     -   [ ] Dualize
-    <!--
-    -   [ ] Taper
-    -   [ ] Stitch
-    -   [ ] Subdivide
-    -   [ ] Snub
-    -   [ ] Inset
-    -   [ ] Stellate
-    -   [ ] Plane Intersection
-    -   [ ] Morph
-    -   [ ] Voxelate
-    -   [ ] Smooth
-    -   [ ] Bridge
-    -   [ ] Reflect
-    -   [ ] Weld
-    -   [ ] Twist
-    -   [ ] Offset
-    -   [ ] Inflate, Deflate
-    -   [ ] Convex Hull
-    -   [ ] Collapse
-    -   [ ] Split
-    -   [ ] Lattice
-    -   [ ] Refine
-    -   [ ] Crease
-    -   [ ] Fractalize
-    -   [ ] Project
-            -->
 
 -   Tools
 
@@ -165,8 +145,9 @@ We are currently working on some tutorials for the most important features.
 
 -   Extensions
 
-    -   [x] bevy
-    -   [x] wgpu
+    -   [x] [bevy](https://github.com/bevy-procedural/modelling/tree/main/playground/bevy)
+    -   [x] [wgpu](https://github.com/bevy-procedural/modelling/tree/main/playground/wgpu)
+    -   [x] [mini-renderer](https://github.com/bevy-procedural/modelling/tree/main/playground/svg) to quickly render to svg, e.g., the animations embedded in this readme.
     -   [x] nalgebra (when not using bevy)
     -   [x] SVG import/ [ ] export
     -   [ ] STL import/export
@@ -202,7 +183,6 @@ For development only:
 
 -   `sweep_debug` -- Collect debug information during the sweepline triangulation and enable visualizations in the bevy backend.
 -   `sweep_debug_print` -- Print debug information for the sweepline triangulation.
--   `bevy_dynamic` -- Use dynamic linking for bevy. This is useful for faster incremental builds.
 
 ## Triangulation algorithms
 
@@ -230,7 +210,8 @@ The following table shows the compatibility of `procedural_modelling` (when usin
 
 | bevy | bevy_procedural_meshes |
 | ---- | ---------------------- |
-| 0.15 | 0.3.\*, main           |
+| 0.16 | 0.4.\*, main           |
+| 0.15 | 0.3.\*                 |
 | 0.14 | 0.2.\*                 |
 | 0.13 | 0.1.\*                 |
 
@@ -238,8 +219,8 @@ The following table shows the compatibility of `procedural_modelling` (when usin
 
 Except where noted (below and/or in individual files), all code in this repository is dual-licensed, allowing you the flexibility to choose between:
 
--   The MIT License (LICENSE-MIT or http://opensource.org/licenses/MIT)
--   The Apache License, Version 2.0 (LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0).
+-   The MIT License (LICENSE-MIT or [http://opensource.org/licenses/MIT](http://opensource.org/licenses/MIT))
+-   The Apache License, Version 2.0 (LICENSE-APACHE or [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)).
 
 ## Contribution
 

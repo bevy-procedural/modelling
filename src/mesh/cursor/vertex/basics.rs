@@ -20,7 +20,7 @@ where
     }
 
     /// Returns an iterator of edge ids pointing to the outgoing halfedges of the vertex.
-    /// Panics if the vertex is void.
+    /// Returns an empty iterator if the vertex is void.
     /// See [MeshBasics::vertex_edges_out] for more information.
     #[must_use]
     #[inline]
@@ -39,7 +39,7 @@ where
     }
 
     /// Returns an iterator of edge ids pointing to the incoming halfedges of the vertex.
-    /// Panics if the vertex is void.
+    /// Returns an empty iterator if the vertex is void.
     /// See [MeshBasics::vertex_edges_in] for more information.
     #[must_use]
     #[inline]
@@ -48,8 +48,8 @@ where
     }
 
     /// Iterates over the neighbors of the vertex.
-    /// Panics if the vertex is void.
-    /// See [VertexBasics::neighbor_ids] for more information.
+    /// Returns an empty iterator if the vertex is void.
+    /// See [MeshBasics::vertex_neighbors] for more information.
     #[inline]
     #[must_use]
     fn neighbors(self) -> impl Iterator<Item = ValidVertexCursor<'a, T>> {
@@ -67,7 +67,7 @@ where
     }
 
     /// Iterates over the faces adjacent to the vertex.
-    /// Panics if the vertex is void.
+    /// Returns an empty iterator if the vertex is void.
     /// See [MeshBasics::vertex_faces] for more information.
     #[inline]
     #[must_use]
@@ -77,7 +77,7 @@ where
     }
 
     /// Iterates over the ids of the faces adjacent to the vertex.
-    /// Panics if the vertex is void.
+    /// Returns an empty iterator if the vertex is void.
     /// See [MeshBasics::vertex_faces] for more information.
     #[inline]
     #[must_use]

@@ -12,6 +12,14 @@ pub trait Polygon<Vec2: Vector2D>: Clone + PartialEq + std::fmt::Debug + 'static
     fn from_iter(iter: impl IntoIterator<Item = Vec2>) -> Self {
         Self::from_points(&iter.into_iter().collect::<Vec<_>>())
     }
+    
+    /// Adds a point after the last inserted point.
+    fn append_point(&mut self, point: Vec2);
+
+    /// Creates an empty polygon.
+    fn empty() -> Self {
+        Self::from_points(&[])
+    }
 
     /// Returns the average of the points of the polygon.
     fn centroid(&self) -> Vec2 {
@@ -71,8 +79,20 @@ pub trait Polygon<Vec2: Vector2D>: Clone + PartialEq + std::fmt::Debug + 'static
         count != 0
     }
 
+    /// Whether the given polygon is inside this polygon.
+    fn contains_polygon(&self, polygon: &Self) -> bool {
+        // TODO: this is not correct if there are intersecting lines
+        // PERF: Inefficient, should be done in O(n) time.
+        for point in polygon.points() {
+            if !self.contains(point) {
+                return false;
+            }
+        }
+        true
+    }
+
     /// Whether an edge is a valid diagonal.
-    /// If (i,j) is an edge on the boundary, consider it also a valid diagonal,
+    /// If (i,j) is an edge on the face boundary, consider it also a valid diagonal,
     /// but i==j is considered invalid.
     fn valid_diagonal(&self, i: usize, j: usize) -> bool {
         if i == j {
@@ -98,7 +118,7 @@ pub trait Polygon<Vec2: Vector2D>: Clone + PartialEq + std::fmt::Debug + 'static
             return false;
         }
 
-        // Is there a boundary edge intersecting the diagonal?
+        // Is there a face boundary edge intersecting the diagonal?
         for start in 0..n {
             let end = (start + 1) % n;
             // ignore edges starting or ending at i or j
@@ -196,7 +216,7 @@ mod tests {
                 let centroid = polygon.centroid();
                 assert!(polygon.contains(&centroid));
 
-                // undefined on the boundary, but moving an epsilon inside makes the test pass
+                // undefined on the face boundary, but moving an epsilon inside makes the test pass
                 let eps = 1e-10;
                 for p in points {
                     let inside = p.lerp(&centroid, eps);

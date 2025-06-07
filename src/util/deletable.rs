@@ -31,13 +31,13 @@ impl<'a, T> CreateEmptyIterator for DeletableVectorIterator<'a, T> {
     }
 }
 
-impl<'a, T> CreateEmptyIterator
+/*impl<'a, T> CreateEmptyIterator
     for std::iter::Filter<DeletableVectorIterator<'a, T>, fn(&&T) -> bool>
 {
     fn create_empty() -> Self {
         DeletableVectorIterator::<'a, T>::create_empty().filter(|_| false)
     }
-}
+}*/
 
 /// A vector that also keeps track of deleted elements to reallocate them.
 #[derive(Debug, Clone)]
@@ -148,14 +148,14 @@ impl<T: Deletable<I>, I: IndexType> DeletableVector<T, I> {
 
     /// Move the element at the given index. Assumes that the position is allocated and free, i.e., the contents are deleted.
     #[inline]
-    pub fn set(&mut self, index: I, mut v: T) {
+    pub fn set(&mut self, index: I, mut value: T) {
         assert!(
             self.data[index.index()].is_deleted(),
             "Tried to overwrite a non-deleted element at {}",
             index
         );
         assert!(
-            v.is_deleted(),
+            value.is_deleted(),
             "Tried to set an element that already has an id"
         );
         let l = self.deleted.len();
@@ -166,8 +166,8 @@ impl<T: Deletable<I>, I: IndexType> DeletableVector<T, I> {
             // self.deleted.contains(&index), // this would be too slow even in debug mode
             "Tried to set an element without allocating an index first"
         );
-        v.set_id(index);
-        self.data[index.index()] = v;
+        value.set_id(index);
+        self.data[index.index()] = value;
     }
 
     /// Marks the element as deleted and remembers it for reallocation.

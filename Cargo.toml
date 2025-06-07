@@ -1,16 +1,15 @@
 [package]
 name = "procedural_modelling"
 description = "A framework-agnostic Procedural Modelling crate."
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 categories = ["graphics", "rendering", "game-development"]
 keywords = ["gamedev", "graphics", "procedural", "meshes", "modelling"]
-homepage = "https://bevy-procedural.org/modelling"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/bevy-procedural/modelling"
 documentation = "https://docs.rs/procedural_modelling"
-rust-version = "1.80.0"
+rust-version = "1.87.0"
 include = [
     "src/**/*",
     "doc/**/*",
@@ -27,7 +26,12 @@ path = "src/lib.rs"
 crate-type = ["rlib"]
 
 [workspace]
-members = ["playground/bevy", "playground/wgpu", "playground/fps_bench"]
+members = [
+    "playground/bevy",
+    "playground/svg",
+    "playground/wgpu",
+    "playground/fps_bench",
+]
 
 [workspace.lints.clippy]
 type_complexity = "allow"
@@ -51,21 +55,21 @@ missing_docs = "warn"
 workspace = true
 
 [dependencies]
-bevy = { version = "^0.15.0", default-features = false, optional = true }
+bevy = { version = "^0.16.1", default-features = false, optional = true }
 itertools = "^0.14.0"
 meshopt = { version = "^0.4.1", optional = true }
-rand = "^0.9.0"
+rand = "^0.9.1"
 spade = "^2.13.1"
-usvg = { version = "0.45.0", optional = true }
-lazy_static = "1.5.0"
-ab_glyph = { version = "0.2.29", optional = true }
-nalgebra = { version = "0.33.2", optional = true }
-num-traits = "0.2.19"
-criterion = { version = "0.5.1", features = ["html_reports"], optional = true }
+usvg = { version = "^0.45.1", optional = true }
+lazy_static = "^1.5.0"
+nalgebra = { version = "^0.33.2", optional = true }
+num-traits = "^0.2.19"
+criterion = { version = "^0.6.0", features = ["html_reports"], optional = true }
+ttf-parser = { version = "^0.25.1", optional = true }
 
 
 [features]
-default = ["nalgebra", "netsci", "fonts"]
+default = ["nalgebra", "netsci", "fonts", "bevy_example"]
 netsci = ["nalgebra"]
 wgpu = ["nalgebra"]
 bevy = ["dep:bevy", "bevy/bevy_core_pipeline"]
@@ -73,7 +77,7 @@ gizmo = ["bevy", "bevy/bevy_text", "bevy/bevy_ui"]
 bevy_example = ["bevy", "bevy/default", "gizmo"]
 svg = ["dep:usvg"]
 nalgebra = ["dep:nalgebra"]
-fonts = ["dep:ab_glyph"]
+fonts = ["dep:ttf-parser"]
 bevy_dynamic = ["bevy/dynamic_linking"]
 meshopt = ["dep:meshopt"]
 sweep_debug = []

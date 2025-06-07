@@ -44,7 +44,7 @@ impl Transformable<3> for BevyVertexPayload3d {
 
     #[inline]
     fn transform(&mut self, t: &Self::Trans) -> &mut Self {
-        self.position = t.apply(self.position);
+        self.position = t.apply_point(self.position);
         self.normal = t.apply_vec(self.normal);
         // TODO: should the uv be transformed as well?
         self

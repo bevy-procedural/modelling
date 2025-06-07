@@ -65,8 +65,8 @@ where
             .face()
             .expect("The polygon must have a face");
         let normal = f.normal().normalize();
-        self.extrude(first, T::Trans::from_translation(-normal * height))
-            .unwrap()
+        let e = self.extrude(first, &T::Trans::from_translation(-normal * height));
+        self.edge_mut(e.unwrap()).unwrap()
     }
 
     /// calls `insert_prism` on a new mesh
@@ -96,12 +96,12 @@ where
             .face()
             .expect("The polygon must have a face");
         let normal = f.normal().normalize();
-        // TODO: Is unwrap ok?
-        self.extrude_tri2(
+        let e = self.extrude_tri2(
             self.edge(first).unwrap().twin_id(),
-            T::Trans::from_translation(-normal * height),
-        )
-        .unwrap()
+            &T::Trans::from_translation(-normal * height),
+        );
+        // TODO: Is unwrap ok?
+        self.edge_mut(e.unwrap()).unwrap()
     }
 
     /// calls `insert_antiprism` on a new mesh
@@ -121,7 +121,7 @@ where
     where
         T: 'a,
     {
-        let first = self.insert_polygon(vp).id();
+        let first = self.insert_polygon(vp).next().unwrap().id();
         let e = self.loft_tri(first, false, true, vp2).unwrap();
         self.insert_face(e, Default::default()).unwrap();
         self.edge_mut(e).unwrap()

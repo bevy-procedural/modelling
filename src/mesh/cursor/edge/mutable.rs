@@ -43,7 +43,4 @@ impl_cursor_data!(
    EdgeCursorBuilder, EdgeCursorBasics, EdgeCursorHalfedgeBasics
 );
 
-impl<'a, T: MeshType + 'a> EdgeCursorHalfedgeBuilder<'a, T> for EdgeCursorMut<'a, T> where
-    T: MeshTypeHalfEdge
-{
-}
+impl<'a, T: MeshTypeHalfEdge + 'a> EdgeCursorHalfedgeBuilder<'a, T> for EdgeCursorMut<'a, T> {}

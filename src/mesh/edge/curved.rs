@@ -165,19 +165,6 @@ pub trait CurvedEdge<const D: usize, T: EuclideanMeshType<D, Edge = Self>>: Edge
         ) where
             T::Edge: CurvedEdge<D, T>,
         {
-            /*
-            // we shouldn't just test the middle but n points
-            // e.g., if the curve is s-shaped, the deviation would be 0 at the middle
-            let n = 4;
-
-            // start in the middle, since it is most likely to be the worst point
-            let is_acceptable = [2, 1, 3].into_iter().find(|i| {
-                let t = t0 + (t1 - t0) * T::S::from_usize(*i) / T::S::from_usize(n);
-                let p = curve.point_at(edge, mesh, t);
-                let p_line = p0.lerped(&p1, t - t0);
-                p.distance(&p_line) > error
-            }).is_none();*/
-
             // TODO: don't hardcode the frechet params
 
             let curve = edge.curve_type(mesh);

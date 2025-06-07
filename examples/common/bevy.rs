@@ -75,7 +75,7 @@ pub fn close_on_esc(
 pub fn setup_basic_bevy_app() -> App {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins)
-        .add_plugins((WireframePlugin, Text3dGizmosPlugin))
+        .add_plugins((WireframePlugin::default(), Text3dGizmosPlugin))
         .insert_resource(WireframeConfig {
             global: true,
             default_color: Color::WHITE,

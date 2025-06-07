@@ -78,7 +78,7 @@ fn create_or_delete_text(mut commands: Commands, mut texts: ResMut<Text3dGizmos>
     for text in texts.texts.iter_mut() {
         if let Some(entity) = text.entity {
             if text.should_remove {
-                commands.entity(entity).despawn_recursive();
+                commands.entity(entity).despawn();
                 text.entity = None;
             }
         } else {

@@ -29,7 +29,7 @@ fn generate_shapes(
         {
             let mut mesh = BevyMesh3d::regular_star(1.0 / (f32::PHI * f32::PHI), 1.0, 10);
             mesh.flip_yz()
-                .extrude_boundary(Transform::from_translation(Vec3::new(0.0, 0.5, 0.0)));
+                .extrude_boundary(&Transform::from_translation(Vec3::new(0.0, 0.5, 0.0)));
             mesh
         },
         // row 2

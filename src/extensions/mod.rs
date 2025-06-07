@@ -11,3 +11,6 @@ pub mod svg;
 
 #[cfg(feature = "nalgebra")]
 pub mod nalgebra;
+
+#[cfg(feature = "nalgebra")]
+pub mod mini_renderer;

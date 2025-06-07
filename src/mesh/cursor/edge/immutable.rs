@@ -8,19 +8,6 @@ use crate::{
 /// You can move the cursor even if it is void -- it will simply stay void without panicking.
 ///
 /// To access the data of the edge, you have to call `load` on the cursor to get a `ValidEdgeCursor`.
-///
-/// You should prefer using Cursors over direct access to the mesh data structures whenever possible.
-/// You don't have to worry about performance, as the rust compiler will completely optimize them away.
-/// Cloning immutable cursors is also optimized away, so feel free to clone them as much as you like.
-/// For example, when compiling `cursor.next().next().next().next()`, all function
-/// calls will be inlined leading to the same 8 commands for each call to `next`:
-/// ```ir
-/// getelementptr + load    ; compute address of and load the `id` in the `HalfEdgeImpl` in the `Vec`
-/// icmp + br               ; if the `id` is `IndexType::max()`, skip all further blocks (since it is deleted)
-/// getelementptr + load    ; compute address of and load the `next_id` in the `HalfEdgeImpl`
-/// icmp + br               ; if the `next_id` exceeds the length of the `Vec` or is `IndexType::max()`, skip all further blocks
-/// ```
-/// (using `cargo rustc -- --emit=llvm-ir -O -C debuginfo=2`)
 #[derive(Clone, Eq)]
 pub struct EdgeCursor<'a, T: MeshType> {
     mesh: &'a T::Mesh,
@@ -44,13 +31,6 @@ impl<'a, T: MeshType> EdgeCursor<'a, T> {
             edge: IndexType::max(),
         }
     }
-
-    // TODO: this cannot be called. How to realize this?
-    /*#[inline]
-    pub fn mutable(self, mesh: &'a mut T::Mesh) -> EdgeCursorMut<'a, T> {
-        assert!(self.mesh as *const _ == mesh as *const _);
-        EdgeCursorMut::new(mesh, self.edge)
-    }*/
 }
 
 impl_debug_eq_cursor!(EdgeCursor, edge);
@@ -87,8 +67,8 @@ mod tests {
 
         let _c1: EdgeCursorMut<'_, MeshType3d64PNU> = mesh.edge_mut(e0).next();
         /*c1.next()
-        .subdivide(std::iter::empty())
+        .split(std::iter::empty())
         .next()
-        .subdivide(std::iter::empty());*/
+        .split(std::iter::empty());*/
     }
 }

@@ -14,6 +14,13 @@ impl<'a, T: MeshType> ValidVertexCursorMut<'a, T> {
     pub fn new(mesh: &'a mut T::Mesh, vertex: T::V) -> Self {
         Self { mesh, vertex }
     }
+
+    /// Converts the mutable cursor to an immutable cursor.
+    #[inline]
+    #[must_use]
+    pub fn into_immutable(self) -> ValidVertexCursor<'a, T> {
+        ValidVertexCursor::load_new(self.mesh, self.id_unchecked())
+    }
 }
 
 impl_debug_eq_cursor!(ValidVertexCursorMut, vertex);
@@ -42,6 +49,6 @@ impl<'a, T: MeshType> ValidVertexCursorMut<'a, T> {
         T::Edge: HalfEdge<T>,
         T::Vertex: HalfEdgeVertex<T>,
     {
-        self.mesh.vertex_ref_mut(self.try_id()).set_edge(edge);
+        self.mesh.vertex_ref_mut(self.id_unchecked()).set_edge(edge);
     }
 }

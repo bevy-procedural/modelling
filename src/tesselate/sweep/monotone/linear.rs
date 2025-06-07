@@ -5,7 +5,8 @@ use crate::{
 };
 
 /// This structure stores the reflex chain of the untriangulated region above.
-/// See https://www.cs.umd.edu/class/spring2020/cmsc754/Lects/lect05-triangulate.pdf
+/// See [CMSC 754](https://www.cs.umd.edu/class/spring2020/cmsc754/Lects/lect05-triangulate.pdf).
+/// 
 /// It preserves the following invariant:
 /// for i>=2, let v_i be the triangle just processed by the algorithm. The untriangulated
 /// region to the top of v_i consist of two y-monotone chains, a left and a right chain each containing

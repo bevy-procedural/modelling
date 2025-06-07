@@ -14,8 +14,9 @@ pub fn ear_clipping<T: MeshType3D>(
     indices: &mut Triangulation<T::V>,
     randomize: bool,
 ) {
-    debug_assert!(face.may_be_curved() || face.is_planar2(mesh));
+    debug_assert!(!face.is_flat() || face.is_planar2(mesh));
     debug_assert!(face.is_simple(mesh));
+    assert!(!face.has_islands(), "face has islands!");
 
     let vs: Vec<(T::Vec2, T::V)> = face.vertices_2d(mesh).collect();
 

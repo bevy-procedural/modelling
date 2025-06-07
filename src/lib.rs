@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 #![doc = include_str!("../README.md")]
 #![doc = include_str!("../doc/start.md")]
+#![doc = include_str!("../doc/cursors.md")]
 
 pub mod extensions;
 pub mod halfedge;

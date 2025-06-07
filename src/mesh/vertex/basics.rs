@@ -2,7 +2,7 @@
 
 use crate::{
     math::{HasPosition, Scalar, Vector},
-    mesh::{cursor::*, MeshBasics, MeshType},
+    mesh::{cursor::*, MeshBasics, MeshType}, util::CreateEmptyIterator,
 };
 
 /// Basic vertex functionality for a mesh
@@ -72,7 +72,7 @@ pub trait VertexBasics<T: MeshType>: std::fmt::Debug + Clone {
     fn edges_out<'a>(
         &'a self,
         mesh: &'a T::Mesh,
-    ) -> <T::Mesh as MeshBasics<T>>::VertexEdgesOutIterator<'a>
+    ) -> impl Iterator<Item = ValidEdgeCursor<'a, T>> + CreateEmptyIterator
     where
         T: 'a,
     {

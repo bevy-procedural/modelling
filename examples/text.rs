@@ -16,14 +16,14 @@ fn generate_path(
 
     // Make some 3d letters
     let mut mesh = mesh2d.to_3d(0.05);
-    mesh.extrude_boundary(Transform::from_translation(Vec3::new(0.0, 0.0, -0.2)));
+    mesh.extrude_boundary(&Transform::from_translation(Vec3::new(0.0, 0.0, -0.2)));
     mesh.translate(&Vec3::new(-3.0, 0.0, 0.0));
+    mesh.simplify_all_islands();
 
     commands.spawn((
         Mesh3d(meshes.add(mesh.to_bevy_ex(
             RenderAssetUsages::all(),
-            // slowest triangulation, but looks nice for small examples
-            TriangulationAlgorithm::MinWeight,
+            TriangulationAlgorithm::Delaunay,
             true,
         ))),
         MeshMaterial3d(materials.add(StandardMaterial {

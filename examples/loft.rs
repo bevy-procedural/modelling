@@ -2,7 +2,7 @@
 
 use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
 use itertools::Itertools;
-use procedural_modelling::{extensions::bevy::*, math::Polygon, mesh, prelude::*};
+use procedural_modelling::{extensions::bevy::*, math::Polygon, prelude::*};
 #[path = "common/bevy.rs"]
 mod bevy_examples;
 
@@ -17,7 +17,7 @@ fn lofted_polygon(
     vp: Option<Vec<BevyVertexPayload3d>>,
 ) -> BevyMesh3d {
     let mut mesh = BevyMesh3d::default();
-    let e = mesh.insert_regular_polygon(1.0, sides);
+    let e = mesh.insert_regular_polygon(1.0, sides).id();
     println!("{:?}", mesh);
     println!("{:?}", e);
     mesh.crochet(
@@ -35,11 +35,12 @@ fn lofted_polygon(
             )
             .collect_vec()
         }),
-    );
+    )
+    .unwrap();
     mesh.flip_yz().translate(&Vec3::new(0.0, 0.1, 0.0));
 
     for face in mesh.faces() {
-        let poly = face.as_polygon(&mesh);
+        let poly = face.inner().as_polygon(&mesh);
         println!("{:?}", poly.area());
     }
 

@@ -5,7 +5,7 @@ use crate::mesh::MeshType;
 /// This allows the cursor to be freely shared and passed around without worrying about mutable borrow rules.
 pub trait ImmutableCursor: CursorData + Clone {
     /// Clones the cursor.
-    /// 
+    ///
     /// This can be used if you want to be explicit about the fact that ownership is forked to a new cursor.
     #[must_use]
     #[inline]
@@ -35,17 +35,6 @@ pub trait MutableCursor: CursorData {
 /// This is the most common type of cursor and is used in most of the mesh API.
 /// A maybe cursor without a valid instance is called "void", otherwise it is called "valid".
 pub trait MaybeCursor: CursorData {
-    /*/// Returns a reference to the instance if it exists and is not deleted, otherwise `void`.
-    #[must_use]
-    fn inner<'b>(&'b self) -> Option<&'b Self::S>;
-
-    /// Returns a reference to the instance the cursor points to..
-    /// Panics if it does'nt exist or is deleted.
-    #[inline]
-    fn unwrap<'b>(&'b self) -> &'b Self::S {
-        self.try_inner().unwrap()
-    }*/
-
     // TODO: Move more functions down here
 
     /// Returns the id the cursor is pointing to.
@@ -55,7 +44,7 @@ pub trait MaybeCursor: CursorData {
         if self.is_void() {
             None
         } else {
-            Some(self.try_id())
+            Some(self.id_unchecked())
         }
     }
 
@@ -116,7 +105,7 @@ pub trait ValidCursor: CursorData {
     #[must_use]
     #[inline]
     fn id(&self) -> Self::I {
-        self.try_id()
+        self.id_unchecked()
     }
 
     /// Returns a reference to the instance if it exists and is not deleted, otherwise `void`.
@@ -124,7 +113,6 @@ pub trait ValidCursor: CursorData {
     fn inner<'b>(&'b self) -> &'b Self::S;
 
     /// Returns a reference to the payload of the face.
-    /// Panics if the face is void.
     #[must_use]
     fn payload<'b>(&'b self) -> &'b Self::Payload;
 }

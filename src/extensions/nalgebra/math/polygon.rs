@@ -22,6 +22,10 @@ impl<S: Scalar> Polygon<Vec2<S>> for Polygon2d<S> {
     fn num_points(&self) -> usize {
         self.vertices.len()
     }
+
+    fn append_point(&mut self, point: Vec2<S>) {
+        self.vertices.push(point.into());
+    }
 }
 
 #[cfg(test)]

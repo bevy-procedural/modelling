@@ -1,4 +1,4 @@
-use super::{rotate::NdRotate, transform_n::NdAffine, ScalarPlus};
+use super::{NdHomography, NdRotate, ScalarPlus};
 use crate::math::{HasZero, Scalar, TransformTrait, Transformable, Vector};
 use nalgebra::SVector;
 
@@ -137,16 +137,29 @@ impl<S: Scalar, const D: usize> Vector<S, D> for VecN<S, D> {
             .zip(other.iter())
             .all(|(a, b)| a.is_about(*b, eps))
     }
+
+    /*#[inline]
+    fn from_slice(slice: &[S; D]) -> Self {
+        Self::from(*slice)
+    }
+
+    #[inline]
+    fn as_slice(&self) -> &[S; D] {
+        self.data
+            .as_slice()
+            .try_into()
+            .expect("Slice length mismatch")
+    }*/
 }
 
 impl<S: ScalarPlus, const D: usize> Transformable<D> for VecN<S, D> {
     type S = S;
     type Rot = NdRotate<S, D>;
-    type Trans = NdAffine<S, D>;
+    type Trans = NdHomography<S, D>;
     type Vec = VecN<S, D>;
 
     fn transform(&mut self, t: &Self::Trans) -> &mut Self {
-        *self = t.apply(*self);
+        *self = t.apply_point(*self);
         self
     }
 

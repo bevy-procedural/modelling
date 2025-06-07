@@ -1,14 +1,17 @@
 use super::{BevyVertexPayload3d, Polygon2dBevy};
 use crate::{
     halfedge::{
-        HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeImplMeshType, HalfEdgeMeshImpl, HalfEdgeVertexImpl,
+        HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeImplMeshType, HalfEdgeImplMeshTypePlus,
+        HalfEdgeMeshImpl, HalfEdgeVertexImpl,
     },
-    math::{impls::{E32, F32, V32}, HasNormal, HasPosition, IndexType},
+    math::{
+        impls::{E32, F32, V32},
+        HasNormal, HasPosition, IndexType,
+    },
     mesh::{
-        EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshType,
-        MeshType3D, MeshTypeHalfEdge, Triangulateable,
+        cursor::*, EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType,
+        MeshImport, MeshType, MeshType3D, MeshTypeHalfEdge, Triangulateable,
     },
-    prelude::HalfEdgeImplMeshTypePlus,
     tesselate::TriangulationAlgorithm,
 };
 use bevy::{
@@ -108,7 +111,7 @@ impl<T: HalfEdgeImplMeshType<VP = BevyVertexPayload3d> + MeshType3D<Vec = Vec3, 
         let (is, vs) = if generate_flat_normals {
             self.triangulate_and_generate_flat_normals_post(algo)
         } else {
-            self.triangulate(algo)
+            self.triangulate_raw(algo)
         };
         //let elapsed = now.elapsed();
         //println!("///////////////////\nTriangulation took {:.2?}", elapsed);
@@ -155,12 +158,15 @@ impl<T: HalfEdgeImplMeshType<VP = BevyVertexPayload3d> + MeshType3D<Vec = Vec3, 
 #[cfg(feature = "nalgebra")]
 impl From<&crate::extensions::nalgebra::Mesh3d64> for HalfEdgeMeshImpl<BevyMeshType3d32> {
     fn from(value: &crate::extensions::nalgebra::Mesh3d64) -> Self {
-        BevyMesh3d::import_mesh::<_, _, _, _, crate::extensions::nalgebra::MeshType3d64PNU>(
+        let mut res = BevyMesh3d::empty();
+        res.import_mesh::<_, _, _, _, crate::extensions::nalgebra::MeshType3d64PNU>(
             value,
             |vp| vp.into(),
             |_ep| EmptyEdgePayload::default(),
             |_fp| EmptyFacePayload::default(),
             |_mp| EmptyMeshPayload::default(),
         )
+        .ensure();
+        res
     }
 }

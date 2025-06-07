@@ -16,16 +16,17 @@ where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
 {
-    /// Extrudes all boundary edges using the given transformation.
+    /// Extrudes *all* boundary edges in the mesh using the given transformation.
     ///
     /// Uses one row of quad faces.
-    fn extrude_boundary<const D: usize>(&mut self, transform: T::Trans)
+    fn extrude_boundary<const D: usize>(&mut self, transform: &T::Trans)
     where
         T::VP: Transformable<D, Trans = T::Trans, S = T::S>,
         T: EuclideanMeshType<D, Mesh = Self>,
     {
         let faces = self.face_ids().collect_vec();
         for f in faces {
+            // TODO: Why iterate over faces and not edges?
             let e = self.face(f).edge().twin().unwrap();
             if e.is_boundary_self() {
                 self.extrude(e.id(), transform);
@@ -37,25 +38,27 @@ where
     /// Returns an edge on the boundary of the extrusion.
     ///
     /// Uses one row of quad faces.
-    fn extrude<const D: usize>(&mut self, e: T::E, transform: T::Trans) -> EdgeCursorMut<'_, T>
+    fn extrude<const D: usize>(&mut self, e: T::E, transform: &T::Trans) -> Option<T::E>
     where
         T::VP: Transformable<D, Trans = T::Trans, S = T::S>,
         T: EuclideanMeshType<D, Mesh = Self>,
     {
-        assert!(self.edge(e).unwrap().is_boundary_self());
+        if !self.edge(e).load()?.is_boundary_self() {
+            return None;
+        }
         // TODO: avoid collecting
         // TODO: avoid unwrap
         let vps: Vec<_> = self
             .edges_back_from(self.edge(e).unwrap().next_id())
             .map(|v| v.origin(self).payload().transformed(&transform))
             .collect();
-        let start = self.edge_mut(e).loft_back(2, 2, vps).unwrap().id(); // TODO
-        self.insert_face(start, Default::default()).unwrap(); // TODO
-        self.edge_mut(start)
+        let start = self.edge_mut(e).next().loft_back(2, 2, vps).unwrap().id(); // TODO
+        self.insert_face(start, Default::default()).unwrap();
+        Some(start)
     }
 
-    /// Remove the given face and extrude the boundary using the given transformation.
-    fn extrude_face<const D: usize>(&mut self, f: T::F, transform: T::Trans) -> EdgeCursorMut<'_, T>
+    /// Remove the given face and extrude the created boundary chain using the given transformation.
+    fn extrude_face<const D: usize>(&mut self, f: T::F, transform: &T::Trans) -> Option<T::E>
     where
         T::VP: Transformable<D, Trans = T::Trans, S = T::S>,
         T: EuclideanMeshType<D, Mesh = Self>,
@@ -66,12 +69,8 @@ where
         self.extrude(e, transform)
     }
 
-    /// Remove the given face and extrude the boundary using the given transformation.
-    fn extrude_tri_face<const D: usize>(
-        &mut self,
-        f: T::F,
-        transform: T::Trans,
-    ) -> EdgeCursorMut<'_, T>
+    /// Remove the given face and extrude the created boundary chain using the given transformation.
+    fn extrude_tri_face<const D: usize>(&mut self, f: T::F, transform: &T::Trans) -> Option<T::E>
     where
         T::VP: Transformable<D, Trans = T::Trans, S = T::S>,
         T: EuclideanMeshType<D, Mesh = Self>,
@@ -82,16 +81,19 @@ where
         self.extrude_tri(e, transform)
     }
 
-    /// Extrudes the given boundary using the given transformation.
-    /// Returns an edge on the boundary of the extrusion.
+    /// Extrudes the given boundary chain using the given transformation.
+    /// Returns an edge on the newly created boundary chain.
     ///
     /// Uses two rows of triangle faces.
-    fn extrude_tri<const D: usize>(&mut self, e: T::E, transform: T::Trans) -> EdgeCursorMut<'_, T>
+    fn extrude_tri<const D: usize>(&mut self, e: T::E, transform: &T::Trans) -> Option<T::E>
     where
         T::VP: Transformable<D, Trans = T::Trans, S = T::S>,
         T: EuclideanMeshType<D, Mesh = Self>,
     {
-        assert!(self.edge(e).unwrap().is_boundary_self());
+        if !self.edge(e).load()?.is_boundary_self() {
+            return None;
+        }
+
         // TODO: avoid collecting
         // TODO: avoid unwrap
         let vps: Vec<_> = self
@@ -100,19 +102,21 @@ where
             .collect();
         let start = self.loft_tri(e, false, true, vps).unwrap();
         self.insert_face(start, Default::default()).unwrap();
-        self.edge_mut(start)
+        Some(start)
     }
 
-    /// Extrudes the given boundary using the given transformation.
-    /// Returns an edge on the boundary of the extrusion.
+    /// Extrudes the given boundary chain using the given transformation.
+    /// Returns an edge on the newly created boundary chain.
     ///
     /// Uses two rows of triangle faces.
-    fn extrude_tri2<const D: usize>(&mut self, e: T::E, transform: T::Trans) -> EdgeCursorMut<'_, T>
+    fn extrude_tri2<const D: usize>(&mut self, e: T::E, transform: &T::Trans) -> Option<T::E>
     where
         T::VP: Transformable<D, Trans = T::Trans, S = T::S>,
         T: EuclideanMeshType<D, Mesh = Self>,
     {
-        assert!(self.edge(e).unwrap().is_boundary_self());
+        if !self.edge(e).unwrap().is_boundary_self() {
+            return None;
+        }
         // TODO: avoid collecting
         // TODO: avoid unwrap
         let mut vps: Vec<_> = self
@@ -126,11 +130,11 @@ where
         vps.rotate_right(1);
         let start = self.loft_tri(e, false, true, vps).unwrap();
         self.insert_face(start, Default::default()).unwrap();
-        self.edge_mut(start)
+        Some(start)
     }
 
-    /// Assumes `start` is on the boundary of the edge.
-    /// Will insert a vertex `hub` with the given vp and fill the hole along the boundary with triangles connected to the hub vertex.
+    /// Assumes `start` is on the boundary chain of the edge.
+    /// Will insert a vertex `hub` with the given vp and fill the hole along the boundary chain with triangles connected to the hub vertex.
     /// Returns the id of the hub vertex.
     ///
     /// The result will be a windmill with triangular blades.
@@ -154,8 +158,8 @@ where
         Some(v)
     }
 
-    /// Assumes `start` is on the boundary of the edge.
-    /// Will insert a vertex `hub` with the given vp and fill the hole along the boundary with triangles connected to the hub vertex.
+    /// Assumes `start` is on the boundary chain of the edge.
+    /// Will insert a vertex `hub` with the given vp and fill the hole along the boundary chain with triangles connected to the hub vertex.
     /// Returns the id of the hub vertex.
     ///
     /// The result will be a windmill with triangular blades.

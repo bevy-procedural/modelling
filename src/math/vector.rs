@@ -103,6 +103,17 @@ pub trait Vector<S: Scalar, const D: usize>:
     fn zero() -> Self {
         Self::splat(S::ZERO)
     }
+    
+    /*/// Returns the components of the vector as a slice.
+    fn as_slice(&self) -> &[S; D];
+
+    /// Build a vector from a slice.
+    fn from_slice(slice: &[S; D]) -> Self;
+
+    /// Cast the components to another type.
+    fn cast<T: Scalar + From<S>, Output: Vector<T, D>>(self) -> Output {
+        Output::from_slice(&self.as_slice().map(|x| x.into()))
+    }*/
 }
 
 /// Additional methods for vector iterators.

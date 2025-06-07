@@ -1,4 +1,4 @@
-use crate::mesh::{cursor::*, EuclideanMeshType, Face, Face3d, FaceBasics, MeshType, MeshType3D};
+use crate::mesh::{cursor::*, EuclideanMeshType, Face, Face3d, FaceBasics, HasIslands, MeshType, MeshType3D};
 
 /// Methods specific to valid face cursors, i.e., they are guaranteed to point to an existing face.
 pub trait ValidFaceCursorBasics<'a, T: MeshType + 'a>:
@@ -80,5 +80,23 @@ where
     #[must_use]
     fn edge_id(&self) -> T::E {
         self.inner().edge_id()
+    }
+
+    /// Returns the number of islands of the face.
+    #[inline]
+    #[must_use]
+    fn num_islands(&self) -> usize
+    where
+        T::Face: HasIslands<T>,
+    {
+        self.inner().num_islands(self.mesh())
+    }
+
+    /// Whether the face has islands.
+    #[inline]
+    #[must_use]
+    fn has_islands(&self) -> bool
+    {
+        self.inner().has_islands()
     }
 }

@@ -6,9 +6,9 @@ license = "MIT OR Apache-2.0"
 publish = false
 
 [dependencies]
-bevy = { version = "^0.15.0", default-features = true }
-bevy-inspector-egui = "^0.30.0"
-bevy_panorbit_camera = { version = "^0.24.0", features = ["bevy_egui"] }
+bevy = { version = "^0.16.1", default-features = true }
+bevy-inspector-egui = "^0.31.0"
+bevy_panorbit_camera = { version = "^0.26.0", features = ["bevy_egui"] }
 
 [dependencies.procedural_modelling]
 path = "../../"

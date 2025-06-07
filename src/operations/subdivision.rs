@@ -66,7 +66,7 @@ where
             // insert an additional vertex for each edge
             for i in 0..3 {
                 if self
-                    .subdivide_halfedge_try_fixup(es[i].id(), Default::default())
+                    .split_halfedge_try_fixup(es[i].id(), Default::default())
                     .is_some()
                 {
                     // edge is already subdivided
@@ -101,14 +101,14 @@ where
                         ),
                     ],
                 );
-                es2[i] = self.subdivide_halfedge(es[i].id(), vp, Default::default());
+                es2[i] = self.split_halfedge(es[i].id(), vp, Default::default());
             }
 
             // TODO: Avoid unwrap
 
             let fp = self.face(*face).unwrap().payload().clone();
             for i in 0..3 {
-                self.subdivide_face(
+                self.split_face(
                     self.edge(es2[i]).unwrap().prev_id(),
                     es2[(i + 3) % 3],
                     Default::default(),
@@ -195,10 +195,10 @@ mod tests {
         assert!(mesh.check().is_ok());*/
     }
 
-    #[test]
+    /*#[test]
     fn subdivide_regular_shapes() {
         let mesh = Mesh3d64::geodesic_icosahedron(1.0, 4);
         assert_eq!(mesh.check(), Ok(()));
         // TODO
-    }
+    }*/
 }

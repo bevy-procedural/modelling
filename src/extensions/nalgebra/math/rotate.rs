@@ -129,7 +129,7 @@ impl<S: Scalar, const D: usize> Rotator<VecN<S, D>> for NdRotate<S, D> {}
 #[cfg(test)]
 mod tests {
     use crate::extensions::nalgebra::*;
-    use nalgebra::SMatrix;
+    use ::nalgebra::{SMatrix, Unit};
 
     #[test]
     fn test_nd_rotate() {
@@ -144,8 +144,8 @@ mod tests {
         let expected = SMatrix::<f64, 2, 2>::new(0.0, -1.0, 1.0, 0.0);
         assert!((rot.to_matrix() - expected).abs().max() < 1e-10);
 
-        let rot = NdRotate::<f64, 3>::from_axis_angle(
-            nalgebra::Unit::new_normalize(VecN::<f64, 3>::new(1.0, 0.0, 0.0)),
+        let rot: NdRotate<f64, 3> = NdRotate::<f64, 3>::from_axis_angle(
+            Unit::new_normalize(VecN::<f64, 3>::new(1.0, 0.0, 0.0)),
             std::f64::consts::PI / 2.0,
         );
         let expected = SMatrix::<f64, 3, 3>::new(1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0);

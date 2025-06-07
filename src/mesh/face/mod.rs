@@ -2,10 +2,12 @@
 mod basics;
 mod face3d;
 mod payload;
+mod islands;
 
 pub use basics::*;
 pub use face3d::*;
 pub use payload::*;
+pub use islands::*;
 
 use super::{cursor::*, EuclideanMeshType, MeshType};
 use crate::math::VectorIteratorExt;

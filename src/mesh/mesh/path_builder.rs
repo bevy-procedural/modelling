@@ -235,7 +235,7 @@ where
 
         let ed = self.mesh().edge_ref(current_inner).clone();
         let end_of_path = ed
-            .boundary(self.mesh())
+            .chain(self.mesh())
             .find(|e| e.id() == current_outer || e.id() == start_inner)
             .expect("The path is malformed.");
 
@@ -285,7 +285,7 @@ where
         Transform: TransformTrait<T::S, D, Vec = T::Vec>,
         T::EP: DefaultEdgePayload,
     {
-        let w = self.transform.apply(pos);
+        let w = self.transform.apply_point(pos);
         let v = self.mesh().insert_vertex_id(T::VP::from_pos(w));
         self.line_to(v);
         self
@@ -302,7 +302,7 @@ where
         T: EuclideanMeshType<D, Trans = Transform>,
         Transform: TransformTrait<T::S, D, Vec = T::Vec>,
     {
-        let w = self.transform.apply(pos);
+        let w = self.transform.apply_point(pos);
         self.mesh().insert_vertex_id(T::VP::from_pos(w))
     }
 
@@ -422,7 +422,7 @@ where
         T: EuclideanMeshType<D, Trans = Transform> + MeshTypeHalfEdge,
         Transform: TransformTrait<T::S, D, Vec = T::Vec>,
     {
-        let ct = self.transform.apply(control);
+        let ct = self.transform.apply_point(control);
         self.line_to(end);
         let (edge, _twin) = self.current_edges().unwrap();
         self.mesh()
@@ -446,8 +446,8 @@ where
         T: EuclideanMeshType<D, Trans = Transform> + MeshTypeHalfEdge,
         Transform: TransformTrait<T::S, D, Vec = T::Vec>,
     {
-        let ct1 = self.transform.apply(control1);
-        let ct2 = self.transform.apply(control2);
+        let ct1 = self.transform.apply_point(control1);
+        let ct2 = self.transform.apply_point(control2);
         self.line_to(end);
         let (edge, _twin) = self.current_edges().unwrap();
         self.mesh()

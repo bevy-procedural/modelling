@@ -4,7 +4,7 @@ use crate::{
         cursor::*, DefaultEdgePayload, DefaultFacePayload, EdgeBasics, EuclideanMeshType,
         FaceBasics, HalfEdge, MeshBuilder, MeshPosition, MeshType3D, MeshTypeHalfEdge,
     },
-    operations::{MeshExtrude, MeshLoft, MeshSubdivision},
+    operations::{DebuggingConstruction, MeshExtrude, MeshLoft, MeshSubdivision},
     primitives::{Make2dShape, MakePlane, MakePrismatoid, MakeSphere},
 };
 
@@ -60,6 +60,13 @@ where
     T::EP: DefaultEdgePayload,
     T::FP: DefaultFacePayload,
     Self: Make2dShape<T>,
+{
+}
+
+impl<T: HalfEdgeImplMeshType + MeshTypeHalfEdge> DebuggingConstruction<T> for HalfEdgeMeshImpl<T>
+where
+    T::EP: DefaultEdgePayload,
+    T::FP: DefaultFacePayload,
 {
 }
 

@@ -117,20 +117,20 @@ where
         )
     }
 
-    /// Subdivide the given face by inserting an edge from the current vertex to the given vertex.
+    /// Splits the given face by inserting an edge from the current vertex to the given vertex.
     ///
     /// Moves the cursor to the new edge. The new face will be that edge's face.
     /// Returns void if the resulting faces would've been invalid or the vertices don't share the given face.
     ///
-    /// See [MeshBuilder::subdivide_face_v] for more information.
+    /// See [MeshBuilder::split_face_v] for more information.
     #[inline]
     #[must_use]
-    fn subdivide_face(self, f: T::F, other: T::V, ep: T::EP, fp: T::FP) -> Self::EC {
+    fn split_face(self, f: T::F, other: T::V, ep: T::EP, fp: T::FP) -> Self::EC {
         self.load_or_else(
             |cursor| cursor.move_to_edge(IndexType::max()),
             |mut valid| {
                 let id = valid.id();
-                if let Some(e) = valid.mesh_mut().subdivide_face_v(f, id, other, ep, fp) {
+                if let Some(e) = valid.mesh_mut().split_face_v(f, id, other, ep, fp) {
                     valid.move_to_edge(e)
                 } else {
                     valid.move_to_edge(IndexType::max())

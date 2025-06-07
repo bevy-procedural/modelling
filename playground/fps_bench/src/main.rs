@@ -3,7 +3,7 @@
 use bevy::{
     prelude::*,
     render::render_asset::RenderAssetUsages,
-    window::{PresentMode, WindowMode, WindowResolution},
+    window::{PresentMode, VideoMode, WindowMode, WindowResolution},
 };
 use procedural_modelling::{extensions::bevy::*, prelude::*};
 use std::io::Write;
@@ -43,7 +43,14 @@ fn main() {
                 resolution: WindowResolution::new(1920.0, 1080.0).with_scale_factor_override(1.0),
                 title: "Bevy Mesh Benchmark".to_string(),
                 resizable: false,
-                mode: WindowMode::SizedFullscreen(MonitorSelection::Primary),
+                mode: WindowMode::Fullscreen(
+                    MonitorSelection::Primary,
+                    VideoModeSelection::Specific(VideoMode {
+                        physical_size: UVec2::new(1920, 1080),
+                        bit_depth: 24,
+                        refresh_rate_millihertz: 60000,
+                    }),
+                ),
                 // disable fps cap
                 present_mode: PresentMode::Immediate,
                 focused: true,
@@ -116,7 +123,7 @@ fn setup(
                     break;
                 }
                 let start = std::time::Instant::now();
-                mesh.triangulate(algo);
+                let _ = mesh.triangulate_raw(algo);
                 mesh_list
                     .0
                     .last_mut()

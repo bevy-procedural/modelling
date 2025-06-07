@@ -13,6 +13,10 @@ pub fn try_min_weight_small<T: MeshType3D>(
     mesh: &T::Mesh,
     indices: &mut Triangulation<T::V>,
 ) -> bool {
+    if face.has_islands() {
+        return false; // TODO: handle islands
+    }
+
     let n = face.num_vertices(mesh);
     if n == 3 {
         let (a, b, c) = face.vertex_ids(mesh).collect_tuple().unwrap();
@@ -136,7 +140,7 @@ mod tests {
     use super::*;
     use crate::{
         extensions::nalgebra::*, math::IndexType, mesh::EuclideanMeshType,
-        prelude::minweight_dynamic_direct,
+        tesselate::minweight_dynamic_direct,
     };
 
     fn verify_min_weight<T: EuclideanMeshType<2>>(vs: &Vec<T::Vec2>) {

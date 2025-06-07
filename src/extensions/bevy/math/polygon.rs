@@ -21,4 +21,8 @@ impl Polygon<Vec2> for Polygon2dBevy {
     fn num_points(&self) -> usize {
         self.vertices.len()
     }
+
+    fn append_point(&mut self, point: Vec2) {
+        self.vertices.push(point);
+    }
 }

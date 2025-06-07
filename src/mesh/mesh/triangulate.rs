@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-use super::{MeshBasics, MeshType, MeshType3D};
+use super::{MeshBasics, MeshImport, MeshType, MeshType3D};
 use crate::{
     math::{HasNormal, IndexType, Vector},
-    mesh::{cursor::*, Face3d, Triangulation},
+    mesh::{cursor::*, DefaultEdgePayload, DefaultFacePayload, Face3d, Triangulation},
     tesselate::{triangulate_face, TriangulationAlgorithm},
 };
 
@@ -11,7 +11,8 @@ use crate::{
 pub trait Triangulateable<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// convert the mesh to triangles and get all indices to do so.
     /// Compact the vertices and return the indices
-    fn triangulate(&self, algorithm: TriangulationAlgorithm) -> (Vec<T::V>, Vec<T::VP>)
+    #[must_use]
+    fn triangulate_raw(&self, algorithm: TriangulationAlgorithm) -> (Vec<T::V>, Vec<T::VP>)
     where
         T: MeshType3D,
     {
@@ -27,8 +28,27 @@ pub trait Triangulateable<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         (indices, vs)
     }
 
+    /// Triangulates the mesh and returns a fresh copy.
+    #[must_use]
+    fn triangulated(&self, algorithm: TriangulationAlgorithm) -> Self
+    where
+        T: MeshType3D,
+        Self: MeshImport<T>,
+        T::FP: DefaultFacePayload,
+        T::EP: DefaultEdgePayload,
+    {
+        let (indices, vertices) = self.triangulate_raw(algorithm);
+        let mut mesh = T::Mesh::default();
+        if indices.is_empty() {
+            return mesh; // empty mesh
+        }
+        mesh.import_indexed_triangles(indices, vertices).ensure();
+        mesh
+    }
+
     /// Triangulates the mesh and duplicates the vertices for use with flat normals.
     /// This doesn't duplicate the halfedge mesh but only the exported vertex buffer.
+    #[must_use]
     fn triangulate_and_generate_flat_normals_post(
         &self,
         algorithm: TriangulationAlgorithm,

@@ -78,7 +78,7 @@ fn bench_triangulation(c: &mut Criterion) {
                         &mesh,
                         |b, para: &BevyMesh3d| {
                             b.iter(|| {
-                                para.triangulate(algo);
+                                para.triangulate_raw(algo);
                             })
                         },
                     );

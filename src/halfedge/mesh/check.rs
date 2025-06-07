@@ -27,7 +27,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
             return Err(format!(
                 "Vertex {} has edge {} with origin {}",
                 bad_vertex.id(),
-                bad_vertex.clone().edge().try_id(),
+                bad_vertex.clone().edge().id_unchecked(),
                 bad_vertex
                     .edge()
                     .load_or(IndexType::max(), |v| v.origin_id())
@@ -40,7 +40,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
     fn check_edges_are_loops(&self) -> Result<(), String> {
         if let Some(bad_edge) = self
             .halfedges()
-            .find(|e| e.fork().next().same_boundary(e.origin_id()).is_none())
+            .find(|e| e.fork().next().same_chain(e.origin_id()).is_none())
         {
             return Err(format!(
                 "Successor of edge {} cannot reach it's origin {} during forward search",
@@ -51,7 +51,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
 
         if let Some(bad_edge) = self
             .halfedges()
-            .find(|e| e.fork().prev().same_boundary_back(e.target_id()).is_none())
+            .find(|e| e.fork().prev().same_chain_back(e.target_id()).is_none())
         {
             return Err(format!(
                 "Precursor of edge {} cannot reach it's target {} during backward search",
@@ -98,7 +98,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
             return Err(format!(
                 "Face {} has edge {} with face {}",
                 bad_face.id(),
-                bad_face.fork().edge().try_id(),
+                bad_face.fork().edge().id_unchecked(),
                 bad_face.edge().unwrap().face_id()
             ));
         }

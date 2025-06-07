@@ -7,3 +7,5 @@ flamegraph.svg
 *.old
 *.data
 *.txt
+output.svg
+Cargo.lock

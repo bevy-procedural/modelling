@@ -1,14 +1,14 @@
-use super::{NdAffine, NdRotate, Polygon2d, VecN, VertexPayloadPNU};
+use super::{NdHomography, NdRotate, Polygon2d, VecN, VertexPayloadPNU};
 use crate::{
     halfedge::{
-        HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeImplMeshType, HalfEdgeMeshImpl, HalfEdgeVertexImpl,
+        HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeImplMeshType, HalfEdgeImplMeshTypePlus,
+        HalfEdgeMeshImpl, HalfEdgeVertexImpl,
     },
     math::impls::{EU, FU, VU},
     mesh::{
         EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshType,
         MeshType3D, MeshTypeHalfEdge,
     },
-    prelude::HalfEdgeImplMeshTypePlus,
 };
 
 /// A mesh type for nalgebra with
@@ -43,7 +43,7 @@ impl<const D: usize> EuclideanMeshType<D> for MeshTypeNd64PNU<D> {
     type S = f64;
     type Vec = VecN<f64, D>;
     type Vec2 = VecN<f64, 2>;
-    type Trans = NdAffine<f64, D>;
+    type Trans = NdHomography<f64, D>;
     type Rot = NdRotate<f64, D>;
     type Poly = Polygon2d<f64>;
 }

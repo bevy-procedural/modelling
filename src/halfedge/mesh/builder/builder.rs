@@ -1,11 +1,10 @@
 use crate::{
-    halfedge::{HalfEdgeImplMeshTypePlus, HalfEdgeMeshImpl},
+    halfedge::{HalfEdgeFaceImpl, HalfEdgeImplMeshTypePlus, HalfEdgeMeshImpl},
     math::IndexType,
     mesh::{
         cursor::*, EdgeBasics, EdgePayload, HalfEdge, MeshBasics, MeshBuilder, MeshHalfEdgeBuilder,
         MeshTypeHalfEdge, VertexBasics,
     },
-    prelude::HalfEdgeFaceImpl,
 };
 use itertools::Itertools;
 
@@ -302,7 +301,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
         };
 
         // Otherwise, find a unique boundary from e to v
-        if let Some(outgoing) = self.edge(e).same_boundary_back(v) {
+        if let Some(outgoing) = self.edge(e).same_chain_back(v) {
             return self.insert_edge_ee(e, outgoing.id()?, ep);
         }
 
@@ -310,14 +309,15 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     }
 
     #[inline]
-    fn try_remove_face(&mut self, f: T::F) -> bool {
+    fn try_remove_face(&mut self, f: T::F) -> Option<T::FP> {
         let Some(face) = self.face(f).load() else {
-            return false;
+            return None;
         };
         let e = self.edge_ref(face.edge_id()).clone();
+        let fp = face.payload().clone();
         self.faces.delete(f);
-        e.boundary_mut(self).for_each(|e| e.remove_face());
-        true
+        e.chain_mut(self).for_each(|e| e.remove_face());
+        Some(fp)
     }
 
     #[inline]
@@ -330,41 +330,64 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
 
     #[inline]
     fn insert_face_forced(&mut self, e: T::E, fp: T::FP) -> T::F {
-        let f = self.faces.push(HalfEdgeFaceImpl::new(e, fp));
+        let f = self.faces.push(HalfEdgeFaceImpl::new(e, fp, IndexType::max()));
         self.edge_ref(e)
             .clone()
-            .boundary_mut(self)
+            .chain_mut(self)
             .for_each(|e| e.set_face(f));
         return f;
     }
 
-    fn subdivide_edge(&mut self, e: T::E, vp: T::VP, ep: T::EP) -> T::E {
-        let edge = self.edge_ref(e).clone();
-        let twin = self.edge_ref(edge.twin_id()).clone();
-        let target = twin.origin_id(self);
+    fn split_edge(&mut self, to_origin: T::E, vp: T::VP, ep: T::EP) -> T::E {
+        // TODO: don't unwrap but return error
+
+        let edge = self.edge(to_origin).unwrap();
+        let from_origin = edge.twin_id();
+        let forward_face = edge.face_id();
+        let mut from_target = edge.next_id();
+        if from_target == from_origin {
+            // next = twin means the target vertex has only one edge!
+            from_target = IndexType::max();
+        }
+
+        let twin = self.edge(from_origin).unwrap();
+        let backward_face = twin.face_id();
+        let mut to_target = twin.prev_id();
+        if to_target == to_origin {
+            // prev = edge means the target vertex has only one edge!
+            to_target = IndexType::max();
+        };
+        let target = twin.origin_id();
+
+        assert_eq!(
+            from_target == IndexType::max(),
+            to_target == IndexType::max()
+        );
 
         let origin = self.insert_vertex_id(vp);
         let (new_e, new_t) = self.insert_halfedge_pair_forced(
-            edge.id(),
+            to_origin,
             origin,
-            twin.id(),
-            twin.prev_id(),
+            from_origin,
+            to_target,
             target,
-            edge.next_id(),
-            edge.face_id(),
-            twin.face_id(),
+            from_target,
+            forward_face,
+            backward_face,
             ep,
         );
 
         // TODO: Remove the unwraps and use load instead
 
+        to_target = self.edge(new_t).unwrap().prev_id();
+        from_target = self.edge(new_e).unwrap().next_id();
         self.vertex_mut(origin).set_edge(new_e);
         self.vertex_mut(target).set_edge(new_t);
-        self.edge_mut(edge.next_id()).unwrap().set_prev(new_e);
-        self.edge_mut(twin.prev_id()).unwrap().set_next(new_t);
-        self.edge_mut(edge.id()).unwrap().set_next(new_e);
-        self.edge_mut(twin.id()).unwrap().set_prev(new_t);
-        self.edge_mut(twin.id()).unwrap().set_origin(origin);
+        self.edge_mut(from_target).unwrap().set_prev(new_e);
+        self.edge_mut(to_target).unwrap().set_next(new_t);
+        self.edge_mut(to_origin).unwrap().set_next(new_e);
+        self.edge_mut(from_origin).unwrap().set_prev(new_t);
+        self.edge_mut(from_origin).unwrap().set_origin(origin);
 
         debug_assert_eq!(self.edge(new_e).check(), Ok(()));
         debug_assert_eq!(self.edge(new_t).check(), Ok(()));
@@ -445,7 +468,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     }
 
     #[inline]
-    fn subdivide_face(&mut self, from: T::E, to: T::E, ep: T::EP, fp: T::FP) -> Option<T::E> {
+    fn split_face(&mut self, from: T::E, to: T::E, ep: T::EP, fp: T::FP) -> Option<T::E> {
         let f = self.edge(from).load()?.face_id();
         if f == IndexType::max() || f != self.edge(to).load()?.face_id() {
             return None;
@@ -463,14 +486,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
     }
 
     #[inline]
-    fn subdivide_face_v(
-        &mut self,
-        f: T::F,
-        v: T::V,
-        w: T::V,
-        ep: T::EP,
-        fp: T::FP,
-    ) -> Option<T::E> {
+    fn split_face_v(&mut self, f: T::F, v: T::V, w: T::V, ep: T::EP, fp: T::FP) -> Option<T::E> {
         if v == w {
             return None;
         }
@@ -491,7 +507,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshBuilder<T> for HalfEdgeMeshImpl<T> {
             return None;
         };
 
-        self.subdivide_face(from.id(), to.id(), ep, fp)
+        self.split_face(from.id(), to.id(), ep, fp)
     }
 }
 
@@ -1059,13 +1075,13 @@ mod tests {
     }
 
     #[test]
-    fn test_subdivide_edge() {
+    fn test_split_edge() {
         let mut mesh = Mesh3d64::default();
         let e0 = mesh.insert_regular_polygon(1.0, 3).id();
         assert_eq!(mesh.check(), Ok(()));
         let f = mesh.edge(e0).twin().unwrap().face_id();
 
-        let e1 = mesh.subdivide_edge(e0, vp(0.0, 0.0, 0.0), Default::default());
+        let e1 = mesh.split_edge(e0, vp(0.0, 0.0, 0.0), Default::default());
         assert_eq!(mesh.check(), Ok(()));
         assert_eq!(mesh.is_connected(), true);
         assert_eq!(mesh.is_open_2manifold(), true);
@@ -1074,7 +1090,7 @@ mod tests {
         assert_eq!(mesh.num_faces(), 1);
         assert_eq!(mesh.face(f).unwrap().num_edges(), 4);
 
-        let e2 = mesh.subdivide_edge(e0, vp(0.1, 0.0, 0.0), Default::default());
+        let e2 = mesh.split_edge(e0, vp(0.1, 0.0, 0.0), Default::default());
         assert_eq!(mesh.check(), Ok(()));
         assert_eq!(mesh.is_connected(), true);
         assert_eq!(mesh.is_open_2manifold(), true);
@@ -1114,14 +1130,14 @@ mod tests {
         /*
         let mesh_clone = mesh.clone();
         assert_eq!(
-            mesh.subdivide_face(e1, e1, Default::default(), Default::default()),
+            mesh.split_face(e1, e1, Default::default(), Default::default()),
             None
         );
         assert_eq!(mesh.is_trivially_isomorphic(&mesh_clone).eq(), true);*/
     }
 
     #[test]
-    fn test_subdivide_face() {
+    fn test_split_face() {
         let mut mesh = Mesh3d64::default();
         let e0b = mesh.insert_regular_polygon(1.0, 4).id();
         let e0 = mesh.edge(e0b).unwrap().twin_id();
@@ -1132,7 +1148,7 @@ mod tests {
         let e3 = mesh.edge(e2).unwrap().next_id();
 
         let d1a = mesh
-            .subdivide_face(e0, e3, Default::default(), Default::default())
+            .split_face(e0, e3, Default::default(), Default::default())
             .unwrap();
         assert_eq!(mesh.check(), Ok(()));
         assert_eq!(mesh.is_connected(), true);
@@ -1141,7 +1157,7 @@ mod tests {
         assert_eq!(mesh.num_edges(), 5);
         assert_eq!(mesh.num_faces(), 2);
 
-        let d1bt = mesh.subdivide_edge(d1a, vp(0.0, 0.0, 0.0), Default::default());
+        let d1bt = mesh.split_edge(d1a, vp(0.0, 0.0, 0.0), Default::default());
         let d1at = mesh.edge(d1bt).twin().unwrap().next_id();
         assert_ne!(d1a, d1bt);
         assert_eq!(d1a, mesh.edge(d1at).unwrap().twin_id());
@@ -1149,10 +1165,10 @@ mod tests {
         assert_eq!(mesh.num_vertices(), 5);
 
         let d2a = mesh
-            .subdivide_face(e3, d1bt, Default::default(), Default::default())
+            .split_face(e3, d1bt, Default::default(), Default::default())
             .unwrap();
         let d2b = mesh
-            .subdivide_face(e1, d1at, Default::default(), Default::default())
+            .split_face(e1, d1at, Default::default(), Default::default())
             .unwrap();
 
         assert_eq!(mesh.check(), Ok(()));
@@ -1176,21 +1192,21 @@ mod tests {
         let mesh_clone = mesh.clone();
         // not the same face
         assert_eq!(
-            mesh.subdivide_face(e0, e1, Default::default(), Default::default()),
+            mesh.split_face(e0, e1, Default::default(), Default::default()),
             None
         );
         assert_eq!(mesh.is_trivially_isomorphic(&mesh_clone).eq(), true);
 
         // still not the same face
         assert_eq!(
-            mesh.subdivide_face(e0, e2, Default::default(), Default::default()),
+            mesh.split_face(e0, e2, Default::default(), Default::default()),
             None
         );
         assert_eq!(mesh.is_trivially_isomorphic(&mesh_clone).eq(), true);
 
         // too small
         assert_eq!(
-            mesh.subdivide_face(
+            mesh.split_face(
                 e0,
                 mesh.edge(e0).unwrap().next_id(),
                 Default::default(),
@@ -1202,7 +1218,7 @@ mod tests {
 
         // subdiving the outside is also not possible
         assert_eq!(
-            mesh.subdivide_face(
+            mesh.split_face(
                 mesh.edge(e0).unwrap().twin_id(),
                 mesh.edge(e3).unwrap().twin_id(),
                 Default::default(),
@@ -1217,7 +1233,7 @@ mod tests {
             .unwrap();
         assert_eq!(mesh.check(), Ok(()));
         let _d3 = mesh
-            .subdivide_face(
+            .split_face(
                 mesh.edge(e0).unwrap().twin_id(),
                 mesh.edge(e1).unwrap().twin_id(),
                 Default::default(),

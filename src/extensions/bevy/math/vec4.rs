@@ -111,7 +111,7 @@ impl Transformable<4> for Vec4 {
     type Vec = Vec4;
 
     fn transform(&mut self, t: &Self::Trans) -> &mut Self {
-        *self = t.apply(*self);
+        *self = t.apply_point(*self);
         self
     }
 

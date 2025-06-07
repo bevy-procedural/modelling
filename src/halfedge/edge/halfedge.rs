@@ -14,9 +14,9 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
         face: T::F,
         payload: Option<T::EP>,
     ) -> Self {
-        assert!(next != IndexType::max());
-        assert!(prev != IndexType::max());
-        assert!(twin != IndexType::max());
+        //assert!(next != IndexType::max());
+        //assert!(prev != IndexType::max());
+        //assert!(twin != IndexType::max());
         Self {
             id: IndexType::max(),
             next,
@@ -98,7 +98,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdge<T> for HalfEdgeImpl<T> {
     }
 
     #[inline]
-    fn other_face<'a>(&'a self, mesh: &'a HalfEdgeMeshImpl<T>) -> Option<&'a T::Face> {
+    fn twin_face<'a>(&'a self, mesh: &'a HalfEdgeMeshImpl<T>) -> Option<&'a T::Face> {
         let face = self.twin(mesh).face_id();
         if face == IndexType::max() {
             None

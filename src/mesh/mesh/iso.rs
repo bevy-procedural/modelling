@@ -125,7 +125,7 @@ pub trait MeshIsomorphism<T: MeshType<Mesh = Self>>: MeshBasics<T> {
                 }
 
                 let Some(other_e) =
-                    other.shared_edge(other_v.try_id(), *iso.get(e.target_id()).unwrap())
+                    other.shared_edge(other_v.id_unchecked(), *iso.get(e.target_id()).unwrap())
                 else {
                     return Err(MeshEquivalenceDifference::NoCorrespondingEdge(e.id()));
                 };

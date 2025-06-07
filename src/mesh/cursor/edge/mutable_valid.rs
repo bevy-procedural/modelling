@@ -56,15 +56,15 @@ where
     /// Panics if one of the outgoing halfedges doesn't have a twin.
     pub fn for_each_next<F: Fn(Self) -> Self>(self, f: F) -> Self {
         let twin = self.twin();
-        let id = twin.try_id();
+        let id = twin.id_unchecked();
         let mut c = twin.next_sibling();
-        while c.try_id() != id {
-            let c_id = c.try_id();
+        while c.id_unchecked() != id {
+            let c_id = c.id_unchecked();
             // execute closure, reset to the original edge and continue with the next sibling
             c = f(c.load().unwrap()).move_to(c_id).next_sibling();
         }
 
-        assert!(c.try_id() == id, "Invalid edge cursor: {}", c.try_id());
+        assert!(c.id_unchecked() == id, "Invalid edge cursor: {}", c.id_unchecked());
         c.load()
             .expect("The original edge disappeared during the iteration")
     }
@@ -126,7 +126,4 @@ impl<'a, T: MeshType + 'a> ValidEdgeCursorHalfedgeBasics<'a, T> for ValidEdgeCur
     T::Edge: HalfEdge<T>
 {
 }
-impl<'a, T: MeshType + 'a> EdgeCursorHalfedgeBuilder<'a, T> for ValidEdgeCursorMut<'a, T> where
-    T: MeshTypeHalfEdge
-{
-}
+impl<'a, T: MeshTypeHalfEdge + 'a> EdgeCursorHalfedgeBuilder<'a, T> for ValidEdgeCursorMut<'a, T> {}

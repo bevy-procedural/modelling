@@ -56,7 +56,8 @@ pub fn sweep_line<T: MeshType3D, Tri: MonotoneTriangulator<V = T::V, Vec2 = T::V
     indices: &mut Triangulation<T::V>,
     meta: &mut TesselationMeta<T::V>,
 ) {
-    debug_assert!(face.may_be_curved() || face.is_planar2(mesh));
+    debug_assert!(!face.is_flat() || face.is_planar2(mesh));
+    assert!(!face.has_islands(), "face has islands!");
 
     // TODO: Improve performance by directly using the nd-vertices instead of converting to 2d
     let vec2s: Vec<_> = face

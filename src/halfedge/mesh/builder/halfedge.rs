@@ -66,7 +66,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T>
         true
     }
 
-    fn subdivide_halfedge(&mut self, e: T::E, vp: T::VP, ep: T::EP) -> T::E {
+    fn split_halfedge(&mut self, e: T::E, vp: T::VP, ep: T::EP) -> T::E {
         // TODO: This could be done in a more generic way in a standard impl
 
         let old_edge = self.edge_ref(e).clone();
@@ -97,7 +97,7 @@ impl<T: HalfEdgeImplMeshTypePlus> MeshHalfEdgeBuilder<T> for HalfEdgeMeshImpl<T>
         new_edge
     }
 
-    fn subdivide_halfedge_try_fixup(&mut self, e: T::E, ep: T::EP) -> Option<T::E> {
+    fn split_halfedge_try_fixup(&mut self, e: T::E, ep: T::EP) -> Option<T::E> {
         let old_edge = self.edge_ref(e).clone();
         let other_old = old_edge.twin(self).id();
 

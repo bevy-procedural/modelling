@@ -1,0 +1,13 @@
+[package]
+name = "playground_svg"
+description = "A tiny rendering backend that produces SVG files"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[dependencies]
+
+[dependencies.procedural_modelling]
+path = "../../"
+default-features = false
+features = ["nalgebra", "fonts"]

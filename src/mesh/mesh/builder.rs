@@ -52,7 +52,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Returns the new edge and vertex id.
     ///
     /// Fails if the connectivity to the existing vertex is ambiguous, i.e.,
-    /// there is not exactly one boundary passing through `v` or `v` is isolated.
+    /// there is not exactly one chain passing through `v` or `v` is isolated.
     ///
     /// For half-edge meshes, the payload will be added to the outgoing half-edge
     /// from the current vertex to the new vertex. This is also the half-edge that is returned.
@@ -82,12 +82,14 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         self.insert_edge_ev(e, v, ep).map(|e| (e, v))
     }
 
+    // TODO: Check whether the use of boundary vs chain is correct here.
+
     /// Connects the vertices `a` and `b` with an edge and returns the edge id.
     /// This will not close any face! The method will not check whether the vertices
     /// are in different connected components, so, you can generate non-manifold meshes
     /// using this method.
     ///
-    /// If `a` and `b` are connected by some boundary, it will walk backwards from `b`
+    /// If `a` and `b` are connected by some boundary chain, it will walk backwards from `b`
     /// and use the first edge coming from `a` to create the new boundary connectivity.
     ///
     /// The edge will be updated with the matching faces to continue the boundary.
@@ -170,30 +172,31 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Panics if the face doesn't exist.
     #[inline]
     fn remove_face(&mut self, f: T::F) {
-        assert!(self.try_remove_face(f), "Could not remove face {}", f);
+        assert!(self.try_remove_face(f).is_some(), "Could not remove face {}", f);
     }
 
-    /// Tries to remove the face `f` and returns whether it was successful.
-    /// Fails only if the face doesn't exist.
-    fn try_remove_face(&mut self, f: T::F) -> bool;
+    /// Tries to remove the face `f`.
+    /// Returns the face payload if the face was removed or `None` if the face doesn't exist.
+    #[must_use]
+    fn try_remove_face(&mut self, f: T::F) -> Option<T::FP>;
 
     /// Close the open boundary with a single face. Doesn't create new edges or vertices.
-    /// Fails if there is already a face using the boundary.
+    /// Fails if there is already a face using the chain.
     ///
     /// The given edge will be the representative edge of the face.
     #[must_use]
     fn insert_face(&mut self, e: T::E, fp: T::FP) -> Option<T::F>;
 
-    /// Close the open boundary with a single face. Doesn't create new edges or vertices.
+    /// Close the chain with a single face. Doesn't create new edges or vertices.
     ///
     /// The given edge will be the representative edge of the face.
     fn insert_face_forced(&mut self, e: T::E, fp: T::FP) -> T::F;
 
-    /// Close the given boundary by inserting an edge from `from.target` to
+    /// Close the given boundary chain by inserting an edge from `from.target` to
     /// `to.origin` and insert a face.
     ///
     /// There must be exactly one boundary path from `to` to `from` without a face.
-    /// This boundary will be used to construct the face.
+    /// This chain will be used to construct the face.
     /// See [MeshBuilder::insert_edge_ee] for more information.
     ///
     /// Returns the new face and edge id. For half-edge meshes, this should be the half-edge
@@ -218,7 +221,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
             self.edge(from).unwrap().target_id()
         );
 
-        // `insert_face` fails if there is already a face using the boundary
+        // `insert_face` fails if there is already a face using the chain
         if let Some(f) = self.insert_face(e, fp) {
             Some((e, f))
         } else {
@@ -227,7 +230,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         }
     }
 
-    /// Close the given boundary by inserting an edge from `from.target` to
+    /// Close the given boundary chain by inserting an edge from `from.target` to
     /// `to` and insert a face.
     ///
     /// There must be exactly one boundary path from `to` to `from` without a face.
@@ -245,7 +248,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         ep: T::EP,
         fp: T::FP,
     ) -> Option<(T::E, T::F)> {
-        // TODO: debug_assert!(self.edge(from).same_boundary_back(to));
+        // TODO: debug_assert!(self.edge(from).same_chain_back(to));
         let e = self.insert_edge_ev(from, to, ep)?;
         debug_assert_eq!(self.edge(e).unwrap().target_id(), to);
         debug_assert_eq!(
@@ -253,7 +256,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
             self.edge(from).unwrap().target_id()
         );
 
-        // `insert_face` fails if there is already a face using the boundary
+        // `insert_face` fails if there is already a face using the chain
         if let Some(f) = self.insert_face(e, fp) {
             Some((e, f))
         } else {
@@ -262,7 +265,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         }
     }
 
-    /// Close the given boundary by inserting an edge from `from` to `to` and insert a face.
+    /// Close the given boundary chain by inserting an edge from `from` to `to` and insert a face.
     /// The face will be inserted such that the edge from `from` to `to` appears ccw in the face.
     ///
     /// The connection must be unambiguous in the same sense as required by [MeshBuilder::insert_edge_vv].
@@ -282,7 +285,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         debug_assert_eq!(self.edge(e).unwrap().target_id(), to);
         debug_assert_eq!(self.edge(e).unwrap().origin_id(), from);
 
-        // `insert_face` fails if there is already a face using the boundary
+        // `insert_face` fails if there is already a face using the chain
         if let Some(f) = self.insert_face(e, fp) {
             Some((e, f))
         } else {
@@ -291,7 +294,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
         }
     }
 
-    /// Close the given boundary by inserting an edge from `from` to `to` and insert a face.
+    /// Close the given boundary chain by inserting an edge from `from` to `to` and insert a face.
     /// The vertex `prev` must also lie on the face with an edge from `prev` to `from`. That way
     /// we can know which side of the edge to insert the face.
     ///
@@ -316,14 +319,23 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     ////////////////////////////////////////////////////////////////////////////////////
     //************************ More complex operations *******************************//
 
-    /// Subdivide the given edge (resp. half-edge pair) by inserting a new vertex,
+    /// Split the given edge (resp. half-edge pair) by inserting a new vertex,
     /// changing the edge's target vertex to the new vertex and connecting the new vertex
     /// to the edge's original target vertex.
     ///
     /// Returns the (half)edge starting in the new vertex.
     /// Panics if the edge doesn't exist.
     /// Sets the same faces on the inserted edge as the original edge.
-    fn subdivide_edge(&mut self, e: T::E, vp: T::VP, ep: T::EP) -> T::E;
+    ///
+    /// Keep in mind that edges could be curved and the curvature might not make sense after the split.
+    fn split_edge(&mut self, e: T::E, vp: T::VP, ep: T::EP) -> T::E;
+
+    /*
+    TODO:
+    /// Join two faces that are separated by the given edge.
+    /// Returns `None` if the edge doesn't exist or doesn't have exactly two faces.
+    fn join_faces(&mut self, e: T::E) -> Option<T::F>;
+    */
 
     /// Deletes the next edge and connects the given edge to the target of the next edge.
     /// Fails if the edge doesn't exist or the edge's target vertex doesn't have degree 2.
@@ -331,23 +343,21 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     #[must_use]
     fn collapse_edge(&mut self, e: T::E) -> Option<T::E>;
 
-    /// Like [MeshBuilder::subdivide_edge] but takes an iterator of vertices and edges to insert.
+    /// Like [MeshBuilder::split_edge] but takes an iterator of vertices and edges to insert.
     ///
     /// Returns the last (half)edge inserted, i.e., the one pointing to the original target vertex.
+    ///
+    /// Keep in mind that edges could be curved and the curvature might not make sense after the split.
     #[inline]
-    fn subdivide_edge_iter(
-        &mut self,
-        e: T::E,
-        vs: impl IntoIterator<Item = (T::EP, T::VP)>,
-    ) -> T::E {
+    fn split_edge_iter(&mut self, e: T::E, vs: impl IntoIterator<Item = (T::EP, T::VP)>) -> T::E {
         let mut last = e;
         for (ep, vp) in vs {
-            last = self.subdivide_edge(last, vp, ep);
+            last = self.split_edge(last, vp, ep);
         }
         last
     }
 
-    /// Subdivide the face by inserting a diagonal edge from the target `v` of `from` to the origin `w` of `to`.
+    /// Split the face by inserting a diagonal edge from the target `v` of `from` to the origin `w` of `to`.
     /// The face containing edge `wv` will keep the old face payload, the face containing `vw` will get the new payload.
     /// Returns the edge `vw`.
     ///
@@ -355,10 +365,14 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Won't complain about degenerate faces with 2 vertices and two parallel pairs of half-edges.
     ///
     /// Doesn't care about whether the diagonal is geometrically inside the face.
+    ///
+    /// Keep in mind that for concave faces not all diagonals are valid.
+    /// Also keep in mind that the face could have islands.
+    /// Splitting between the outer edge chain and an island is currently not supported.
     #[must_use]
-    fn subdivide_face(&mut self, from: T::E, to: T::E, ep: T::EP, fp: T::FP) -> Option<T::E>;
+    fn split_face(&mut self, from: T::E, to: T::E, ep: T::EP, fp: T::FP) -> Option<T::E>;
 
-    /// Subdivide the given face by inserting a diagonal edge from `v` to `w`.
+    /// Split the given face by inserting a diagonal edge from `v` to `w`.
     /// The face containing edge `wv` will keep the old face payload, the face containing `vw` will get the new payload.
     /// Returns the edge `vw`.
     ///
@@ -366,9 +380,12 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
     /// Won't complain about degenerate faces with 2 vertices and two parallel pairs of half-edges.
     ///
     /// Doesn't care about whether the diagonal is geometrically inside the face.
+    ///
+    /// Keep in mind that for concave faces not all diagonals are valid.
+    /// Also keep in mind that the face could have islands.
+    /// Splitting between the outer edge chain and an island is currently not supported.
     #[must_use]
-    fn subdivide_face_v(&mut self, f: T::F, v: T::V, w: T::V, ep: T::EP, fp: T::FP)
-        -> Option<T::E>;
+    fn split_face_v(&mut self, f: T::F, v: T::V, w: T::V, ep: T::EP, fp: T::FP) -> Option<T::E>;
 
     /// Append a chain of edges to the vertex `v` from the finite iterator of vertices and edges.
     ///
@@ -412,7 +429,7 @@ pub trait MeshBuilder<T: MeshType<Mesh = Self>>: MeshBasics<T> {
 
     /// Same as [MeshBuilder::insert_path] but closes the path by connecting the last vertex with the first one.
     ///
-    /// Returns the first edge (outer boundary of the loop when constructed ccw).
+    /// Returns the first edge (outer boundary chain of the loop when constructed ccw).
     ///
     /// The first edge's target is the first vertex of the loop.
     /// Panics if the iterator has a length of less than 2.

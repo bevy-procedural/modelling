@@ -159,7 +159,7 @@ impl TransformTrait<f32, 4> for Mat5<f32> {
     }
 
     #[inline]
-    fn apply(&self, v: Self::Vec) -> Self::Vec {
+    fn apply_point(&self, v: Self::Vec) -> Self::Vec {
         *self * v
     }
 

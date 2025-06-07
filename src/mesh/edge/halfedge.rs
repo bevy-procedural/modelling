@@ -67,31 +67,31 @@ pub trait HalfEdge<T: MeshType<Edge = Self>>: EdgeBasics<T> {
     fn face_id(&self) -> T::F;
 
     /// Returns the other face (incident to the twin)
-    fn other_face<'a>(&'a self, mesh: &'a T::Mesh) -> Option<&'a T::Face>;
+    fn twin_face<'a>(&'a self, mesh: &'a T::Mesh) -> Option<&'a T::Face>;
 
     /// Returns whether the edge (i.e., this HalfEdge and not necessarily its twin) is a boundary edge
     fn is_boundary_self(&self) -> bool;
 
-    /// Returns an outgoing edge from `v` that is part of the same boundary as `self`.
+    /// Returns an outgoing edge from `v` that is part of the same chain as `self`.
     /// Returns `None` if no such edge exists.
-    /// Traverses the boundary forwards.
-    fn same_boundary(&self, mesh: &T::Mesh, v: T::V) -> Option<T::E> {
-        self.boundary(mesh)
+    /// Traverses the chain forwards.
+    fn same_chain(&self, mesh: &T::Mesh, v: T::V) -> Option<T::E> {
+        self.chain(mesh)
             .find(|e| e.origin_id(mesh) == v)
             .map(|e| e.id())
     }
-    /// Returns an outgoing edge from `v` that is part of the same boundary as `self`.
+    /// Returns an outgoing edge from `v` that is part of the same chain as `self`.
     /// Returns `None` if no such edge exists.
-    /// Traverses the boundary backwards.
-    fn same_boundary_back(&self, mesh: &T::Mesh, v: T::V) -> Option<T::E> {
-        self.boundary_back(mesh)
+    /// Traverses the chain backwards.
+    fn same_chain_back(&self, mesh: &T::Mesh, v: T::V) -> Option<T::E> {
+        self.chain_back(mesh)
             .find(|e| e.origin_id(mesh) == v)
             .map(|e| e.id())
     }
 
     /// Flips the direction of the edge and its twin.
     /// Updates the neighboring edges, vertices, and faces.
-    /// 
+    ///
     /// Panics if the edge or its twin does not exist.
     fn flip(e: T::E, mesh: &mut T::Mesh);
 
@@ -151,7 +151,7 @@ mod tests {
         for face in mesh.faces() {
             face.edges().for_each(|e1| {
                 face.edges().for_each(|e2| {
-                    assert!(e1.clone().same_boundary(e2.origin_id()).is_some());
+                    assert!(e1.clone().same_chain(e2.origin_id()).is_some());
                 });
             });
         }

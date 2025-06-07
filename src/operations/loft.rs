@@ -17,10 +17,10 @@ pub enum FaceConnection {
 
 /// A trait for lofting a mesh.
 pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
-    /// This will walk clockwise (backwards) along the given boundary and add a "hem" made from triangles.
+    /// This will walk clockwise (backwards) along the given boundary chain and add a "hem" made from triangles.
     /// The payloads are given using the iterator.
     ///
-    /// `start` must be an edge on the boundary pointing to the first vertex to be connected with the hem.
+    /// `start` must be an edge on the boundary chain pointing to the first vertex to be connected with the hem.
     ///
     /// Returns the edge pointing from the first inserted vertex to the target of `start`.
     /// If the iterator is empty, return `start` instead.
@@ -119,10 +119,10 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
         Some(self.edge(e).next().next().load()?.twin_id())
     }
 
-    /// This will walk counter-clockwise along the given boundary and add a "hem" made from triangles.
+    /// This will walk counter-clockwise along the given boundary chain and add a "hem" made from triangles.
     /// The payloads are given using the iterator.
     ///
-    /// `start` must be an edge on the boundary pointing to the first vertex to be connected with the hem.
+    /// `start` must be an edge on the boundary chain pointing to the first vertex to be connected with the hem.
     ///
     /// Returns the edge pointing from the first inserted vertex to the target of `start`.
     /// If the iterator is empty, return `start` instead.
@@ -145,7 +145,7 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
         // TODO: a more efficient implementation could bulk-insert everything at once
         // TODO: assertions
 
-        // output will walk forward around the boundary
+        // output will walk forward around the boundary chain
         let mut output = start;
 
         let mut first = true;
@@ -194,7 +194,7 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
                 )?;
             }
 
-            // advance output to the next edge on the boundary
+            // advance output to the next edge on the boundary chain
             output = new_output;
 
             first = false;
@@ -254,19 +254,19 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
         todo!()
     }
 
-    /// Walks along the given boundary and "crochet" a "hem" made from polygon faces.
+    /// Walks along the given boundary chain and "crochet" a "hem" made from polygon faces.
     /// Each face consists of `n` vertices from the iterator
-    /// and `m` vertices from the boundary of the existing mesh.
+    /// and `m` vertices from the boundary chain of the existing mesh.
     /// Hence, it will create polygon faces with `n+m` vertices each.
     ///
-    /// If the iterator is long enough to go once around the boundary,
+    /// If the iterator is long enough to go once around the boundary chain,
     /// the "hem" will be automatically closed if `autoclose` is true.
     ///
-    /// If the boundary is too short to fit the next `n` new vertices, none of them will be inserted.
+    /// If the boundary chain is too short to fit the next `n` new vertices, none of them will be inserted.
     /// e.g., if you have a triangle and insert with `m=2`, then at most one face will be created since
     /// two won't fit.
     ///
-    /// It returns the first and last edge on the new boundary, with one edge distance to the boundary, e.g.,
+    /// It returns the first and last edge on the new boundary chain, with one edge distance to the original boundary chain, e.g.,
     /// - if `n>=2`: the edge between the first inserted vertex and the second inserted
     ///   vertex and the edge between the last to the second to last. The direction will
     ///   be chosen such that it is the edge that is not part of the inserted face. If the
@@ -274,7 +274,7 @@ pub trait MeshLoft<T: MeshTypeHalfEdge<Mesh = Self>> {
     ///   to the first instead, so the edges will actually be neighbors.
     /// - if `n=0`: the edge between the first boundary vertex to the `n`th if `m=0`.
     /// If there is no new boundary edge, it will return `start` instead.
-    /// The function will return `None` if the boundary had unclear connectivity
+    /// The function will return `None` if the boundary chain had unclear connectivity
     /// (which shouldn't happen on half-edge meshes).
     ///
     /// The distance to the boundary makes the behavior easier to understand when using `open=false` or `autoclose=true`.
@@ -703,7 +703,7 @@ mod tests {
             if config.backwards.unwrap() {
                 assert_eq!(
                     mesh.edge(first_edge)
-                        .same_boundary_back(mesh.edge(last_edge).unwrap().origin_id())
+                        .same_chain_back(mesh.edge(last_edge).unwrap().origin_id())
                         .map(|c| c.id()),
                     Some(Some(last_edge))
                 );
@@ -722,7 +722,7 @@ mod tests {
             } else {
                 assert_eq!(
                     mesh.edge(first_edge)
-                        .same_boundary(mesh.edge(last_edge).unwrap().origin_id())
+                        .same_chain(mesh.edge(last_edge).unwrap().origin_id())
                         .map(|c| c.id()),
                     Some(Some(last_edge))
                 );

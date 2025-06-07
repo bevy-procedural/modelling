@@ -32,7 +32,7 @@ impl<'a, T: MeshType> ValidEdgeCursor<'a, T> {
     #[inline]
     #[must_use]
     pub fn payload(&self) -> &'a T::EP {
-        self.mesh.edge_payload(self.try_id())
+        self.mesh.edge_payload(self.id_unchecked())
     }
 }
 

@@ -1,15 +1,20 @@
 use super::{BevyMesh3d, BevyVertexPayload2d, BevyVertexPayload3d, Polygon2dBevy};
 use crate::{
     halfedge::{
-        HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeImplMeshType, HalfEdgeMeshImpl, HalfEdgeVertexImpl,
+        HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeImplMeshType, HalfEdgeImplMeshTypePlus,
+        HalfEdgeMeshImpl, HalfEdgeVertexImpl,
     },
-    math::{impls::{E32, F32, V32}, HasPosition},
+    math::{
+        impls::{E32, F32, V32},
+        HasPosition, Vector,
+    },
     mesh::{
-        CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EdgeBasics, EmptyEdgePayload, EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshBasicsCurved, MeshType, MeshTypeHalfEdge
+        cursor::*, CurvedEdge, CurvedEdgePayload, CurvedEdgeType, EdgeBasics, EmptyEdgePayload,
+        EmptyFacePayload, EmptyMeshPayload, EuclideanMeshType, MeshBasics, MeshBasicsCurved,
+        MeshImport, MeshType, MeshTypeHalfEdge,
     },
-    prelude::HalfEdgeImplMeshTypePlus,
 };
-use bevy::math::{Affine2, Vec2, Vec3};
+use bevy::math::{Affine2, Vec2};
 
 /// A mesh type for bevy with
 /// - 2D vertices,
@@ -68,10 +73,11 @@ impl HalfEdgeMeshImpl<BevyMeshType2d32> {
     /// Convert a BevyMesh2d to a 3d mesh.
     /// If there are curved edges they will be converted with the given tolerance.
     pub fn to_3d(&self, tol: f32) -> BevyMesh3d {
-        BevyMesh3d::import_mesh::<_, _, _, _, BevyMeshType2d32>(
+        let mut res = BevyMesh3d::empty();
+        res.import_mesh::<_, _, _, _, BevyMeshType2d32>(
             self.clone().flatten_curved_edges(tol),
             |vp: &BevyVertexPayload2d| {
-                BevyVertexPayload3d::from_pos(Vec3::new(vp.pos().x, vp.pos().y, 0.0))
+                BevyVertexPayload3d::from_pos(Vector::from_xyz(vp.pos().x, vp.pos().y, 0.0))
             },
             |_ep| {
                 // TODO: flatten_curved_edges seems to miss some edges?
@@ -81,5 +87,7 @@ impl HalfEdgeMeshImpl<BevyMeshType2d32> {
             |_fp| EmptyFacePayload::default(),
             |_mp| EmptyMeshPayload::default(),
         )
+        .ensure();
+        res
     }
 }

@@ -48,38 +48,31 @@ pub trait EdgeBasics<T: MeshType<Edge = Self>>: std::fmt::Debug + Clone {
         (v1 + v2) * T::S::HALF
     }
 
-    /// Iterator for [EdgeBasics::boundary].
-    type BoundaryIterator<'a>: Iterator<Item = &'a T::Edge> + CreateEmptyIterator + 'a
-    where
-        Self: 'a,
-        T: 'a;
-
     /// Iterates all (half)edges incident to the same face or boundary (counter-clockwise)
-    fn boundary<'a>(&'a self, mesh: &'a T::Mesh) -> Self::BoundaryIterator<'a>
+    fn chain<'a>(
+        &'a self,
+        mesh: &'a T::Mesh,
+    ) -> impl Iterator<Item = &'a T::Edge> + CreateEmptyIterator
     where
-        T: 'a;
-
-    /// Iterator for [EdgeBasics::boundary_back].
-    type BoundaryBackIterator<'a>: Iterator<Item = &'a T::Edge> + CreateEmptyIterator + 'a
-    where
-        Self: 'a,
         T: 'a;
 
     /// Iterates all (half)edges incident to the same face or boundary (clockwise)
-    fn boundary_back<'a>(&'a self, mesh: &'a T::Mesh) -> Self::BoundaryBackIterator<'a>
+    fn chain_back<'a>(
+        &'a self,
+        mesh: &'a T::Mesh,
+    ) -> impl Iterator<Item = &'a T::Edge> + CreateEmptyIterator
     where
-        T: 'a;
-
-    /// Iterator type for face ids incident to the edge
-    type FaceIdIterator<'a>: Iterator<Item = T::F> + CreateEmptyIterator + 'a
-    where
-        Self: 'a,
         T: 'a;
 
     /// Iterates all face ids incident to the edge
     /// (even for half-edges, this will return both faces if there are two
     /// or more than that if the edge is non-manifold)
-    fn face_ids<'a>(&'a self, mesh: &'a T::Mesh) -> Self::FaceIdIterator<'a>;
+    fn face_ids<'a>(
+        &'a self,
+        mesh: &'a T::Mesh,
+    ) -> impl Iterator<Item = T::F> + CreateEmptyIterator
+    where
+        T: 'a;
 
     /// Determines whether the edge is manifold, i.e., has one or two incident faces.
     /// Degenerate edges where the same face is incident twice are not considered manifold.
@@ -120,16 +113,16 @@ mod tests {
 
         // TODO: Cursor
         assert_eq!(edge.face_ids().collect::<Vec<_>>(), vec![IndexType::new(0)]);
-        assert!(edge.boundary().count() == 3);
-        assert!(edge.boundary_back().count() == 3);
+        assert!(edge.chain().count() == 3);
+        assert!(edge.chain_back().count() == 3);
         assert_eq!(
-            edge.boundary()
+            edge.chain()
                 .map(|e| e.id())
                 .collect::<Vec<EU>>()
                 .iter()
                 .rev()
                 .collect::<Vec<&EU>>(),
-            edge.boundary_back()
+            edge.chain_back()
                 .map(|e| e.id())
                 .collect::<Vec<EU>>()
                 .iter()
@@ -141,7 +134,7 @@ mod tests {
         for edge in mesh.halfedges() {
             assert!(edge.is_boundary());
             assert_eq!(edge.fork().face_ids().count(), 1);
-            assert_eq!(edge.boundary().count(), 3);
+            assert_eq!(edge.chain().count(), 3);
         }
     }
 
@@ -152,8 +145,8 @@ mod tests {
         for edge in mesh.halfedges() {
             assert!(!edge.is_boundary());
             assert_eq!(edge.face_ids().count(), 2);
-            assert_eq!(edge.boundary().count(), 4);
-            assert_eq!(edge.boundary_back().count(), 4);
+            assert_eq!(edge.chain().count(), 4);
+            assert_eq!(edge.chain_back().count(), 4);
             assert!(edge
                 .face()
                 .unwrap()

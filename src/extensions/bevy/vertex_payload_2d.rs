@@ -40,7 +40,7 @@ impl Transformable<2> for BevyVertexPayload2d {
 
     #[inline]
     fn transform(&mut self, t: &Self::Trans) -> &mut Self {
-        self.position = t.apply(self.position);
+        self.position = t.apply_point(self.position);
         // TODO: should the uv be transformed as well?
         self
     }

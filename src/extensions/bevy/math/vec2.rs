@@ -149,7 +149,7 @@ impl TransformTrait<f32, 2> for Affine2 {
     }
 
     #[inline]
-    fn apply(&self, v: Vec2) -> Vec2 {
+    fn apply_point(&self, v: Vec2) -> Vec2 {
         bevy::math::Affine2::transform_point2(self, v)
     }
 
@@ -170,7 +170,7 @@ impl Transformable<2> for Vec2 {
     type Trans = Affine2;
     type Vec = Vec2;
     fn transform(&mut self, t: &Self::Trans) -> &mut Self {
-        *self = t.apply(*self);
+        *self = t.apply_point(*self);
         self
     }
 

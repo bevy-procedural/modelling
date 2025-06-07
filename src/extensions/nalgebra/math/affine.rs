@@ -1,13 +1,13 @@
-use super::{NdRotate, ScalarPlus, VecN};
+use super::{NdHomography, NdRotate, ScalarPlus, VecN};
 use crate::math::{Scalar, TransformTrait};
 use nalgebra::{DMatrix, SMatrix, SVector};
 
 /// Affine transformation in D-dimensional space.
-/// Represented as a D x D matrix with an additional row for translation since const generics are unstable in rust.
+/// Represented as a N x N matrix with an additional row for translation since const generics are unstable in rust.
 #[derive(Clone, Debug, Copy)]
-pub struct NdAffine<S: Scalar, const D: usize> {
-    matrix: SMatrix<S, D, D>,
-    translation: VecN<S, D>,
+pub struct NdAffine<S: Scalar, const N: usize> {
+    matrix: SMatrix<S, N, N>,
+    translation: VecN<S, N>,
 }
 
 impl<S: Scalar, const D: usize> NdAffine<S, D> {
@@ -19,14 +19,18 @@ impl<S: Scalar, const D: usize> NdAffine<S, D> {
         }
     }
 
+    // Returns the affine transformation as an augmented matrix.
     fn as_matrix(&self) -> DMatrix<S> {
+        // PERF: avoid DMatrix
         let mut m = DMatrix::<S>::identity(D + 1, D + 1);
         m.view_mut((0, 0), (D, D)).copy_from(&self.matrix);
         m.view_mut((0, D), (D, 1)).copy_from(&self.translation);
         m
     }
 
-    fn from_matrix(m: DMatrix<S>) -> Self {
+    // Constructs an affine transformation from an augmented matrix.
+    // Panics if the matrix is not in the expected format
+    pub(super) fn from_matrix(m: DMatrix<S>) -> Self {
         assert!(m.nrows() == D + 1 && m.ncols() == D + 1);
         assert!(m.fixed_view::<1, D>(D, 0).iter().all(|&x| x == S::ZERO));
         Self::new(
@@ -59,7 +63,7 @@ impl<S: ScalarPlus, const D: usize> TransformTrait<S, D> for NdAffine<S, D> {
         Self::default()
     }
 
-    fn apply(&self, v: Self::Vec) -> Self::Vec {
+    fn apply_point(&self, v: Self::Vec) -> Self::Vec {
         self.matrix * v + self.translation
     }
 
@@ -109,6 +113,12 @@ impl<S: ScalarPlus, const D: usize> TransformTrait<S, D> for NdAffine<S, D> {
     }
 }
 
+impl<S: Scalar, const N: usize> Into<NdHomography<S, N>> for NdAffine<S, N> {
+    fn into(self) -> NdHomography<S, N> {
+        NdHomography::from_homogenous(self.as_matrix())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::math::Vector;
@@ -126,12 +136,12 @@ mod tests {
         let b = NdAffine::<f64, 2>::new(Matrix2::new(2.0, 0.0, 0.0, 2.0), V2::new(3.0, 4.0));
         let c = b.chain(&a);
 
-        assert_eq!(a.apply(V2::new(0.0, 0.0)), V2::new(1.0, 2.0));
-        assert_eq!(a.apply(V2::new(1.0, 1.0)), V2::new(2.0, 3.0));
-        assert_eq!(b.apply(V2::new(0.0, 0.0)), V2::new(3.0, 4.0));
-        assert_eq!(b.apply(V2::new(1.0, 1.0)), V2::new(5.0, 6.0));
-        assert_eq!(c.apply(V2::new(0.0, 0.0)), V2::new(4.0, 6.0));
-        assert_eq!(c.apply(V2::new(1.0, 1.0)), V2::new(6.0, 8.0));
+        assert_eq!(a.apply_point(V2::new(0.0, 0.0)), V2::new(1.0, 2.0));
+        assert_eq!(a.apply_point(V2::new(1.0, 1.0)), V2::new(2.0, 3.0));
+        assert_eq!(b.apply_point(V2::new(0.0, 0.0)), V2::new(3.0, 4.0));
+        assert_eq!(b.apply_point(V2::new(1.0, 1.0)), V2::new(5.0, 6.0));
+        assert_eq!(c.apply_point(V2::new(0.0, 0.0)), V2::new(4.0, 6.0));
+        assert_eq!(c.apply_point(V2::new(1.0, 1.0)), V2::new(6.0, 8.0));
 
         assert!(NdAffine::<f64, 2>::from_translation(V2::new(1.0, 2.0)).is_about(&a, 1e-10));
         assert!(NdAffine::<f64, 2>::from_scale(V2::new(2.0, 2.0))
@@ -162,39 +172,48 @@ mod tests {
         let rot = NdRotate::<f64, 2>::from_angle(std::f64::consts::PI / 2.0);
         let rot_affine = NdAffine::<f64, 2>::from_rotation(rot);
         assert!(rot_affine
-            .apply(V2::new(1.0, 0.0))
+            .apply_point(V2::new(1.0, 0.0))
             .is_about(&V2::new(0.0, 1.0), 1e-10));
 
         let move1 = NdAffine::<f64, 2>::from_translation(V2::new(1.0, 0.0));
 
         assert!(move1
             .chain(&rot_affine)
-            .apply(V2::new(2.0, 0.0))
-            .is_about(&rot_affine.apply(move1.apply(V2::new(2.0, 0.0))), 1e-10));
+            .apply_point(V2::new(2.0, 0.0))
+            .is_about(
+                &rot_affine.apply_point(move1.apply_point(V2::new(2.0, 0.0))),
+                1e-10
+            ));
         assert!(rot_affine
             .chain(&move1)
-            .apply(V2::new(2.0, 0.0))
-            .is_about(&move1.apply(rot_affine.apply(V2::new(2.0, 0.0))), 1e-10));
+            .apply_point(V2::new(2.0, 0.0))
+            .is_about(
+                &move1.apply_point(rot_affine.apply_point(V2::new(2.0, 0.0))),
+                1e-10
+            ));
         assert!(rot_affine
             .chain(&move1)
-            .apply(V2::new(0.0, 2.0))
-            .is_about(&move1.apply(rot_affine.apply(V2::new(0.0, 2.0))), 1e-10));
+            .apply_point(V2::new(0.0, 2.0))
+            .is_about(
+                &move1.apply_point(rot_affine.apply_point(V2::new(0.0, 2.0))),
+                1e-10
+            ));
 
         assert!(move1
             .chain(&rot_affine)
-            .apply(V2::new(2.0, 0.0))
+            .apply_point(V2::new(2.0, 0.0))
             .is_about(&V2::new(0.0, 3.0), 1e-10));
         assert!(rot_affine
             .chain(&move1)
-            .apply(V2::new(2.0, 0.0))
+            .apply_point(V2::new(2.0, 0.0))
             .is_about(&V2::new(1.0, 2.0), 1e-10));
         assert!(move1
             .chain(&rot_affine)
-            .apply(V2::new(0.0, 2.0))
+            .apply_point(V2::new(0.0, 2.0))
             .is_about(&V2::new(-2.0, 1.0), 1e-10));
         assert!(rot_affine
             .chain(&move1)
-            .apply(V2::new(0.0, 2.0))
+            .apply_point(V2::new(0.0, 2.0))
             .is_about(&V2::new(-1.0, 0.0), 1e-10));
     }
 }

@@ -1,13 +1,7 @@
-mod edge;
-mod face;
 mod filter;
 mod target;
-mod vertex;
+mod valid;
 
-pub use edge::*;
-pub use face::*;
 pub use filter::*;
 pub use target::*;
-pub use vertex::*;
-
-// TODO: Unify these using macros
+pub use valid::*;

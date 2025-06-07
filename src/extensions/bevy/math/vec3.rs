@@ -162,7 +162,7 @@ impl TransformTrait<f32, 3> for TransformBevy {
     }
 
     #[inline]
-    fn apply(&self, v: Vec3) -> Vec3 {
+    fn apply_point(&self, v: Vec3) -> Vec3 {
         if v.x.is_nan() || v.y.is_nan() || v.z.is_nan() {
             panic!("NAN in vertex: {:?}", v);
         }
@@ -175,7 +175,7 @@ impl TransformTrait<f32, 3> for TransformBevy {
 
     #[inline]
     fn apply_vec(&self, v: Vec3) -> Vec3 {
-        self.apply(v)
+        self.apply_point(v)
     }
 
     #[inline]
@@ -192,7 +192,7 @@ impl Transformable<3> for Vec3 {
     type Vec = Vec3;
 
     fn transform(&mut self, t: &Self::Trans) -> &mut Self {
-        *self = t.apply(*self);
+        *self = t.apply_point(*self);
         self
     }
 

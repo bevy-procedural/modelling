@@ -21,7 +21,7 @@ impl<'a, T: MeshType> FaceCursorMut<'a, T> {
     #[inline]
     #[must_use]
     pub fn into_immutable(self) -> FaceCursor<'a, T> {
-        FaceCursor::new(self.mesh, self.try_id())
+        FaceCursor::new(self.mesh, self.id_unchecked())
     }
 }
 
@@ -47,6 +47,7 @@ impl<'a, T: MeshType> FaceCursorMut<'a, T> {
     /// Panics if the vertex is void.
     #[inline]
     pub fn set_edge(&mut self, edge: T::E) {
-        self.mesh.face_ref_mut(self.try_id()).set_edge(edge);
+        // TODO: don't panic
+        self.mesh.face_ref_mut(self.id_unchecked()).set_edge(edge);
     }
 }

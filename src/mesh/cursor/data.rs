@@ -41,7 +41,7 @@ pub trait CursorData: Sized + Debug {
     /// - deleted (i.e., was valid in the past but has been deleted from the mesh by now), or
     /// - valid (i.e., points to an existing non-deleted instance).
     #[must_use]
-    fn try_id(&self) -> Self::I;
+    fn id_unchecked(&self) -> Self::I;
 
     /// Returns a reference to the mesh the cursor points to.
     #[must_use]
@@ -78,7 +78,7 @@ pub trait CursorData: Sized + Debug {
     #[inline]
     #[must_use]
     fn stay<F: FnOnce(Self) -> Self>(self, f: F) -> Self {
-        let id = self.try_id();
+        let id = self.id_unchecked();
         let c = f(self);
         Self::from_maybe(c.move_to(id))
     }
@@ -91,7 +91,7 @@ pub trait CursorData: Sized + Debug {
     #[must_use]
     fn with_id<F: FnOnce(Self::Valid, Self::I) -> Self>(self, f: F) -> Self {
         self.load_or_nop(|c| {
-            let id = c.try_id();
+            let id = c.id_unchecked();
             f(c, id)
         })
     }
@@ -191,6 +191,12 @@ pub trait CursorData: Sized + Debug {
         assert!(self.is_valid(), "Expected {:?} to be valid", self);
     }
 
+    /// Ensures that the cursor is void. Panics otherwise.
+    #[inline]
+    fn ensure_void(self) {
+        assert!(self.is_void(), "Expected {:?} to be void", self);
+    }
+
     /// Returns a reference to the instance if it exists and is not deleted, otherwise `void`.
     #[must_use]
     fn try_inner<'b>(&'b self) -> Option<&'b Self::S>;
@@ -241,7 +247,7 @@ pub trait CursorData: Sized + Debug {
 
 macro_rules! impl_cursor_data {
     (MaybeCursor, $mutability:ident, $cursor:ident, $valid:ident,
-        $try_id:ident, $load:ident, $I:ident, $S:ident, $payload:ident,
+        $id_unchecked:ident, $load:ident, $I:ident, $S:ident, $payload:ident,
         $get_inner:ident, $check_has:ident,
         $mutability_impl:ident, $basics:ident, $halfedge_basics:ident) => {
         impl<'a, T: MeshType + 'a> CursorData for $cursor<'a, T> {
@@ -253,8 +259,8 @@ macro_rules! impl_cursor_data {
             type Valid = $valid<'a, T>;
 
             #[inline]
-            fn try_id(&self) -> Self::I {
-                self.$try_id
+            fn id_unchecked(&self) -> Self::I {
+                self.$id_unchecked
             }
 
             #[inline]
@@ -272,13 +278,13 @@ macro_rules! impl_cursor_data {
                 if self.is_void() {
                     None
                 } else {
-                    Some(Self::Valid::$load(self.mesh, self.try_id()))
+                    Some(Self::Valid::$load(self.mesh, self.id_unchecked()))
                 }
             }
 
             #[inline]
             fn try_inner<'b>(&'b self) -> Option<&'b Self::S> {
-                self.mesh.$get_inner(self.try_id())
+                self.mesh.$get_inner(self.id_unchecked())
             }
 
             #[inline]
@@ -298,7 +304,8 @@ macro_rules! impl_cursor_data {
 
             #[inline]
             fn is_void(&self) -> bool {
-                self.try_id() == IndexType::max() || !self.mesh().$check_has(self.try_id())
+                self.id_unchecked() == IndexType::max()
+                    || !self.mesh().$check_has(self.id_unchecked())
             }
         }
 
@@ -315,7 +322,7 @@ macro_rules! impl_cursor_data {
     };
 
     (ValidCursor, $mutability:ident, $cursor:ident, $maybe:ident,
-        $try_id:ident, $I:ident, $S:ident, $payload:ident,
+        $id_unchecked:ident, $I:ident, $S:ident, $payload:ident,
         $get_inner:ident, $get_inner_mut:ident, $check_has:ident,
         $mutability_impl:ident, $valid:ident, $basics:ident, $halfedge_basics:ident) => {
         impl<'a, T: MeshType + 'a> CursorData for $cursor<'a, T> {
@@ -327,8 +334,8 @@ macro_rules! impl_cursor_data {
             type Valid = Self;
 
             #[inline]
-            fn try_id(&self) -> Self::I {
-                self.$try_id.id()
+            fn id_unchecked(&self) -> Self::I {
+                self.$id_unchecked.id()
             }
 
             #[inline]
@@ -349,12 +356,12 @@ macro_rules! impl_cursor_data {
             #[inline]
             fn try_inner<'b>(&'b self) -> Option<&'b Self::S> {
                 // TODO: use the cashed inner value for valid immutable cursors
-                self.mesh.$get_inner(self.try_id())
+                self.mesh.$get_inner(self.id_unchecked())
             }
 
             #[inline]
             fn maybe(self) -> Self::Maybe {
-                Self::Maybe::new(self.mesh, self.try_id())
+                Self::Maybe::new(self.mesh, self.id_unchecked())
             }
 
             #[inline]
@@ -376,7 +383,7 @@ macro_rules! impl_cursor_data {
         impl<'a, T: MeshType + 'a> ValidCursor for $cursor<'a, T> {
             #[inline]
             fn id(&self) -> Self::I {
-                self.try_id()
+                self.id_unchecked()
             }
 
             #[inline]
@@ -404,7 +411,7 @@ macro_rules! impl_cursor_data {
 macro_rules! impl_payload_method {
     (EP, $cursor:ident) => {
         fn payload<'b>(&'b self) -> &'b Self::Payload {
-            self.mesh.edge_payload(self.try_id())
+            self.mesh.edge_payload(self.id_unchecked())
         }
     };
 
@@ -440,12 +447,12 @@ macro_rules! impl_valid_mut {
         impl<'a, T: MeshType + 'a> ValidCursorMut for $cursor<'a, T> {
             #[inline]
             fn payload_mut<'b>(&'b mut self) -> &'b mut Self::Payload {
-                self.mesh.edge_payload_mut(self.try_id())
+                self.mesh.edge_payload_mut(self.id_unchecked())
             }
 
             #[inline]
             fn inner_mut<'b>(&'b mut self) -> &'b mut Self::S {
-                self.mesh.$get_inner_mut(self.try_id()).unwrap()
+                self.mesh.$get_inner_mut(self.id_unchecked()).unwrap()
             }
         }
     };
@@ -460,7 +467,7 @@ macro_rules! impl_valid_mut {
 
             #[inline]
             fn inner_mut<'b>(&'b mut self) -> &'b mut Self::S {
-                self.mesh.$get_inner_mut(self.try_id()).unwrap()
+                self.mesh.$get_inner_mut(self.id_unchecked()).unwrap()
             }
         }
     };

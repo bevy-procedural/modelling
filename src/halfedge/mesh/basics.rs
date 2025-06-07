@@ -1,12 +1,12 @@
 use super::{HalfEdgeImplMeshType, HalfEdgeMeshImpl};
 use crate::{
+    halfedge::IncidentToVertexIterator,
     math::IndexType,
     mesh::{
         cursor::*, Edge2ValidEdgeCursorAdapter, EdgeBasics, FilterTargetIdIterator, HalfEdge,
         HalfEdgeMesh, MeshBasics, Triangulation, VertexBasics, VertexPayload,
     },
-    prelude::IncidentToVertexIterator,
-    util::{CreateEmptyIterator, DeletableVectorIterator},
+    util::CreateEmptyIterator,
 };
 use std::collections::HashMap;
 
@@ -38,30 +38,21 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         self.vertices.len()
     }
 
-    type VertexRefIter<'a>
-        = DeletableVectorIterator<'a, T::Vertex>
-    where
-        T: 'a;
-
     #[inline]
-    fn vertex_refs<'a>(&'a self) -> Self::VertexRefIter<'a>
+    fn vertex_refs<'a>(&'a self) -> impl Iterator<Item = &'a T::Vertex> + CreateEmptyIterator
     where
         T::Vertex: 'a,
     {
         self.vertices.iter()
     }
 
-    type VertexIdIter<'a>
-        = std::iter::Map<DeletableVectorIterator<'a, T::Vertex>, fn(&'a T::Vertex) -> T::V>
-    where
-        T: 'a;
-
     #[inline]
-    fn vertex_ids<'a>(&'a self) -> Self::VertexIdIter<'a>
+    fn vertex_ids<'a>(&'a self) -> impl Iterator<Item = T::V> + CreateEmptyIterator
     where
         T: 'a,
     {
-        self.vertex_refs().map(|v| v.id())
+        let mapper: fn(&'a T::Vertex) -> T::V = |v| v.id();
+        self.vertex_refs().map(mapper)
     }
 
     #[inline]
@@ -72,13 +63,11 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         self.vertices.iter_mut()
     }
 
-    type VertexEdgesOutIterator<'a>
-        = IncidentToVertexIterator<'a, T>
-    where
-        T: 'a;
-
     #[inline]
-    fn vertex_edges_out<'a>(&'a self, v: T::V) -> Self::VertexEdgesOutIterator<'a>
+    fn vertex_edges_out<'a>(
+        &'a self,
+        v: T::V,
+    ) -> impl Iterator<Item = ValidEdgeCursor<'a, T>> + CreateEmptyIterator
     where
         T: 'a,
     {
@@ -88,52 +77,42 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         )
     }
 
-    type VertexEdgesInIterator<'a>
-        = std::iter::Map<
-        Self::VertexEdgesOutIterator<'a>,
-        fn(ValidEdgeCursor<'a, T>) -> ValidEdgeCursor<'a, T>,
-    >
-    where
-        T: 'a;
-
     #[inline]
-    fn vertex_edges_in<'a>(&'a self, v: T::V) -> Self::VertexEdgesInIterator<'a>
+    fn vertex_edges_in<'a>(
+        &'a self,
+        v: T::V,
+    ) -> impl Iterator<Item = ValidEdgeCursor<'a, T>> + CreateEmptyIterator
     where
         T: 'a,
     {
-        self.vertex_edges_out(v).map(|e| e.twin().unwrap())
+        let mapper: fn(ValidEdgeCursor<'a, T>) -> ValidEdgeCursor<'a, T> = |e| e.twin().unwrap();
+        self.vertex_edges_out(v).map(mapper)
     }
 
-    type VertexNeighborsIterator<'a>
-        = std::iter::Map<
-        Self::VertexEdgesOutIterator<'a>,
-        fn(ValidEdgeCursor<'a, T>) -> ValidVertexCursor<'a, T>,
-    >
-    where
-        T: 'a;
-
     #[inline]
-    fn vertex_neighbors<'a>(&'a self, v: T::V) -> Self::VertexNeighborsIterator<'a>
+    fn vertex_neighbors<'a>(
+        &'a self,
+        v: T::V,
+    ) -> impl Iterator<Item = ValidVertexCursor<'a, T>> + CreateEmptyIterator
     where
         T: 'a,
     {
-        self.vertex_edges_out(v).map(|e| e.target().unwrap())
+        let mapper: fn(ValidEdgeCursor<'a, T>) -> ValidVertexCursor<'a, T> =
+            |e| e.target().unwrap();
+        self.vertex_edges_out(v).map(mapper)
     }
 
-    type VertexFacesIterator<'a>
-        = std::iter::FilterMap<
-        Self::VertexEdgesOutIterator<'a>,
-        fn(ValidEdgeCursor<'a, T>) -> Option<ValidFaceCursor<'a, T>>,
-    >
-    where
-        T: 'a;
-
     #[inline]
-    fn vertex_faces<'a>(&'a self, v: T::V) -> Self::VertexFacesIterator<'a>
+    fn vertex_faces<'a>(
+        &'a self,
+        v: T::V,
+    ) -> impl Iterator<Item = ValidFaceCursor<'a, T>> + CreateEmptyIterator
     where
         T: 'a,
     {
-        self.vertex_edges_out(v).filter_map(|e| e.face().load())
+        let mapper: fn(ValidEdgeCursor<'a, T>) -> Option<ValidFaceCursor<'a, T>> =
+            |e| e.face().load();
+        self.vertex_edges_out(v).filter_map(mapper)
     }
 
     //======================= Edge Operations =======================//
@@ -160,26 +139,17 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         n / 2
     }
 
-    type EdgeRefIter<'a>
-        = std::iter::Filter<DeletableVectorIterator<'a, T::Edge>, fn(&&T::Edge) -> bool>
-    where
-        T: 'a;
-
     #[inline]
-    fn edge_refs<'a>(&'a self) -> Self::EdgeRefIter<'a>
+    fn edge_refs<'a>(&'a self) -> impl Iterator<Item = &'a T::Edge> + CreateEmptyIterator
     where
-        T::Edge: 'a,
+        T: 'a,
     {
-        self.halfedges.iter().filter(|e| e.twin_id() > e.id())
+        let mapper: fn(&&'a T::Edge) -> bool = |&e| e.twin_id() > e.id();
+        self.halfedges.iter().filter(mapper)
     }
 
-    type EdgeIter<'a>
-        = Edge2ValidEdgeCursorAdapter<'a, T, Self::EdgeRefIter<'a>>
-    where
-        T: 'a;
-
     #[inline]
-    fn edges<'a>(&'a self) -> Self::EdgeIter<'a>
+    fn edges<'a>(&'a self) -> impl Iterator<Item = ValidEdgeCursor<'a, T>> + CreateEmptyIterator
     where
         T: 'a,
     {
@@ -187,17 +157,13 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         //self.edge_refs().map(move |edge| ValidEdgeCursor::new(self, edge))
     }
 
-    type EdgeIdIter<'a>
-        = std::iter::Map<Self::EdgeRefIter<'a>, fn(&'a T::Edge) -> T::E>
-    where
-        T: 'a;
-
     #[inline]
-    fn edge_ids<'a>(&'a self) -> Self::EdgeIdIter<'a>
+    fn edge_ids<'a>(&'a self) -> impl Iterator<Item = T::E> + CreateEmptyIterator
     where
         T: 'a,
     {
-        self.edge_refs().map(|e| e.id())
+        let mapper: fn(&'a T::Edge) -> T::E = |e| e.id();
+        self.edge_refs().map(mapper)
     }
 
     #[inline]
@@ -256,13 +222,12 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
         })
     }
 
-    type SharedEdgeIter<'a>
-        = FilterTargetIdIterator<'a, T, <T::Mesh as MeshBasics<T>>::VertexEdgesOutIterator<'a>>
-    where
-        T: 'a;
-
     #[inline]
-    fn shared_edges<'a>(&'a self, v: T::V, w: T::V) -> Self::SharedEdgeIter<'a>
+    fn shared_edges<'a>(
+        &'a self,
+        v: T::V,
+        w: T::V,
+    ) -> impl Iterator<Item = ValidEdgeCursor<'a, T>> + CreateEmptyIterator
     where
         T: 'a,
     {
@@ -311,7 +276,7 @@ impl<T: HalfEdgeImplMeshType> MeshBasics<T> for HalfEdgeMeshImpl<T> {
     #[inline]
     fn faces_mut<'a>(
         &'a mut self,
-    ) -> impl Iterator<Item = &'a mut <T as crate::prelude::MeshType>::Face>
+    ) -> impl Iterator<Item = &'a mut <T as crate::mesh::MeshType>::Face>
     where
         T: 'a,
     {

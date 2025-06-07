@@ -49,6 +49,13 @@ pub trait ValidEdgeCursorBasics<'a, T: MeshType>:
     fn target_id(&self) -> T::V {
         self.inner().target_id(self.mesh())
     }
+
+    /// Same as [ValidEdgeCursorHalfedgeBasics::has_face] but doesn't require half edge meshes.
+    #[inline]
+    #[must_use]
+    fn has_faces(&self) -> bool {
+        self.inner().face_ids(self.mesh()).next().is_some()
+    }
 }
 
 /// Methods specific for edge cursors on halfedge meshes that are known to point to an existing edge.
@@ -80,6 +87,14 @@ where
         self.inner().twin_id()
     }
 
+    /// Returns whether the edge is a boundary edge itself.
+    /// See [HalfEdge::is_boundary_self] for more information.
+    #[inline]
+    #[must_use]
+    fn is_boundary_self(&self) -> bool {
+        self.inner().is_boundary_self()
+    }
+
     /// Returns the id of the face of the edge.
     #[inline]
     #[must_use]
@@ -92,13 +107,5 @@ where
     #[must_use]
     fn has_face(&self) -> bool {
         self.face_id() != IndexType::max()
-    }
-
-    /// Returns whether the edge is a boundary edge itself.
-    /// See [HalfEdge::is_boundary_self] for more information.
-    #[inline]
-    #[must_use]
-    fn is_boundary_self(&self) -> bool {
-        self.inner().is_boundary_self()
     }
 }

@@ -16,7 +16,7 @@ fn main() {
     mesh.translate(&Vec3::new(1.0, 0.0, 0.0));
 
     // triangulate the mesh and retrieve the indices
-    let (indices, vertices) = mesh.triangulate(TriangulationAlgorithm::Auto);
+    let (indices, vertices) = mesh.triangulate_raw(TriangulationAlgorithm::Auto);
 
     // Check how many triangles have all red vertices
     let red_triangles = indices
@@ -78,7 +78,7 @@ impl<const D: usize> EuclideanMeshType<D> for MeshTypeColored<D> {
     type S = f64;
     type Vec = VecN<f64, D>;
     type Vec2 = VecN<f64, 2>;
-    type Trans = NdAffine<f64, D>;
+    type Trans = NdHomography<f64, D>;
     type Rot = NdRotate<f64, D>;
     type Poly = Polygon2d<f64>;
 }
@@ -117,7 +117,7 @@ impl<S: Scalar, const D: usize> VertexPayload for VertexPayloadColored<S, D> {
 impl<S: ScalarPlus, const D: usize> Transformable<D> for VertexPayloadColored<S, D> {
     type S = S;
     type Vec = VecN<S, D>;
-    type Trans = NdAffine<S, D>;
+    type Trans = NdHomography<S, D>;
     type Rot = NdRotate<S, D>;
 
     #[inline]
@@ -128,7 +128,7 @@ impl<S: ScalarPlus, const D: usize> Transformable<D> for VertexPayloadColored<S,
 
     #[inline]
     fn transform(&mut self, t: &Self::Trans) -> &mut Self {
-        self.position = t.apply(self.position);
+        self.position = t.apply_point(self.position);
         self
     }
 

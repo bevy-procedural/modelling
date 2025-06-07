@@ -2,12 +2,11 @@ use super::{ForwardEdgeIterator, HalfEdgeImplMeshType};
 use crate::{
     math::IndexType,
     mesh::{
-        DefaultFacePayload, EdgeBasics, EdgeRef2TargetRefAdapter, Face, Face3d, FaceBasics,
-        FacePayload, HalfEdge, MeshBasics, MeshType3D, MeshTypeHalfEdge,
-        Vertex2ValidVertexCursorAdapter,
+        cursor::*, DefaultFacePayload, EdgeBasics, EdgeRef2TargetRefAdapter, Face, Face3d,
+        FaceBasics, FacePayload, HalfEdge, HasIslands, IslandCircularLinkedList, MeshBasics,
+        MeshType3D, Vertex2ValidVertexCursorAdapter,
     },
-    prelude::{ValidCursor, ValidVertexCursor},
-    util::Deletable,
+    util::{CreateEmptyIterator, Deletable},
 };
 
 /// A face in a mesh.
@@ -25,11 +24,33 @@ pub struct HalfEdgeFaceImpl<T: HalfEdgeImplMeshType> {
 
     /// Some user-defined payload
     payload: T::FP,
+
+    // The next island in the circular linked list of islands.
+    // TODO: make this optional
+    next_island: T::F,
 }
 
 impl<T: HalfEdgeImplMeshType + MeshType3D> Face3d<T> for HalfEdgeFaceImpl<T> {}
 
+impl<T: HalfEdgeImplMeshType> IslandCircularLinkedList<T> for HalfEdgeFaceImpl<T> {
+    #[inline]
+    fn next_island(&self) -> T::F {
+        self.next_island
+    }
+
+    #[inline]
+    fn set_next_island(&mut self, island: T::F) {
+        self.next_island = island;
+    }
+}
+
 impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
+    #[inline]
+    fn next_island_helper(&self) -> Option<T::F> {
+        assert!(self.next_island != IndexType::max());
+        Some(self.next_island)
+    }
+
     #[inline]
     fn edge<'a>(&'a self, mesh: &'a T::Mesh) -> &'a T::Edge {
         mesh.edge_ref(self.edge)
@@ -41,8 +62,8 @@ impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
     }
 
     #[inline]
-    fn may_be_curved(&self) -> bool {
-        false
+    fn is_flat(&self) -> bool {
+        true
         // TODO
     }
 
@@ -64,16 +85,6 @@ impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
     }
 
     #[inline]
-    fn num_vertices(&self, mesh: &T::Mesh) -> usize {
-        FaceBasics::num_edges(self, mesh)
-    }
-
-    #[inline]
-    fn num_triangles(&self, mesh: &T::Mesh) -> usize {
-        (FaceBasics::num_vertices(self, mesh) - 2) * 3
-    }
-
-    #[inline]
     fn payload(&self) -> &T::FP {
         &self.payload
     }
@@ -83,78 +94,67 @@ impl<T: HalfEdgeImplMeshType> FaceBasics<T> for HalfEdgeFaceImpl<T> {
         &mut self.payload
     }
 
-    type VertexRefIterator<'a>
-        = EdgeRef2TargetRefAdapter<'a, T, Self::EdgeRefIterator<'a>>
-    where
-        T: 'a,
-        Self: 'a;
-
     /// Iterates references to all vertices adjacent to the face
-    fn vertex_refs<'a>(&'a self, mesh: &'a T::Mesh) -> Self::VertexRefIterator<'a>
+    fn vertex_refs<'a>(
+        &'a self,
+        mesh: &'a T::Mesh,
+    ) -> impl Iterator<Item = &'a T::Vertex> + CreateEmptyIterator
     where
         T: 'a,
     {
-        EdgeRef2TargetRefAdapter::new(mesh, self.edge_refs(mesh))
+        EdgeRef2TargetRefAdapter::<'a, T, _>::new(mesh, self.edge_refs(mesh))
     }
 
-    type VertexIterator<'a>
-        = Vertex2ValidVertexCursorAdapter<'a, T, Self::VertexRefIterator<'a>>
-    where
-        T: 'a,
-        Self: 'a;
-
     #[inline]
-    fn vertices<'a>(&'a self, mesh: &'a T::Mesh) -> Self::VertexIterator<'a>
+    fn vertices<'a>(
+        &'a self,
+        mesh: &'a T::Mesh,
+    ) -> impl Iterator<Item = ValidVertexCursor<'a, T>> + CreateEmptyIterator
     where
         T: 'a,
     {
         Vertex2ValidVertexCursorAdapter::new(mesh, self.vertex_refs(mesh))
     }
 
-    type VertexIdIterator<'a>
-        = std::iter::Map<Self::VertexIterator<'a>, fn(ValidVertexCursor<'a, T>) -> T::V>
-    where
-        T: 'a,
-        Self: 'a;
-
     #[inline]
-    fn vertex_ids<'a>(&'a self, mesh: &'a T::Mesh) -> Self::VertexIdIterator<'a>
+    fn vertex_ids<'a>(
+        &'a self,
+        mesh: &'a T::Mesh,
+    ) -> impl Iterator<Item = T::V> + CreateEmptyIterator
     where
         T: 'a,
     {
-        self.vertices(mesh).map(|v| v.id())
+        let mapper: fn(ValidVertexCursor<'a, T>) -> T::V = |c| c.id();
+        self.vertices(mesh).map(mapper)
     }
 
-    type EdgeRefIterator<'a>
-        = ForwardEdgeIterator<'a, T>
-    where
-        T: 'a,
-        Self: 'a;
-
     #[inline]
-    fn edge_refs<'a>(&'a self, mesh: &'a T::Mesh) -> Self::EdgeRefIterator<'a>
+    fn edge_refs<'a>(
+        &'a self,
+        mesh: &'a T::Mesh,
+    ) -> impl Iterator<Item = &'a T::Edge> + CreateEmptyIterator
     where
         T: 'a,
     {
         ForwardEdgeIterator::new(self.edge(mesh), mesh)
     }
 
-    type EdgeIdIterator<'a>
-        = std::iter::Map<ForwardEdgeIterator<'a, T>, fn(&'a T::Edge) -> T::E>
-    where
-        T: 'a,
-        Self: 'a;
-
     #[inline]
-    fn edge_ids<'a>(&'a self, mesh: &'a T::Mesh) -> Self::EdgeIdIterator<'a>
+    fn edge_ids<'a>(&'a self, mesh: &'a T::Mesh) -> impl Iterator<Item = T::E> + CreateEmptyIterator
     where
         T: 'a,
     {
-        self.edge_refs(mesh).map(|e| e.id())
+        let mapper: fn(&'a T::Edge) -> T::E = |e| e.id();
+        self.edge_refs(mesh).map(mapper)
+    }
+
+    #[inline]
+    fn add_quasi_island(&self, mesh: &mut T::Mesh, island: T::E) -> Option<T::E> {
+        self.add_island(mesh, island)
     }
 }
 
-impl<T: HalfEdgeImplMeshType + MeshTypeHalfEdge> Face for HalfEdgeFaceImpl<T> {
+impl<T: HalfEdgeImplMeshType> Face for HalfEdgeFaceImpl<T> {
     type T = T;
 
     fn triangle_touches_boundary(
@@ -190,10 +190,11 @@ impl<T: HalfEdgeImplMeshType + MeshTypeHalfEdge> Face for HalfEdgeFaceImpl<T> {
 
 impl<T: HalfEdgeImplMeshType> HalfEdgeFaceImpl<T> {
     /// Creates a new face.
-    pub fn new(edge: T::E, payload: T::FP) -> Self {
+    pub fn new(edge: T::E, payload: T::FP, next_island: T::F) -> Self {
         assert!(edge != IndexType::max());
         Self {
             id: IndexType::max(),
+            next_island,
             edge,
             payload,
         }
@@ -216,6 +217,7 @@ impl<T: HalfEdgeImplMeshType> Deletable<T::F> for HalfEdgeFaceImpl<T> {
     fn delete(&mut self) {
         assert!(self.id != IndexType::max(), "Face is already deleted");
         self.id = IndexType::max();
+        self.next_island = IndexType::max();
     }
 
     fn is_deleted(&self) -> bool {
@@ -226,11 +228,15 @@ impl<T: HalfEdgeImplMeshType> Deletable<T::F> for HalfEdgeFaceImpl<T> {
         assert!(self.id == IndexType::max());
         assert!(id != IndexType::max());
         self.id = id;
+        if self.next_island == IndexType::max() {
+            self.next_island = id;
+        }
     }
 
     fn allocate() -> Self {
         Self {
             id: IndexType::max(),
+            next_island: IndexType::max(),
             edge: IndexType::max(),
             payload: T::FP::allocate(),
         }
@@ -245,6 +251,7 @@ where
     fn default() -> Self {
         Self {
             id: IndexType::max(),
+            next_island: IndexType::max(),
             edge: IndexType::max(),
             payload: T::FP::default(),
         }

@@ -3,7 +3,7 @@ use std::time::Instant;
 
 use crate::{
     math::{IndexType, Polygon, Scalar, Vector2D},
-    mesh::{Face3d, IndexedVertex2D, MeshType3D, Triangulation},
+    mesh::{Face3d, FaceBasics, IndexedVertex2D, MeshType3D, Triangulation},
     tesselate::try_min_weight_small,
 };
 
@@ -17,6 +17,7 @@ pub fn minweight_dynamic<T: MeshType3D>(
 ) {
     // TODO: Ignore non-planar faces for now
     //debug_assert!(face.may_be_curved() || face.is_planar2(mesh));
+    assert!(!face.has_islands(), "face has islands!");
 
     if try_min_weight_small::<T>(face, mesh, indices) {
         return;

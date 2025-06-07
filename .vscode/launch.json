@@ -1,0 +1,83 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'playground_bevy'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=playground_bevy",
+                    "--package=playground_bevy"
+                ],
+                "filter": {
+                    "name": "playground_bevy",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'playground_bevy'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=playground_bevy",
+                    "--package=playground_bevy"
+                ],
+                "filter": {
+                    "name": "playground_bevy",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'procedural_modelling'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=procedural_modelling"
+                ],
+                "filter": {
+                    "name": "procedural_modelling",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'box'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=box",
+                    "--features=bevy_example",
+                    "--package=procedural_modelling"
+                ],
+                "filter": {
+                    "name": "box",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+    ]
+}
