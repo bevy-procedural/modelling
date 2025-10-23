@@ -33,8 +33,19 @@ jobs:
       - name: Install stable toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Install Dependencies
-        run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends \
+            pkg-config \
+            libasound2-dev \
+            libudev-dev \
+            libwayland-dev \
+            libxkbcommon-dev \
+            libx11-dev \
+            libxcursor-dev \
+            libxi-dev \
+            libxrandr-dev
       - name: Run cargo test
         run: cargo test --verbose --no-default-features --features="bevy,nalgebra,fonts,svg"
       - name: Compile examples
-        run: cargo build --examples --no-default-features --features="bevy_example,nalgebra,fonts,svg"
+        run: cargo build --examples --no-default-features --features="example_deps"

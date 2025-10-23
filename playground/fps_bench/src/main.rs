@@ -2,7 +2,7 @@
 
 use bevy::{
     prelude::*,
-    render::render_asset::RenderAssetUsages,
+    asset::RenderAssetUsages,
     window::{PresentMode, VideoMode, WindowMode, WindowResolution},
 };
 use procedural_modelling::{extensions::bevy::*, prelude::*};
@@ -40,7 +40,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
-                resolution: WindowResolution::new(1920.0, 1080.0).with_scale_factor_override(1.0),
+                resolution: WindowResolution::new(1920, 1080).with_scale_factor_override(1.0),
                 title: "Bevy Mesh Benchmark".to_string(),
                 resizable: false,
                 mode: WindowMode::Fullscreen(

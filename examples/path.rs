@@ -1,6 +1,6 @@
 //! In this example, we will construct a path with bezier curves.
 
-use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
+use bevy::{prelude::*, asset::RenderAssetUsages};
 use procedural_modelling::{extensions::bevy::*, prelude::*};
 #[path = "common/bevy.rs"]
 mod bevy_examples;

@@ -1,6 +1,6 @@
 # Procedural Modelling
 
-*A framework-agnostic toolkit for constructive geometry and mesh processing.*
+_A framework-agnostic toolkit for constructive geometry and mesh processing._
 
 [![Documentation](https://docs.rs/procedural_modelling/badge.svg)](https://docs.rs/procedural_modelling)
 [![crates.io](https://img.shields.io/crates/v/procedural_modelling)](https://crates.io/crates/procedural_modelling)
@@ -39,6 +39,8 @@ let svg_string = render2svg::<MeshType3d64PNU, _>(&mesh, &s, |t: f64|
     NdAffine::from_rotation(NdRotate::from_axis_angle(Vec3::<f64>::y_axis(), 0.8 * (std::f64::consts::PI * t).sin())));
 ```
 
+See the [spiral example](https://github.com/bevy-procedural/modelling/blob/main/examples/spiral.rs) for how to render this mesh using Bevy.
+
 A key component of this library are `Cursors`, which provide a convenient way to traverse and modify the mesh in a functional, performant, and safe way. See the [cursors tutorial](https://docs.rs/procedural_modelling/latest/procedural_modelling/#cursors) for more information.
 
 ## Examples
@@ -46,6 +48,7 @@ A key component of this library are `Cursors`, which provide a convenient way to
 <!-- Try the live examples!
  TODO: bevy-procedural.org -->
 
+-   [spiral](https://github.com/bevy-procedural/modelling/blob/main/examples/spiral.rs) is a minimal example that demonstrates how to construct the mesh from the introduction and render it using bevy.
 -   [box](https://github.com/bevy-procedural/modelling/blob/main/examples/box.rs) demonstrates different methods to build a cube from scratch. This is a good place to get started with this crate!
 -   [loft](https://github.com/bevy-procedural/modelling/blob/main/examples/loft.rs) demonstrates the usage of `loft` and `extrude`. These functions are extremely versatile and you should definitely look at this example when you plan to constructively model your meshes.
 -   [path](https://github.com/bevy-procedural/modelling/blob/main/examples/path.rs) demonstrates the path builder with bezier curves.

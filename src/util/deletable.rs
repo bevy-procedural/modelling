@@ -64,7 +64,7 @@ impl<T: Deletable<I>, I: IndexType> DeletableVector<T, I> {
 
     /// Returns an iterator over the non-deleted elements.
     #[inline]
-    pub fn iter(&self) -> DeletableVectorIterator<T> {
+    pub fn iter<'a>(&'a self) -> DeletableVectorIterator<'a, T> {
         self.data.iter().filter(|f| !f.is_deleted())
     }
 

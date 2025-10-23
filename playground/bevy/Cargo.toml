@@ -6,10 +6,43 @@ license = "MIT OR Apache-2.0"
 publish = false
 
 [dependencies]
-bevy = { version = "^0.16.1", default-features = true }
-bevy-inspector-egui = "^0.31.0"
-bevy_panorbit_camera = { version = "^0.26.0", features = ["bevy_egui"] }
+bevy = { version = "^0.17.2", default-features = false, features = [
+    "std",
+    "async_executor",
+    "bevy_asset",
+    "bevy_color",
+    "bevy_core_pipeline",
+    "bevy_post_process",
+    "bevy_anti_alias",
+    "bevy_gizmos",
+    "bevy_log",
+    "bevy_pbr",
+    "bevy_render",
+    "bevy_scene",
+    "bevy_image",
+    "bevy_mesh",
+    "bevy_camera",
+    "bevy_light",
+    "bevy_shader",
+    "bevy_sprite",
+    "bevy_sprite_render",
+    "bevy_state",
+    "bevy_text",
+    "bevy_ui",
+    "bevy_ui_render",
+    "bevy_window",
+    "bevy_winit",
+    "default_font",
+    "multi_threaded",
+    "reflect_auto_register",
+    "sysinfo_plugin",
+    "tonemapping_luts",
+    "debug",
+    "zstd_rust",
+] }
+bevy-inspector-egui = "^0.35.0"
+bevy_panorbit_camera = { version = "^0.31.0", features = ["bevy_egui"] }
 
 [dependencies.procedural_modelling]
 path = "../../"
-features = ["bevy", "meshopt", "bevy_dynamic", "svg", "fonts", "gizmo"]
+features = ["bevy", "bevy_dynamic", "svg", "fonts", "gizmo"]

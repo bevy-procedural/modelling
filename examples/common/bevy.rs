@@ -2,10 +2,7 @@
 #![cfg(feature = "bevy_example")]
 
 use bevy::{
-    pbr::{
-        wireframe::{NoWireframe, WireframeConfig, WireframePlugin},
-        CascadeShadowConfigBuilder,
-    },
+    pbr::wireframe::{NoWireframe, WireframeConfig, WireframePlugin},
     prelude::*,
 };
 use procedural_modelling::extensions::bevy::Text3dGizmosPlugin;
@@ -39,15 +36,6 @@ fn setup_camera_and_light(
             rotation: Quat::from_rotation_x(-PI / 4.),
             ..default()
         },
-        // The default cascade config is designed to handle large scenes.
-        // As this example has a much smaller world, we can tighten the shadow
-        // bounds for better visual quality.
-        CascadeShadowConfigBuilder {
-            first_cascade_far_bound: 4.0,
-            maximum_distance: 10.0,
-            ..default()
-        }
-        .build(),
     ));
     commands.spawn((
         Camera3d::default(),
@@ -55,7 +43,6 @@ fn setup_camera_and_light(
     ));
 }
 
-// this changed in bevy 0.15
 pub fn close_on_esc(
     mut commands: Commands,
     focused_windows: Query<(Entity, &Window)>,

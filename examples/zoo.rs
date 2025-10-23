@@ -1,6 +1,6 @@
 //! In this example, we will demonstrate a zoo of predefined shapes.
 
-use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
+use bevy::{asset::RenderAssetUsages, prelude::*};
 use procedural_modelling::{extensions::bevy::*, prelude::*};
 use std::f32::consts::PI;
 #[path = "common/bevy.rs"]

@@ -1,6 +1,6 @@
 //! In this example, we demonstrate different uses of the loft and extrude methods.
 
-use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
+use bevy::{asset::RenderAssetUsages, prelude::*};
 use itertools::Itertools;
 use procedural_modelling::{extensions::bevy::*, math::Polygon, prelude::*};
 #[path = "common/bevy.rs"]

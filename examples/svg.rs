@@ -1,9 +1,8 @@
 //! In this example, we will load and render a 2d-duck from svg.
 
-use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
+use bevy::{prelude::*, asset::RenderAssetUsages};
 use procedural_modelling::{
-    extensions::{bevy::*, svg::*},
-    prelude::*,
+    extensions::{bevy::*, svg::*}, math::impls::E32, prelude::*
 };
 #[path = "common/bevy.rs"]
 mod bevy_examples;
@@ -20,7 +19,7 @@ fn generate_path(
         .scale(&Vec2::splat(-0.004))
         .translate(&Vec2::new(2.0, 3.8))
         .to_3d(0.05);
-    mesh.extrude(0, &Transform::from_translation(Vec3::new(0.0, 0.0, -0.2)));
+    mesh.extrude(E32::new(0), &Transform::from_translation(Vec3::new(0.0, 0.0, -0.2)));
 
     commands.spawn((
         Mesh3d(meshes.add(mesh.to_bevy_ex(

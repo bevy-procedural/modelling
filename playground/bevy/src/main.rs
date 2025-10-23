@@ -6,12 +6,7 @@
 //! cargo watch -w src -w examples -x "run --example loft --profile fast-dev --features bevy_example"
 
 use bevy::{
-    pbr::{
-        wireframe::{NoWireframe, WireframeConfig, WireframePlugin},
-        CascadeShadowConfigBuilder, NotShadowCaster, ShadowFilteringMethod,
-    },
-    prelude::*,
-    window::WindowResolution,
+    light::{CascadeShadowConfigBuilder, NotShadowCaster, ShadowFilteringMethod}, pbr::wireframe::{NoWireframe, WireframeConfig, WireframePlugin}, prelude::*, window::WindowResolution
 };
 use bevy_inspector_egui::{
     bevy_egui::EguiPlugin,
@@ -67,7 +62,7 @@ pub fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
-                resolution: WindowResolution::new(1920.0, 1080.0),
+                resolution: WindowResolution::new(1920, 1080),
                 position: WindowPosition::Centered(MonitorSelection::Index(1)),
                 decorations: false,
                 ..default()
@@ -84,9 +79,7 @@ pub fn main() {
             PanOrbitCameraPlugin,
             Text3dGizmosPlugin,
             WireframePlugin::default(),
-            EguiPlugin {
-                enable_multipass_for_primary_context: true,
-            },
+            EguiPlugin::default(),
             WorldInspectorPlugin::default(),
             ResourceInspectorPlugin::<GlobalSettings>::default(),
         ))
@@ -98,10 +91,10 @@ pub fn main() {
 
 fn exit_on_esc(
     input: Res<ButtonInput<KeyCode>>,
-    mut app_exit_events: ResMut<Events<bevy::app::AppExit>>,
+    mut app_exit_events: ResMut<Messages<bevy::app::AppExit>>,
 ) {
     if input.just_pressed(KeyCode::Escape) {
-        app_exit_events.send(AppExit::Success);
+        app_exit_events.write(AppExit::Success);
     }
 }
 

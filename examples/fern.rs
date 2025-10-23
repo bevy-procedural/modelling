@@ -2,7 +2,7 @@
 
 use std::f32::consts::PI;
 
-use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
+use bevy::{asset::RenderAssetUsages, prelude::*};
 use procedural_modelling::{extensions::bevy::*, prelude::*};
 #[path = "common/bevy.rs"]
 mod bevy_examples;
@@ -204,11 +204,13 @@ fn make_blechnum_spicant(settings: &GlobalSettings) -> BevyMesh3d {
         // the radius is linearly interpolated between the base and the tip
         let scale = r1.lerp(r2, i as f32 / m as f32) / r1;
 
-        edge = mesh.loft_tri_closed(
-            edge,
-            base.iter()
-                .map(|v| BevyVertexPayload3d::from_pos(cur + q.mul_vec3(*v * scale))),
-        ).unwrap();
+        edge = mesh
+            .loft_tri_closed(
+                edge,
+                base.iter()
+                    .map(|v| BevyVertexPayload3d::from_pos(cur + q.mul_vec3(*v * scale))),
+            )
+            .unwrap();
 
         // TODO: make the smoothstep a more general concept. Also, investigate different overshoot and offset systems
         let leaf_progress = smoothstep(

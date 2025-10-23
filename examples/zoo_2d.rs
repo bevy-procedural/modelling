@@ -1,6 +1,6 @@
 //! Showcase different 2d shapes
 
-use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
+use bevy::{asset::RenderAssetUsages, prelude::*};
 use procedural_modelling::{extensions::bevy::*, mesh::MeshBuilder, prelude::*};
 use std::f32::consts::PI;
 #[path = "common/bevy.rs"]
@@ -28,7 +28,7 @@ fn generate_shapes(
         BevyMesh2d::cubic_circle(1.0),
         {
             let mut mesh = BevyMesh2d::default();
-            mesh.insert_loop(circle_iter(1.0, 0.0));
+            mesh.insert_loop_default(circle_iter(1.0, 0.0));
             mesh
         },
         // TODO: BevyMesh3d::hex_plane(10, 8);

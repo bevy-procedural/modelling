@@ -3,7 +3,7 @@
 //! This is a good way to see the different ways this crate
 //! provides to build a mesh and compare their trade-offs.
 
-use bevy::{pbr::wireframe::NoWireframe, prelude::*, render::render_asset::RenderAssetUsages};
+use bevy::{asset::RenderAssetUsages, pbr::wireframe::NoWireframe, prelude::*};
 use procedural_modelling::{extensions::bevy::*, mesh::MeshBuilder, prelude::*};
 #[path = "common/bevy.rs"]
 mod bevy_examples;
