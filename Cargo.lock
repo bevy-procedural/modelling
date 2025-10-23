@@ -2708,9 +2708,6 @@ name = "float-cmp"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "98de4bbd547a563b716d8dfa9aad1cb19bfab00f4fa09a6a4ed21dbcf44ce9c4"
-dependencies = [
- "num-traits",
-]
 
 [[package]]
 name = "fnv"
@@ -3729,18 +3726,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "meshopt"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a0cad96c96b1c198160517f5dc7c247ef36ebb9d49015c0cfca0c0ee8d7d1bbc"
-dependencies = [
- "bitflags 2.10.0",
- "cc",
- "float-cmp",
- "thiserror 1.0.69",
-]
-
-[[package]]
 name = "metal"
 version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3885,23 +3870,11 @@ dependencies = [
  "glam 0.29.3",
  "glam 0.30.8",
  "matrixmultiply",
- "nalgebra-macros",
  "num-complex",
  "num-rational",
  "num-traits",
  "simba",
  "typenum",
-]
-
-[[package]]
-name = "nalgebra-macros"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "973e7178a678cfd059ccec50887658d482ce16b0aa9da3888ddeab5cd5eb4889"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.108",
 ]
 
 [[package]]
@@ -4755,20 +4728,18 @@ dependencies = [
 
 [[package]]
 name = "procedural_modelling"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "ab_glyph",
  "bevy",
  "criterion",
  "itertools 0.14.0",
  "lazy_static",
- "meshopt",
  "nalgebra",
  "num-traits",
  "rand",
  "spade",
  "usvg",
- "web-sys",
 ]
 
 [[package]]
@@ -6355,7 +6326,7 @@ dependencies = [
  "wasm-bindgen",
  "web-sys",
  "wgpu-core 26.0.1",
- "wgpu-hal 26.0.5",
+ "wgpu-hal 26.0.6",
  "wgpu-types 26.0.0",
 ]
 
@@ -6411,7 +6382,7 @@ dependencies = [
  "wgpu-core-deps-apple",
  "wgpu-core-deps-wasm",
  "wgpu-core-deps-windows-linux-android",
- "wgpu-hal 26.0.5",
+ "wgpu-hal 26.0.6",
  "wgpu-types 26.0.0",
 ]
 
@@ -6421,7 +6392,7 @@ version = "26.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "18ae5fbde6a4cbebae38358aa73fcd6e0f15c6144b67ef5dc91ded0db125dbdf"
 dependencies = [
- "wgpu-hal 26.0.5",
+ "wgpu-hal 26.0.6",
 ]
 
 [[package]]
@@ -6430,7 +6401,7 @@ version = "26.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c03b9f9e1a50686d315fc6debe4980cc45cd37b0e919351917df494e8fdc8885"
 dependencies = [
- "wgpu-hal 26.0.5",
+ "wgpu-hal 26.0.6",
 ]
 
 [[package]]
@@ -6439,7 +6410,7 @@ version = "26.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "720a5cb9d12b3d337c15ff0e24d3e97ed11490ff3f7506e7f3d98c68fa5d6f14"
 dependencies = [
- "wgpu-hal 26.0.5",
+ "wgpu-hal 26.0.6",
 ]
 
 [[package]]
@@ -6489,9 +6460,9 @@ dependencies = [
 
 [[package]]
 name = "wgpu-hal"
-version = "26.0.5"
+version = "26.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f66204fca99d4e5a4e9efe76042218f4f7019eaf85b33b62ecacb763e7fbd99"
+checksum = "a8d0e67224cc7305b3b4eb2cc57ca4c4c3afc665c1d1bee162ea806e19c47bdd"
 dependencies = [
  "android_system_properties",
  "arrayvec",

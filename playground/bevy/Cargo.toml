@@ -12,4 +12,4 @@ bevy_panorbit_camera = { version = "^0.31.0", features = ["bevy_egui"] }
 
 [dependencies.procedural_modelling]
 path = "../../"
-features = ["bevy", "meshopt", "bevy_dynamic", "svg", "fonts", "gizmo"]
+features = ["bevy", "bevy_dynamic", "svg", "fonts", "gizmo"]
