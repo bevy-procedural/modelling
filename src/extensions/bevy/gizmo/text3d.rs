@@ -34,15 +34,16 @@ fn update_text_positions(
     mut camera: Query<(&mut Camera, &mut Transform, &GlobalTransform), With<Camera3d>>,
 ) {
     for (mut node, text_3d) in text_3d_query.iter_mut() {
-        let (camera, _, camera_global_transform) = camera.single_mut();
-        let world_position = text_3d.world_position;
-        let Ok(viewport_position) =
-            camera.world_to_viewport(camera_global_transform, world_position)
-        else {
-            continue;
-        };
-        
-        node.top = Val::Px(viewport_position.y - text_3d.font_size / 2.0);
-        node.left = Val::Px(viewport_position.x);
+        if let Ok((camera, _, camera_global_transform)) = camera.single_mut() {
+            let world_position = text_3d.world_position;
+            let Ok(viewport_position) =
+                camera.world_to_viewport(camera_global_transform, world_position)
+            else {
+                continue;
+            };
+
+            node.top = Val::Px(viewport_position.y - text_3d.font_size / 2.0);
+            node.left = Val::Px(viewport_position.x);
+        }
     }
 }

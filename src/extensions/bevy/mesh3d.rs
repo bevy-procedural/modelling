@@ -1,4 +1,4 @@
-use super::{Polygon2dBevy, BevyVertexPayload3d};
+use super::{BevyVertexPayload3d, Polygon2dBevy};
 use crate::{
     halfedge::{
         HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeImplMeshType, HalfEdgeMeshImpl, HalfEdgeVertexImpl,
@@ -11,11 +11,7 @@ use crate::{
     tesselate::{TesselationMeta, TriangulationAlgorithm},
 };
 use bevy::{
-    math::{Quat, Vec2, Vec3},
-    render::{
-        mesh::{PrimitiveTopology, VertexAttributeValues},
-        render_asset::RenderAssetUsages,
-    },
+    asset::RenderAssetUsages, math::{Quat, Vec2, Vec3}, mesh::{Indices as BevyIndices, PrimitiveTopology, VertexAttributeValues}
 };
 
 /// A mesh type for bevy with
@@ -57,23 +53,19 @@ pub type BevyMesh3d = HalfEdgeMeshImpl<BevyMeshType3d32>;
 impl<T: HalfEdgeImplMeshType<VP = BevyVertexPayload3d> + MeshType3D<Vec = Vec3, S = f32>>
     HalfEdgeMeshImpl<T>
 {
-    fn bevy_indices(&self, indices: &Vec<T::V>) -> bevy::render::mesh::Indices {
+    fn bevy_indices(&self, indices: &Vec<T::V>) -> BevyIndices {
         if std::mem::size_of::<T::V>() == std::mem::size_of::<u32>() {
-            bevy::render::mesh::Indices::U32(
-                indices.into_iter().map(|x| x.index() as u32).collect(),
-            )
+            BevyIndices::U32(indices.into_iter().map(|x| x.index() as u32).collect())
         } else if std::mem::size_of::<T::V>() == std::mem::size_of::<u16>()
             || std::mem::size_of::<T::V>() == std::mem::size_of::<u8>()
         {
-            bevy::render::mesh::Indices::U16(
-                indices.into_iter().map(|x| x.index() as u16).collect(),
-            )
+            BevyIndices::U16(indices.into_iter().map(|x| x.index() as u16).collect())
         } else {
             panic!("Unsupported index type {}", std::mem::size_of::<T::V>());
         }
     }
 
-    fn bevy_remove_attributes(mesh: &mut bevy::render::mesh::Mesh) {
+    fn bevy_remove_attributes(mesh: &mut bevy::prelude::Mesh) {
         mesh.remove_indices();
         let mut attributes_to_remove = Vec::new();
         for (attr, _) in mesh.attributes() {
@@ -86,7 +78,7 @@ impl<T: HalfEdgeImplMeshType<VP = BevyVertexPayload3d> + MeshType3D<Vec = Vec3, 
 
     /// Replace the mesh's attributes with the current mesh.
     /// Requires the mesh to be a triangle list and have the MAIN_WORLD usage.
-    pub fn bevy_set(&self, mesh: &mut bevy::render::mesh::Mesh) {
+    pub fn bevy_set(&self, mesh: &mut bevy::prelude::Mesh) {
         self.bevy_set_ex(
             mesh,
             TriangulationAlgorithm::Auto,
@@ -98,7 +90,7 @@ impl<T: HalfEdgeImplMeshType<VP = BevyVertexPayload3d> + MeshType3D<Vec = Vec3, 
     /// Like bevy_set, but with additional meta information
     pub fn bevy_set_ex(
         &self,
-        mesh: &mut bevy::render::mesh::Mesh,
+        mesh: &mut bevy::prelude::Mesh,
         algo: TriangulationAlgorithm,
         generate_flat_normals: bool,
         meta: &mut TesselationMeta<T::V>,
@@ -119,7 +111,7 @@ impl<T: HalfEdgeImplMeshType<VP = BevyVertexPayload3d> + MeshType3D<Vec = Vec3, 
 
         mesh.insert_indices(self.bevy_indices(&is));
         mesh.insert_attribute(
-            bevy::render::mesh::Mesh::ATTRIBUTE_POSITION,
+            bevy::prelude::Mesh::ATTRIBUTE_POSITION,
             VertexAttributeValues::Float32x3(
                 vs.iter()
                     .map(|vp: &<BevyMeshType3d32 as MeshType>::VP| vp.pos().to_array())
@@ -127,7 +119,7 @@ impl<T: HalfEdgeImplMeshType<VP = BevyVertexPayload3d> + MeshType3D<Vec = Vec3, 
             ),
         );
         mesh.insert_attribute(
-            bevy::render::mesh::Mesh::ATTRIBUTE_NORMAL,
+            bevy::prelude::Mesh::ATTRIBUTE_NORMAL,
             VertexAttributeValues::Float32x3(
                 vs.iter()
                     .map(|vp| (vp as &BevyVertexPayload3d).normal().to_array())
@@ -137,8 +129,8 @@ impl<T: HalfEdgeImplMeshType<VP = BevyVertexPayload3d> + MeshType3D<Vec = Vec3, 
     }
 
     /// Convert the mesh to a bevy mesh
-    pub fn to_bevy(&self, usage: RenderAssetUsages) -> bevy::render::mesh::Mesh {
-        let mut mesh = bevy::render::mesh::Mesh::new(PrimitiveTopology::TriangleList, usage);
+    pub fn to_bevy(&self, usage: RenderAssetUsages) -> bevy::prelude::Mesh {
+        let mut mesh = bevy::prelude::Mesh::new(PrimitiveTopology::TriangleList, usage);
         self.bevy_set(&mut mesh);
         mesh
     }
@@ -149,8 +141,8 @@ impl<T: HalfEdgeImplMeshType<VP = BevyVertexPayload3d> + MeshType3D<Vec = Vec3, 
         usage: RenderAssetUsages,
         algo: TriangulationAlgorithm,
         generate_flat_normals: bool,
-    ) -> bevy::render::mesh::Mesh {
-        let mut mesh = bevy::render::mesh::Mesh::new(PrimitiveTopology::TriangleList, usage);
+    ) -> bevy::prelude::Mesh {
+        let mut mesh = bevy::prelude::Mesh::new(PrimitiveTopology::TriangleList, usage);
         self.bevy_set_ex(
             &mut mesh,
             algo,

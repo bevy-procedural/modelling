@@ -1,12 +1,10 @@
 use bevy::{
-    pbr::{
-        wireframe::{WireframeConfig, WireframePlugin},
-        CascadeShadowConfigBuilder, ShadowFilteringMethod,
-    },
+    pbr::wireframe::{WireframeConfig, WireframePlugin},
     prelude::*,
     window::WindowResolution,
 };
 use bevy_inspector_egui::{
+    bevy_egui::EguiPlugin,
     inspector_options::ReflectInspectorOptions,
     quick::{FilterQueryInspectorPlugin, ResourceInspectorPlugin, WorldInspectorPlugin},
     InspectorOptions,
@@ -623,14 +621,14 @@ pub fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
-                resolution: WindowResolution::new(1920.0, 1080.0),
+                resolution: WindowResolution::new(1920, 1080),
                 position: WindowPosition::Centered(MonitorSelection::Index(1)),
                 decorations: false,
                 ..default()
             }),
             ..default()
         }))
-        .add_plugins(WireframePlugin)
+        .add_plugins(WireframePlugin::default())
         .insert_resource(WireframeConfig {
             global: true,
             default_color: Color::WHITE,
@@ -639,11 +637,14 @@ pub fn main() {
         .insert_resource(GlobalSettings::default())
         .register_type::<MeshSettings>()
         .add_plugins((
-            ResourceInspectorPlugin::<GlobalSettings>::default(),
-            FilterQueryInspectorPlugin::<With<MeshSettings>>::default(),
-            WorldInspectorPlugin::default(),
             PanOrbitCameraPlugin,
             Text3dGizmosPlugin,
+            EguiPlugin::default(),
+        ))
+        .add_plugins((
+            WorldInspectorPlugin::default(),
+            ResourceInspectorPlugin::<GlobalSettings>::default(),
+            FilterQueryInspectorPlugin::<With<MeshSettings>>::default(),
         ))
         .add_systems(Startup, setup_meshes)
         .add_systems(Update, update_meshes)
@@ -670,42 +671,44 @@ fn update_meshes(
     mut texts: ResMut<Text3dGizmos>,
 ) {
     let window = windows.single();
-    let (camera, camera_transform) = camera_q.single();
-    if let Some(ray) = window
-        .cursor_position()
-        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor).ok())
-    {
-        let distance = ray
-            .intersect_plane(Vec3::ZERO, InfinitePlane3d::new(Vec3::Y))
-            .unwrap_or(0.0);
-        let _world_position = ray.get_point(distance);
-    }
+    if let Ok((camera, camera_transform)) = camera_q.single() {
+        if let Some(ray) = window
+            .unwrap()
+            .cursor_position()
+            .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor).ok())
+        {
+            let distance = ray
+                .intersect_plane(Vec3::ZERO, InfinitePlane3d::new(Vec3::Y))
+                .unwrap_or(0.0);
+            let _world_position = ray.get_point(distance);
+        }
 
-    if !global_settings.is_changed() {
-        return;
-    }
+        if !global_settings.is_changed() {
+            return;
+        }
 
-    for (bevy_mesh, _settings) in query.iter() {
-        let mut mesh = make_mesh(&global_settings);
+        for (bevy_mesh, _settings) in query.iter() {
+            let mut mesh = make_mesh(&global_settings);
 
-        // place it "on the floor"
-        let min_y = mesh
-            .vertices()
-            .map(|v| v.pos().y)
-            .min_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap_or(0.0);
-        mesh.translate(&Vec3::new(0.0, -min_y, 0.0));
+            // place it "on the floor"
+            let min_y = mesh
+                .vertices()
+                .map(|v| v.pos().y)
+                .min_by(|a, b| a.partial_cmp(b).unwrap())
+                .unwrap_or(0.0);
+            mesh.translate(&Vec3::new(0.0, -min_y, 0.0));
 
-        let mut meta = TesselationMeta::default();
-        mesh.generate_smooth_normals();
-        mesh.bevy_set_ex(
-            assets.get_mut(bevy_mesh).unwrap(),
-            TriangulationAlgorithm::MinWeight,
-            true,
-            &mut meta,
-        );
+            let mut meta = TesselationMeta::default();
+            mesh.generate_smooth_normals();
+            mesh.bevy_set_ex(
+                assets.get_mut(bevy_mesh).unwrap(),
+                TriangulationAlgorithm::MinWeight,
+                true,
+                &mut meta,
+            );
 
-        show_tesselation_meta(&mut texts, &mesh, &meta);
+            show_tesselation_meta(&mut texts, &mesh, &meta);
+        }
     }
 }
 
@@ -758,20 +761,11 @@ fn setup_meshes(
             rotation: Quat::from_rotation_x(-PI / 4.),
             ..default()
         },
-        // very high quality shadows
-        CascadeShadowConfigBuilder {
-            num_cascades: 4,
-            first_cascade_far_bound: 5.0,
-            maximum_distance: 55.0,
-            ..default()
-        }
-        .build(),
     ));
 
     commands.spawn((
         Camera3d::default(),
         Transform::from_xyz(3.0, 7.0, 5.0).looking_at(Vec3::new(0.0, 2.0, 0.0), Vec3::Y),
         PanOrbitCamera::default(),
-        ShadowFilteringMethod::Gaussian,
     ));
 }

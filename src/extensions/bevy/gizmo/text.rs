@@ -78,7 +78,7 @@ fn create_or_delete_text(mut commands: Commands, mut texts: ResMut<Text3dGizmos>
     for text in texts.texts.iter_mut() {
         if let Some(entity) = text.entity {
             if text.should_remove {
-                commands.entity(entity).despawn_recursive();
+                commands.entity(entity).despawn();
                 text.entity = None;
             }
         } else {
@@ -95,7 +95,7 @@ fn create_or_delete_text(mut commands: Commands, mut texts: ResMut<Text3dGizmos>
                         builder.spawn((
                             Text::new(text.text.to_string()),
                             TextFont::from_font_size(text.font_size),
-                            TextLayout::new_with_justify(JustifyText::Center).with_no_wrap(),
+                            TextLayout::new_with_justify(Justify::Center).with_no_wrap(),
                             TextColor(text.color),
                             text3d::Text3d::new(text.world_position, text.font_size),
                         ));

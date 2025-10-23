@@ -6,7 +6,6 @@ use super::{
     SweepMeta, VertexType,
 };
 use crate::{
-    math::{Vector, Vector2D},
     mesh::{IndexedVertex2D, Triangulation},
 };
 

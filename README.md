@@ -44,7 +44,7 @@ mesh.to_bevy(RenderAssetUsages::default())
 -   [box](https://github.com/bevy-procedural/modelling/blob/main/examples/box.rs) demonstrates different methods to build a cube from scratch. This is a good place to get started with this crate!
 -   [fps_bench](https://github.com/bevy-procedural/modelling/blob/main/examples/fps_bench.rs) benchmarks the rendering performance of the different triangulation algorithms.
 
-Or run the [examples](https://github.com/bevy-procedural/modelling/tree/main/examples) on your computer like, e.g., `cargo run --features="bevy bevy/bevy_pbr bevy/bevy_winit bevy/tonemapping_luts" --profile fast-dev --example box`.
+Or run the [examples](https://github.com/bevy-procedural/modelling/tree/main/examples) on your computer like, e.g., `cargo run --features="example_deps" --profile fast-dev --example box`.
 
 For package development, we recommend using the `playground_bevy`- resp. `playground_wgpu`-subcrate. This example has a little [egui](https://github.com/jakobhellermann/bevy-inspector-egui/)-editor. Run it using `cargo watch -w playground -w src -x "run -p playground_bevy --profile fast-dev"`. The `fast-dev` profile will enable optimizations for the dependencies, but not for the package itself. This will slow down the first build _significantly_, but incremental builds are slightly faster and bevy's performance (bevy is used as the renderer in the examples) improves a lot.
 
@@ -224,7 +224,8 @@ The following table shows the compatibility of `procedural_modelling` (when usin
 
 | bevy | bevy_procedural_meshes |
 | ---- | ---------------------- |
-| 0.15 | 0.3.\*, main           |
+| 0.17 | 0.4.\*, main, next     |
+| 0.15 | 0.3.\*                 |
 | 0.14 | 0.2.\*                 |
 | 0.13 | 0.1.\*                 |
 

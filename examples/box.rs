@@ -4,9 +4,7 @@
 //! provides to build a mesh and compare their trade-offs.
 
 use bevy::{
-    pbr::wireframe::{WireframeConfig, WireframePlugin},
-    prelude::*,
-    render::render_asset::RenderAssetUsages,
+    asset::RenderAssetUsages, pbr::wireframe::{WireframeConfig, WireframePlugin}, prelude::*
 };
 use procedural_modelling::{extensions::bevy::*, mesh::MeshBuilder, prelude::*};
 use std::f32::consts::PI;
@@ -152,7 +150,7 @@ fn cuboid_from_cuboid(size: Vec3) -> BevyMesh3d {
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugins(WireframePlugin)
+        .add_plugins(WireframePlugin::default())
         .insert_resource(WireframeConfig {
             global: true,
             default_color: Color::WHITE,
