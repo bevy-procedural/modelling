@@ -224,7 +224,8 @@ The following table shows the compatibility of `procedural_modelling` (when usin
 
 | bevy | bevy_procedural_meshes |
 | ---- | ---------------------- |
-| 0.17 | 0.4.\*, main, next     |
+| 0.18 | 0.4.2, main            |
+| 0.17 | 0.4.1                  |
 | 0.15 | 0.3.\*                 |
 | 0.14 | 0.2.\*                 |
 | 0.13 | 0.1.\*                 |

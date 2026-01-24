@@ -220,7 +220,7 @@ fn setup_camera_and_light(
         Name::new("Floor"),
     ));
 
-    commands.insert_resource(AmbientLight::default());
+    commands.insert_resource(GlobalAmbientLight::default());
     commands.spawn((
         DirectionalLight {
             color: Color::WHITE,

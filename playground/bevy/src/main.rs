@@ -622,8 +622,6 @@ pub fn main() {
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 resolution: WindowResolution::new(1920, 1080),
-                position: WindowPosition::Centered(MonitorSelection::Index(1)),
-                decorations: false,
                 ..default()
             }),
             ..default()
@@ -654,10 +652,10 @@ pub fn main() {
 
 fn exit_on_esc(
     input: Res<ButtonInput<KeyCode>>,
-    mut app_exit_events: ResMut<Events<bevy::app::AppExit>>,
+    mut app_exit_events: ResMut<Messages<bevy::app::AppExit>>,
 ) {
     if input.just_pressed(KeyCode::Escape) {
-        app_exit_events.send(AppExit::Success);
+        app_exit_events.write(AppExit::Success);
     }
 }
 
@@ -749,7 +747,7 @@ fn setup_meshes(
         show_faces(&mut texts, &mesh);
     }
 
-    commands.insert_resource(AmbientLight::default());
+    commands.insert_resource(GlobalAmbientLight::default());
     commands.spawn((
         DirectionalLight {
             color: Color::WHITE,
