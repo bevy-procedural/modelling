@@ -1,5 +1,5 @@
 use crate::{
-    halfedge::{HalfEdgeImpl, HalfEdgeMeshImpl, HalfEdgeImplMeshType, HalfEdgeVertexImpl},
+    halfedge::{HalfEdgeImpl, HalfEdgeImplMeshType, HalfEdgeMeshImpl, HalfEdgeVertexImpl},
     math::IndexType,
     mesh::{
         EdgeBasics, HalfEdge, HalfEdgeSemiBuilder, MeshBasics, MeshHalfEdgeBuilder, VertexBasics,

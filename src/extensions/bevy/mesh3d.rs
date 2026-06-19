@@ -11,7 +11,9 @@ use crate::{
     tesselate::{TesselationMeta, TriangulationAlgorithm},
 };
 use bevy::{
-    asset::RenderAssetUsages, math::{Quat, Vec2, Vec3}, mesh::{Indices as BevyIndices, PrimitiveTopology, VertexAttributeValues}
+    asset::RenderAssetUsages,
+    math::{Quat, Vec2, Vec3},
+    mesh::{Indices as BevyIndices, PrimitiveTopology, VertexAttributeValues},
 };
 
 /// A mesh type for bevy with

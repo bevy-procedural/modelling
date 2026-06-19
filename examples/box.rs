@@ -4,7 +4,9 @@
 //! provides to build a mesh and compare their trade-offs.
 
 use bevy::{
-    asset::RenderAssetUsages, pbr::wireframe::{WireframeConfig, WireframePlugin}, prelude::*
+    asset::RenderAssetUsages,
+    pbr::wireframe::{WireframeConfig, WireframePlugin},
+    prelude::*,
 };
 use procedural_modelling::{extensions::bevy::*, mesh::MeshBuilder, prelude::*};
 use std::f32::consts::PI;
@@ -154,6 +156,7 @@ fn main() {
         .insert_resource(WireframeConfig {
             global: true,
             default_color: Color::WHITE,
+            ..Default::default()
         })
         .add_systems(Startup, setup_camera_and_light)
         .add_systems(Startup, setup_meshes)
@@ -224,7 +227,8 @@ fn setup_camera_and_light(
     commands.spawn((
         DirectionalLight {
             color: Color::WHITE,
-            shadows_enabled: true,
+            shadow_maps_enabled: true,
+            contact_shadows_enabled: true,
             ..default()
         },
         Transform {

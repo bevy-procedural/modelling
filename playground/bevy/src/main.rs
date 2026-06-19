@@ -3,13 +3,6 @@ use bevy::{
     prelude::*,
     window::WindowResolution,
 };
-use bevy_inspector_egui::{
-    bevy_egui::EguiPlugin,
-    inspector_options::ReflectInspectorOptions,
-    quick::{FilterQueryInspectorPlugin, ResourceInspectorPlugin, WorldInspectorPlugin},
-    InspectorOptions,
-};
-use bevy_panorbit_camera::*;
 use procedural_modelling::{
     extensions::{
         bevy::{text::*, *},
@@ -19,13 +12,9 @@ use procedural_modelling::{
 };
 use std::{env, f32::consts::PI};
 
-#[derive(Reflect, Resource, InspectorOptions)]
-#[reflect(Resource, InspectorOptions)]
+#[derive(Reflect, Resource)]
 struct GlobalSettings {
-    #[inspector(min = -20.0, max = 10.0)]
     tol: f32,
-
-    #[inspector(min = 0.0, max = 100.0)]
     prog: f32,
 
     curvature: f32,
@@ -59,20 +48,12 @@ impl Default for GlobalSettings {
     }
 }
 
-#[derive(Reflect, Component, InspectorOptions)]
-#[reflect(Component, InspectorOptions)]
+#[derive(Reflect, Component)]
 struct MeshSettings {
-    #[inspector(min = -20.0, max = 10.0)]
     tol: f32,
-
     n: usize,
-
-    #[inspector(min = 0.0, max = 10.0)]
     r: f32,
-
-    #[inspector(min = 0.0, max = 10.0)]
     r2: f32,
-
     d1: Vec3,
     rot: f32,
     segs: usize,
@@ -630,20 +611,12 @@ pub fn main() {
         .insert_resource(WireframeConfig {
             global: true,
             default_color: Color::WHITE,
+            ..default()
         })
         .register_type::<GlobalSettings>()
         .insert_resource(GlobalSettings::default())
         .register_type::<MeshSettings>()
-        .add_plugins((
-            PanOrbitCameraPlugin,
-            Text3dGizmosPlugin,
-            EguiPlugin::default(),
-        ))
-        .add_plugins((
-            WorldInspectorPlugin::default(),
-            ResourceInspectorPlugin::<GlobalSettings>::default(),
-            FilterQueryInspectorPlugin::<With<MeshSettings>>::default(),
-        ))
+        .add_plugins((Text3dGizmosPlugin,))
         .add_systems(Startup, setup_meshes)
         .add_systems(Update, update_meshes)
         .add_systems(Update, exit_on_esc)
@@ -699,7 +672,7 @@ fn update_meshes(
             let mut meta = TesselationMeta::default();
             mesh.generate_smooth_normals();
             mesh.bevy_set_ex(
-                assets.get_mut(bevy_mesh).unwrap(),
+                &mut assets.get_mut(bevy_mesh).unwrap(),
                 TriangulationAlgorithm::MinWeight,
                 true,
                 &mut meta,
@@ -751,7 +724,8 @@ fn setup_meshes(
     commands.spawn((
         DirectionalLight {
             color: Color::WHITE,
-            shadows_enabled: true,
+            shadow_maps_enabled: true,
+            contact_shadows_enabled: true,
             ..default()
         },
         Transform {
@@ -764,6 +738,5 @@ fn setup_meshes(
     commands.spawn((
         Camera3d::default(),
         Transform::from_xyz(3.0, 7.0, 5.0).looking_at(Vec3::new(0.0, 2.0, 0.0), Vec3::Y),
-        PanOrbitCamera::default(),
     ));
 }

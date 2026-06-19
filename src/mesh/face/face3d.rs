@@ -58,8 +58,8 @@ pub trait Face3d<T: MeshType3D<Face = Self>>: FaceBasics<T> {
         // TODO: Test this
         self.vertices_2d(mesh)
             .circular_tuple_windows::<(_, _)>()
-            .tuple_combinations::<(_, _)>()
-            .any(|(((a1, _), (a2, _)), ((b1, _), (b2, _)))| {
+            .array_combinations()
+            .any(|[((a1, _), (a2, _)), ((b1, _), (b2, _))]| {
                 let l1 = LineSegment2D::<T::Vec2>::new(a1, a2);
                 let l2 = LineSegment2D::<T::Vec2>::new(b1, b2);
                 let res = l1.intersect_line(&l2, T::S::EPS, -T::S::EPS);

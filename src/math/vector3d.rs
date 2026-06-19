@@ -51,7 +51,6 @@ pub trait Vector3D: Vector<Self::S, 3> {
     /// The associated spherical 3d vector type
     type Spherical: Spherical3d<S = Self::S, Vec3 = Self>;
 
-
     /// Construct from scalar values.
     fn new(x: Self::S, y: Self::S, z: Self::S) -> Self;
 

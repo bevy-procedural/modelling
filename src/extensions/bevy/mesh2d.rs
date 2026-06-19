@@ -1,4 +1,4 @@
-use super::{Polygon2dBevy, BevyMesh3d, BevyVertexPayload2d, BevyVertexPayload3d};
+use super::{BevyMesh3d, BevyVertexPayload2d, BevyVertexPayload3d, Polygon2dBevy};
 use crate::{
     halfedge::{
         HalfEdgeFaceImpl, HalfEdgeImpl, HalfEdgeImplMeshType, HalfEdgeMeshImpl, HalfEdgeVertexImpl,

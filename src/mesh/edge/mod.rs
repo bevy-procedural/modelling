@@ -1,12 +1,12 @@
 mod basics;
+mod curved;
 mod halfedge;
 mod payload;
-mod curved;
 
 pub use basics::*;
+pub use curved::*;
 pub use halfedge::*;
 pub use payload::*;
-pub use curved::*;
 
 use super::MeshType;
 

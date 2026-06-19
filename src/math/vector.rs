@@ -88,7 +88,7 @@ pub trait Vector<S: Scalar, const D: usize>:
         if D == 2 {
             let det = self.x() * other.y() - self.y() * other.x();
             det.atan2(self.dot(&other))
-        } else {                
+        } else {
             let cos_theta = self.dot(&other) / (len_self * len_other);
 
             // Clamp cos_theta to [-1, 1] to handle numerical inaccuracies

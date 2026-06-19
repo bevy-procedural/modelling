@@ -1,6 +1,6 @@
 use super::HalfEdgeMeshImpl;
 use crate::{
-    halfedge::{HalfEdgeImplMeshType, BackwardEdgeIterator, ForwardEdgeIterator},
+    halfedge::{BackwardEdgeIterator, ForwardEdgeIterator, HalfEdgeImplMeshType},
     mesh::{HalfEdgeMesh, MeshBasics},
 };
 

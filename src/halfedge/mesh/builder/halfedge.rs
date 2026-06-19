@@ -5,8 +5,8 @@ use crate::{
     math::IndexType,
     mesh::{
         DefaultEdgePayload, DefaultFacePayload, EdgeBasics, FaceBasics, HalfEdge,
-        HalfEdgeSemiBuilder, HalfEdgeVertex, MeshBasics, MeshHalfEdgeBuilder,
-        MeshType, VertexBasics,
+        HalfEdgeSemiBuilder, HalfEdgeVertex, MeshBasics, MeshHalfEdgeBuilder, MeshType,
+        VertexBasics,
     },
 };
 use itertools::Itertools;
@@ -328,7 +328,7 @@ impl<T: HalfEdgeImplMeshType> HalfEdgeMeshImpl<T> {
         fv: FV,
         fe: FE,
         ff: FF,
-        fm: FM
+        fm: FM,
     ) -> Self
     where
         FE: Fn(&T2::EP) -> T::EP,

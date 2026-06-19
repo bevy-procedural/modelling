@@ -2,9 +2,9 @@
 
 mod mat5;
 mod polygon;
+mod quat;
 mod vec2;
 mod vec3;
 mod vec4;
-mod quat;
 
 pub use polygon::*;
